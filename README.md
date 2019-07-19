@@ -1,7 +1,6 @@
 # llvm-ir: LLVM IR in natural Rust data structures
 
 [![Crates.io](http://meritbadge.herokuapp.com/llvm-ir)](https://crates.io/crates/llvm-ir)
-[![Documentation](https://docs.rs/llvm-ir/badge.svg)](https://docs.rs/llvm-ir)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/cdisselkoen/llvm-ir/master/LICENSE)
 
 `llvm-ir` is a crate which provides a more Rust-y representation of LLVM IR
@@ -50,7 +49,7 @@ module = Module::from_bc_path(&path)?;
 ```
 
 ## Documentation
-Documentation for `llvm-ir` can be found on [docs.rs](https://docs.rs/llvm-ir),
+Documentation for `llvm-ir` can be found [here](https://cdisselkoen.github.io/llvm-ir),
 or of course you can generate local documentation with `cargo doc --open`.
 The documentation includes links to relevant parts of the LLVM documentation
 when appropriate.
@@ -106,10 +105,10 @@ package] as well.
 [`inkwell`]: https://github.com/TheDan64/inkwell
 [`llvm-hs-pure` Haskell package]: http://hackage.haskell.org/package/llvm-hs-pure
 [`llvm-hs` Haskell package]: http://hackage.haskell.org/package/llvm-hs
-[`Instruction`]: https://docs.rs/llvm-ir/~0/llvm-ir/struct.Instruction.html
-[`Add`]: https://docs.rs/llvm-ir/~0/llvm-ir/instruction/struct.Add.html
-[`Call`]: https://docs.rs/llvm-ir/~0/llvm-ir/instruction/struct.Call.html
-[`Store`]: https://docs.rs/llvm-ir/~0/llvm-ir/instruction/struct.Store.html
-[`BasicBlock`]: https://docs.rs/llvm-ir/~0/llvm-ir/struct.BasicBlock.html
-[`Function`]: https://docs.rs/llvm-ir/~0/llvm-ir/struct.Function.html
-[`Module`]: https://docs.rs/llvm-ir/~0/llvm-ir/struct.Module.html
+[`Instruction`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/enum.Instruction.html
+[`Add`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/instruction/struct.Add.html
+[`Call`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/instruction/struct.Call.html
+[`Store`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/instruction/struct.Store.html
+[`BasicBlock`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/struct.BasicBlock.html
+[`Function`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/struct.Function.html
+[`Module`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/struct.Module.html
