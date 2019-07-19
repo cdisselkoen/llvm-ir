@@ -105,7 +105,7 @@ package] as well.
 [`inkwell`]: https://github.com/TheDan64/inkwell
 [`llvm-hs-pure` Haskell package]: http://hackage.haskell.org/package/llvm-hs-pure
 [`llvm-hs` Haskell package]: http://hackage.haskell.org/package/llvm-hs
-[`Instruction`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/enum.Instruction.html
+[`Instruction`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/instruction/enum.Instruction.html
 [`Add`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/instruction/struct.Add.html
 [`Call`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/instruction/struct.Call.html
 [`Store`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/instruction/struct.Store.html
