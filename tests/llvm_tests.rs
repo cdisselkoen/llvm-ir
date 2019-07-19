@@ -112,11 +112,8 @@ fn DILocation_implicit_code_extra_checks() {
     assert_eq!(invoke.arguments.len(), 2);
     if let Operand::LocalOperand { name, ty: Type::PointerType { pointee_type, .. } } = &invoke.arguments[0].0 {
         assert_eq!(name, &Name::Name("a".to_owned()));
-        if let Type::NamedStructTypeReference(ref s) = **pointee_type {
-            let struct_type = module.named_struct_types.get(s)
-                .unwrap_or_else(|| panic!("Failed to find {} in module.named_struct_types", s))
-                .as_ref()
-                .unwrap_or_else(|| panic!("Didn't expect {} to be an opaque type", s));
+        if let Type::NamedStructType { ref ty, .. } = **pointee_type {
+            let struct_type = ty.clone().unwrap_or_else(|| panic!("Didn't expect {:?} to be an opaque type", **pointee_type));
             assert_eq!(*struct_type, Type::StructType { element_types: vec![Type::i8()], is_packed: false });
         } else {
             panic!("Expected invoke.arguments[0].0 to be a pointer to a Type::NamedStructTypeReference; instead it was a pointer to a {:?}", **pointee_type);

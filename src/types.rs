@@ -22,16 +22,20 @@ pub enum Type {
     VectorType { element_type: Box<Type>, num_elements: usize },
     /// Struct and Array types (but not vector types) are "aggregate types" and cannot be produced by
     /// a single instruction (see [LLVM 8 docs on Aggregate Types](https://releases.llvm.org/8.0.0/docs/LangRef.html#aggregate-types)).
-    /// See [LLVM 8 docs on Structure Type](https://releases.llvm.org/8.0.0/docs/LangRef.html#structure-type)
-    StructType { element_types: Vec<Type>, is_packed: bool },
     /// See [LLVM 8 docs on Array Type](https://releases.llvm.org/8.0.0/docs/LangRef.html#array-type)
     ArrayType { element_type: Box<Type>, num_elements: usize },
-    /// Used for self-referential (i.e., recursive) structure types, and also opaque structure types.
-    /// May also be used for any named structure type, even if it is not self-referential or opaque.
-    /// You can look up the actual `StructType` in the [`Module.named_struct_types`](../module/struct.Module.html#structfield.named_struct_types) map.
-    /// See LLVM 8 docs on [Structure Type](https://releases.llvm.org/8.0.0/docs/LangRef.html#structure-type)
-    /// and [Opaque Structure Types](http://llvm.org/docs/LangRef.html#opaque-structure-types)
-    NamedStructTypeReference(String),  // llvm-hs-pure has Name rather than String
+    /// The `StructType` variant is used for a "literal" (i.e., anonymous) structure type.
+    /// See [LLVM 8 docs on Structure Type](https://releases.llvm.org/8.0.0/docs/LangRef.html#structure-type)
+    StructType { element_types: Vec<Type>, is_packed: bool },
+    /// Named structure types. Note that these may be self-referential (i.e., recursive).
+    /// See [LLVM 8 docs on Structure Type](https://releases.llvm.org/8.0.0/docs/LangRef.html#structure-type)
+    NamedStructType {
+        /// Name of the struct type referred to
+        name: String,  // llvm-hs-pure has Name rather than String
+        /// The actual struct type, which will be a `StructType` variant.
+        /// A `None` here indicates an opaque type; see [LLVM 8 docs on Opaque Structure Types](https://releases.llvm.org/8.0.0/docs/LangRef.html#t-opaque).
+        ty: Option<Box<Type>>,
+    },
     /// See [LLVM 8 docs on X86_MMX Type](https://releases.llvm.org/8.0.0/docs/LangRef.html#x86-mmx-type)
     X86_MMXType,  // llvm-hs-pure doesn't have this, not sure what they do with LLVM's http://llvm.org/docs/LangRef.html#x86-mmx-type
     /// See [LLVM 8 docs on Metadata Type](https://releases.llvm.org/8.0.0/docs/LangRef.html#metadata-type)
@@ -164,12 +168,17 @@ impl Type {
 
                 match name {
                     Some(ref s) if !s.is_empty() => {
-                        if !tynamemap.contains_key(s) {
-                            tynamemap.insert(s.clone(), None);  // put it in as opaque for now, so that the next call will terminate
+                        let actual_type: Option<Type> = if tynamemap.contains_key(s) {
+                            tynamemap.get(s).unwrap().clone()
+                        } else {
+                            // first fill in the entry as opaque for now, so that the call to struct_type_from_llvm_ref will terminate
+                            tynamemap.insert(s.clone(), None);
+                            // now compute and put in the actual correct type
                             let actual_type = Type::struct_type_from_llvm_ref(ty, tynamemap);
-                            tynamemap.insert(s.clone(), Some(actual_type));  // now put in the actual correct type
-                        }
-                        Type::NamedStructTypeReference(s.clone())
+                            tynamemap.insert(s.clone(), Some(actual_type.clone()));
+                            Some(actual_type)
+                        };
+                        Type::NamedStructType { name: s.clone(), ty: actual_type.map(Box::new) }
                     },
                     _ => Type::struct_type_from_llvm_ref(ty, tynamemap),
                 }

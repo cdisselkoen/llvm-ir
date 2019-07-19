@@ -24,9 +24,10 @@ pub struct Module {
     pub global_vars: Vec<GlobalVariable>,
     /// See [LLVM 8 docs on Global Aliases](https://releases.llvm.org/8.0.0/docs/LangRef.html#aliases)
     pub global_aliases: Vec<GlobalAlias>,
-    /// Structure types can be "identified", meaning named. These are the named structure types in this `Module`.
+    /// Structure types can be "identified", meaning named. This map holds the named structure types in this `Module`.
     /// See [LLVM 8 docs on Structure Type](https://releases.llvm.org/8.0.0/docs/LangRef.html#structure-type).
-    /// A `None` here indicates an opaque type; see [LLVM 8 docs on Opaque Structure Types](https://releases.llvm.org/8.0.0/docs/LangRef.html#t-opaque).
+    /// A `None` value indicates an opaque type; see [LLVM 8 docs on Opaque Structure Types](https://releases.llvm.org/8.0.0/docs/LangRef.html#t-opaque).
+    /// Note that this map is from struct name to `Type::StructType` variant, not to `Type::NamedStructType` variant (which would be redundant).
     pub named_struct_types: HashMap<String, Option<Type>>,
     // --TODO not yet implemented-- pub function_attribute_groups: Vec<FunctionAttributeGroup>,
     /// See [LLVM 8 docs on Module-Level Inline Assembly](https://releases.llvm.org/8.0.0/docs/LangRef.html#moduleasm)

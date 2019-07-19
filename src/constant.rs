@@ -827,7 +827,7 @@ impl Constant {
             LLVMValueKind::LLVMConstantStructValueKind => {
                 let ty = match Type::from_llvm_ref( unsafe { LLVMTypeOf(constant) }, tnmap ) {
                     ty @ Type::StructType { .. } => ty,
-                    Type::NamedStructTypeReference(s) => tnmap.get(&s).expect("Received a NamedStructTypeReference which wasn't in the map").as_ref().expect("Constant of opaque struct type").clone(),
+                    Type::NamedStructType { ty, .. } => *(ty.expect("Constant of opaque struct type")).clone(),
                     ty => panic!("Constant::Struct apparently has type {:?}", ty),
                 };
                 if let Type::StructType { element_types, is_packed } = ty {
