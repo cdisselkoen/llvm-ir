@@ -1040,22 +1040,22 @@ impl_hasresult!(GetElementPtr);
 
 impl Typed for GetElementPtr {
     fn get_type(&self) -> Type {
-        gep_type(self.address.get_type(), self.indices.iter().cloned())
+        gep_type(&self.address.get_type(), self.indices.iter())
     }
 }
 
-fn gep_type(cur_type: Type, mut indices: impl Iterator<Item=Operand>) -> Type {
+fn gep_type<'t>(cur_type: &'t Type, mut indices: impl Iterator<Item=&'t Operand>) -> Type {
     match indices.next() {
-        None => Type::pointer_to(cur_type),  // iterator is done
+        None => Type::pointer_to(cur_type.clone()),  // iterator is done
         Some(index) => match cur_type {
-            Type::PointerType { pointee_type, .. } => gep_type(*pointee_type, indices),
-            Type::VectorType { element_type, .. } => gep_type(*element_type, indices),
-            Type::ArrayType { element_type, .. } => gep_type(*element_type, indices),
+            Type::PointerType { pointee_type, .. } => gep_type(pointee_type, indices),
+            Type::VectorType { element_type, .. } => gep_type(element_type, indices),
+            Type::ArrayType { element_type, .. } => gep_type(element_type, indices),
             Type::StructType { element_types, .. } => {
                 if let Operand::ConstantOperand(Constant::Int { value, .. }) = index {
-                    gep_type(element_types.get(value as usize).expect("GEP index out of range").clone(), indices)
+                    gep_type(element_types.get(*value as usize).expect("GEP index out of range"), indices)
                 } else {
-                    panic!("GEP index is not a Operand::ConstantOperand(Constant::Int)")
+                    panic!("GEP index on a struct was not a Operand::ConstantOperand(Constant::Int)")
                 }
             },
             _ => panic!("GEP on something that's not a PointerType, VectorType, ArrayType, or StructType"),
