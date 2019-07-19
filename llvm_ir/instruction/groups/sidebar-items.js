@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["BinaryOp","Just the BinaryOps.  This ends up being better than a `&dyn ``BinaryOp` for various reasons."]]});
