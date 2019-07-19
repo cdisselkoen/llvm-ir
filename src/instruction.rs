@@ -1055,10 +1055,23 @@ fn gep_type<'t>(cur_type: &'t Type, mut indices: impl Iterator<Item=&'t Operand>
                 if let Operand::ConstantOperand(Constant::Int { value, .. }) = index {
                     gep_type(element_types.get(*value as usize).expect("GEP index out of range"), indices)
                 } else {
-                    panic!("GEP index on a struct was not a Operand::ConstantOperand(Constant::Int)")
+                    panic!("Expected GEP index on a struct to be a Operand::ConstantOperand(Constant::Int); got {:?}", index)
                 }
             },
-            _ => panic!("GEP on something that's not a PointerType, VectorType, ArrayType, or StructType"),
+            Type::NamedStructType { ty, .. } => match ty {
+                None => panic!("GEP on an opaque struct type"),
+                Some(ty) => match **ty {
+                    Type::StructType { ref element_types, .. } => {
+                        if let Operand::ConstantOperand(Constant::Int { value, .. }) = index {
+                            gep_type(element_types.get(*value as usize).expect("GEP index out of range"), indices)
+                        } else {
+                            panic!("Expected GEP index on a struct to be a Operand::ConstantOperand(Constant::Int); got {:?}", index)
+                        }
+                    },
+                    _ => panic!("Expected NamedStructType inner type to be a StructType; got {:?}", **ty),
+                },
+            }
+            _ => panic!("Expected GEP base type to be a PointerType, VectorType, ArrayType, StructType, or NamedStructType; got {:?}", cur_type),
         }
     }
 }
