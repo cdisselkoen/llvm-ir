@@ -1,0 +1,65 @@
+pub use llvm_sys::prelude::*;
+pub use llvm_sys::core::*;
+pub use crate::iterators::*;
+use std::ffi::CStr;
+use std::os::raw::c_char;
+
+// We convert all LLVM strings to owned Strings (which involves a copy)
+// partly because we intend to serialize/deserialize our ASTs eventually
+pub unsafe fn raw_to_string(raw: *const c_char) -> String {
+    let cstr = CStr::from_ptr(raw);
+    cstr.to_str().expect("Failed to convert CStr").to_owned()
+}
+
+macro_rules! wrap {
+    ($llvmFunc:ident, $argty:ty, $wrapperFunc:ident) => {
+        pub unsafe fn $wrapperFunc(arg: $argty) -> String {
+            let ptr = $llvmFunc(arg);
+            raw_to_string(ptr)
+        }
+    }
+}
+
+macro_rules! wrap_maybe_null {
+    ($llvmFunc: ident, $argty:ty, $wrapperFunc:ident) => {
+        pub unsafe fn $wrapperFunc(arg: $argty) -> Option<String> {
+            let ptr = $llvmFunc(arg);
+            if ptr.is_null() {
+                None
+            } else {
+                Some(raw_to_string(ptr))
+            }
+        }
+    }
+}
+
+macro_rules! wrap_with_len {
+    ($llvmFunc:ident, $argty:ty, $wrapperFunc:ident) => {
+        pub unsafe fn $wrapperFunc(arg: $argty) -> String {
+            let mut len = 0;
+            let ptr = $llvmFunc(arg, &mut len);
+            raw_to_string(ptr)
+        }
+    };
+}
+
+wrap_with_len!(LLVMGetModuleInlineAsm, LLVMModuleRef, get_module_inline_asm);
+wrap_with_len!(LLVMGetModuleIdentifier, LLVMModuleRef, get_module_identifier);
+wrap_with_len!(LLVMGetSourceFileName, LLVMModuleRef, get_source_file_name);
+wrap!(LLVMGetDataLayoutStr, LLVMModuleRef, get_data_layout_str);
+wrap_maybe_null!(LLVMGetTarget, LLVMModuleRef, get_target);
+wrap_with_len!(LLVMGetValueName2, LLVMValueRef, get_value_name);
+wrap_maybe_null!(LLVMGetStructName, LLVMTypeRef, get_struct_name);
+wrap_maybe_null!(LLVMGetSection, LLVMValueRef, get_section);
+wrap_maybe_null!(LLVMGetGC, LLVMValueRef, get_gc);
+wrap!(LLVMGetBasicBlockName, LLVMBasicBlockRef, get_bb_name);
+wrap!(LLVMPrintValueToString, LLVMValueRef, print_to_string);
+// wrap!(LLVMPrintTypeToString, LLVMTypeRef, print_type_to_string);
+wrap_with_len!(LLVMGetStringAttributeKind, LLVMAttributeRef, get_string_attribute_kind);
+wrap_with_len!(LLVMGetStringAttributeValue, LLVMAttributeRef, get_string_attribute_value);
+
+// Panics if the LLVMValueRef is not a basic block
+pub unsafe fn op_to_bb(op: LLVMValueRef) -> LLVMBasicBlockRef {
+    assert!(LLVMValueIsBasicBlock(op) != 0);
+    LLVMValueAsBasicBlock(op)
+}
