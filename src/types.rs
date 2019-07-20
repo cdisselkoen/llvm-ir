@@ -30,7 +30,7 @@ pub enum Type {
     /// Named structure types. Note that these may be self-referential (i.e., recursive).
     /// See [LLVM 8 docs on Structure Type](https://releases.llvm.org/8.0.0/docs/LangRef.html#structure-type)
     NamedStructType {
-        /// Name of the struct type referred to
+        /// Name of the struct type
         name: String,  // llvm-hs-pure has Name rather than String
         /// The actual struct type, which will be a `StructType` variant.
         /// A `None` here indicates an opaque type; see [LLVM 8 docs on Opaque Structure Types](https://releases.llvm.org/8.0.0/docs/LangRef.html#t-opaque).
