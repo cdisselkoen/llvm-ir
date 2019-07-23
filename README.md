@@ -3,9 +3,9 @@
 [![Crates.io](http://meritbadge.herokuapp.com/llvm-ir)](https://crates.io/crates/llvm-ir)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/cdisselkoen/llvm-ir/master/LICENSE)
 
-`llvm-ir` is a crate which provides a more Rust-y representation of LLVM IR
-than crates like [`llvm-sys`] or [`inkwell`] which rely on continuous FFI to
-the LLVM API.
+`llvm-ir` is a crate which seeks to provide a more Rust-y representation of
+LLVM IR than crates like [`llvm-sys`] or [`inkwell`] which rely on continuous
+FFI to the LLVM API.
 It's based on the idea that an LLVM [`Instruction`] shouldn't be an opaque
 datatype (which is under-the-hood just an FFI pointer), but rather an `enum`
 with variants like [`Add`], [`Call`], and [`Store`].
