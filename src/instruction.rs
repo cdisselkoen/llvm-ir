@@ -1,13 +1,13 @@
-use either::Either;
-use std::convert::TryFrom;
-use std::fmt::Debug;
-use std::ops::Deref;
 use crate::constant::Constant;
 use crate::function::{CallingConvention, FunctionAttribute, ParameterAttribute};
 use crate::name::Name;
 use crate::operand::Operand;
 use crate::predicates::*;
 use crate::types::{Type, Typed};
+use either::Either;
+use std::convert::TryFrom;
+use std::fmt::Debug;
+use std::ops::Deref;
 
 /// Non-terminator instructions.
 #[derive(PartialEq, Clone, Debug)]
@@ -85,7 +85,7 @@ pub enum Instruction {
 /// The [`Type`](../enum.Type.html) of an `Instruction` (or any subtype of `Instruction`) is its result type.
 impl Typed for Instruction {
     fn get_type(&self) -> Type {
-       match self {
+        match self {
             Instruction::Add(i) => i.get_type(),
             Instruction::Sub(i) => i.get_type(),
             Instruction::Mul(i) => i.get_type(),
@@ -330,15 +330,15 @@ impl HasMetadata for Instruction {
 }
 */
 
-pub trait HasResult : Debug + Typed {
+pub trait HasResult: Debug + Typed {
     fn get_result(&self) -> &Name;
 }
 
-pub trait UnaryOp : HasResult {
+pub trait UnaryOp: HasResult {
     fn get_operand(&self) -> &Operand;
 }
 
-pub trait BinaryOp : HasResult {
+pub trait BinaryOp: HasResult {
     fn get_operand0(&self) -> &Operand;
     fn get_operand1(&self) -> &Operand;
 }
@@ -399,7 +399,7 @@ macro_rules! impl_inst {
             }
         }
         */
-    }
+    };
 }
 
 macro_rules! impl_hasresult {
@@ -409,7 +409,7 @@ macro_rules! impl_hasresult {
                 &self.dest
             }
         }
-    }
+    };
 }
 
 macro_rules! impl_unop {
@@ -421,7 +421,7 @@ macro_rules! impl_unop {
                 &self.operand
             }
         }
-    }
+    };
 }
 
 macro_rules! impl_binop {
@@ -452,7 +452,7 @@ macro_rules! impl_binop {
                 }
             }
         }
-    }
+    };
 }
 
 // Use on unops where the result type is the same as the operand type
@@ -463,7 +463,7 @@ macro_rules! unop_same_type {
                 self.get_operand().get_type()
             }
         }
-    }
+    };
 }
 
 // Use on binops where the result type is the same as both operand types
@@ -498,7 +498,7 @@ macro_rules! explicitly_typed {
                 self.to_type.clone()
             }
         }
-    }
+    };
 }
 
 macro_rules! void_typed {
@@ -878,15 +878,20 @@ impl Typed for ExtractValue {
     }
 }
 
-fn ev_type(cur_type: Type, mut indices: impl Iterator<Item=u32>) -> Type {
+fn ev_type(cur_type: Type, mut indices: impl Iterator<Item = u32>) -> Type {
     match indices.next() {
         None => cur_type,
         Some(index) => match cur_type {
             Type::ArrayType { element_type, .. } => ev_type(*element_type, indices),
-            Type::StructType { element_types, .. } =>
-                ev_type( element_types.get(index as usize).expect("ExtractValue index out of range").clone(), indices),
+            Type::StructType { element_types, .. } => ev_type(
+                element_types
+                    .get(index as usize)
+                    .expect("ExtractValue index out of range")
+                    .clone(),
+                indices,
+            ),
             _ => panic!("ExtractValue from something that's not ArrayType or StructType"),
-        }
+        },
     }
 }
 
@@ -915,7 +920,7 @@ impl Typed for InsertValue {
 #[derive(PartialEq, Clone, Debug)]
 pub struct Alloca {
     pub allocated_type: Type,
-    pub num_elements: Operand,  // llvm-hs-pure has Option<Operand>
+    pub num_elements: Operand, // llvm-hs-pure has Option<Operand>
     pub dest: Name,
     pub alignment: u32,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
@@ -1045,7 +1050,7 @@ impl Typed for GetElementPtr {
     }
 }
 
-fn gep_type<'a, 'b>(cur_type: &'a Type, mut indices: impl Iterator<Item=&'b Operand>) -> Type {
+fn gep_type<'a, 'b>(cur_type: &'a Type, mut indices: impl Iterator<Item = &'b Operand>) -> Type {
     match indices.next() {
         None => Type::pointer_to(cur_type.clone()),  // iterator is done
         Some(index) => match cur_type {
@@ -1277,7 +1282,10 @@ impl Typed for ICmp {
         let t = self.operand0.get_type();
         assert_eq!(t, self.operand1.get_type());
         match t {
-            Type::VectorType { num_elements, .. } => Type::VectorType { element_type: Box::new(Type::bool()), num_elements },
+            Type::VectorType { num_elements, .. } => Type::VectorType {
+                element_type: Box::new(Type::bool()),
+                num_elements,
+            },
             _ => Type::bool(),
         }
     }
@@ -1302,7 +1310,10 @@ impl Typed for FCmp {
         let t = self.operand0.get_type();
         assert_eq!(t, self.operand1.get_type());
         match t {
-            Type::VectorType { num_elements, .. } => Type::VectorType { element_type: Box::new(Type::bool()), num_elements },
+            Type::VectorType { num_elements, .. } => Type::VectorType {
+                element_type: Box::new(Type::bool()),
+                num_elements,
+            },
             _ => Type::bool(),
         }
     }
@@ -1349,9 +1360,9 @@ pub struct Call {
     pub function: Either<InlineAssembly, Operand>,
     pub arguments: Vec<(Operand, Vec<ParameterAttribute>)>,
     pub return_attributes: Vec<ParameterAttribute>,
-    pub dest: Option<Name>,  // will be None if the `function` returns void
-    pub function_attributes: Vec<FunctionAttribute>,  // llvm-hs has the equivalent of Vec<Either<GroupID, FunctionAttribute>>, but I'm not sure how the GroupID option comes up
-    pub is_tail_call: bool,  // llvm-hs has the more sophisticated structure Option<TailCallKind>, but the LLVM C API just gives us true/false
+    pub dest: Option<Name>, // will be None if the `function` returns void
+    pub function_attributes: Vec<FunctionAttribute>, // llvm-hs has the equivalent of Vec<Either<GroupID, FunctionAttribute>>, but I'm not sure how the GroupID option comes up
+    pub is_tail_call: bool, // llvm-hs has the more sophisticated structure Option<TailCallKind>, but the LLVM C API just gives us true/false
     pub calling_convention: CallingConvention,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -1487,7 +1498,7 @@ pub enum MemoryOrdering {
     Release,
     AcquireRelease,
     SequentiallyConsistent,
-    NotAtomic,  // since we only have a `MemoryOrdering` on atomic instructions, we should never need this. But empirically, some atomic instructions -- e.g. the first 'atomicrmw' instruction in our 'atomic_no_syncscope' test -- have this `MemoryOrdering`
+    NotAtomic, // since we only have a `MemoryOrdering` on atomic instructions, we should never need this. But empirically, some atomic instructions -- e.g. the first 'atomicrmw' instruction in our 'atomic_no_syncscope' test -- have this `MemoryOrdering`
 }
 
 /// See [LLVM 8 docs on Inline Assembler Expressions](https://releases.llvm.org/8.0.0/docs/LangRef.html#inline-assembler-expressions).
@@ -1557,19 +1568,28 @@ pub struct LandingPadClause {}
 // from_llvm //
 // ********* //
 
+use crate::basicblock::BBMap;
+use crate::constant::GlobalNameMap;
 use crate::from_llvm::*;
+use crate::operand::ValToNameMap;
+use crate::types::TyNameMap;
 use llvm_sys::LLVMAtomicOrdering;
 use llvm_sys::LLVMOpcode;
 use llvm_sys::LLVMTypeKind::LLVMVoidTypeKind;
-use crate::basicblock::BBMap;
-use crate::constant::GlobalNameMap;
-use crate::operand::ValToNameMap;
-use crate::types::TyNameMap;
 use log::debug;
 
 impl Instruction {
-    pub(crate) fn from_llvm_ref(inst: LLVMValueRef, ctr: &mut usize, vnmap: &ValToNameMap, bbmap: &BBMap, gnmap: &GlobalNameMap, tnmap: &mut TyNameMap) -> Self {
-        debug!("Processing instruction {:?}", unsafe { print_to_string(inst) });
+    pub(crate) fn from_llvm_ref(
+        inst: LLVMValueRef,
+        ctr: &mut usize,
+        vnmap: &ValToNameMap,
+        bbmap: &BBMap,
+        gnmap: &GlobalNameMap,
+        tnmap: &mut TyNameMap,
+    ) -> Self {
+        debug!("Processing instruction {:?}", unsafe {
+            print_to_string(inst)
+        });
         match unsafe { LLVMGetInstructionOpcode(inst) } {
             LLVMOpcode::LLVMAdd => Instruction::Add(Add::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
             LLVMOpcode::LLVMSub => Instruction::Sub(Sub::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
@@ -1632,32 +1652,59 @@ impl Instruction {
 macro_rules! unop_from_llvm {
     ($inst:ident) => {
         impl $inst {
-            pub(crate) fn from_llvm_ref(inst: LLVMValueRef, ctr: &mut usize, vnmap: &ValToNameMap, gnmap: &GlobalNameMap, tnmap: &mut TyNameMap) -> Self {
+            pub(crate) fn from_llvm_ref(
+                inst: LLVMValueRef,
+                ctr: &mut usize,
+                vnmap: &ValToNameMap,
+                gnmap: &GlobalNameMap,
+                tnmap: &mut TyNameMap,
+            ) -> Self {
                 assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 1);
                 Self {
-                    operand: Operand::from_llvm_ref( unsafe { LLVMGetOperand(inst, 0) }, vnmap, gnmap, tnmap),
-                    dest: Name::name_or_num( unsafe { get_value_name(inst) }, ctr),
+                    operand: Operand::from_llvm_ref(
+                        unsafe { LLVMGetOperand(inst, 0) },
+                        vnmap,
+                        gnmap,
+                        tnmap,
+                    ),
+                    dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
                     // metadata: InstructionMetadata::from_llvm_inst(inst),
                 }
             }
         }
-    }
+    };
 }
 
 macro_rules! binop_from_llvm {
     ($inst:ident) => {
         impl $inst {
-            pub(crate) fn from_llvm_ref(inst: LLVMValueRef, ctr: &mut usize, vnmap: &ValToNameMap, gnmap: &GlobalNameMap, tnmap: &mut TyNameMap) -> Self {
+            pub(crate) fn from_llvm_ref(
+                inst: LLVMValueRef,
+                ctr: &mut usize,
+                vnmap: &ValToNameMap,
+                gnmap: &GlobalNameMap,
+                tnmap: &mut TyNameMap,
+            ) -> Self {
                 assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 2);
                 Self {
-                    operand0: Operand::from_llvm_ref( unsafe { LLVMGetOperand(inst, 0) }, vnmap, gnmap, tnmap ),
-                    operand1: Operand::from_llvm_ref( unsafe { LLVMGetOperand(inst, 1) }, vnmap, gnmap, tnmap ),
-                    dest: Name::name_or_num( unsafe { get_value_name(inst) }, ctr),
+                    operand0: Operand::from_llvm_ref(
+                        unsafe { LLVMGetOperand(inst, 0) },
+                        vnmap,
+                        gnmap,
+                        tnmap,
+                    ),
+                    operand1: Operand::from_llvm_ref(
+                        unsafe { LLVMGetOperand(inst, 1) },
+                        vnmap,
+                        gnmap,
+                        tnmap,
+                    ),
+                    dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
                     // metadata: InstructionMetadata::from_llvm_inst(inst),
                 }
             }
         }
-    }
+    };
 }
 
 binop_from_llvm!(Add);
@@ -1681,83 +1728,154 @@ binop_from_llvm!(FRem);
 unop_from_llvm!(FNeg);
 
 impl ExtractElement {
-    pub(crate) fn from_llvm_ref(inst: LLVMValueRef, ctr: &mut usize, vnmap: &ValToNameMap, gnmap: &GlobalNameMap, tnmap: &mut TyNameMap) -> Self {
+    pub(crate) fn from_llvm_ref(
+        inst: LLVMValueRef,
+        ctr: &mut usize,
+        vnmap: &ValToNameMap,
+        gnmap: &GlobalNameMap,
+        tnmap: &mut TyNameMap,
+    ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 2);
         Self {
-            vector: Operand::from_llvm_ref( unsafe { LLVMGetOperand(inst, 0) }, vnmap, gnmap, tnmap ),
-            index: Operand::from_llvm_ref( unsafe { LLVMGetOperand(inst, 1) }, vnmap, gnmap, tnmap ),
-            dest: Name::name_or_num( unsafe { get_value_name(inst) }, ctr),
+            vector: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 0) }, vnmap, gnmap, tnmap),
+            index: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 1) }, vnmap, gnmap, tnmap),
+            dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
 }
 
 impl InsertElement {
-    pub(crate) fn from_llvm_ref(inst: LLVMValueRef, ctr: &mut usize, vnmap: &ValToNameMap, gnmap: &GlobalNameMap, tnmap: &mut TyNameMap) -> Self {
+    pub(crate) fn from_llvm_ref(
+        inst: LLVMValueRef,
+        ctr: &mut usize,
+        vnmap: &ValToNameMap,
+        gnmap: &GlobalNameMap,
+        tnmap: &mut TyNameMap,
+    ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 3);
         Self {
-            vector: Operand::from_llvm_ref( unsafe { LLVMGetOperand(inst, 0) }, vnmap, gnmap, tnmap ),
-            element: Operand::from_llvm_ref( unsafe { LLVMGetOperand(inst, 1) }, vnmap, gnmap, tnmap ),
-            index: Operand::from_llvm_ref( unsafe { LLVMGetOperand(inst, 2) }, vnmap, gnmap, tnmap ),
-            dest: Name::name_or_num( unsafe { get_value_name(inst) }, ctr),
+            vector: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 0) }, vnmap, gnmap, tnmap),
+            element: Operand::from_llvm_ref(
+                unsafe { LLVMGetOperand(inst, 1) },
+                vnmap,
+                gnmap,
+                tnmap,
+            ),
+            index: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 2) }, vnmap, gnmap, tnmap),
+            dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
 }
 
 impl ShuffleVector {
-    pub(crate) fn from_llvm_ref(inst: LLVMValueRef, ctr: &mut usize, vnmap: &ValToNameMap, gnmap: &GlobalNameMap, tnmap: &mut TyNameMap) -> Self {
+    pub(crate) fn from_llvm_ref(
+        inst: LLVMValueRef,
+        ctr: &mut usize,
+        vnmap: &ValToNameMap,
+        gnmap: &GlobalNameMap,
+        tnmap: &mut TyNameMap,
+    ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 3);
         Self {
-            operand0: Operand::from_llvm_ref( unsafe { LLVMGetOperand(inst, 0) }, vnmap, gnmap, tnmap ),
-            operand1: Operand::from_llvm_ref( unsafe { LLVMGetOperand(inst, 1) }, vnmap, gnmap, tnmap ),
-            mask: Constant::from_llvm_ref( unsafe { LLVMGetOperand(inst, 2) }, gnmap, tnmap ),
-            dest: Name::name_or_num( unsafe { get_value_name(inst) }, ctr),
+            operand0: Operand::from_llvm_ref(
+                unsafe { LLVMGetOperand(inst, 0) },
+                vnmap,
+                gnmap,
+                tnmap,
+            ),
+            operand1: Operand::from_llvm_ref(
+                unsafe { LLVMGetOperand(inst, 1) },
+                vnmap,
+                gnmap,
+                tnmap,
+            ),
+            mask: Constant::from_llvm_ref(unsafe { LLVMGetOperand(inst, 2) }, gnmap, tnmap),
+            dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
 }
 
 impl ExtractValue {
-    pub(crate) fn from_llvm_ref(inst: LLVMValueRef, ctr: &mut usize, vnmap: &ValToNameMap, gnmap: &GlobalNameMap, tnmap: &mut TyNameMap) -> Self {
+    pub(crate) fn from_llvm_ref(
+        inst: LLVMValueRef,
+        ctr: &mut usize,
+        vnmap: &ValToNameMap,
+        gnmap: &GlobalNameMap,
+        tnmap: &mut TyNameMap,
+    ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 1);
         Self {
-            aggregate: Operand::from_llvm_ref( unsafe { LLVMGetOperand(inst, 0) }, vnmap, gnmap, tnmap ),
+            aggregate: Operand::from_llvm_ref(
+                unsafe { LLVMGetOperand(inst, 0) },
+                vnmap,
+                gnmap,
+                tnmap,
+            ),
             indices: unsafe {
                 let num_indices = LLVMGetNumIndices(inst);
                 let ptr = LLVMGetIndices(inst);
                 std::slice::from_raw_parts(ptr, num_indices as usize).to_vec()
             },
-            dest: Name::name_or_num( unsafe { get_value_name(inst) }, ctr),
+            dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
 }
 
 impl InsertValue {
-    pub(crate) fn from_llvm_ref(inst: LLVMValueRef, ctr: &mut usize, vnmap: &ValToNameMap, gnmap: &GlobalNameMap, tnmap: &mut TyNameMap) -> Self {
+    pub(crate) fn from_llvm_ref(
+        inst: LLVMValueRef,
+        ctr: &mut usize,
+        vnmap: &ValToNameMap,
+        gnmap: &GlobalNameMap,
+        tnmap: &mut TyNameMap,
+    ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 2);
         Self {
-            aggregate: Operand::from_llvm_ref( unsafe { LLVMGetOperand(inst, 0) }, vnmap, gnmap, tnmap ),
-            element: Operand::from_llvm_ref( unsafe { LLVMGetOperand(inst, 1) }, vnmap, gnmap, tnmap ),
+            aggregate: Operand::from_llvm_ref(
+                unsafe { LLVMGetOperand(inst, 0) },
+                vnmap,
+                gnmap,
+                tnmap,
+            ),
+            element: Operand::from_llvm_ref(
+                unsafe { LLVMGetOperand(inst, 1) },
+                vnmap,
+                gnmap,
+                tnmap,
+            ),
             indices: unsafe {
                 let num_indices = LLVMGetNumIndices(inst);
                 let ptr = LLVMGetIndices(inst);
                 std::slice::from_raw_parts(ptr, num_indices as usize).to_vec()
             },
-            dest: Name::name_or_num( unsafe { get_value_name(inst) }, ctr),
+            dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
 }
 
 impl Alloca {
-    pub(crate) fn from_llvm_ref(inst: LLVMValueRef, ctr: &mut usize, vnmap: &ValToNameMap, gnmap: &GlobalNameMap, tnmap: &mut TyNameMap) -> Self {
+    pub(crate) fn from_llvm_ref(
+        inst: LLVMValueRef,
+        ctr: &mut usize,
+        vnmap: &ValToNameMap,
+        gnmap: &GlobalNameMap,
+        tnmap: &mut TyNameMap,
+    ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 1);
         Self {
-            allocated_type: Type::from_llvm_ref( unsafe { LLVMGetAllocatedType(inst) }, tnmap ),
-            num_elements: Operand::from_llvm_ref( unsafe { LLVMGetOperand(inst, 0) }, vnmap, gnmap, tnmap ),  // This is a guess. or maybe num_elements is included in allocated_type?
-            dest: Name::name_or_num( unsafe { get_value_name(inst) }, ctr),
+            allocated_type: Type::from_llvm_ref(unsafe { LLVMGetAllocatedType(inst) }, tnmap),
+            num_elements: Operand::from_llvm_ref(
+                unsafe { LLVMGetOperand(inst, 0) }, // This is a guess. or maybe num_elements is included in allocated_type?
+                vnmap,
+                gnmap,
+                tnmap,
+            ),
+            dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
             alignment: unsafe { LLVMGetAlignment(inst) },
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
@@ -1765,11 +1883,22 @@ impl Alloca {
 }
 
 impl Load {
-    pub(crate) fn from_llvm_ref(inst: LLVMValueRef, ctr: &mut usize, vnmap: &ValToNameMap, gnmap: &GlobalNameMap, tnmap: &mut TyNameMap) -> Self {
+    pub(crate) fn from_llvm_ref(
+        inst: LLVMValueRef,
+        ctr: &mut usize,
+        vnmap: &ValToNameMap,
+        gnmap: &GlobalNameMap,
+        tnmap: &mut TyNameMap,
+    ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 1);
         Self {
-            address: Operand::from_llvm_ref( unsafe { LLVMGetOperand(inst, 0) }, vnmap, gnmap, tnmap ),
-            dest: Name::name_or_num( unsafe { get_value_name(inst) }, ctr),
+            address: Operand::from_llvm_ref(
+                unsafe { LLVMGetOperand(inst, 0) },
+                vnmap,
+                gnmap,
+                tnmap,
+            ),
+            dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
             volatile: unsafe { LLVMGetVolatile(inst) } != 0,
             atomicity: {
                 let ordering = unsafe { LLVMGetOrdering(inst) };
@@ -1788,13 +1917,22 @@ impl Load {
     }
 }
 
-
 impl Store {
-    pub(crate) fn from_llvm_ref(inst: LLVMValueRef, vnmap: &ValToNameMap, gnmap: &GlobalNameMap, tnmap: &mut TyNameMap) -> Self {
+    pub(crate) fn from_llvm_ref(
+        inst: LLVMValueRef,
+        vnmap: &ValToNameMap,
+        gnmap: &GlobalNameMap,
+        tnmap: &mut TyNameMap,
+    ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 2);
         Self {
-            address: Operand::from_llvm_ref( unsafe { LLVMGetOperand(inst, 1) }, vnmap, gnmap, tnmap ),
-            value: Operand::from_llvm_ref( unsafe { LLVMGetOperand(inst, 0) }, vnmap, gnmap, tnmap ),
+            address: Operand::from_llvm_ref(
+                unsafe { LLVMGetOperand(inst, 1) },
+                vnmap,
+                gnmap,
+                tnmap,
+            ),
+            value: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 0) }, vnmap, gnmap, tnmap),
             volatile: unsafe { LLVMGetVolatile(inst) } != 0,
             atomicity: {
                 let ordering = unsafe { LLVMGetOrdering(inst) };
@@ -1819,7 +1957,7 @@ impl Fence {
         Self {
             atomicity: Atomicity {
                 synch_scope: SynchronizationScope::from_llvm_ref(inst),
-                mem_ordering: MemoryOrdering::from_llvm( unsafe { LLVMGetOrdering(inst) } ),
+                mem_ordering: MemoryOrdering::from_llvm(unsafe { LLVMGetOrdering(inst) }),
             },
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
@@ -1827,34 +1965,69 @@ impl Fence {
 }
 
 impl CmpXchg {
-    pub(crate) fn from_llvm_ref(inst: LLVMValueRef, ctr: &mut usize, vnmap: &ValToNameMap, gnmap: &GlobalNameMap, tnmap: &mut TyNameMap) -> Self {
+    pub(crate) fn from_llvm_ref(
+        inst: LLVMValueRef,
+        ctr: &mut usize,
+        vnmap: &ValToNameMap,
+        gnmap: &GlobalNameMap,
+        tnmap: &mut TyNameMap,
+    ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 3);
         Self {
-            address: Operand::from_llvm_ref( unsafe { LLVMGetOperand(inst, 0) }, vnmap, gnmap, tnmap ),
-            expected: Operand::from_llvm_ref( unsafe { LLVMGetOperand(inst, 1) }, vnmap, gnmap, tnmap ),
-            replacement: Operand::from_llvm_ref( unsafe { LLVMGetOperand(inst, 2) }, vnmap, gnmap, tnmap ),
-            dest: Name::name_or_num( unsafe { get_value_name(inst) }, ctr),
+            address: Operand::from_llvm_ref(
+                unsafe { LLVMGetOperand(inst, 0) },
+                vnmap,
+                gnmap,
+                tnmap,
+            ),
+            expected: Operand::from_llvm_ref(
+                unsafe { LLVMGetOperand(inst, 1) },
+                vnmap,
+                gnmap,
+                tnmap,
+            ),
+            replacement: Operand::from_llvm_ref(
+                unsafe { LLVMGetOperand(inst, 2) },
+                vnmap,
+                gnmap,
+                tnmap,
+            ),
+            dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
             volatile: unsafe { LLVMGetVolatile(inst) } != 0,
             atomicity: Atomicity {
                 synch_scope: SynchronizationScope::from_llvm_ref(inst),
-                mem_ordering: MemoryOrdering::from_llvm( unsafe { LLVMGetCmpXchgSuccessOrdering(inst) } ),
+                mem_ordering: MemoryOrdering::from_llvm(unsafe {
+                    LLVMGetCmpXchgSuccessOrdering(inst)
+                }),
             },
-            failure_memory_ordering: MemoryOrdering::from_llvm( unsafe { LLVMGetCmpXchgFailureOrdering(inst) } ),
+            failure_memory_ordering: MemoryOrdering::from_llvm(unsafe {
+                LLVMGetCmpXchgFailureOrdering(inst)
+            }),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
 }
 
 impl AtomicRMW {
-    pub(crate) fn from_llvm_ref(inst: LLVMValueRef, vnmap: &ValToNameMap, gnmap: &GlobalNameMap, tnmap: &mut TyNameMap) -> Self {
+    pub(crate) fn from_llvm_ref(
+        inst: LLVMValueRef,
+        vnmap: &ValToNameMap,
+        gnmap: &GlobalNameMap,
+        tnmap: &mut TyNameMap,
+    ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 2);
         Self {
-            address: Operand::from_llvm_ref( unsafe { LLVMGetOperand(inst, 0) }, vnmap, gnmap, tnmap ),
-            value: Operand::from_llvm_ref( unsafe { LLVMGetOperand(inst, 1) }, vnmap, gnmap, tnmap ),
+            address: Operand::from_llvm_ref(
+                unsafe { LLVMGetOperand(inst, 0) },
+                vnmap,
+                gnmap,
+                tnmap,
+            ),
+            value: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 1) }, vnmap, gnmap, tnmap),
             volatile: unsafe { LLVMGetVolatile(inst) } != 0,
             atomicity: Atomicity {
                 synch_scope: SynchronizationScope::from_llvm_ref(inst),
-                mem_ordering: MemoryOrdering::from_llvm( unsafe { LLVMGetOrdering(inst) } ),
+                mem_ordering: MemoryOrdering::from_llvm(unsafe { LLVMGetOrdering(inst) }),
             },
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
@@ -1862,16 +2035,34 @@ impl AtomicRMW {
 }
 
 impl GetElementPtr {
-    pub(crate) fn from_llvm_ref(inst: LLVMValueRef, ctr: &mut usize, vnmap: &ValToNameMap, gnmap: &GlobalNameMap, tnmap: &mut TyNameMap) -> Self {
+    pub(crate) fn from_llvm_ref(
+        inst: LLVMValueRef,
+        ctr: &mut usize,
+        vnmap: &ValToNameMap,
+        gnmap: &GlobalNameMap,
+        tnmap: &mut TyNameMap,
+    ) -> Self {
         Self {
-            address: Operand::from_llvm_ref( unsafe { LLVMGetOperand(inst, 0) }, vnmap, gnmap, tnmap ),
+            address: Operand::from_llvm_ref(
+                unsafe { LLVMGetOperand(inst, 0) },
+                vnmap,
+                gnmap,
+                tnmap,
+            ),
             indices: {
                 let num_indices = unsafe { LLVMGetNumIndices(inst) };
-                (1 ..= num_indices).map(|i| {
-                    Operand::from_llvm_ref( unsafe { LLVMGetOperand(inst, i) }, vnmap, gnmap, tnmap )
-                }).collect()
+                (1..=num_indices)
+                    .map(|i| {
+                        Operand::from_llvm_ref(
+                            unsafe { LLVMGetOperand(inst, i) },
+                            vnmap,
+                            gnmap,
+                            tnmap,
+                        )
+                    })
+                    .collect()
             },
-            dest: Name::name_or_num( unsafe { get_value_name(inst) }, ctr),
+            dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
             in_bounds: unsafe { LLVMIsInBounds(inst) } != 0,
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
@@ -1883,17 +2074,28 @@ impl GetElementPtr {
 macro_rules! typed_unop_from_llvm {
     ($inst:ident) => {
         impl $inst {
-            pub(crate) fn from_llvm_ref(inst: LLVMValueRef, ctr: &mut usize, vnmap: &ValToNameMap, gnmap: &GlobalNameMap, tnmap: &mut TyNameMap) -> Self {
+            pub(crate) fn from_llvm_ref(
+                inst: LLVMValueRef,
+                ctr: &mut usize,
+                vnmap: &ValToNameMap,
+                gnmap: &GlobalNameMap,
+                tnmap: &mut TyNameMap,
+            ) -> Self {
                 assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 1);
                 Self {
-                    operand: Operand::from_llvm_ref( unsafe { LLVMGetOperand(inst, 0) }, vnmap, gnmap, tnmap ),
-                    to_type: Type::from_llvm_ref( unsafe { LLVMTypeOf(inst) }, tnmap ),
-                    dest: Name::name_or_num( unsafe { get_value_name(inst) }, ctr),
+                    operand: Operand::from_llvm_ref(
+                        unsafe { LLVMGetOperand(inst, 0) },
+                        vnmap,
+                        gnmap,
+                        tnmap,
+                    ),
+                    to_type: Type::from_llvm_ref(unsafe { LLVMTypeOf(inst) }, tnmap),
+                    dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
                     // metadata: InstructionMetadata::from_llvm_inst(inst),
                 }
             }
         }
-    }
+    };
 }
 
 typed_unop_from_llvm!(Trunc);
@@ -1911,59 +2113,127 @@ typed_unop_from_llvm!(BitCast);
 typed_unop_from_llvm!(AddrSpaceCast);
 
 impl ICmp {
-    pub(crate) fn from_llvm_ref(inst: LLVMValueRef, ctr: &mut usize, vnmap: &ValToNameMap, gnmap: &GlobalNameMap, tnmap: &mut TyNameMap) -> Self {
+    pub(crate) fn from_llvm_ref(
+        inst: LLVMValueRef,
+        ctr: &mut usize,
+        vnmap: &ValToNameMap,
+        gnmap: &GlobalNameMap,
+        tnmap: &mut TyNameMap,
+    ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 2);
         Self {
-            predicate: IntPredicate::from_llvm( unsafe { LLVMGetICmpPredicate(inst) } ),
-            operand0: Operand::from_llvm_ref( unsafe { LLVMGetOperand(inst, 0) }, vnmap, gnmap, tnmap ),
-            operand1: Operand::from_llvm_ref( unsafe { LLVMGetOperand(inst, 1) }, vnmap, gnmap, tnmap ),
-            dest: Name::name_or_num( unsafe { get_value_name(inst) }, ctr),
+            predicate: IntPredicate::from_llvm(unsafe { LLVMGetICmpPredicate(inst) }),
+            operand0: Operand::from_llvm_ref(
+                unsafe { LLVMGetOperand(inst, 0) },
+                vnmap,
+                gnmap,
+                tnmap,
+            ),
+            operand1: Operand::from_llvm_ref(
+                unsafe { LLVMGetOperand(inst, 1) },
+                vnmap,
+                gnmap,
+                tnmap,
+            ),
+            dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
 }
 
 impl FCmp {
-    pub(crate) fn from_llvm_ref(inst: LLVMValueRef, ctr: &mut usize, vnmap: &ValToNameMap, gnmap: &GlobalNameMap, tnmap: &mut TyNameMap) -> Self {
+    pub(crate) fn from_llvm_ref(
+        inst: LLVMValueRef,
+        ctr: &mut usize,
+        vnmap: &ValToNameMap,
+        gnmap: &GlobalNameMap,
+        tnmap: &mut TyNameMap,
+    ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 2);
         Self {
-            predicate: FPPredicate::from_llvm( unsafe { LLVMGetFCmpPredicate(inst) } ),
-            operand0: Operand::from_llvm_ref( unsafe { LLVMGetOperand(inst, 0) }, vnmap, gnmap, tnmap ),
-            operand1: Operand::from_llvm_ref( unsafe { LLVMGetOperand(inst, 1) }, vnmap, gnmap, tnmap ),
-            dest: Name::name_or_num( unsafe { get_value_name(inst) }, ctr),
+            predicate: FPPredicate::from_llvm(unsafe { LLVMGetFCmpPredicate(inst) }),
+            operand0: Operand::from_llvm_ref(
+                unsafe { LLVMGetOperand(inst, 0) },
+                vnmap,
+                gnmap,
+                tnmap,
+            ),
+            operand1: Operand::from_llvm_ref(
+                unsafe { LLVMGetOperand(inst, 1) },
+                vnmap,
+                gnmap,
+                tnmap,
+            ),
+            dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
 }
 
 impl Phi {
-    pub(crate) fn from_llvm_ref(inst: LLVMValueRef, ctr: &mut usize, vnmap: &ValToNameMap, bbmap: &BBMap, gnmap: &GlobalNameMap, tnmap: &mut TyNameMap) -> Self {
+    pub(crate) fn from_llvm_ref(
+        inst: LLVMValueRef,
+        ctr: &mut usize,
+        vnmap: &ValToNameMap,
+        bbmap: &BBMap,
+        gnmap: &GlobalNameMap,
+        tnmap: &mut TyNameMap,
+    ) -> Self {
         Self {
             incoming_values: {
                 let num_incoming = unsafe { LLVMCountIncoming(inst) };
-                (0 .. num_incoming).map(|i| {
-                    let operand = Operand::from_llvm_ref( unsafe { LLVMGetIncomingValue(inst, i) }, vnmap, gnmap, tnmap );
-                    let name = bbmap.get( unsafe { &LLVMGetIncomingBlock(inst, i) } )
-                        .expect("Failed to find incoming block in the map")
-                        .clone();
-                    (operand, name)
-                }).collect()
+                (0..num_incoming)
+                    .map(|i| {
+                        let operand = Operand::from_llvm_ref(
+                            unsafe { LLVMGetIncomingValue(inst, i) },
+                            vnmap,
+                            gnmap,
+                            tnmap,
+                        );
+                        let name = bbmap
+                            .get(unsafe { &LLVMGetIncomingBlock(inst, i) })
+                            .expect("Failed to find incoming block in the map")
+                            .clone();
+                        (operand, name)
+                    })
+                    .collect()
             },
-            dest: Name::name_or_num( unsafe { get_value_name(inst) }, ctr),
-            to_type: Type::from_llvm_ref( unsafe { LLVMTypeOf(inst) }, tnmap ),
+            dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
+            to_type: Type::from_llvm_ref(unsafe { LLVMTypeOf(inst) }, tnmap),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
 }
 
 impl Select {
-    pub(crate) fn from_llvm_ref(inst: LLVMValueRef, ctr: &mut usize, vnmap: &ValToNameMap, gnmap: &GlobalNameMap, tnmap: &mut TyNameMap) -> Self {
+    pub(crate) fn from_llvm_ref(
+        inst: LLVMValueRef,
+        ctr: &mut usize,
+        vnmap: &ValToNameMap,
+        gnmap: &GlobalNameMap,
+        tnmap: &mut TyNameMap,
+    ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 3);
         Self {
-            condition: Operand::from_llvm_ref( unsafe { LLVMGetOperand(inst, 0) }, vnmap, gnmap, tnmap ),
-            true_value: Operand::from_llvm_ref( unsafe { LLVMGetOperand(inst, 1) }, vnmap, gnmap, tnmap ),
-            false_value: Operand::from_llvm_ref( unsafe { LLVMGetOperand(inst, 2) }, vnmap, gnmap, tnmap ),
-            dest: Name::name_or_num( unsafe { get_value_name(inst) }, ctr),
+            condition: Operand::from_llvm_ref(
+                unsafe { LLVMGetOperand(inst, 0) },
+                vnmap,
+                gnmap,
+                tnmap,
+            ),
+            true_value: Operand::from_llvm_ref(
+                unsafe { LLVMGetOperand(inst, 1) },
+                vnmap,
+                gnmap,
+                tnmap,
+            ),
+            false_value: Operand::from_llvm_ref(
+                unsafe { LLVMGetOperand(inst, 2) },
+                vnmap,
+                gnmap,
+                tnmap,
+            ),
+            dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
@@ -1980,7 +2250,12 @@ pub(crate) struct CallInfo {
 
 impl CallInfo {
     // Call this function only an a Call instruction or Invoke terminator
-    pub(crate) fn from_llvm_ref(inst: LLVMValueRef, vnmap: &ValToNameMap, gnmap: &GlobalNameMap, tnmap: &mut TyNameMap) -> Self {
+    pub(crate) fn from_llvm_ref(
+        inst: LLVMValueRef,
+        vnmap: &ValToNameMap,
+        gnmap: &GlobalNameMap,
+        tnmap: &mut TyNameMap,
+    ) -> Self {
         use llvm_sys::{LLVMAttributeFunctionIndex, LLVMAttributeReturnIndex};
         Self {
             function: {
@@ -1994,54 +2269,85 @@ impl CallInfo {
             },
             arguments: {
                 let num_args: u32 = unsafe { LLVMGetNumArgOperands(inst) } as u32;
-                (0 .. num_args).map(|i| {  // arguments are (0 .. num_args); other operands (such as the called function) are after that
-                    let operand = Operand::from_llvm_ref( unsafe { LLVMGetOperand(inst, i) }, vnmap, gnmap, tnmap );
-                    let attrs = {
-                        let num_attrs = unsafe { LLVMGetCallSiteAttributeCount(inst, (i+1) as u32) };  // see LLVM C API (Core.h) comments on `LLVMAttributeReturnIndex` and `LLVMAttributeFunctionIndex`
-                        let mut attrs: Vec<LLVMAttributeRef> = Vec::with_capacity(num_attrs as usize);
-                        unsafe {
-                            LLVMGetCallSiteAttributes(inst, (i+1) as u32, attrs.as_mut_ptr());
-                            attrs.set_len(num_attrs as usize);
+                (0..num_args) // arguments are (0 .. num_args); other operands (such as the called function) are after that
+                    .map(|i| {
+                        let operand = Operand::from_llvm_ref(
+                            unsafe { LLVMGetOperand(inst, i) },
+                            vnmap,
+                            gnmap,
+                            tnmap,
+                        );
+                        let attrs = {
+                            let num_attrs =
+                                unsafe { LLVMGetCallSiteAttributeCount(inst, (i + 1) as u32) }; // see LLVM C API (Core.h) comments on `LLVMAttributeReturnIndex` and `LLVMAttributeFunctionIndex`
+                            let mut attrs: Vec<LLVMAttributeRef> =
+                                Vec::with_capacity(num_attrs as usize);
+                            unsafe {
+                                LLVMGetCallSiteAttributes(inst, (i + 1) as u32, attrs.as_mut_ptr());
+                                attrs.set_len(num_attrs as usize);
+                            };
+                            attrs
+                                .into_iter()
+                                .map(ParameterAttribute::from_llvm_ref)
+                                .collect()
                         };
-                        attrs.into_iter().map(ParameterAttribute::from_llvm_ref).collect()
-                    };
-                    (operand, attrs)
-                }).collect()
+                        (operand, attrs)
+                    })
+                    .collect()
             },
             return_attributes: {
-                let num_attrs = unsafe { LLVMGetCallSiteAttributeCount(inst, LLVMAttributeReturnIndex) };
+                let num_attrs =
+                    unsafe { LLVMGetCallSiteAttributeCount(inst, LLVMAttributeReturnIndex) };
                 let mut attrs: Vec<LLVMAttributeRef> = Vec::with_capacity(num_attrs as usize);
                 unsafe {
                     LLVMGetCallSiteAttributes(inst, LLVMAttributeReturnIndex, attrs.as_mut_ptr());
                     attrs.set_len(num_attrs as usize);
                 };
-                attrs.into_iter().map(ParameterAttribute::from_llvm_ref).collect()
+                attrs
+                    .into_iter()
+                    .map(ParameterAttribute::from_llvm_ref)
+                    .collect()
             },
             function_attributes: {
-                let num_attrs = unsafe { LLVMGetCallSiteAttributeCount(inst, LLVMAttributeFunctionIndex) };
+                let num_attrs =
+                    unsafe { LLVMGetCallSiteAttributeCount(inst, LLVMAttributeFunctionIndex) };
                 let mut attrs: Vec<LLVMAttributeRef> = Vec::with_capacity(num_attrs as usize);
                 unsafe {
                     LLVMGetCallSiteAttributes(inst, LLVMAttributeFunctionIndex, attrs.as_mut_ptr());
                     attrs.set_len(num_attrs as usize);
                 };
-                attrs.into_iter().map(FunctionAttribute::from_llvm_ref).collect()
+                attrs
+                    .into_iter()
+                    .map(FunctionAttribute::from_llvm_ref)
+                    .collect()
             },
-            calling_convention: CallingConvention::from_u32( unsafe { LLVMGetInstructionCallConv(inst) } ),
+            calling_convention: CallingConvention::from_u32(unsafe {
+                LLVMGetInstructionCallConv(inst)
+            }),
         }
     }
 }
 
 impl Call {
-    pub(crate) fn from_llvm_ref(inst: LLVMValueRef, ctr: &mut usize, vnmap: &ValToNameMap, gnmap: &GlobalNameMap, tnmap: &mut TyNameMap) -> Self {
+    pub(crate) fn from_llvm_ref(
+        inst: LLVMValueRef,
+        ctr: &mut usize,
+        vnmap: &ValToNameMap,
+        gnmap: &GlobalNameMap,
+        tnmap: &mut TyNameMap,
+    ) -> Self {
         let callinfo = CallInfo::from_llvm_ref(inst, vnmap, gnmap, tnmap);
         Self {
             function: callinfo.function,
             arguments: callinfo.arguments,
             return_attributes: callinfo.return_attributes,
-            dest: if unsafe { LLVMGetTypeKind(LLVMGetReturnType(LLVMGetCalledFunctionType(inst))) == LLVMVoidTypeKind } {
+            dest: if unsafe {
+                LLVMGetTypeKind(LLVMGetReturnType(LLVMGetCalledFunctionType(inst)))
+                    == LLVMVoidTypeKind
+            } {
                 None
             } else {
-                Some(Name::name_or_num( unsafe { get_value_name(inst) }, ctr))
+                Some(Name::name_or_num(unsafe { get_value_name(inst) }, ctr))
             },
             function_attributes: callinfo.function_attributes,
             is_tail_call: unsafe { LLVMIsTailCall(inst) } != 0,
@@ -2052,28 +2358,43 @@ impl Call {
 }
 
 impl VAArg {
-    pub(crate) fn from_llvm_ref(inst: LLVMValueRef, ctr: &mut usize, vnmap: &ValToNameMap, gnmap: &GlobalNameMap, tnmap: &mut TyNameMap) -> Self {
+    pub(crate) fn from_llvm_ref(
+        inst: LLVMValueRef,
+        ctr: &mut usize,
+        vnmap: &ValToNameMap,
+        gnmap: &GlobalNameMap,
+        tnmap: &mut TyNameMap,
+    ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 1);
         Self {
-            arg_list: Operand::from_llvm_ref( unsafe { LLVMGetOperand(inst, 0) }, vnmap, gnmap, tnmap ),
-            cur_type: Type::from_llvm_ref( unsafe { LLVMTypeOf(inst) }, tnmap ),
-            dest: Name::name_or_num( unsafe { get_value_name(inst) }, ctr),
+            arg_list: Operand::from_llvm_ref(
+                unsafe { LLVMGetOperand(inst, 0) },
+                vnmap,
+                gnmap,
+                tnmap,
+            ),
+            cur_type: Type::from_llvm_ref(unsafe { LLVMTypeOf(inst) }, tnmap),
+            dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
 }
 
 impl LandingPad {
-    pub(crate) fn from_llvm_ref(inst: LLVMValueRef, ctr: &mut usize, tnmap: &mut TyNameMap) -> Self {
+    pub(crate) fn from_llvm_ref(
+        inst: LLVMValueRef,
+        ctr: &mut usize,
+        tnmap: &mut TyNameMap,
+    ) -> Self {
         Self {
-            result_type: Type::from_llvm_ref( unsafe { LLVMTypeOf(inst) }, tnmap ),
+            result_type: Type::from_llvm_ref(unsafe { LLVMTypeOf(inst) }, tnmap),
             clauses: {
                 let num_clauses = unsafe { LLVMGetNumClauses(inst) };
-                (0 .. num_clauses).map(|i| {
-                    LandingPadClause::from_llvm_ref( unsafe { LLVMGetClause(inst, i) } )
-                }).collect()
+                (0..num_clauses)
+                    .map(|i| LandingPadClause::from_llvm_ref(unsafe { LLVMGetClause(inst, i) }))
+                    .collect()
             },
-            dest: Name::name_or_num( unsafe { get_value_name(inst) }, ctr),
+            dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
             cleanup: unsafe { LLVMIsCleanup(inst) } != 0,
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
@@ -2081,32 +2402,68 @@ impl LandingPad {
 }
 
 impl CatchPad {
-    pub(crate) fn from_llvm_ref(inst: LLVMValueRef, ctr: &mut usize, vnmap: &ValToNameMap, gnmap: &GlobalNameMap, tnmap: &mut TyNameMap) -> Self {
+    pub(crate) fn from_llvm_ref(
+        inst: LLVMValueRef,
+        ctr: &mut usize,
+        vnmap: &ValToNameMap,
+        gnmap: &GlobalNameMap,
+        tnmap: &mut TyNameMap,
+    ) -> Self {
         Self {
-            catch_switch: Operand::from_llvm_ref( unsafe { LLVMGetParentCatchSwitch(inst) }, vnmap, gnmap, tnmap ),
+            catch_switch: Operand::from_llvm_ref(
+                unsafe { LLVMGetParentCatchSwitch(inst) },
+                vnmap,
+                gnmap,
+                tnmap,
+            ),
             args: {
                 let num_args = unsafe { LLVMGetNumArgOperands(inst) };
-                (0 .. num_args).map(|i| {
-                    Operand::from_llvm_ref( unsafe { LLVMGetArgOperand(inst, i) }, vnmap, gnmap, tnmap )
-                }).collect()
+                (0..num_args)
+                    .map(|i| {
+                        Operand::from_llvm_ref(
+                            unsafe { LLVMGetArgOperand(inst, i) },
+                            vnmap,
+                            gnmap,
+                            tnmap,
+                        )
+                    })
+                    .collect()
             },
-            dest: Name::name_or_num( unsafe { get_value_name(inst) }, ctr),
+            dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
 }
 
 impl CleanupPad {
-    pub(crate) fn from_llvm_ref(inst: LLVMValueRef, ctr: &mut usize, vnmap: &ValToNameMap, gnmap: &GlobalNameMap, tnmap: &mut TyNameMap) -> Self {
+    pub(crate) fn from_llvm_ref(
+        inst: LLVMValueRef,
+        ctr: &mut usize,
+        vnmap: &ValToNameMap,
+        gnmap: &GlobalNameMap,
+        tnmap: &mut TyNameMap,
+    ) -> Self {
         Self {
-            parent_pad: Operand::from_llvm_ref( unsafe { LLVMGetOperand(inst, 0) }, vnmap, gnmap, tnmap ),
+            parent_pad: Operand::from_llvm_ref(
+                unsafe { LLVMGetOperand(inst, 0) },
+                vnmap,
+                gnmap,
+                tnmap,
+            ),
             args: {
                 let num_args = unsafe { LLVMGetNumArgOperands(inst) };
-                (0 .. num_args).map(|i| {
-                    Operand::from_llvm_ref( unsafe { LLVMGetArgOperand(inst, i) }, vnmap, gnmap, tnmap )
-                }).collect()
+                (0..num_args)
+                    .map(|i| {
+                        Operand::from_llvm_ref(
+                            unsafe { LLVMGetArgOperand(inst, i) },
+                            vnmap,
+                            gnmap,
+                            tnmap,
+                        )
+                    })
+                    .collect()
             },
-            dest: Name::name_or_num( unsafe { get_value_name(inst) }, ctr),
+            dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
@@ -2143,7 +2500,7 @@ impl InlineAssembly {
         // `InlineAssembly`, but once you know it is one, there seem to be no
         // other related methods
         Self {
-            ty: Type::from_llvm_ref( unsafe { LLVMTypeOf(asm) }, tnmap ),
+            ty: Type::from_llvm_ref(unsafe { LLVMTypeOf(asm) }, tnmap),
         }
     }
 }

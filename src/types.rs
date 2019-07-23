@@ -1,9 +1,9 @@
 use crate::module::AddrSpace;
 //use crate::name::Name;
 use either::Either;
+use std::cell::RefCell;
 use std::rc;
 use std::rc::Rc;
-use std::cell::RefCell;
 
 /// See [LLVM 8 docs on Type System](https://releases.llvm.org/8.0.0/docs/LangRef.html#type-system)
 #[derive(Clone, Debug)]
@@ -14,34 +14,50 @@ pub enum Type {
     /// See [LLVM 8 docs on Integer Type](https://releases.llvm.org/8.0.0/docs/LangRef.html#integer-type)
     IntegerType { bits: u32 },
     /// See [LLVM 8 docs on Pointer Type](https://releases.llvm.org/8.0.0/docs/LangRef.html#pointer-type)
-    PointerType { pointee_type: Box<Type>, addr_space: AddrSpace },
+    PointerType {
+        pointee_type: Box<Type>,
+        addr_space: AddrSpace,
+    },
     /// See [LLVM 8 docs on Floating-Point Types](https://releases.llvm.org/8.0.0/docs/LangRef.html#floating-point-types)
     FPType(FPType),
     /// See [LLVM 8 docs on Function Type](https://releases.llvm.org/8.0.0/docs/LangRef.html#function-type)
-    FuncType { result_type: Box<Type>, param_types: Vec<Type>, is_var_arg: bool },
+    FuncType {
+        result_type: Box<Type>,
+        param_types: Vec<Type>,
+        is_var_arg: bool,
+    },
     /// Vector types (along with integer, FP, pointer, and X86_MMX types) are "first class types",
     /// which means they can be produced by instructions (see [LLVM 8 docs on First Class Types](https://releases.llvm.org/8.0.0/docs/LangRef.html#first-class-types)).
     /// See [LLVM 8 docs on Vector Type](https://releases.llvm.org/8.0.0/docs/LangRef.html#vector-type)
-    VectorType { element_type: Box<Type>, num_elements: usize },
+    VectorType {
+        element_type: Box<Type>,
+        num_elements: usize,
+    },
     /// Struct and Array types (but not vector types) are "aggregate types" and cannot be produced by
     /// a single instruction (see [LLVM 8 docs on Aggregate Types](https://releases.llvm.org/8.0.0/docs/LangRef.html#aggregate-types)).
     /// See [LLVM 8 docs on Array Type](https://releases.llvm.org/8.0.0/docs/LangRef.html#array-type)
-    ArrayType { element_type: Box<Type>, num_elements: usize },
+    ArrayType {
+        element_type: Box<Type>,
+        num_elements: usize,
+    },
     /// The `StructType` variant is used for a "literal" (i.e., anonymous) structure type.
     /// See [LLVM 8 docs on Structure Type](https://releases.llvm.org/8.0.0/docs/LangRef.html#structure-type)
-    StructType { element_types: Vec<Type>, is_packed: bool },
+    StructType {
+        element_types: Vec<Type>,
+        is_packed: bool,
+    },
     /// Named structure types. Note that these may be self-referential (i.e., recursive).
     /// See [LLVM 8 docs on Structure Type](https://releases.llvm.org/8.0.0/docs/LangRef.html#structure-type)
     NamedStructType {
         /// Name of the struct type
-        name: String,  // llvm-hs-pure has Name rather than String
+        name: String, // llvm-hs-pure has Name rather than String
         /// The actual struct type, which will be a `StructType` variant.
         /// A `None` here indicates an opaque type; see [LLVM 8 docs on Opaque Structure Types](https://releases.llvm.org/8.0.0/docs/LangRef.html#t-opaque).
         /// The weak reference should remain valid for at least the lifetime of the `Module` in which the named struct type is defined.
         ty: Option<rc::Weak<RefCell<Type>>>,
     },
     /// See [LLVM 8 docs on X86_MMX Type](https://releases.llvm.org/8.0.0/docs/LangRef.html#x86-mmx-type)
-    X86_MMXType,  // llvm-hs-pure doesn't have this, not sure what they do with LLVM's http://llvm.org/docs/LangRef.html#x86-mmx-type
+    X86_MMXType, // llvm-hs-pure doesn't have this, not sure what they do with LLVM's http://llvm.org/docs/LangRef.html#x86-mmx-type
     /// See [LLVM 8 docs on Metadata Type](https://releases.llvm.org/8.0.0/docs/LangRef.html#metadata-type)
     MetadataType,
     /// `LabelType` is the type of [`BasicBlock`](../struct.BasicBlock.html) labels.
@@ -127,7 +143,10 @@ impl Type {
     }
 
     pub fn pointer_to(ty: Type) -> Type {
-        Type::PointerType { pointee_type: Box::new(ty), addr_space: 0 }  // default to addr_space 0
+        Type::PointerType {
+            pointee_type: Box::new(ty),
+            addr_space: 0, // default to addr_space 0
+        }
     }
 }
 
@@ -166,7 +185,11 @@ impl Typed for FPType {
     }
 }
 
-impl<A,B> Typed for Either<A,B> where A: Typed, B:Typed {
+impl<A, B> Typed for Either<A, B>
+where
+    A: Typed,
+    B: Typed,
+{
     fn get_type(&self) -> Type {
         match self {
             Either::Left(x) => x.get_type(),
@@ -194,15 +217,24 @@ impl Type {
                 bits: unsafe { LLVMGetIntTypeWidth(ty) },
             },
             LLVMTypeKind::LLVMPointerTypeKind => Type::PointerType {
-                pointee_type: Box::new(Type::from_llvm_ref(unsafe { LLVMGetElementType(ty) }, tynamemap)),
+                pointee_type: Box::new(Type::from_llvm_ref(
+                    unsafe { LLVMGetElementType(ty) },
+                    tynamemap,
+                )),
                 addr_space: unsafe { LLVMGetPointerAddressSpace(ty) },
             },
             LLVMTypeKind::LLVMArrayTypeKind => Type::ArrayType {
-                element_type: Box::new(Type::from_llvm_ref(unsafe { LLVMGetElementType(ty) }, tynamemap)),
+                element_type: Box::new(Type::from_llvm_ref(
+                    unsafe { LLVMGetElementType(ty) },
+                    tynamemap,
+                )),
                 num_elements: unsafe { LLVMGetArrayLength(ty) as usize },
             },
             LLVMTypeKind::LLVMVectorTypeKind => Type::VectorType {
-                element_type: Box::new(Type::from_llvm_ref(unsafe { LLVMGetElementType(ty) }, tynamemap)),
+                element_type: Box::new(Type::from_llvm_ref(
+                    unsafe { LLVMGetElementType(ty) },
+                    tynamemap,
+                )),
                 num_elements: unsafe { LLVMGetVectorSize(ty) as usize },
             },
             LLVMTypeKind::LLVMStructTypeKind => {
@@ -220,22 +252,30 @@ impl Type {
                             // first fill in the entry as opaque for now, so that the call to struct_type_from_llvm_ref will terminate
                             tynamemap.insert(s.clone(), None);
                             // now compute the actual correct type. Any self-references will be opaqued
-                            let type_with_opaqued_self_refs = Type::struct_type_from_llvm_ref(ty, tynamemap);
+                            let type_with_opaqued_self_refs =
+                                Type::struct_type_from_llvm_ref(ty, tynamemap);
                             // recursively replace any opaqued self-references with weak refs to self
                             let rc = Rc::new(RefCell::new(type_with_opaqued_self_refs.clone()));
-                            let actual_type = Type::replace_in_type(type_with_opaqued_self_refs, s, &rc);
+                            let actual_type =
+                                Type::replace_in_type(type_with_opaqued_self_refs, s, &rc);
                             rc.replace(actual_type);
                             // and finally, put the completed type in the map
                             tynamemap.insert(s.clone(), Some(rc.clone()));
                             Some(rc)
                         };
-                        Type::NamedStructType { name: s.clone(), ty: actual_type.map(|rc| Rc::downgrade(&rc)) }
-                    },
+                        Type::NamedStructType {
+                            name: s.clone(),
+                            ty: actual_type.map(|rc| Rc::downgrade(&rc)),
+                        }
+                    }
                     _ => Type::struct_type_from_llvm_ref(ty, tynamemap),
                 }
-            },
+            }
             LLVMTypeKind::LLVMFunctionTypeKind => Type::FuncType {
-                result_type: Box::new(Type::from_llvm_ref(unsafe { LLVMGetReturnType(ty) }, tynamemap)),
+                result_type: Box::new(Type::from_llvm_ref(
+                    unsafe { LLVMGetReturnType(ty) },
+                    tynamemap,
+                )),
                 param_types: {
                     let num_types = unsafe { LLVMCountParamTypes(ty) };
                     let mut types: Vec<LLVMTypeRef> = Vec::with_capacity(num_types as usize);
@@ -243,7 +283,10 @@ impl Type {
                         LLVMGetParamTypes(ty, types.as_mut_ptr());
                         types.set_len(num_types as usize);
                     };
-                    types.into_iter().map(|t| Type::from_llvm_ref(t, tynamemap)).collect()
+                    types
+                        .into_iter()
+                        .map(|t| Type::from_llvm_ref(t, tynamemap))
+                        .collect()
                 },
                 is_var_arg: unsafe { LLVMIsFunctionVarArg(ty) } != 0,
             },
@@ -268,21 +311,32 @@ impl Type {
     // `seen_names` is here to prevent infinite recursion on self-referential
     // struct types; we don't need to continue into any recursive reference (as
     // we've been there already and done any necessary replacements)
-    fn _replace_in_type(ty: Type, target_name: &str, replacement: &Rc<RefCell<Type>>, mut seen_names: HashSet<String>) -> Type {
+    fn _replace_in_type(
+        ty: Type,
+        target_name: &str,
+        replacement: &Rc<RefCell<Type>>,
+        mut seen_names: HashSet<String>,
+    ) -> Type {
         match ty {
-            Type::NamedStructType { ref name, ty: None } if name == target_name => Type::NamedStructType {
-                name: name.clone(),
-                ty: Some(Rc::downgrade(replacement)),
-            },
+            Type::NamedStructType { ref name, ty: None } if name == target_name => {
+                Type::NamedStructType {
+                    name: name.clone(),
+                    ty: Some(Rc::downgrade(replacement)),
+                }
+            }
             // confused on the proper syntax here; neither `{ ref name, ref ty: Some(weak) }` nor
             // `{ ref name, ty: ref Some(weak) }` parse as valid, and just `ty: Some(weak)` errors due to
             // attempting to move the value. For now we have this hack instead.
             Type::NamedStructType { ref name, ref ty } if ty.is_some() && !seen_names.contains(name) => {
-                let weak = ty.as_ref().expect("we checked that ty.is_some() in the pattern guard");
+                let weak = ty
+                    .as_ref()
+                    .expect("we checked that ty.is_some() in the pattern guard");
                 seen_names.insert(name.clone());
                 let rc_opt: Option<Rc<RefCell<Type>>> = weak.upgrade();
                 if let Some(rc) = rc_opt.as_ref() {
-                    rc.replace_with(|t| Type::_replace_in_type(t.clone(), target_name, replacement, seen_names));
+                    rc.replace_with(|t| {
+                        Type::_replace_in_type(t.clone(), target_name, replacement, seen_names)
+                    });
                 }
                 Type::NamedStructType {
                     name: name.clone(),
@@ -296,23 +350,50 @@ impl Type {
             Type::FuncType { result_type, param_types, is_var_arg } => Type::FuncType {
                 // we need to `seen_names.clone()` in every recursive call because one recursive call seeing a name
                 // shouldn't mark it as seen for any of the other calls
-                result_type: Box::new(Type::_replace_in_type(*result_type, target_name, replacement, seen_names.clone())),
-                param_types: param_types.into_iter().map(|t| Type::_replace_in_type(t, target_name, replacement, seen_names.clone())).collect(),
+                result_type: Box::new(Type::_replace_in_type(
+                    *result_type,
+                    target_name,
+                    replacement,
+                    seen_names.clone(),
+                )),
+                param_types: param_types
+                    .into_iter()
+                    .map(|t| {
+                        Type::_replace_in_type(t, target_name, replacement, seen_names.clone())
+                    })
+                    .collect(),
                 is_var_arg,
             },
             Type::VectorType { element_type, num_elements } => Type::VectorType {
-                element_type: Box::new(Type::_replace_in_type(*element_type, target_name, replacement, seen_names)), num_elements,
+                element_type: Box::new(Type::_replace_in_type(
+                    *element_type,
+                    target_name,
+                    replacement,
+                    seen_names,
+                )),
+                num_elements,
             },
             Type::ArrayType { element_type, num_elements } => Type::ArrayType {
-                element_type: Box::new(Type::_replace_in_type(*element_type, target_name, replacement, seen_names)), num_elements,
+                element_type: Box::new(Type::_replace_in_type(
+                    *element_type,
+                    target_name,
+                    replacement,
+                    seen_names,
+                )),
+                num_elements,
             },
             Type::StructType { element_types, is_packed } => Type::StructType {
                 // we need to `seen_names.clone()` in every recursive call because one recursive call seeing a name
                 // shouldn't mark it as seen for any of the other calls
-                element_types: element_types.into_iter().map(|t| Type::_replace_in_type(t, target_name, replacement, seen_names.clone())).collect(),
+                element_types: element_types
+                    .into_iter()
+                    .map(|t| {
+                        Type::_replace_in_type(t, target_name, replacement, seen_names.clone())
+                    })
+                    .collect(),
                 is_packed,
             },
-            _ => ty,  // nothing to replace. In particular we don't need to replace anything in opaque named structs when name != target_name.
+            _ => ty, // nothing to replace. In particular we don't need to replace anything in opaque named structs when name != target_name.
         }
     }
 
@@ -326,7 +407,10 @@ impl Type {
                     LLVMGetStructElementTypes(ty, types.as_mut_ptr());
                     types.set_len(num_types as usize);
                 };
-                types.into_iter().map(|t| Type::from_llvm_ref(t, tynamemap)).collect()
+                types
+                    .into_iter()
+                    .map(|t| Type::from_llvm_ref(t, tynamemap))
+                    .collect()
             },
             is_packed: unsafe { LLVMIsPackedStruct(ty) } != 0,
         }

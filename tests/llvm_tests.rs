@@ -9,7 +9,7 @@ macro_rules! llvm_test {
         #[test]
         #[allow(non_snake_case)]
         fn $func() {
-            let _ = env_logger::builder().is_test(true).try_init();  // capture log messages with test harness
+            let _ = env_logger::builder().is_test(true).try_init(); // capture log messages with test harness
             let path = Path::new($path);
             let _ = Module::from_bc_path(&path).expect("Failed to parse module");
         }
@@ -87,12 +87,12 @@ llvm_test!("tests/llvm_bc/visibility-styles.3.2.ll.bc", visibility_styles);
 llvm_test!("tests/llvm_bc/weak-cmpxchg-upgrade.ll.bc", weak_cmpxchg_upgrade);
 llvm_test!("tests/llvm_bc/weak-macho-3.5.ll.bc", weak_macho);
 
-use llvm_ir::*;
-use std::convert::TryInto;
-use std::rc::Rc;
-use std::cell::RefCell;
-use std::ops::Deref;
 use either::Either;
+use llvm_ir::*;
+use std::cell::RefCell;
+use std::convert::TryInto;
+use std::ops::Deref;
+use std::rc::Rc;
 
 /// Additionally ensure that certain constructs were parsed correctly
 /// (these constructs don't currently appear in any of the basic_tests)
@@ -100,27 +100,47 @@ use either::Either;
 #[allow(non_snake_case)]
 #[allow(clippy::cognitive_complexity)]
 fn DILocation_implicit_code_extra_checks() {
-    let _ = env_logger::builder().is_test(true).try_init();  // capture log messages with test harness
+    let _ = env_logger::builder().is_test(true).try_init(); // capture log messages with test harness
     let path = Path::new("tests/llvm_bc/DILocation-implicit-code.ll.bc");
     let module = Module::from_bc_path(&path).expect("Failed to parse module");
-    let func = module.get_func_by_name("_Z5test1v").expect("Failed to find function");
+    let func = module
+        .get_func_by_name("_Z5test1v")
+        .expect("Failed to find function");
 
-    let entry = func.get_bb_by_name(&Name::Name("entry".to_owned())).expect("Failed to find entry bb");
-    let invoke: &terminator::Invoke = &entry.term.clone().try_into().unwrap_or_else(|_| panic!("Expected an invoke, got {:?}", &entry.term));
+    let entry = func
+        .get_bb_by_name(&Name::Name("entry".to_owned()))
+        .expect("Failed to find entry bb");
+    let invoke: &terminator::Invoke = &entry
+        .term
+        .clone()
+        .try_into()
+        .unwrap_or_else(|_| panic!("Expected an invoke, got {:?}", &entry.term));
     if let Either::Right(Operand::ConstantOperand(Constant::GlobalReference { name, .. })) = &invoke.function {
         assert_eq!(name, &Name::Name("_ZN1A3fooEi".to_owned()));
     } else {
-        panic!("Expected invoke.function to be a GlobalReference; instead it was {:?}", &invoke.function);
+        panic!(
+            "Expected invoke.function to be a GlobalReference; instead it was {:?}",
+            &invoke.function
+        );
     }
     assert_eq!(invoke.arguments.len(), 2);
     if let Operand::LocalOperand { name, ty: Type::PointerType { pointee_type, .. } } = &invoke.arguments[0].0 {
         assert_eq!(name, &Name::Name("a".to_owned()));
         if let Type::NamedStructType { ref ty, .. } = **pointee_type {
-            let struct_type: Rc<RefCell<Type>> = ty.as_ref()
-                .unwrap_or_else(|| panic!("Didn't expect {:?} to be an opaque type", **pointee_type))
+            let struct_type: Rc<RefCell<Type>> = ty
+                .as_ref()
+                .unwrap_or_else(|| {
+                    panic!("Didn't expect {:?} to be an opaque type", **pointee_type)
+                })
                 .upgrade()
                 .expect("Failed to upgrade weak ref");
-            assert_eq!(*struct_type.borrow().deref(), Type::StructType { element_types: vec![Type::i8()], is_packed: false });
+            assert_eq!(
+                *struct_type.borrow().deref(),
+                Type::StructType {
+                    element_types: vec![Type::i8()],
+                    is_packed: false
+                }
+            );
         } else {
             panic!("Expected invoke.arguments[0].0 to be a pointer to a Type::NamedStructTypeReference; instead it was a pointer to a {:?}", **pointee_type);
         }
@@ -140,15 +160,32 @@ fn DILocation_implicit_code_extra_checks() {
     // assign the result of the invoke, the LLVM 8 docs on 'invoke' -- and in
     // particular the examples -- are clear that 'invoke' does produce a result.
 
-    let lpad = func.get_bb_by_name(&Name::Name("lpad".to_owned())).expect("Failed to find lpad bb");
-    let landingpad: &instruction::LandingPad = &lpad.instrs[0].clone().try_into().unwrap_or_else(|_| panic!("Expected a landingpad, got {:?}", &lpad.instrs[0]));
-    let expected_landingpad_resultty = Type::StructType { element_types: vec![Type::pointer_to(Type::i8()), Type::i32()], is_packed: false };
+    let lpad = func
+        .get_bb_by_name(&Name::Name("lpad".to_owned()))
+        .expect("Failed to find lpad bb");
+    let landingpad: &instruction::LandingPad = &lpad.instrs[0]
+        .clone()
+        .try_into()
+        .unwrap_or_else(|_| panic!("Expected a landingpad, got {:?}", &lpad.instrs[0]));
+    let expected_landingpad_resultty = Type::StructType {
+        element_types: vec![Type::pointer_to(Type::i8()), Type::i32()],
+        is_packed: false,
+    };
     assert_eq!(landingpad.result_type, expected_landingpad_resultty);
     assert_eq!(landingpad.clauses.len(), 1);
     assert_eq!(landingpad.cleanup, false);
     assert_eq!(landingpad.dest, Name::Number(1));
-    let eval: &instruction::ExtractValue = &lpad.instrs[1].clone().try_into().unwrap_or_else(|_| panic!("Expected an extractvalue, got {:?}", &lpad.instrs[1]));
-    assert_eq!(eval.aggregate, Operand::LocalOperand { name: Name::Number(1), ty: expected_landingpad_resultty.clone() });
+    let eval: &instruction::ExtractValue = &lpad.instrs[1]
+        .clone()
+        .try_into()
+        .unwrap_or_else(|_| panic!("Expected an extractvalue, got {:?}", &lpad.instrs[1]));
+    assert_eq!(
+        eval.aggregate,
+        Operand::LocalOperand {
+            name: Name::Number(1),
+            ty: expected_landingpad_resultty.clone()
+        }
+    );
     assert_eq!(eval.indices.len(), 1);
     assert_eq!(eval.indices[0], 0);
     assert_eq!(eval.dest, Name::Number(2));
@@ -157,33 +194,92 @@ fn DILocation_implicit_code_extra_checks() {
     // numbering the invoke terminator in the 'catch' block.
     // See notes above.
 
-    let lpad1 = func.get_bb_by_name(&Name::Name("lpad1".to_owned())).expect("Failed to find lpad1 bb");
-    let landingpad: &instruction::LandingPad = &lpad1.instrs[0].clone().try_into().unwrap_or_else(|_| panic!("Expected a landingpad, got {:?}", &lpad1.instrs[0]));
+    let lpad1 = func
+        .get_bb_by_name(&Name::Name("lpad1".to_owned()))
+        .expect("Failed to find lpad1 bb");
+    let landingpad: &instruction::LandingPad = &lpad1.instrs[0]
+        .clone()
+        .try_into()
+        .unwrap_or_else(|_| panic!("Expected a landingpad, got {:?}", &lpad1.instrs[0]));
     assert_eq!(landingpad.result_type, expected_landingpad_resultty);
     assert_eq!(landingpad.clauses.len(), 0);
     assert_eq!(landingpad.cleanup, true);
-    let eval: &instruction::ExtractValue = &lpad1.instrs[3].clone().try_into().unwrap_or_else(|_| panic!("Expected an extractvalue, got {:?}", &lpad.instrs[3]));
-    assert_eq!(eval.aggregate, Operand::LocalOperand { name: Name::Number(10), ty: expected_landingpad_resultty.clone() });
+    let eval: &instruction::ExtractValue = &lpad1.instrs[3]
+        .clone()
+        .try_into()
+        .unwrap_or_else(|_| panic!("Expected an extractvalue, got {:?}", &lpad.instrs[3]));
+    assert_eq!(
+        eval.aggregate,
+        Operand::LocalOperand {
+            name: Name::Number(10),
+            ty: expected_landingpad_resultty.clone()
+        }
+    );
     assert_eq!(eval.indices.len(), 1);
     assert_eq!(eval.indices[0], 1);
     assert_eq!(eval.dest, Name::Number(12));
 
-    let trycont = func.get_bb_by_name(&Name::Name("try.cont".to_owned())).expect("Failed to find trycont bb");
-    let _: &terminator::Unreachable = &trycont.term.clone().try_into().unwrap_or_else(|_| panic!("Expected an unreachable, got {:?}", &trycont.term));
+    let trycont = func
+        .get_bb_by_name(&Name::Name("try.cont".to_owned()))
+        .expect("Failed to find trycont bb");
+    let _: &terminator::Unreachable = &trycont
+        .term
+        .clone()
+        .try_into()
+        .unwrap_or_else(|_| panic!("Expected an unreachable, got {:?}", &trycont.term));
 
-    let ehresume = func.get_bb_by_name(&Name::Name("eh.resume".to_owned())).expect("Failed to find ehresume bb");
-    let ival: &instruction::InsertValue = &ehresume.instrs[2].clone().try_into().unwrap_or_else(|_| panic!("Expected an insertvalue, got {:?}", &ehresume.instrs[2]));
-    assert_eq!(ival.aggregate, Operand::ConstantOperand(Constant::Undef(expected_landingpad_resultty.clone())));
-    assert_eq!(ival.element, Operand::LocalOperand { name: Name::Name("exn4".to_owned()), ty: Type::pointer_to(Type::i8()) });
+    let ehresume = func
+        .get_bb_by_name(&Name::Name("eh.resume".to_owned()))
+        .expect("Failed to find ehresume bb");
+    let ival: &instruction::InsertValue = &ehresume.instrs[2]
+        .clone()
+        .try_into()
+        .unwrap_or_else(|_| panic!("Expected an insertvalue, got {:?}", &ehresume.instrs[2]));
+    assert_eq!(
+        ival.aggregate,
+        Operand::ConstantOperand(Constant::Undef(expected_landingpad_resultty.clone()))
+    );
+    assert_eq!(
+        ival.element,
+        Operand::LocalOperand {
+            name: Name::Name("exn4".to_owned()),
+            ty: Type::pointer_to(Type::i8())
+        }
+    );
     assert_eq!(ival.indices.len(), 1);
     assert_eq!(ival.indices[0], 0);
     assert_eq!(ival.dest, Name::Name("lpad.val".to_owned()));
-    let ival2: &instruction::InsertValue = &ehresume.instrs[3].clone().try_into().unwrap_or_else(|_| panic!("Expected an insertvalue, got {:?}", &ehresume.instrs[3]));
-    assert_eq!(ival2.aggregate, Operand::LocalOperand { name: Name::Name("lpad.val".to_owned()), ty: expected_landingpad_resultty.clone() });
-    assert_eq!(ival2.element, Operand::LocalOperand { name: Name::Name("sel5".to_owned()), ty: Type::i32() });
+    let ival2: &instruction::InsertValue = &ehresume.instrs[3]
+        .clone()
+        .try_into()
+        .unwrap_or_else(|_| panic!("Expected an insertvalue, got {:?}", &ehresume.instrs[3]));
+    assert_eq!(
+        ival2.aggregate,
+        Operand::LocalOperand {
+            name: Name::Name("lpad.val".to_owned()),
+            ty: expected_landingpad_resultty.clone()
+        }
+    );
+    assert_eq!(
+        ival2.element,
+        Operand::LocalOperand {
+            name: Name::Name("sel5".to_owned()),
+            ty: Type::i32()
+        }
+    );
     assert_eq!(ival2.indices.len(), 1);
     assert_eq!(ival2.indices[0], 1);
     assert_eq!(ival2.dest, Name::Name("lpad.val6".to_owned()));
-    let resume: &terminator::Resume = &ehresume.term.clone().try_into().unwrap_or_else(|_| panic!("Expected a resume, got {:?}", &ehresume.term));
-    assert_eq!(resume.operand, Operand::LocalOperand { name: Name::Name("lpad.val6".to_owned()), ty: expected_landingpad_resultty.clone() });
+    let resume: &terminator::Resume = &ehresume
+        .term
+        .clone()
+        .try_into()
+        .unwrap_or_else(|_| panic!("Expected a resume, got {:?}", &ehresume.term));
+    assert_eq!(
+        resume.operand,
+        Operand::LocalOperand {
+            name: Name::Name("lpad.val6".to_owned()),
+            ty: expected_landingpad_resultty.clone()
+        }
+    );
 }

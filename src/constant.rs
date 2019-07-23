@@ -1,29 +1,42 @@
 use crate::name::Name;
 use crate::predicates::*;
 use crate::types::{Type, Typed};
+use std::cell::RefCell;
 use std::convert::TryFrom;
 use std::rc::Rc;
-use std::cell::RefCell;
 
 /// See [LLVM 8 docs on Constants](https://releases.llvm.org/8.0.0/docs/LangRef.html#constants).
 /// Constants can be either values, or expressions involving other constants (see [LLVM 8 docs on Constant Expressions](https://releases.llvm.org/8.0.0/docs/LangRef.html#constant-expressions)).
 #[derive(PartialEq, Clone, Debug)]
 pub enum Constant {
-    Int { bits: u32, value: u64 },  // If the Int is less than 64 bits, it will be zero-extended to create the Rust u64 (so if `bits` is 8, the lowest 8 bits of the Rust value are the relevant bits, and the others are all zeroes). Note that LLVM integers aren't signed or unsigned; each individual instruction indicates whether it's treating the integer as signed or unsigned if necessary (e.g., UDiv vs SDiv).
+    Int {
+        bits: u32,
+        value: u64, // If the Int is less than 64 bits, the value will be zero-extended to create the Rust `u64` `value` (so if `bits` is 8, the lowest 8 bits of `value` are the relevant bits, and the others are all zeroes). Note that LLVM integers aren't signed or unsigned; each individual instruction indicates whether it's treating the integer as signed or unsigned if necessary (e.g., UDiv vs SDiv).
+    },
     Float(Float),
     /// The `Type` here must be a `PointerType`. See [LLVM 8 docs on Simple Constants](https://releases.llvm.org/8.0.0/docs/LangRef.html#constants)
     Null(Type),
     /// A zero-initialized array or struct (or scalar).
     AggregateZero(Type),
-    Struct { name: Option<String>, values: Vec<Constant>, is_packed: bool },  // llvm-hs-pure has Option<Name> for the name, but I don't think struct types can be numbered
-    Array { element_type: Type, elements: Vec<Constant> },
+    Struct {
+        name: Option<String>, // llvm-hs-pure has Option<Name> here, but I don't think struct types can be numbered
+        values: Vec<Constant>,
+        is_packed: bool,
+    },
+    Array {
+        element_type: Type,
+        elements: Vec<Constant>,
+    },
     Vector(Vec<Constant>),
     /// `Undef` can be used anywhere a constant is expected. See [LLVM 8 docs on Undefined Values](https://releases.llvm.org/8.0.0/docs/LangRef.html#undefined-values)
     Undef(Type),
     /// The address of the given (non-entry) [`BasicBlock`](../struct.BasicBlock.html). See [LLVM 8 docs on Addresses of Basic Blocks](https://releases.llvm.org/8.0.0/docs/LangRef.html#addresses-of-basic-blocks).
     /// `BlockAddress` needs more fields, but the necessary getter functions are apparently not exposed in the LLVM C API (only the C++ API)
-    BlockAddress,  // --TODO ideally we want BlockAddress { function: Name, block: Name },
-    GlobalReference { name: Name, ty: Type },
+    BlockAddress, // --TODO ideally we want BlockAddress { function: Name, block: Name },
+    GlobalReference {
+        name: Name,
+        ty: Type,
+    },
     TokenNone,
 
     // Constants can also be expressed as operations applied to other constants:
@@ -92,12 +105,12 @@ pub enum Constant {
 #[derive(PartialEq, Clone, Debug)]
 #[allow(non_camel_case_types)]
 pub enum Float {
-    Half,  // TODO perhaps Half(u16)
+    Half, // TODO perhaps Half(u16)
     Single(f32),
     Double(f64),
-    Quadruple,  // TODO perhaps Quadruple(u128)
+    Quadruple, // TODO perhaps Quadruple(u128)
     X86_FP80,  // TODO perhaps X86_FP80((u16, u64)) with the most-significant bits on the left
-    PPC_FP128,  // TODO perhaps PPC_FP128((u64, u64)) with the most-significant bits on the left
+    PPC_FP128, // TODO perhaps PPC_FP128((u64, u64)) with the most-significant bits on the left
 }
 
 impl Typed for Float {
@@ -124,12 +137,18 @@ impl Typed for Constant {
                 element_types: values.iter().map(|v| v.get_type()).collect(),
                 is_packed: *is_packed,
             },
-            Constant::Array { element_type, elements } => Type::ArrayType { element_type: Box::new(element_type.clone()), num_elements: elements.len() },
-            Constant::Vector(v) => Type::VectorType { element_type: Box::new(v[0].get_type()), num_elements: v.len() },
+            Constant::Array { element_type, elements } => Type::ArrayType {
+                element_type: Box::new(element_type.clone()),
+                num_elements: elements.len(),
+            },
+            Constant::Vector(v) => Type::VectorType {
+                element_type: Box::new(v[0].get_type()),
+                num_elements: v.len(),
+            },
             Constant::Undef(t) => t.clone(),
             Constant::BlockAddress { .. } => Type::LabelType,
             Constant::GlobalReference { ty, .. } => ty.clone(),
-            Constant::TokenNone =>  Type::TokenType,
+            Constant::TokenNone => Type::TokenType,
             Constant::Add(a) => a.get_type(),
             Constant::Sub(s) => s.get_type(),
             Constant::Mul(m) => m.get_type(),
@@ -200,7 +219,7 @@ macro_rules! impl_constexpr {
                 }
             }
         }
-    }
+    };
 }
 
 macro_rules! impl_unop {
@@ -210,7 +229,7 @@ macro_rules! impl_unop {
                 &self.operand
             }
         }
-    }
+    };
 }
 
 macro_rules! impl_binop {
@@ -223,7 +242,7 @@ macro_rules! impl_binop {
                 &self.operand1
             }
         }
-    }
+    };
 }
 
 // Use on binops where the result type is the same as both operand types
@@ -258,7 +277,7 @@ macro_rules! explicitly_typed {
                 self.to_type.clone()
             }
         }
-    }
+    };
 }
 
 #[derive(PartialEq, Clone, Debug)]
@@ -526,15 +545,20 @@ impl Typed for ExtractValue {
     }
 }
 
-fn ev_type(cur_type: Type, mut indices: impl Iterator<Item=u32>) -> Type {
+fn ev_type(cur_type: Type, mut indices: impl Iterator<Item = u32>) -> Type {
     match indices.next() {
         None => cur_type,
         Some(index) => match cur_type {
             Type::ArrayType { element_type, .. } => ev_type(*element_type, indices),
-            Type::StructType { element_types, .. } =>
-                ev_type( element_types.get(index as usize).expect("ExtractValue index out of range").clone(), indices),
+            Type::StructType { element_types, .. } => ev_type(
+                element_types
+                    .get(index as usize)
+                    .expect("ExtractValue index out of range")
+                    .clone(),
+                indices,
+            ),
             _ => panic!("ExtractValue from something that's not ArrayType or StructType"),
-        }
+        },
     }
 }
 
@@ -568,22 +592,28 @@ impl Typed for GetElementPtr {
     }
 }
 
-fn gep_type(cur_type: Type, mut indices: impl Iterator<Item=Constant>) -> Type {
+fn gep_type(cur_type: Type, mut indices: impl Iterator<Item = Constant>) -> Type {
     match indices.next() {
-        None => Type::pointer_to(cur_type),  // iterator is done
+        None => Type::pointer_to(cur_type), // iterator is done
         Some(index) => match cur_type {
             Type::PointerType { pointee_type, .. } => gep_type(*pointee_type, indices),
             Type::VectorType { element_type, .. } => gep_type(*element_type, indices),
             Type::ArrayType { element_type, .. } => gep_type(*element_type, indices),
             Type::StructType { element_types, .. } => {
                 if let Constant::Int { value, .. } = index {
-                    gep_type(element_types.get(value as usize).expect("GEP index out of range").clone(), indices)
+                    gep_type(
+                        element_types
+                            .get(value as usize)
+                            .expect("GEP index out of range")
+                            .clone(),
+                        indices,
+                    )
                 } else {
                     panic!("GEP index is not a Constant::Int")
                 }
-            },
+            }
             _ => panic!("GEP on something that's not a PointerType, VectorType, ArrayType, or StructType"),
-        }
+        },
     }
 }
 
@@ -732,7 +762,10 @@ impl Typed for ICmp {
         let t = self.operand0.get_type();
         assert_eq!(t, self.operand1.get_type());
         match t {
-            Type::VectorType { num_elements, .. } => Type::VectorType { element_type: Box::new(Type::bool()), num_elements },
+            Type::VectorType { num_elements, .. } => Type::VectorType {
+                element_type: Box::new(Type::bool()),
+                num_elements,
+            },
             _ => Type::bool(),
         }
     }
@@ -753,7 +786,10 @@ impl Typed for FCmp {
         let t = self.operand0.get_type();
         assert_eq!(t, self.operand1.get_type());
         match t {
-            Type::VectorType { num_elements, .. } => Type::VectorType { element_type: Box::new(Type::bool()), num_elements },
+            Type::VectorType { num_elements, .. } => Type::VectorType {
+                element_type: Box::new(Type::bool()),
+                num_elements,
+            },
             _ => Type::bool(),
         }
     }
@@ -788,10 +824,17 @@ use std::collections::HashMap;
 pub(crate) type GlobalNameMap = HashMap<LLVMValueRef, Name>;
 
 impl Constant {
-    pub(crate) fn from_llvm_ref(constant: LLVMValueRef, gnmap: &GlobalNameMap, tnmap: &mut TyNameMap) -> Self {
+    pub(crate) fn from_llvm_ref(
+        constant: LLVMValueRef,
+        gnmap: &GlobalNameMap,
+        tnmap: &mut TyNameMap,
+    ) -> Self {
         use llvm_sys::LLVMValueKind;
         if unsafe { LLVMIsAConstant(constant).is_null() } {
-            panic!("Constant::from_llvm_ref: argument wasn't a constant; ValueKind {:?}", unsafe { LLVMGetValueKind(constant) })
+            panic!(
+                "Constant::from_llvm_ref: argument wasn't a constant; ValueKind {:?}",
+                unsafe { LLVMGetValueKind(constant) }
+            )
         }
         match unsafe { LLVMGetValueKind(constant) } {
             LLVMValueKind::LLVMConstantIntValueKind => {
@@ -969,15 +1012,27 @@ impl Constant {
 macro_rules! binop_from_llvm {
     ($expr:ident) => {
         impl $expr {
-            pub(crate) fn from_llvm_ref(expr: LLVMValueRef, gnmap: &GlobalNameMap, tnmap: &mut TyNameMap) -> Self {
+            pub(crate) fn from_llvm_ref(
+                expr: LLVMValueRef,
+                gnmap: &GlobalNameMap,
+                tnmap: &mut TyNameMap,
+            ) -> Self {
                 assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 2);
                 Self {
-                    operand0: Constant::from_llvm_ref( unsafe { LLVMGetOperand(expr, 0) }, gnmap, tnmap ),
-                    operand1: Constant::from_llvm_ref( unsafe { LLVMGetOperand(expr, 1) }, gnmap, tnmap ),
+                    operand0: Constant::from_llvm_ref(
+                        unsafe { LLVMGetOperand(expr, 0) },
+                        gnmap,
+                        tnmap,
+                    ),
+                    operand1: Constant::from_llvm_ref(
+                        unsafe { LLVMGetOperand(expr, 1) },
+                        gnmap,
+                        tnmap,
+                    ),
                 }
             }
         }
-    }
+    };
 }
 
 binop_from_llvm!(Add);
@@ -1000,42 +1055,58 @@ binop_from_llvm!(FDiv);
 binop_from_llvm!(FRem);
 
 impl ExtractElement {
-    pub(crate) fn from_llvm_ref(expr: LLVMValueRef, gnmap: &GlobalNameMap, tnmap: &mut TyNameMap) -> Self {
+    pub(crate) fn from_llvm_ref(
+        expr: LLVMValueRef,
+        gnmap: &GlobalNameMap,
+        tnmap: &mut TyNameMap,
+    ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 2);
         Self {
-            vector: Constant::from_llvm_ref( unsafe { LLVMGetOperand(expr, 0) }, gnmap, tnmap ),
-            index: Constant::from_llvm_ref( unsafe { LLVMGetOperand(expr, 1) }, gnmap, tnmap ),
+            vector: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, gnmap, tnmap),
+            index: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 1) }, gnmap, tnmap),
         }
     }
 }
 
 impl InsertElement {
-    pub(crate) fn from_llvm_ref(expr: LLVMValueRef, gnmap: &GlobalNameMap, tnmap: &mut TyNameMap) -> Self {
+    pub(crate) fn from_llvm_ref(
+        expr: LLVMValueRef,
+        gnmap: &GlobalNameMap,
+        tnmap: &mut TyNameMap,
+    ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 3);
         Self {
-            vector: Constant::from_llvm_ref( unsafe { LLVMGetOperand(expr, 0) }, gnmap, tnmap ),
-            element: Constant::from_llvm_ref( unsafe { LLVMGetOperand(expr, 1) }, gnmap, tnmap ),
-            index: Constant::from_llvm_ref( unsafe { LLVMGetOperand(expr, 2) }, gnmap, tnmap ),
+            vector: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, gnmap, tnmap),
+            element: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 1) }, gnmap, tnmap),
+            index: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 2) }, gnmap, tnmap),
         }
     }
 }
 
 impl ShuffleVector {
-    pub(crate) fn from_llvm_ref(expr: LLVMValueRef, gnmap: &GlobalNameMap, tnmap: &mut TyNameMap) -> Self {
+    pub(crate) fn from_llvm_ref(
+        expr: LLVMValueRef,
+        gnmap: &GlobalNameMap,
+        tnmap: &mut TyNameMap,
+    ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 3);
         Self {
-            operand0: Constant::from_llvm_ref( unsafe { LLVMGetOperand(expr, 0) }, gnmap, tnmap ),
-            operand1: Constant::from_llvm_ref( unsafe { LLVMGetOperand(expr, 1) }, gnmap, tnmap ),
-            mask: Constant::from_llvm_ref( unsafe { LLVMGetOperand(expr, 2) }, gnmap, tnmap ),
+            operand0: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, gnmap, tnmap),
+            operand1: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 1) }, gnmap, tnmap),
+            mask: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 2) }, gnmap, tnmap),
         }
     }
 }
 
 impl ExtractValue {
-    pub(crate) fn from_llvm_ref(expr: LLVMValueRef, gnmap: &GlobalNameMap, tnmap: &mut TyNameMap) -> Self {
+    pub(crate) fn from_llvm_ref(
+        expr: LLVMValueRef,
+        gnmap: &GlobalNameMap,
+        tnmap: &mut TyNameMap,
+    ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 2);
         Self {
-            aggregate: Constant::from_llvm_ref( unsafe { LLVMGetOperand(expr, 0) }, gnmap, tnmap ),
+            aggregate: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, gnmap, tnmap),
             indices: unsafe {
                 let num_indices = LLVMGetNumIndices(expr);
                 let ptr = LLVMGetIndices(expr);
@@ -1046,11 +1117,15 @@ impl ExtractValue {
 }
 
 impl InsertValue {
-    pub(crate) fn from_llvm_ref(expr: LLVMValueRef, gnmap: &GlobalNameMap, tnmap: &mut TyNameMap) -> Self {
+    pub(crate) fn from_llvm_ref(
+        expr: LLVMValueRef,
+        gnmap: &GlobalNameMap,
+        tnmap: &mut TyNameMap,
+    ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 3);
         Self {
-            aggregate: Constant::from_llvm_ref( unsafe { LLVMGetOperand(expr, 0) }, gnmap, tnmap ),
-            element: Constant::from_llvm_ref( unsafe { LLVMGetOperand(expr, 1) }, gnmap, tnmap ),
+            aggregate: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, gnmap, tnmap),
+            element: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 1) }, gnmap, tnmap),
             indices: unsafe {
                 let num_indices = LLVMGetNumIndices(expr);
                 let ptr = LLVMGetIndices(expr);
@@ -1061,14 +1136,20 @@ impl InsertValue {
 }
 
 impl GetElementPtr {
-    pub(crate) fn from_llvm_ref(expr: LLVMValueRef, gnmap: &GlobalNameMap, tnmap: &mut TyNameMap) -> Self {
+    pub(crate) fn from_llvm_ref(
+        expr: LLVMValueRef,
+        gnmap: &GlobalNameMap,
+        tnmap: &mut TyNameMap,
+    ) -> Self {
         Self {
-            address: Constant::from_llvm_ref( unsafe { LLVMGetOperand(expr, 0) }, gnmap, tnmap ),
+            address: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, gnmap, tnmap),
             indices: {
-                let num_indices = unsafe { LLVMGetNumOperands(expr) as u32 } - 1;  // LLVMGetNumIndices(), which we use for instruction::GetElementPtr, appears empirically to not work for constant::GetElementPtr
-                (1 ..= num_indices).map(|i| {
-                    Constant::from_llvm_ref( unsafe { LLVMGetOperand(expr, i) }, gnmap, tnmap )
-                }).collect()
+                let num_indices = unsafe { LLVMGetNumOperands(expr) as u32 } - 1; // LLVMGetNumIndices(), which we use for instruction::GetElementPtr, appears empirically to not work for constant::GetElementPtr
+                (1..=num_indices)
+                    .map(|i| {
+                        Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, i) }, gnmap, tnmap)
+                    })
+                    .collect()
             },
             in_bounds: unsafe { LLVMIsInBounds(expr) } != 0,
         }
@@ -1080,15 +1161,23 @@ impl GetElementPtr {
 macro_rules! typed_unop_from_llvm {
     ($expr:ident) => {
         impl $expr {
-            pub(crate) fn from_llvm_ref(expr: LLVMValueRef, gnmap: &GlobalNameMap, tnmap: &mut TyNameMap) -> Self {
+            pub(crate) fn from_llvm_ref(
+                expr: LLVMValueRef,
+                gnmap: &GlobalNameMap,
+                tnmap: &mut TyNameMap,
+            ) -> Self {
                 assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 1);
                 Self {
-                    operand: Constant::from_llvm_ref( unsafe { LLVMGetOperand(expr, 0) }, gnmap, tnmap ),
-                    to_type: Type::from_llvm_ref( unsafe { LLVMTypeOf(expr) }, tnmap ),
+                    operand: Constant::from_llvm_ref(
+                        unsafe { LLVMGetOperand(expr, 0) },
+                        gnmap,
+                        tnmap,
+                    ),
+                    to_type: Type::from_llvm_ref(unsafe { LLVMTypeOf(expr) }, tnmap),
                 }
             }
         }
-    }
+    };
 }
 
 typed_unop_from_llvm!(Trunc);
@@ -1106,34 +1195,46 @@ typed_unop_from_llvm!(BitCast);
 typed_unop_from_llvm!(AddrSpaceCast);
 
 impl ICmp {
-    pub(crate) fn from_llvm_ref(expr: LLVMValueRef, gnmap: &GlobalNameMap, tnmap: &mut TyNameMap) -> Self {
+    pub(crate) fn from_llvm_ref(
+        expr: LLVMValueRef,
+        gnmap: &GlobalNameMap,
+        tnmap: &mut TyNameMap,
+    ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 2);
         Self {
-            predicate: IntPredicate::from_llvm( unsafe { LLVMGetICmpPredicate(expr) } ),
-            operand0: Constant::from_llvm_ref( unsafe { LLVMGetOperand(expr, 0) }, gnmap, tnmap ),
-            operand1: Constant::from_llvm_ref( unsafe { LLVMGetOperand(expr, 1) }, gnmap, tnmap ),
+            predicate: IntPredicate::from_llvm(unsafe { LLVMGetICmpPredicate(expr) }),
+            operand0: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, gnmap, tnmap),
+            operand1: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 1) }, gnmap, tnmap),
         }
     }
 }
 
 impl FCmp {
-    pub(crate) fn from_llvm_ref(expr: LLVMValueRef, gnmap: &GlobalNameMap, tnmap: &mut TyNameMap) -> Self {
+    pub(crate) fn from_llvm_ref(
+        expr: LLVMValueRef,
+        gnmap: &GlobalNameMap,
+        tnmap: &mut TyNameMap,
+    ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 2);
         Self {
-            predicate: FPPredicate::from_llvm( unsafe { LLVMGetFCmpPredicate(expr) } ),
-            operand0: Constant::from_llvm_ref( unsafe { LLVMGetOperand(expr, 0) }, gnmap, tnmap ),
-            operand1: Constant::from_llvm_ref( unsafe { LLVMGetOperand(expr, 1) }, gnmap, tnmap ),
+            predicate: FPPredicate::from_llvm(unsafe { LLVMGetFCmpPredicate(expr) }),
+            operand0: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, gnmap, tnmap),
+            operand1: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 1) }, gnmap, tnmap),
         }
     }
 }
 
 impl Select {
-    pub(crate) fn from_llvm_ref(expr: LLVMValueRef, gnmap: &GlobalNameMap, tnmap: &mut TyNameMap) -> Self {
+    pub(crate) fn from_llvm_ref(
+        expr: LLVMValueRef,
+        gnmap: &GlobalNameMap,
+        tnmap: &mut TyNameMap,
+    ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 3);
         Self {
-            condition: Constant::from_llvm_ref( unsafe { LLVMGetOperand(expr, 0) }, gnmap, tnmap ),
-            true_value: Constant::from_llvm_ref( unsafe { LLVMGetOperand(expr, 1) }, gnmap, tnmap ),
-            false_value: Constant::from_llvm_ref( unsafe { LLVMGetOperand(expr, 2) }, gnmap, tnmap ),
+            condition: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, gnmap, tnmap),
+            true_value: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 1) }, gnmap, tnmap),
+            false_value: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 2) }, gnmap, tnmap),
         }
     }
 }

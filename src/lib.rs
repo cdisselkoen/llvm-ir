@@ -15,11 +15,11 @@ pub use name::Name;
 pub mod operand;
 pub use operand::Operand;
 pub mod predicates;
-pub use predicates::{IntPredicate, FPPredicate};
+pub use predicates::{FPPredicate, IntPredicate};
 pub mod terminator;
 pub use terminator::Terminator;
 pub mod types;
 pub use types::{Type, Typed};
 
-mod iterators;
 mod from_llvm;
+mod iterators;

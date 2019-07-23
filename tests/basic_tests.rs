@@ -1,18 +1,18 @@
-use llvm_ir::Module;
+use either::Either;
+use llvm_ir::instruction;
+use llvm_ir::terminator;
 use llvm_ir::Constant;
-use llvm_ir::Operand;
+use llvm_ir::IntPredicate;
+use llvm_ir::Module;
 use llvm_ir::Name;
+use llvm_ir::Operand;
 use llvm_ir::Type;
 use llvm_ir::Typed;
-use llvm_ir::terminator;
-use llvm_ir::instruction;
-use llvm_ir::IntPredicate;
+use std::cell::RefCell;
 use std::convert::TryInto;
+use std::ops::Deref;
 use std::path::Path;
 use std::rc::Rc;
-use std::cell::RefCell;
-use std::ops::Deref;
-use either::Either;
 
 fn init_logging() {
     // capture log messages with test harness
@@ -37,10 +37,18 @@ fn hellobc() {
     let bb = &func.basic_blocks[0];
     assert_eq!(bb.name, Name::Number(0));
     assert_eq!(bb.instrs.len(), 0);
-    let ret: &terminator::Ret = &bb.term.clone().try_into().unwrap_or_else(|_| panic!("Terminator should be a Ret but is {:?}", &bb.term));
-    assert_eq!(ret.return_operand, Some(Operand::ConstantOperand(
-        Constant::Int { bits: 32, value: 0 }
-    )));
+    let ret: &terminator::Ret = &bb
+        .term
+        .clone()
+        .try_into()
+        .unwrap_or_else(|_| panic!("Terminator should be a Ret but is {:?}", &bb.term));
+    assert_eq!(
+        ret.return_operand,
+        Some(Operand::ConstantOperand(Constant::Int {
+            bits: 32,
+            value: 0
+        }))
+    );
 }
 
 #[test]
@@ -57,11 +65,14 @@ fn loopbc() {
     assert_eq!(func.parameters.len(), 2);
     assert_eq!(func.is_var_arg, false);
     assert_eq!(func.return_type, Type::VoidType);
-    assert_eq!(func.get_type(), Type::FuncType {
-        result_type: Box::new(Type::VoidType),
-        param_types: vec![Type::i32(), Type::i32()],
-        is_var_arg: false,
-    });
+    assert_eq!(
+        func.get_type(),
+        Type::FuncType {
+            result_type: Box::new(Type::VoidType),
+            param_types: vec![Type::i32(), Type::i32()],
+            is_var_arg: false,
+        }
+    );
     assert_eq!(module.get_func_by_name("loop"), Some(func));
 
     // get parameters and check info on them
@@ -92,23 +103,40 @@ fn loopbc() {
     assert_eq!(func.get_bb_by_name(&Name::Number(19)), Some(bb19));
 
     // check details about the instructions in basic block %2
-    let alloca: &instruction::Alloca = &bb2.instrs[0].clone().try_into().expect("Should be an alloca");
+    let alloca: &instruction::Alloca = &bb2.instrs[0]
+        .clone()
+        .try_into()
+        .expect("Should be an alloca");
     assert_eq!(alloca.dest, Name::Number(3));
-    let allocated_type = Type::ArrayType { element_type: Box::new(Type::i32()), num_elements: 10 };
+    let allocated_type = Type::ArrayType {
+        element_type: Box::new(Type::i32()),
+        num_elements: 10,
+    };
     assert_eq!(alloca.allocated_type, allocated_type);
-    assert_eq!(alloca.num_elements, Operand::ConstantOperand(Constant::Int { bits: 32, value: 1 }));  // One element, which is an array of 10 elements. Not 10 elements, each of which are i32.
+    assert_eq!(
+        alloca.num_elements,
+        Operand::ConstantOperand(Constant::Int { bits: 32, value: 1 }) // One element, which is an array of 10 elements. Not 10 elements, each of which are i32.
+    );
     assert_eq!(alloca.alignment, 16);
     assert_eq!(alloca.get_type(), Type::pointer_to(allocated_type.clone()));
     assert_eq!(alloca.num_elements.get_type(), Type::i32());
-    let bitcast: &instruction::BitCast = &bb2.instrs[1].clone().try_into().expect("Should be a bitcast");
+    let bitcast: &instruction::BitCast = &bb2.instrs[1]
+        .clone()
+        .try_into()
+        .expect("Should be a bitcast");
     assert_eq!(bitcast.dest, Name::Number(4));
     assert_eq!(bitcast.to_type, Type::pointer_to(Type::i8()));
-    assert_eq!(bitcast.operand, Operand::LocalOperand {
-        name: Name::Number(3), ty: Type::pointer_to(allocated_type.clone())
-    });
+    assert_eq!(
+        bitcast.operand,
+        Operand::LocalOperand {
+            name: Name::Number(3),
+            ty: Type::pointer_to(allocated_type.clone())
+        }
+    );
     assert_eq!(bitcast.get_type(), Type::pointer_to(Type::i8()));
     assert_eq!(bitcast.operand.get_type(), Type::pointer_to(allocated_type.clone()));
-    let lifetimestart: &instruction::Call = &bb2.instrs[2].clone().try_into().expect("Should be a call");
+    let lifetimestart: &instruction::Call =
+        &bb2.instrs[2].clone().try_into().expect("Should be a call");
     if let Either::Right(Operand::ConstantOperand(Constant::GlobalReference { ref name, ref ty } )) = lifetimestart.function {
         assert_eq!(*name, Name::Name("llvm.lifetime.start.p0i8".to_owned()));
         if let Type::FuncType { ref result_type, ref param_types, ref is_var_arg } = *ty {
@@ -119,7 +147,10 @@ fn loopbc() {
             panic!("lifetimestart.function has unexpected type {:?}", ty);
         }
     } else {
-        panic!("lifetimestart.function not a GlobalReference as expected; it is actually {:?}", &lifetimestart.function);
+        panic!(
+            "lifetimestart.function not a GlobalReference as expected; it is actually {:?}",
+            &lifetimestart.function
+        );
     }
     let arg0 = &lifetimestart.arguments.get(0).expect("Expected an argument 0");
     let arg1 = &lifetimestart.arguments.get(1).expect("Expected an argument 1");
@@ -129,7 +160,7 @@ fn loopbc() {
     assert_eq!(arg1.1.len(), 1);  // should have one parameter attribute
     assert_eq!(lifetimestart.dest, None);
     let memset: &instruction::Call = &bb2.instrs[3].clone().try_into().expect("Should be a call");
-    if let Either::Right(Operand::ConstantOperand(Constant::GlobalReference { ref name, ref ty } )) = memset.function {
+    if let Either::Right(Operand::ConstantOperand(Constant::GlobalReference { ref name, ref ty })) = memset.function {
         assert_eq!(*name, Name::Name("llvm.memset.p0i8.i64".to_owned()));
         if let Type::FuncType { ref result_type, ref param_types, ref is_var_arg } = *ty {
             assert_eq!(**result_type, Type::VoidType);
@@ -139,14 +170,17 @@ fn loopbc() {
             panic!("memset.function has unexpected type {:?}", ty);
         }
     } else {
-        panic!("memset.function not a GlobalReference as expected; it is actually {:?}", memset.function);
+        panic!(
+            "memset.function not a GlobalReference as expected; it is actually {:?}",
+            memset.function
+        );
     }
     assert_eq!(memset.arguments.len(), 4);
     assert_eq!(memset.arguments[0].0, Operand::LocalOperand { name: Name::Number(4), ty: Type::pointer_to(Type::i8()) } );
     assert_eq!(memset.arguments[1].0, Operand::ConstantOperand(Constant::Int { bits: 8, value: 0 } ));
     assert_eq!(memset.arguments[2].0, Operand::ConstantOperand(Constant::Int { bits: 64, value: 40 } ));
     assert_eq!(memset.arguments[3].0, Operand::ConstantOperand(Constant::Int { bits: 1, value: 1 } ));
-    assert_eq!(memset.arguments[0].1.len(), 2);  // should have two parameter attributes
+    assert_eq!(memset.arguments[0].1.len(), 2); // should have two parameter attributes
     let add: &instruction::Add = &bb2.instrs[4].clone().try_into().expect("Should be an add");
     assert_eq!(add.operand0, Operand::LocalOperand { name: Name::Number(1), ty: Type::i32() } );
     assert_eq!(add.operand1, Operand::ConstantOperand(Constant::Int { bits: 32, value: 0x0000_0000_FFFF_FFFF }));
@@ -176,20 +210,45 @@ fn loopbc() {
     let phi: &instruction::Phi = &bb10.instrs[0].clone().try_into().expect("Should be a Phi");
     assert_eq!(phi.dest, Name::Number(11));
     assert_eq!(phi.to_type, Type::i64());
-    assert_eq!(phi.incoming_values, vec![
-        (Operand::ConstantOperand(Constant::Int { bits: 64, value: 0 }), Name::Number(7)),
-        (Operand::LocalOperand { name: Name::Number(20), ty: Type::i64() }, Name::Number(19)),
-    ]);
-    let gep: &instruction::GetElementPtr = &bb10.instrs[1].clone().try_into().expect("Should be a gep");
-    assert_eq!(gep.address, Operand::LocalOperand { name: Name::Number(3), ty: Type::pointer_to(allocated_type.clone()) });
+    assert_eq!(
+        phi.incoming_values,
+        vec![
+            (
+                Operand::ConstantOperand(Constant::Int { bits: 64, value: 0 }),
+                Name::Number(7)
+            ),
+            (
+                Operand::LocalOperand { name: Name::Number(20), ty: Type::i64() },
+                Name::Number(19)
+            ),
+        ]
+    );
+    let gep: &instruction::GetElementPtr =
+        &bb10.instrs[1].clone().try_into().expect("Should be a gep");
+    assert_eq!(
+        gep.address,
+        Operand::LocalOperand {
+            name: Name::Number(3),
+            ty: Type::pointer_to(allocated_type.clone())
+        }
+    );
     assert_eq!(gep.dest, Name::Number(12));
     assert_eq!(gep.in_bounds, true);
-    assert_eq!(gep.indices, vec![
-        Operand::ConstantOperand(Constant::Int { bits: 64, value: 0 } ),
-        Operand::LocalOperand { name: Name::Number(11), ty: Type::i64() },
-    ]);
+    assert_eq!(
+        gep.indices,
+        vec![
+            Operand::ConstantOperand(Constant::Int { bits: 64, value: 0 }),
+            Operand::LocalOperand {
+                name: Name::Number(11),
+                ty: Type::i64()
+            },
+        ]
+    );
     assert_eq!(gep.get_type(), Type::pointer_to(Type::i32()));
-    let store: &instruction::Store = &bb10.instrs[2].clone().try_into().expect("Should be a store");
+    let store: &instruction::Store = &bb10.instrs[2]
+        .clone()
+        .try_into()
+        .expect("Should be a store");
     assert_eq!(store.address, Operand::LocalOperand { name: Name::Number(12), ty: Type::pointer_to(Type::i32()) });
     assert_eq!(store.value, Operand::LocalOperand { name: Name::Number(8), ty: Type::i32() });
     assert_eq!(store.volatile, true);
@@ -233,7 +292,9 @@ fn switchbc() {
     assert_eq!(switch.dests[8], (Constant::Int { bits: 32, value: 101 }, Name::Number(9)));
     assert_eq!(switch.default_dest, Name::Number(10));
 
-    let phibb = &func.get_bb_by_name(&Name::Number(12)).expect("Failed to find bb %12");
+    let phibb = &func
+        .get_bb_by_name(&Name::Number(12))
+        .expect("Failed to find bb %12");
     let phi: &instruction::Phi = &phibb.instrs[0].clone().try_into().expect("Should be a phi");
     assert_eq!(phi.incoming_values.len(), 10);
 }
@@ -244,8 +305,16 @@ fn simple_linked_list() {
     let path = Path::new("tests/basic_bc/linkedlist.bc");
     let module = Module::from_bc_path(&path).expect("Failed to parse module");
 
-    let structty: Rc<RefCell<Type>> = module.named_struct_types.get("struct.SimpleLinkedList")
-        .unwrap_or_else(|| { let names: Vec<_> = module.named_struct_types.keys().collect(); panic!("Failed to find struct.SimpleLinkedList in named_struct_types; have names {:?}", names) })
+    let structty: Rc<RefCell<Type>> = module
+        .named_struct_types
+        .get("struct.SimpleLinkedList")
+        .unwrap_or_else(|| {
+            let names: Vec<_> = module.named_struct_types.keys().collect();
+            panic!(
+                "Failed to find struct.SimpleLinkedList in named_struct_types; have names {:?}",
+                names
+            )
+        })
         .as_ref()
         .expect("SimpleLinkedList should not be an opaque type")
         .clone();
@@ -255,32 +324,51 @@ fn simple_linked_list() {
         if let Type::PointerType { pointee_type, .. } = &element_types[1] {
             if let Type::NamedStructType { ref name, ref ty } = **pointee_type {
                 assert_eq!(name, "struct.SimpleLinkedList");
-                let ty: Rc<RefCell<Type>> = ty.as_ref()
+                let ty: Rc<RefCell<Type>> = ty
+                    .as_ref()
                     .expect("Inner type should not be opaque")
                     .upgrade()
                     .expect("Failed to upgrade weak ref");
-                assert_eq!(ty.borrow().deref(), structty.borrow().deref());  // the type should be truly recursive, in that the pointed-to type should be the same as the original type
+                assert_eq!(ty.borrow().deref(), structty.borrow().deref()); // the type should be truly recursive, in that the pointed-to type should be the same as the original type
             } else {
-                panic!("Expected pointee type to be a NamedStructType, got {:?}", pointee_type);
+                panic!(
+                    "Expected pointee type to be a NamedStructType, got {:?}",
+                    pointee_type
+                );
             }
         } else {
-            panic!("Expected inner type to be a PointerType, got {:?}", element_types[1]);
+            panic!(
+                "Expected inner type to be a PointerType, got {:?}",
+                element_types[1]
+            );
         }
     } else {
-        panic!("Expected SimpleLinkedList to be a StructType, got {:?}", structty);
+        panic!(
+            "Expected SimpleLinkedList to be a StructType, got {:?}",
+            structty
+        );
     }
 
-    let func = module.get_func_by_name("simple_linked_list").expect("Failed to find function");
-    let alloca: &instruction::Alloca = &func.basic_blocks[0].instrs[1].clone().try_into().expect("Should be an alloca");
+    let func = module
+        .get_func_by_name("simple_linked_list")
+        .expect("Failed to find function");
+    let alloca: &instruction::Alloca = &func.basic_blocks[0].instrs[1]
+        .clone()
+        .try_into()
+        .expect("Should be an alloca");
     if let Type::NamedStructType { ref name, ref ty } = alloca.allocated_type {
         assert_eq!(name, "struct.SimpleLinkedList");
-        let inner_ty: Rc<RefCell<Type>> = ty.as_ref()
+        let inner_ty: Rc<RefCell<Type>> = ty
+            .as_ref()
             .expect("Allocated type should not be opaque")
             .upgrade()
             .expect("Failed to upgrade weak ref");
-        assert_eq!(inner_ty.borrow().deref(), structty.borrow().deref());  // this should be exactly the same struct type as when we accessed it through the module above
+        assert_eq!(inner_ty.borrow().deref(), structty.borrow().deref()); // this should be exactly the same struct type as when we accessed it through the module above
     } else {
-        panic!("Expected alloca.allocated_type to be a NamedStructType, got {:?}", alloca.allocated_type);
+        panic!(
+            "Expected alloca.allocated_type to be a NamedStructType, got {:?}",
+            alloca.allocated_type
+        );
     }
 }
 
@@ -290,13 +378,29 @@ fn indirectly_recursive_type() {
     let path = Path::new("tests/basic_bc/linkedlist.bc");
     let module = Module::from_bc_path(&path).expect("Failed to parse module");
 
-    let aty: Rc<RefCell<Type>> = module.named_struct_types.get("struct.NodeA")
-        .unwrap_or_else(|| { let names: Vec<_> = module.named_struct_types.keys().collect(); panic!("Failed to find struct.NodeA in named_struct_types; have names {:?}", names) })
+    let aty: Rc<RefCell<Type>> = module
+        .named_struct_types
+        .get("struct.NodeA")
+        .unwrap_or_else(|| {
+            let names: Vec<_> = module.named_struct_types.keys().collect();
+            panic!(
+                "Failed to find struct.NodeA in named_struct_types; have names {:?}",
+                names
+            )
+        })
         .as_ref()
         .expect("NodeA should not be an opaque type")
         .clone();
-    let bty: Rc<RefCell<Type>> = module.named_struct_types.get("struct.NodeB")
-        .unwrap_or_else(|| { let names: Vec<_> = module.named_struct_types.keys().collect(); panic!("Failed to find struct.NodeB in named_struct_types; have names {:?}", names) })
+    let bty: Rc<RefCell<Type>> = module
+        .named_struct_types
+        .get("struct.NodeB")
+        .unwrap_or_else(|| {
+            let names: Vec<_> = module.named_struct_types.keys().collect();
+            panic!(
+                "Failed to find struct.NodeB in named_struct_types; have names {:?}",
+                names
+            )
+        })
         .as_ref()
         .expect("NodeB should not be an opaque type")
         .clone();
@@ -306,16 +410,23 @@ fn indirectly_recursive_type() {
         if let Type::PointerType { pointee_type, .. } = &element_types[1] {
             if let Type::NamedStructType { ref name, ref ty } = **pointee_type {
                 assert_eq!(name, "struct.NodeB");
-                let ty: Rc<RefCell<Type>> = ty.as_ref()
+                let ty: Rc<RefCell<Type>> = ty
+                    .as_ref()
                     .expect("Inner type should not be opaque")
                     .upgrade()
                     .expect("Failed to upgrade weak ref");
                 assert_eq!(ty.borrow().deref(), bty.borrow().deref());
             } else {
-                panic!("Expected pointee type to be a NamedStructType, got {:?}", **pointee_type);
+                panic!(
+                    "Expected pointee type to be a NamedStructType, got {:?}",
+                    **pointee_type
+                );
             }
         } else {
-            panic!("Expected inner type to be a PointerType, got {:?}", element_types[1]);
+            panic!(
+                "Expected inner type to be a PointerType, got {:?}",
+                element_types[1]
+            );
         }
     } else {
         panic!("Expected NodeA to be a StructType, got {:?}", aty);
@@ -326,42 +437,65 @@ fn indirectly_recursive_type() {
         if let Type::PointerType { pointee_type, .. } = &element_types[1] {
             if let Type::NamedStructType { ref name, ref ty } = **pointee_type {
                 assert_eq!(name, "struct.NodeA");
-                let ty: Rc<RefCell<Type>> = ty.as_ref()
+                let ty: Rc<RefCell<Type>> = ty
+                    .as_ref()
                     .expect("Inner type should not be opaque")
                     .upgrade()
                     .expect("Failed to upgrade weak ref");
                 assert_eq!(ty.borrow().deref(), aty.borrow().deref());
             } else {
-                panic!("Expected pointee type to be a NamedStructType, got {:?}", **pointee_type);
+                panic!(
+                    "Expected pointee type to be a NamedStructType, got {:?}",
+                    **pointee_type
+                );
             }
         } else {
-            panic!("Expected inner type to be a PointerType, got {:?}", element_types[1]);
+            panic!(
+                "Expected inner type to be a PointerType, got {:?}",
+                element_types[1]
+            );
         }
     } else {
         panic!("Expected NodeB to be a StructType, got {:?}", bty);
     }
 
-    let func = module.get_func_by_name("indirectly_recursive_type").expect("Failed to find function");
-    let alloca_a: &instruction::Alloca = &func.basic_blocks[0].instrs[1].clone().try_into().expect("Should be an alloca");
-    let alloca_b: &instruction::Alloca = &func.basic_blocks[0].instrs[2].clone().try_into().expect("Should be an alloca");
+    let func = module
+        .get_func_by_name("indirectly_recursive_type")
+        .expect("Failed to find function");
+    let alloca_a: &instruction::Alloca = &func.basic_blocks[0].instrs[1]
+        .clone()
+        .try_into()
+        .expect("Should be an alloca");
+    let alloca_b: &instruction::Alloca = &func.basic_blocks[0].instrs[2]
+        .clone()
+        .try_into()
+        .expect("Should be an alloca");
     if let Type::NamedStructType { ref name, ref ty } = alloca_a.allocated_type {
         assert_eq!(name, "struct.NodeA");
-        let inner_ty: Rc<RefCell<Type>> = ty.as_ref()
+        let inner_ty: Rc<RefCell<Type>> = ty
+            .as_ref()
             .expect("Allocated type should not be opaque")
             .upgrade()
             .expect("Failed to upgrade weak ref");
-        assert_eq!(inner_ty.borrow().deref(), aty.borrow().deref());  // this should be exactly the same struct type as when we accessed it through the module above
+        assert_eq!(inner_ty.borrow().deref(), aty.borrow().deref()); // this should be exactly the same struct type as when we accessed it through the module above
     } else {
-        panic!("Expected alloca_a.allocated_type to be a NamedStructType, got {:?}", alloca_a.allocated_type);
+        panic!(
+            "Expected alloca_a.allocated_type to be a NamedStructType, got {:?}",
+            alloca_a.allocated_type
+        );
     }
     if let Type::NamedStructType { ref name, ref ty } = alloca_b.allocated_type {
         assert_eq!(name, "struct.NodeB");
-        let inner_ty: Rc<RefCell<Type>> = ty.as_ref()
+        let inner_ty: Rc<RefCell<Type>> = ty
+            .as_ref()
             .expect("Allocated type should not be opaque")
             .upgrade()
             .expect("Failed to upgrade weak ref");
         assert_eq!(inner_ty.borrow().deref(), bty.borrow().deref());
     } else {
-        panic!("Expected alloca_b.allocated_type to be a NamedStructType, got {:?}", alloca_b.allocated_type);
+        panic!(
+            "Expected alloca_b.allocated_type to be a NamedStructType, got {:?}",
+            alloca_b.allocated_type
+        );
     }
 }

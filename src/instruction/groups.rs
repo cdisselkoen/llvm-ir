@@ -1,6 +1,6 @@
 use super::Instruction;
-use super::{Add, Sub, Mul, UDiv, SDiv, URem, SRem, And, Or, Xor, Shl, LShr, AShr, FAdd, FSub, FMul, FDiv, FRem};
-use super::{Type, Typed, HasResult, Name, Operand};
+use super::{AShr, Add, And, FAdd, FDiv, FMul, FRem, FSub, LShr, Mul, Or, SDiv, SRem, Shl, Sub, UDiv, URem, Xor};
+use super::{HasResult, Name, Operand, Type, Typed};
 use std::convert::TryFrom;
 
 /// Just the BinaryOps.  This ends up being better than a `&dyn `[`BinaryOp`](../trait.BinaryOp.html) for various reasons.

@@ -1,11 +1,11 @@
-use std::convert::TryFrom;
-use either::Either;
 use crate::constant::Constant;
 use crate::function::{CallingConvention, FunctionAttribute, ParameterAttribute};
-use crate::instruction::{InlineAssembly, HasResult};
+use crate::instruction::{HasResult, InlineAssembly};
 use crate::name::Name;
 use crate::operand::Operand;
 use crate::types::{Type, Typed};
+use either::Either;
+use std::convert::TryFrom;
 
 /// Terminator instructions end a basic block.
 /// See [LLVM docs on Terminator Instructions](https://releases.llvm.org/8.0.0/docs/LangRef.html#terminator-instructions)
@@ -93,7 +93,7 @@ macro_rules! impl_term {
             }
         }
         */
-    }
+    };
 }
 
 macro_rules! impl_hasresult {
@@ -103,7 +103,7 @@ macro_rules! impl_hasresult {
                 &self.result
             }
         }
-    }
+    };
 }
 
 macro_rules! void_typed {
@@ -125,7 +125,7 @@ pub struct Ret {
 }
 
 impl_term!(Ret, Ret);
-void_typed!(Ret);  // technically the instruction has void type, even though the function may not
+void_typed!(Ret); // technically the instruction has void type, even though the function may not
 
 /// See [LLVM 8 docs on the 'br' instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#br-instruction).
 /// The LLVM 'br' instruction has both conditional and unconditional variants, which we separate -- this is
@@ -191,10 +191,10 @@ pub struct Invoke {
     pub function: Either<InlineAssembly, Operand>,
     pub arguments: Vec<(Operand, Vec<ParameterAttribute>)>,
     pub return_attributes: Vec<ParameterAttribute>,
-    pub result: Name,  // The name of the variable that will get the result of the call (if the callee returns with 'ret')
-    pub return_label: Name,  // Should be the name of a basic block. If the callee returns normally (i.e., with 'ret'), control flow resumes here.
-    pub exception_label: Name,  // Should be the name of a basic block. If the callee returns with 'resume' or another exception-handling mechanism, control flow resumes here.
-    pub function_attributes: Vec<FunctionAttribute>,  // llvm-hs has the equivalent of Vec<Either<GroupID, FunctionAttribute>>, but I'm not sure how the GroupID option comes up
+    pub result: Name, // The name of the variable that will get the result of the call (if the callee returns with 'ret')
+    pub return_label: Name, // Should be the name of a basic block. If the callee returns normally (i.e., with 'ret'), control flow resumes here.
+    pub exception_label: Name, // Should be the name of a basic block. If the callee returns with 'resume' or another exception-handling mechanism, control flow resumes here.
+    pub function_attributes: Vec<FunctionAttribute>, // llvm-hs has the equivalent of Vec<Either<GroupID, FunctionAttribute>>, but I'm not sure how the GroupID option comes up
     pub calling_convention: CallingConvention,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -280,17 +280,26 @@ impl Typed for CatchSwitch {
 // from_llvm //
 // ********* //
 
-use crate::from_llvm::*;
 use crate::basicblock::BBMap;
 use crate::constant::GlobalNameMap;
+use crate::from_llvm::*;
 use crate::operand::ValToNameMap;
 use crate::types::TyNameMap;
 use llvm_sys::LLVMOpcode;
 use log::debug;
 
 impl Terminator {
-    pub(crate) fn from_llvm_ref(term: LLVMValueRef, ctr: &mut usize, vnmap: &ValToNameMap, bbmap: &BBMap, gnmap: &GlobalNameMap, tnmap: &mut TyNameMap) -> Self {
-        debug!("Processing terminator {:?}", unsafe { print_to_string(term) });
+    pub(crate) fn from_llvm_ref(
+        term: LLVMValueRef,
+        ctr: &mut usize,
+        vnmap: &ValToNameMap,
+        bbmap: &BBMap,
+        gnmap: &GlobalNameMap,
+        tnmap: &mut TyNameMap,
+    ) -> Self {
+        debug!("Processing terminator {:?}", unsafe {
+            print_to_string(term)
+        });
         match unsafe { LLVMGetInstructionOpcode(term) } {
             LLVMOpcode::LLVMRet => Terminator::Ret(Ret::from_llvm_ref(term, vnmap, gnmap, tnmap)),
             LLVMOpcode::LLVMBr => match unsafe { LLVMGetNumOperands(term) } {
@@ -312,11 +321,21 @@ impl Terminator {
 }
 
 impl Ret {
-    pub(crate) fn from_llvm_ref(term: LLVMValueRef, vnmap: &ValToNameMap, gnmap: &GlobalNameMap, tnmap: &mut TyNameMap) -> Self {
+    pub(crate) fn from_llvm_ref(
+        term: LLVMValueRef,
+        vnmap: &ValToNameMap,
+        gnmap: &GlobalNameMap,
+        tnmap: &mut TyNameMap,
+    ) -> Self {
         Self {
             return_operand: match unsafe { LLVMGetNumOperands(term) } {
                 0 => None,
-                1 => Some(Operand::from_llvm_ref( unsafe { LLVMGetOperand(term, 0) }, vnmap, gnmap, tnmap )),
+                1 => Some(Operand::from_llvm_ref(
+                    unsafe { LLVMGetOperand(term, 0) },
+                    vnmap,
+                    gnmap,
+                    tnmap,
+                )),
                 n => panic!("Ret instruction with {} operands", n),
             },
             // metadata: InstructionMetadata::from_llvm_inst(term),
@@ -328,7 +347,8 @@ impl Br {
     pub(crate) fn from_llvm_ref(term: LLVMValueRef, bbmap: &BBMap) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(term) }, 1);
         Self {
-            dest: bbmap.get( unsafe { &op_to_bb(LLVMGetOperand(term, 0)) } )
+            dest: bbmap
+                .get(unsafe { &op_to_bb(LLVMGetOperand(term, 0)) })
                 .expect("Failed to find destination bb in map")
                 .clone(),
             // metadata: InstructionMetadata::from_llvm_inst(term),
@@ -337,14 +357,27 @@ impl Br {
 }
 
 impl CondBr {
-    pub(crate) fn from_llvm_ref(term: LLVMValueRef, vnmap: &ValToNameMap, bbmap: &BBMap, gnmap: &GlobalNameMap, tnmap: &mut TyNameMap) -> Self {
+    pub(crate) fn from_llvm_ref(
+        term: LLVMValueRef,
+        vnmap: &ValToNameMap,
+        bbmap: &BBMap,
+        gnmap: &GlobalNameMap,
+        tnmap: &mut TyNameMap,
+    ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(term) }, 3);
         Self {
-            condition: Operand::from_llvm_ref( unsafe { LLVMGetOperand(term, 0) }, vnmap, gnmap, tnmap ),
-            true_dest: bbmap.get( unsafe { &op_to_bb(LLVMGetOperand(term, 2)) } )
+            condition: Operand::from_llvm_ref(
+                unsafe { LLVMGetOperand(term, 0) },
+                vnmap,
+                gnmap,
+                tnmap,
+            ),
+            true_dest: bbmap
+                .get(unsafe { &op_to_bb(LLVMGetOperand(term, 2)) })
                 .expect("Failed to find true-destination bb in map")
                 .clone(),
-            false_dest: bbmap.get( unsafe { &op_to_bb(LLVMGetOperand(term, 1)) } )
+            false_dest: bbmap
+                .get(unsafe { &op_to_bb(LLVMGetOperand(term, 1)) })
                 .expect("Failed to find false-destination in bb map")
                 .clone(),
             // metadata: InstructionMetadata::from_llvm_inst(term),
@@ -353,22 +386,36 @@ impl CondBr {
 }
 
 impl Switch {
-    pub(crate) fn from_llvm_ref(term: LLVMValueRef, vnmap: &ValToNameMap, bbmap: &BBMap, gnmap: &GlobalNameMap, tnmap: &mut TyNameMap) -> Self {
+    pub(crate) fn from_llvm_ref(
+        term: LLVMValueRef,
+        vnmap: &ValToNameMap,
+        bbmap: &BBMap,
+        gnmap: &GlobalNameMap,
+        tnmap: &mut TyNameMap,
+    ) -> Self {
         Self {
-            operand: Operand::from_llvm_ref( unsafe { LLVMGetOperand(term, 0) }, vnmap, gnmap, tnmap ),
+            operand: Operand::from_llvm_ref(
+                unsafe { LLVMGetOperand(term, 0) },
+                vnmap,
+                gnmap,
+                tnmap,
+            ),
             dests: {
                 let num_dests = unsafe { LLVMGetNumSuccessors(term) };
-                let dest_bbs = (1 ..= num_dests).map(|i| {  // LLVMGetSuccessor(0) apparently gives the default dest
-                    bbmap.get( unsafe { &LLVMGetSuccessor(term, i) } )
-                        .expect("Failed to find switch destination in map")
-                        .clone()
-                });
-                let dest_vals = (1 .. num_dests).map(|i| {
-                    Constant::from_llvm_ref( unsafe { LLVMGetOperand(term, 2*i) }, gnmap, tnmap )  // 2*i because empirically, operand 1 is the default dest, and operands 3/5/7/etc are the successor blocks
+                let dest_bbs = (1..=num_dests) // LLVMGetSuccessor(0) apparently gives the default dest
+                    .map(|i| {
+                        bbmap
+                            .get(unsafe { &LLVMGetSuccessor(term, i) })
+                            .expect("Failed to find switch destination in map")
+                            .clone()
+                    });
+                let dest_vals = (1..num_dests).map(|i| {
+                    Constant::from_llvm_ref(unsafe { LLVMGetOperand(term, 2 * i) }, gnmap, tnmap) // 2*i because empirically, operand 1 is the default dest, and operands 3/5/7/etc are the successor blocks
                 });
                 Iterator::zip(dest_vals, dest_bbs).collect()
             },
-            default_dest: bbmap.get( unsafe { &LLVMGetSwitchDefaultDest(term) } )
+            default_dest: bbmap
+                .get(unsafe { &LLVMGetSwitchDefaultDest(term) })
                 .expect("Failed to find switch default destination in map")
                 .clone(),
             // metadata: InstructionMetadata::from_llvm_inst(term),
@@ -377,16 +424,30 @@ impl Switch {
 }
 
 impl IndirectBr {
-    pub(crate) fn from_llvm_ref(term: LLVMValueRef, vnmap: &ValToNameMap, bbmap: &BBMap, gnmap: &GlobalNameMap, tnmap: &mut TyNameMap) -> Self {
+    pub(crate) fn from_llvm_ref(
+        term: LLVMValueRef,
+        vnmap: &ValToNameMap,
+        bbmap: &BBMap,
+        gnmap: &GlobalNameMap,
+        tnmap: &mut TyNameMap,
+    ) -> Self {
         Self {
-            operand: Operand::from_llvm_ref( unsafe { LLVMGetOperand(term, 0) }, vnmap, gnmap, tnmap ),
+            operand: Operand::from_llvm_ref(
+                unsafe { LLVMGetOperand(term, 0) },
+                vnmap,
+                gnmap,
+                tnmap,
+            ),
             possible_dests: {
                 let num_dests = unsafe { LLVMGetNumSuccessors(term) };
-                (0 .. num_dests).map(|i| {
-                    bbmap.get( unsafe { &LLVMGetSuccessor(term, i) } )
-                        .expect("Failed to find indirect branch destination in map")
-                        .clone()
-                }).collect()
+                (0..num_dests)
+                    .map(|i| {
+                        bbmap
+                            .get(unsafe { &LLVMGetSuccessor(term, i) })
+                            .expect("Failed to find indirect branch destination in map")
+                            .clone()
+                    })
+                    .collect()
             },
             // metadata: InstructionMetadata::from_llvm_inst(term),
         }
@@ -394,18 +455,27 @@ impl IndirectBr {
 }
 
 impl Invoke {
-    pub(crate) fn from_llvm_ref(term: LLVMValueRef, ctr: &mut usize, vnmap: &ValToNameMap, bbmap: &BBMap, gnmap: &GlobalNameMap, tnmap: &mut TyNameMap) -> Self {
+    pub(crate) fn from_llvm_ref(
+        term: LLVMValueRef,
+        ctr: &mut usize,
+        vnmap: &ValToNameMap,
+        bbmap: &BBMap,
+        gnmap: &GlobalNameMap,
+        tnmap: &mut TyNameMap,
+    ) -> Self {
         use crate::instruction::CallInfo;
         let callinfo = CallInfo::from_llvm_ref(term, vnmap, gnmap, tnmap);
         Self {
             function: callinfo.function,
             arguments: callinfo.arguments,
             return_attributes: callinfo.return_attributes,
-            result: Name::name_or_num( unsafe { get_value_name(term) }, ctr),
-            return_label: bbmap.get( unsafe { &LLVMGetNormalDest(term) } )
+            result: Name::name_or_num(unsafe { get_value_name(term) }, ctr),
+            return_label: bbmap
+                .get(unsafe { &LLVMGetNormalDest(term) })
                 .expect("Failed to find invoke return destination in map")
                 .clone(),
-            exception_label: bbmap.get( unsafe { &LLVMGetUnwindDest(term) } )
+            exception_label: bbmap
+                .get(unsafe { &LLVMGetUnwindDest(term) })
                 .expect("Failed to find invoke exception destination in map")
                 .clone(),
             function_attributes: callinfo.function_attributes,
@@ -416,10 +486,20 @@ impl Invoke {
 }
 
 impl Resume {
-    pub(crate) fn from_llvm_ref(term: LLVMValueRef, vnmap: &ValToNameMap, gnmap: &GlobalNameMap, tnmap: &mut TyNameMap) -> Self {
+    pub(crate) fn from_llvm_ref(
+        term: LLVMValueRef,
+        vnmap: &ValToNameMap,
+        gnmap: &GlobalNameMap,
+        tnmap: &mut TyNameMap,
+    ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(term) }, 1);
         Self {
-            operand: Operand::from_llvm_ref( unsafe { LLVMGetOperand(term, 0) }, vnmap, gnmap, tnmap ),
+            operand: Operand::from_llvm_ref(
+                unsafe { LLVMGetOperand(term, 0) },
+                vnmap,
+                gnmap,
+                tnmap,
+            ),
             // metadata: InstructionMetadata::from_llvm_inst(term),
         }
     }
@@ -435,18 +515,37 @@ impl Unreachable {
 }
 
 impl CleanupRet {
-    pub(crate) fn from_llvm_ref(term: LLVMValueRef, vnmap: &ValToNameMap, bbmap: &BBMap, gnmap: &GlobalNameMap, tnmap: &mut TyNameMap) -> Self {
+    pub(crate) fn from_llvm_ref(
+        term: LLVMValueRef,
+        vnmap: &ValToNameMap,
+        bbmap: &BBMap,
+        gnmap: &GlobalNameMap,
+        tnmap: &mut TyNameMap,
+    ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(term) }, 1);
         Self {
-            cleanup_pad: Operand::from_llvm_ref( unsafe { LLVMGetOperand(term, 0) }, vnmap, gnmap, tnmap ),
+            cleanup_pad: Operand::from_llvm_ref(
+                unsafe { LLVMGetOperand(term, 0) },
+                vnmap,
+                gnmap,
+                tnmap,
+            ),
             unwind_dest: {
                 let dest = unsafe { LLVMGetUnwindDest(term) };
                 if dest.is_null() {
                     None
                 } else {
-                    Some(bbmap.get(&dest)
-                        .unwrap_or_else(|| { let names: Vec<_> = bbmap.values().collect(); panic!("Failed to find unwind destination in map; have names {:?}", names) })
-                        .clone()
+                    Some(
+                        bbmap
+                            .get(&dest)
+                            .unwrap_or_else(|| {
+                                let names: Vec<_> = bbmap.values().collect();
+                                panic!(
+                                    "Failed to find unwind destination in map; have names {:?}",
+                                    names
+                                )
+                            })
+                            .clone(),
                     )
                 }
             },
@@ -456,10 +555,22 @@ impl CleanupRet {
 }
 
 impl CatchRet {
-    pub(crate) fn from_llvm_ref(term: LLVMValueRef, vnmap: &ValToNameMap, bbmap: &BBMap, gnmap: &GlobalNameMap, tnmap: &mut TyNameMap) -> Self {
+    pub(crate) fn from_llvm_ref(
+        term: LLVMValueRef,
+        vnmap: &ValToNameMap,
+        bbmap: &BBMap,
+        gnmap: &GlobalNameMap,
+        tnmap: &mut TyNameMap,
+    ) -> Self {
         Self {
-            catch_pad: Operand::from_llvm_ref( unsafe { LLVMGetOperand(term, 0) }, vnmap, gnmap, tnmap ),
-            successor: bbmap.get( unsafe { &LLVMGetSuccessor(term, 0) } )
+            catch_pad: Operand::from_llvm_ref(
+                unsafe { LLVMGetOperand(term, 0) },
+                vnmap,
+                gnmap,
+                tnmap,
+            ),
+            successor: bbmap
+                .get(unsafe { &LLVMGetSuccessor(term, 0) })
                 .expect("Failed to find CatchRet successor in map")
                 .clone(),
             // metadata: InstructionMetadata::from_llvm_inst(term),
@@ -468,18 +579,37 @@ impl CatchRet {
 }
 
 impl CatchSwitch {
-    pub(crate) fn from_llvm_ref(term: LLVMValueRef, ctr: &mut usize, vnmap: &ValToNameMap, bbmap: &BBMap, gnmap: &GlobalNameMap, tnmap: &mut TyNameMap) -> Self {
+    pub(crate) fn from_llvm_ref(
+        term: LLVMValueRef,
+        ctr: &mut usize,
+        vnmap: &ValToNameMap,
+        bbmap: &BBMap,
+        gnmap: &GlobalNameMap,
+        tnmap: &mut TyNameMap,
+    ) -> Self {
         Self {
-            parent_pad: Operand::from_llvm_ref( unsafe { LLVMGetOperand(term, 0) }, vnmap, gnmap, tnmap ),
+            parent_pad: Operand::from_llvm_ref(
+                unsafe { LLVMGetOperand(term, 0) },
+                vnmap,
+                gnmap,
+                tnmap,
+            ),
             catch_handlers: {
                 let num_handlers = unsafe { LLVMGetNumHandlers(term) };
-                let mut handlers: Vec<LLVMBasicBlockRef> = Vec::with_capacity(num_handlers as usize);
+                let mut handlers: Vec<LLVMBasicBlockRef> =
+                    Vec::with_capacity(num_handlers as usize);
                 unsafe {
                     LLVMGetHandlers(term, handlers.as_mut_ptr());
                     handlers.set_len(num_handlers as usize);
                 };
-                handlers.into_iter()
-                    .map(|h| bbmap.get(&h).expect("Failed to find catch handler in map").clone())
+                handlers
+                    .into_iter()
+                    .map(|h| {
+                        bbmap
+                            .get(&h)
+                            .expect("Failed to find catch handler in map")
+                            .clone()
+                    })
                     .collect()
             },
             default_unwind_dest: {
@@ -493,7 +623,7 @@ impl CatchSwitch {
                     )
                 }
             },
-            result: Name::name_or_num( unsafe { get_value_name(term) }, ctr),
+            result: Name::name_or_num(unsafe { get_value_name(term) }, ctr),
             // metadata: InstructionMetadata::from_llvm_inst(term),
         }
     }

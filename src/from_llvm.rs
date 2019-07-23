@@ -1,6 +1,6 @@
-pub use llvm_sys::prelude::*;
-pub use llvm_sys::core::*;
 pub use crate::iterators::*;
+pub use llvm_sys::core::*;
+pub use llvm_sys::prelude::*;
 use std::ffi::CStr;
 use std::os::raw::c_char;
 
@@ -17,7 +17,7 @@ macro_rules! wrap {
             let ptr = $llvmFunc(arg);
             raw_to_string(ptr)
         }
-    }
+    };
 }
 
 macro_rules! wrap_maybe_null {
@@ -30,7 +30,7 @@ macro_rules! wrap_maybe_null {
                 Some(raw_to_string(ptr))
             }
         }
-    }
+    };
 }
 
 macro_rules! wrap_with_len {
@@ -79,6 +79,8 @@ impl Context {
 
 impl Drop for Context {
     fn drop(&mut self) {
-        unsafe { LLVMContextDispose(self.ctx); }
+        unsafe {
+            LLVMContextDispose(self.ctx);
+        }
     }
 }

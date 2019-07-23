@@ -13,14 +13,14 @@ pub struct Function {
     pub is_var_arg: bool,
     pub return_type: Type,
     pub basic_blocks: Vec<BasicBlock>,
-    pub function_attributes: Vec<FunctionAttribute>,  // llvm-hs-pure has Vec<Either<GroupID, FunctionAttribute>>, but I'm not sure how the GroupID ones come about
+    pub function_attributes: Vec<FunctionAttribute>, // llvm-hs-pure has Vec<Either<GroupID, FunctionAttribute>>, but I'm not sure how the GroupID ones come about
     pub return_attributes: Vec<ParameterAttribute>,
     pub linkage: Linkage,
     pub visibility: Visibility,
-    pub dll_storage_class: DLLStorageClass,  // llvm-hs-pure has Option<DLLStorageClass>, but the llvm_sys api doesn't look like it can fail
+    pub dll_storage_class: DLLStorageClass, // llvm-hs-pure has Option<DLLStorageClass>, but the llvm_sys api doesn't look like it can fail
     pub calling_convention: CallingConvention,
     pub section: Option<String>,
-    pub comdat: Option<Comdat>,  // llvm-hs-pure has Option<String>, I'm not sure why
+    pub comdat: Option<Comdat>, // llvm-hs-pure has Option<String>, I'm not sure why
     pub alignment: u32,
     /// See [LLVM 8 docs on Garbage Collector Strategy Names](https://releases.llvm.org/8.0.0/docs/LangRef.html#gc)
     pub garbage_collector_name: Option<String>,
@@ -35,7 +35,7 @@ impl Typed for Function {
         Type::FuncType {
             result_type: Box::new(self.return_type.clone()),
             param_types: self.parameters.iter().map(|p| p.get_type()).collect(),
-            is_var_arg: self.is_var_arg
+            is_var_arg: self.is_var_arg,
         }
     }
 }
@@ -45,7 +45,7 @@ impl Function {
     pub fn get_bb_by_name(&self, name: &Name) -> Option<&BasicBlock> {
         for bb in self.basic_blocks.iter() {
             if &bb.name == name {
-                return Some(bb)
+                return Some(bb);
             }
         }
         None
@@ -140,8 +140,14 @@ pub enum CallingConvention {
 
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub enum Attribute {
-    EnumAttribute { kind: u32, value: Option<num::NonZeroU64> },  // LLVM C API documentation for LLVMGetEnumAttributeValue says "0 is returned if none exists", so it seems to be impossible to distinguish between a value of 0 and no value (if a value of 0 is legal at all)
-    StringAttribute { kind: String, value: String },  // for no value, use ""
+    EnumAttribute {
+        kind: u32,
+        value: Option<num::NonZeroU64>, // LLVM C API documentation for LLVMGetEnumAttributeValue says "0 is returned if none exists", so it seems to be impossible to distinguish between a value of 0 and no value (if a value of 0 is legal at all)
+    },
+    StringAttribute {
+        kind: String,
+        value: String, // for no value, use ""
+    },
 }
 
 /// See [LLVM 8 docs on Function Attributes](https://releases.llvm.org/8.0.0/docs/LangRef.html#fnattrs)
@@ -227,38 +233,47 @@ pub type GroupID = usize;
 // from_llvm //
 // ********* //
 
-use crate::from_llvm::*;
 use crate::basicblock::BBMap;
 use crate::constant::GlobalNameMap;
+use crate::from_llvm::*;
 use crate::operand::ValToNameMap;
 use crate::types::TyNameMap;
-use llvm_sys::{LLVMAttributeFunctionIndex, LLVMAttributeReturnIndex};
 use llvm_sys::comdat::*;
+use llvm_sys::{LLVMAttributeFunctionIndex, LLVMAttributeReturnIndex};
 use log::debug;
 
 impl Function {
-    pub(crate) fn from_llvm_ref(func: LLVMValueRef, gnmap: &GlobalNameMap, tnmap: &mut TyNameMap) -> Self {
+    pub(crate) fn from_llvm_ref(
+        func: LLVMValueRef,
+        gnmap: &GlobalNameMap,
+        tnmap: &mut TyNameMap,
+    ) -> Self {
         let func = unsafe { LLVMIsAFunction(func) };
         assert!(!func.is_null());
         debug!("Processing func {:?}", unsafe { get_value_name(func) });
-        let mut local_ctr = 0;  // this ctr is used to number parameters, variables, and basic blocks that aren't named
+        let mut local_ctr = 0; // this ctr is used to number parameters, variables, and basic blocks that aren't named
 
         let parameters = {
-            get_parameters(func).enumerate().map(|(i,p)| {
-                Parameter {
+            get_parameters(func)
+                .enumerate()
+                .map(|(i, p)| Parameter {
                     name: Name::name_or_num(unsafe { get_value_name(p) }, &mut local_ctr),
-                    ty: Type::from_llvm_ref( unsafe { LLVMTypeOf(p) }, tnmap ),
+                    ty: Type::from_llvm_ref(unsafe { LLVMTypeOf(p) }, tnmap),
                     attributes: {
                         let num_attrs = unsafe { LLVMGetAttributeCountAtIndex(func, i as u32) };
-                        let mut attrs: Vec<LLVMAttributeRef> = Vec::with_capacity(num_attrs as usize);
+                        let mut attrs: Vec<LLVMAttributeRef> =
+                            Vec::with_capacity(num_attrs as usize);
                         unsafe {
                             LLVMGetAttributesAtIndex(func, i as u32, attrs.as_mut_ptr());
                             attrs.set_len(num_attrs as usize);
                         };
-                        attrs.into_iter().map(ParameterAttribute::from_llvm_ref).collect()
+                        attrs
+                            .into_iter()
+                            .map(ParameterAttribute::from_llvm_ref)
+                            .collect()
                     },
-                }
-            }).collect()
+                })
+                .collect()
         };
 
         let ctr_val_after_parameters = local_ctr;
@@ -273,56 +288,84 @@ impl Function {
         let bbresults: Vec<_> = get_basic_blocks(func)
             .map(|bb| (bb, BasicBlock::first_pass_names(bb, &mut local_ctr)))
             .collect();
-        let bbmap: BBMap = bbresults.iter()
+        let bbmap: BBMap = bbresults
+            .iter()
             .map(|(bb, (bbname, _))| (*bb, bbname.clone()))
             .collect();
         debug!("Collected a BBMap with {} entries", bbmap.len());
-        let vnmap: ValToNameMap = bbresults.into_iter()
+        let vnmap: ValToNameMap = bbresults
+            .into_iter()
             .flat_map(|(_, (_, namepairs))| namepairs.into_iter())
-            .chain(get_parameters(func).enumerate().map(|(i,p)| (p, Name::Number(i))))
+            .chain(
+                get_parameters(func)
+                    .enumerate()
+                    .map(|(i, p)| (p, Name::Number(i))),
+            )
             .collect();
         debug!("Collected a ValToNameMap with {} entries", vnmap.len());
 
-        local_ctr = ctr_val_after_parameters;  // reset the local_ctr; the second pass should number everything exactly the same though
-        let functy = unsafe { LLVMGetElementType(LLVMTypeOf(func)) };  // for some reason the TypeOf a function is <pointer to function> and not just <function> so we have to deref it like this
+        local_ctr = ctr_val_after_parameters; // reset the local_ctr; the second pass should number everything exactly the same though
+        let functy = unsafe { LLVMGetElementType(LLVMTypeOf(func)) }; // for some reason the TypeOf a function is <pointer to function> and not just <function> so we have to deref it like this
         Self {
             name: unsafe { get_value_name(func) },
             parameters,
             is_var_arg: unsafe { LLVMIsFunctionVarArg(functy) } != 0,
-            return_type: Type::from_llvm_ref( unsafe { LLVMGetReturnType(functy) }, tnmap ),
+            return_type: Type::from_llvm_ref(unsafe { LLVMGetReturnType(functy) }, tnmap),
             basic_blocks: {
-                get_basic_blocks(func).map(|bb| BasicBlock::from_llvm_ref(bb, &mut local_ctr, &vnmap, &bbmap, gnmap, tnmap)).collect()
+                get_basic_blocks(func)
+                    .map(|bb| {
+                        BasicBlock::from_llvm_ref(bb, &mut local_ctr, &vnmap, &bbmap, gnmap, tnmap)
+                    })
+                    .collect()
             },
             function_attributes: {
-                let num_attrs = unsafe { LLVMGetAttributeCountAtIndex(func, LLVMAttributeFunctionIndex) };
+                let num_attrs =
+                    unsafe { LLVMGetAttributeCountAtIndex(func, LLVMAttributeFunctionIndex) };
                 if num_attrs > 0 {
                     let mut attrs: Vec<LLVMAttributeRef> = Vec::with_capacity(num_attrs as usize);
                     unsafe {
-                        LLVMGetAttributesAtIndex(func, LLVMAttributeFunctionIndex, attrs.as_mut_ptr());
+                        LLVMGetAttributesAtIndex(
+                            func,
+                            LLVMAttributeFunctionIndex,
+                            attrs.as_mut_ptr(),
+                        );
                         attrs.set_len(num_attrs as usize);
                     };
-                    attrs.into_iter().map(FunctionAttribute::from_llvm_ref).collect()
+                    attrs
+                        .into_iter()
+                        .map(FunctionAttribute::from_llvm_ref)
+                        .collect()
                 } else {
                     vec![]
                 }
             },
             return_attributes: {
-                let num_attrs = unsafe { LLVMGetAttributeCountAtIndex(func, LLVMAttributeReturnIndex) };
+                let num_attrs =
+                    unsafe { LLVMGetAttributeCountAtIndex(func, LLVMAttributeReturnIndex) };
                 if num_attrs > 0 {
                     let mut attrs: Vec<LLVMAttributeRef> = Vec::with_capacity(num_attrs as usize);
                     unsafe {
-                        LLVMGetAttributesAtIndex(func, LLVMAttributeReturnIndex, attrs.as_mut_ptr());
+                        LLVMGetAttributesAtIndex(
+                            func,
+                            LLVMAttributeReturnIndex,
+                            attrs.as_mut_ptr(),
+                        );
                         attrs.set_len(num_attrs as usize);
                     };
-                    attrs.into_iter().map(ParameterAttribute::from_llvm_ref).collect()
+                    attrs
+                        .into_iter()
+                        .map(ParameterAttribute::from_llvm_ref)
+                        .collect()
                 } else {
                     vec![]
                 }
             },
-            linkage: Linkage::from_llvm( unsafe { LLVMGetLinkage(func) } ),
-            visibility: Visibility::from_llvm( unsafe { LLVMGetVisibility(func) } ),
-            dll_storage_class: DLLStorageClass::from_llvm( unsafe { LLVMGetDLLStorageClass(func) } ),
-            calling_convention: CallingConvention::from_u32( unsafe { LLVMGetFunctionCallConv(func) } ),
+            linkage: Linkage::from_llvm(unsafe { LLVMGetLinkage(func) }),
+            visibility: Visibility::from_llvm(unsafe { LLVMGetVisibility(func) }),
+            dll_storage_class: DLLStorageClass::from_llvm(unsafe { LLVMGetDLLStorageClass(func) }),
+            calling_convention: CallingConvention::from_u32(unsafe {
+                LLVMGetFunctionCallConv(func)
+            }),
             section: unsafe { get_section(func) },
             comdat: {
                 let comdat = unsafe { LLVMGetComdat(func) };
@@ -336,7 +379,11 @@ impl Function {
             garbage_collector_name: unsafe { get_gc(func) },
             personality_function: {
                 if unsafe { LLVMHasPersonalityFn(func) } != 0 {
-                    Some(Constant::from_llvm_ref( unsafe { LLVMGetPersonalityFn(func) }, gnmap, tnmap ))
+                    Some(Constant::from_llvm_ref(
+                        unsafe { LLVMGetPersonalityFn(func) },
+                        gnmap,
+                        tnmap,
+                    ))
                 } else {
                     None
                 }
@@ -403,7 +450,7 @@ impl Attribute {
         if unsafe { LLVMIsEnumAttribute(a) } != 0 {
             Attribute::EnumAttribute {
                 kind: unsafe { LLVMGetEnumAttributeKind(a) },
-                value: num::NonZeroU64::new( unsafe { LLVMGetEnumAttributeValue(a) } ),
+                value: num::NonZeroU64::new(unsafe { LLVMGetEnumAttributeValue(a) }),
             }
         } else if unsafe { LLVMIsStringAttribute(a) } != 0 {
             Attribute::StringAttribute {

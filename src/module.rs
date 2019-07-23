@@ -2,11 +2,11 @@ use crate::constant::Constant;
 use crate::function::{Function, FunctionAttribute, GroupID};
 use crate::name::Name;
 use crate::types::{Type, Typed};
+use log::debug;
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::path::Path;
 use std::rc::Rc;
-use std::cell::RefCell;
-use log::debug;
 
 /// See [LLVM 8 docs on Module Structure](https://releases.llvm.org/8.0.0/docs/LangRef.html#module-structure)
 #[derive(Clone, Debug)]
@@ -16,7 +16,7 @@ pub struct Module {
     /// See [LLVM 8 docs on Source Filename](https://releases.llvm.org/8.0.0/docs/LangRef.html#source-filename)
     pub source_file_name: String,
     /// See [LLVM 8 docs on Data Layout](https://releases.llvm.org/8.0.0/docs/LangRef.html#data-layout)
-    pub data_layout: String,  // llvm-hs parses this String into Option<DataLayout> with a custom parser
+    pub data_layout: String, // llvm-hs parses this String into Option<DataLayout> with a custom parser
     /// See [LLVM 8 docs on Target Triple](https://releases.llvm.org/8.0.0/docs/LangRef.html#target-triple)
     pub target_triple: Option<String>,
     /// Functions which are defined (not just declared) in this `Module`.
@@ -45,7 +45,7 @@ impl Module {
     pub fn get_func_by_name(&self, name: &str) -> Option<&Function> {
         for func in self.functions.iter() {
             if func.name == name {
-                return Some(func)
+                return Some(func);
             }
         }
         None
@@ -54,22 +54,30 @@ impl Module {
     /// Parse the LLVM bitcode (.bc) file at the given path to create a `Module`
     pub fn from_bc_path(path: impl AsRef<Path>) -> Result<Self, String> {
         // implementation here inspired by the `inkwell` crate's `Module::parse_bitcode_from_path`
-        use std::ffi::{CString, CStr};
+        use std::ffi::{CStr, CString};
         use std::mem;
 
         let path = CString::new(
-                path.as_ref()
-                    .to_str()
-                    .expect("Did not find a valid Unicode path string")
-            ).expect("Failed to convert to CString");
+            path.as_ref()
+                .to_str()
+                .expect("Did not find a valid Unicode path string"),
+        )
+        .expect("Failed to convert to CString");
         debug!("Creating a Module from path {:?}", path);
 
         let memory_buffer = unsafe {
             let mut memory_buffer = std::ptr::null_mut();
             let mut err_string: *mut i8 = std::mem::zeroed();
-            let return_code = LLVMCreateMemoryBufferWithContentsOfFile(path.as_ptr() as *const i8, &mut memory_buffer, &mut err_string);
+            let return_code = LLVMCreateMemoryBufferWithContentsOfFile(
+                path.as_ptr() as *const i8,
+                &mut memory_buffer,
+                &mut err_string,
+            );
             if return_code != 0 {
-                return Err(CStr::from_ptr(err_string).to_str().expect("Failed to convert CStr").to_owned());
+                return Err(CStr::from_ptr(err_string)
+                    .to_str()
+                    .expect("Failed to convert CStr")
+                    .to_owned());
             }
             memory_buffer
         };
@@ -79,8 +87,9 @@ impl Module {
 
         use llvm_sys::bit_reader::LLVMParseBitcodeInContext2;
         let module = unsafe {
-            let mut module: mem::MaybeUninit::<LLVMModuleRef> = mem::MaybeUninit::uninit();
-            let return_code = LLVMParseBitcodeInContext2(context.ctx, memory_buffer, module.as_mut_ptr());
+            let mut module: mem::MaybeUninit<LLVMModuleRef> = mem::MaybeUninit::uninit();
+            let return_code =
+                LLVMParseBitcodeInContext2(context.ctx, memory_buffer, module.as_mut_ptr());
             if return_code != 0 {
                 return Err("Failed to parse bitcode".to_string());
             }
@@ -105,7 +114,7 @@ pub struct GlobalVariable {
     pub unnamed_addr: Option<UnnamedAddr>,
     pub initializer: Option<Constant>,
     pub section: Option<String>,
-    pub comdat: Option<Comdat>,  // llvm-hs-pure has Option<String> for some reason
+    pub comdat: Option<Comdat>, // llvm-hs-pure has Option<String> for some reason
     pub alignment: u32,
     // --TODO not yet implemented-- pub metadata: Vec<(String, MetadataRef<MetadataNode>)>,
 }
@@ -270,8 +279,8 @@ pub enum AlignType {
 // from_llvm //
 // ********* //
 
-use crate::from_llvm::*;
 use crate::constant::GlobalNameMap;
+use crate::from_llvm::*;
 use crate::types::TyNameMap;
 use llvm_sys::{LLVMDLLStorageClass, LLVMLinkage, LLVMThreadLocalMode, LLVMUnnamedAddr, LLVMVisibility};
 use llvm_sys::comdat::*;
@@ -279,7 +288,7 @@ use llvm_sys::comdat::*;
 impl Module {
     pub(crate) fn from_llvm_ref(module: LLVMModuleRef) -> Self {
         debug!("Creating a Module from an LLVMModuleRef");
-        let mut global_ctr = 0;  // this ctr is used to number global objects that aren't named
+        let mut global_ctr = 0; // this ctr is used to number global objects that aren't named
 
         // Modules require two passes over their contents.
         // First we make a pass just to map global objects -- in particular, Functions,
@@ -292,9 +301,14 @@ impl Module {
             .chain(get_declared_functions(module))
             .chain(get_globals(module))
             .chain(get_global_aliases(module))
-            .map(|g| (g, Name::name_or_num( unsafe { get_value_name(g) }, &mut global_ctr)))
+            .map(|g| {
+                (
+                    g,
+                    Name::name_or_num(unsafe { get_value_name(g) }, &mut global_ctr),
+                )
+            })
             .collect();
-        global_ctr = 0;  // reset the global_ctr; the second pass should number everything exactly the same though
+        global_ctr = 0; // reset the global_ctr; the second pass should number everything exactly the same though
 
         let mut tynamemap = TyNameMap::new();
 
@@ -303,9 +317,15 @@ impl Module {
             source_file_name: unsafe { get_source_file_name(module) },
             data_layout: unsafe { get_data_layout_str(module) },
             target_triple: unsafe { get_target(module) },
-            functions: get_defined_functions(module).map(|f| Function::from_llvm_ref(f, &gnmap, &mut tynamemap)).collect(),
-            global_vars: get_globals(module).map(|g| GlobalVariable::from_llvm_ref(g, &mut global_ctr, &gnmap, &mut tynamemap)).collect(),
-            global_aliases: get_global_aliases(module).map(|g| GlobalAlias::from_llvm_ref(g, &mut global_ctr, &gnmap, &mut tynamemap)).collect(),
+            functions: get_defined_functions(module)
+                .map(|f| Function::from_llvm_ref(f, &gnmap, &mut tynamemap))
+                .collect(),
+            global_vars: get_globals(module)
+                .map(|g| GlobalVariable::from_llvm_ref(g, &mut global_ctr, &gnmap, &mut tynamemap))
+                .collect(),
+            global_aliases: get_global_aliases(module)
+                .map(|g| GlobalAlias::from_llvm_ref(g, &mut global_ctr, &gnmap, &mut tynamemap))
+                .collect(),
             // function_attribute_groups: unimplemented!("function_attribute_groups"),  // llvm-hs collects these in the decoder monad or something
             named_struct_types: tynamemap,
             inline_assembly: unsafe { get_module_inline_asm(module) },
@@ -317,22 +337,27 @@ impl Module {
 }
 
 impl GlobalVariable {
-    pub(crate) fn from_llvm_ref(global: LLVMValueRef, ctr: &mut usize, gnmap: &GlobalNameMap, tnmap: &mut TyNameMap) -> Self {
-        let ty = Type::from_llvm_ref( unsafe { LLVMTypeOf(global) }, tnmap );
+    pub(crate) fn from_llvm_ref(
+        global: LLVMValueRef,
+        ctr: &mut usize,
+        gnmap: &GlobalNameMap,
+        tnmap: &mut TyNameMap,
+    ) -> Self {
+        let ty = Type::from_llvm_ref(unsafe { LLVMTypeOf(global) }, tnmap);
         debug!("Processing a GlobalVariable with type {:?}", ty);
         Self {
-            name: Name::name_or_num( unsafe { get_value_name(global) }, ctr),
-            linkage: Linkage::from_llvm( unsafe { LLVMGetLinkage(global) } ),
-            visibility: Visibility::from_llvm( unsafe { LLVMGetVisibility(global) } ),
+            name: Name::name_or_num(unsafe { get_value_name(global) }, ctr),
+            linkage: Linkage::from_llvm(unsafe { LLVMGetLinkage(global) }),
+            visibility: Visibility::from_llvm(unsafe { LLVMGetVisibility(global) }),
             is_constant: unsafe { LLVMIsGlobalConstant(global) } != 0,
             ty: ty.clone(),
             addr_space: match ty {
                 Type::PointerType { addr_space, .. } => addr_space,
                 _ => panic!("GlobalVariable has a non-pointer type, {:?}", ty),
             },
-            dll_storage_class: DLLStorageClass::from_llvm( unsafe { LLVMGetDLLStorageClass(global) } ),
-            thread_local_mode: ThreadLocalMode::from_llvm( unsafe { LLVMGetThreadLocalMode(global) } ),
-            unnamed_addr: UnnamedAddr::from_llvm( unsafe { LLVMGetUnnamedAddress(global) } ),
+            dll_storage_class: DLLStorageClass::from_llvm(unsafe { LLVMGetDLLStorageClass(global) }),
+            thread_local_mode: ThreadLocalMode::from_llvm(unsafe { LLVMGetThreadLocalMode(global) }),
+            unnamed_addr: UnnamedAddr::from_llvm(unsafe { LLVMGetUnnamedAddress(global) }),
             initializer: {
                 let it = unsafe { LLVMGetInitializer(global) };
                 if it.is_null() {
@@ -347,7 +372,7 @@ impl GlobalVariable {
                 if comdat.is_null() {
                     None
                 } else {
-                    Some(Comdat::from_llvm_ref( unsafe { LLVMGetComdat(global) } ))
+                    Some(Comdat::from_llvm_ref(unsafe { LLVMGetComdat(global) }))
                 }
             },
             alignment: unsafe { LLVMGetAlignment(global) },
@@ -357,21 +382,26 @@ impl GlobalVariable {
 }
 
 impl GlobalAlias {
-    pub(crate) fn from_llvm_ref(alias: LLVMValueRef, ctr: &mut usize, gnmap: &GlobalNameMap, tnmap: &mut TyNameMap) -> Self {
-        let ty = Type::from_llvm_ref( unsafe { LLVMTypeOf(alias) }, tnmap );
+    pub(crate) fn from_llvm_ref(
+        alias: LLVMValueRef,
+        ctr: &mut usize,
+        gnmap: &GlobalNameMap,
+        tnmap: &mut TyNameMap,
+    ) -> Self {
+        let ty = Type::from_llvm_ref(unsafe { LLVMTypeOf(alias) }, tnmap);
         Self {
-            name: Name::name_or_num( unsafe { get_value_name(alias) }, ctr),
-            aliasee: Constant::from_llvm_ref( unsafe { LLVMAliasGetAliasee(alias) }, gnmap, tnmap ),
-            linkage: Linkage::from_llvm( unsafe { LLVMGetLinkage(alias) } ),
-            visibility: Visibility::from_llvm( unsafe { LLVMGetVisibility(alias) } ),
+            name: Name::name_or_num(unsafe { get_value_name(alias) }, ctr),
+            aliasee: Constant::from_llvm_ref(unsafe { LLVMAliasGetAliasee(alias) }, gnmap, tnmap),
+            linkage: Linkage::from_llvm(unsafe { LLVMGetLinkage(alias) }),
+            visibility: Visibility::from_llvm(unsafe { LLVMGetVisibility(alias) }),
             ty: ty.clone(),
             addr_space: match ty {
                 Type::PointerType { addr_space, .. } => addr_space,
                 _ => panic!("GlobalAlias has a non-pointer type, {:?}", ty),
             },
-            dll_storage_class: DLLStorageClass::from_llvm( unsafe { LLVMGetDLLStorageClass(alias) } ),
-            thread_local_mode: ThreadLocalMode::from_llvm( unsafe { LLVMGetThreadLocalMode(alias) } ),
-            unnamed_addr: UnnamedAddr::from_llvm( unsafe { LLVMGetUnnamedAddress(alias) } ),
+            dll_storage_class: DLLStorageClass::from_llvm(unsafe { LLVMGetDLLStorageClass(alias) }),
+            thread_local_mode: ThreadLocalMode::from_llvm(unsafe { LLVMGetThreadLocalMode(alias) }),
+            unnamed_addr: UnnamedAddr::from_llvm(unsafe { LLVMGetUnnamedAddress(alias) }),
         }
     }
 }
@@ -421,9 +451,9 @@ impl Linkage {
 impl Visibility {
     pub(crate) fn from_llvm(visibility: LLVMVisibility) -> Self {
         match visibility {
-           LLVMVisibility::LLVMDefaultVisibility => Visibility::Default,
-           LLVMVisibility::LLVMHiddenVisibility => Visibility::Hidden,
-           LLVMVisibility::LLVMProtectedVisibility => Visibility::Protected,
+            LLVMVisibility::LLVMDefaultVisibility => Visibility::Default,
+            LLVMVisibility::LLVMHiddenVisibility => Visibility::Hidden,
+            LLVMVisibility::LLVMProtectedVisibility => Visibility::Protected,
         }
     }
 }
@@ -453,8 +483,8 @@ impl ThreadLocalMode {
 impl Comdat {
     pub(crate) fn from_llvm_ref(comdat: LLVMComdatRef) -> Self {
         Self {
-            name: "error: not yet implemented: Comdat.name".to_owned(),  // there appears to not be a getter for this in the LLVM C API?  I could be misunderstanding something
-            selection_kind: SelectionKind::from_llvm( unsafe { LLVMGetComdatSelectionKind(comdat) } ),
+            name: "error: not yet implemented: Comdat.name".to_owned(), // there appears to not be a getter for this in the LLVM C API?  I could be misunderstanding something
+            selection_kind: SelectionKind::from_llvm(unsafe { LLVMGetComdatSelectionKind(comdat) }),
         }
     }
 }
