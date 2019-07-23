@@ -19,6 +19,8 @@ to read and compute on LLVM IR; it's currently not set up to output its
 `Module`s back into LLVM files, or to send them off to the LLVM library for
 compiling.
 If producing LLVM IR with `llvm-ir` interests you, contributions are welcome!
+(Or in the meantime, check out [`inkwell`] for a different safe interface for
+producing LLVM IR.)
 But if what you want is to have a nice read-oriented representation of LLVM
 IR for working in pure Rust, that's exactly what `llvm-ir` can (attempt to)
 provide today.
