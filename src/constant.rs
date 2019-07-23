@@ -2,6 +2,8 @@ use crate::name::Name;
 use crate::predicates::*;
 use crate::types::{Type, Typed};
 use std::convert::TryFrom;
+use std::rc::Rc;
+use std::cell::RefCell;
 
 /// See [LLVM 8 docs on Constants](https://releases.llvm.org/8.0.0/docs/LangRef.html#constants).
 /// Constants can be either values, or expressions involving other constants (see [LLVM 8 docs on Constant Expressions](https://releases.llvm.org/8.0.0/docs/LangRef.html#constant-expressions)).
@@ -825,22 +827,30 @@ impl Constant {
                 }
             },
             LLVMValueKind::LLVMConstantStructValueKind => {
-                let ty = match Type::from_llvm_ref( unsafe { LLVMTypeOf(constant) }, tnmap ) {
-                    ty @ Type::StructType { .. } => ty,
-                    Type::NamedStructType { ty, .. } => *(ty.expect("Constant of opaque struct type")).clone(),
+                let (num_elements, is_packed) = match Type::from_llvm_ref( unsafe { LLVMTypeOf(constant) }, tnmap ) {
+                    Type::StructType { element_types, is_packed } => (element_types.len(), is_packed),
+                    Type::NamedStructType { ref ty, .. } => {
+                        let rc: Rc<RefCell<Type>> = ty.as_ref()
+                            .expect("Constant of opaque struct type")
+                            .upgrade()
+                            .expect("Weak reference should be valid for at least the lifetime of tnmap");
+                        let innerty: &Type = &rc.borrow();
+                        if let Type::StructType { element_types, is_packed } = innerty {
+                            (element_types.len(), *is_packed)
+                        } else {
+                            panic!("Expected NamedStructType inner type to be a StructType, but it actually is a {:?}", innerty)
+                        }
+                    },
                     ty => panic!("Constant::Struct apparently has type {:?}", ty),
                 };
-                if let Type::StructType { element_types, is_packed } = ty {
-                    Constant::Struct {
-                        name: None,  // --TODO not yet implemented: Constant::Struct name
-                        values: {
-                            let num_vals = element_types.len();
-                            (0 .. num_vals).map(|i| Constant::from_llvm_ref( unsafe { LLVMGetOperand(constant, i as u32) }, gnmap, tnmap)).collect()
-                        },
-                        is_packed,
-                    }
-                } else {
-                    panic!("Expected NamedStructTypeReference to have StructType, but it actually has type {:?}", ty)
+                Constant::Struct {
+                    name: None,  // --TODO not yet implemented: Constant::Struct name
+                    values: {
+                        (0 .. num_elements).map(|i| {
+                            Constant::from_llvm_ref( unsafe { LLVMGetOperand(constant, i as u32) }, gnmap, tnmap)
+                        }).collect()
+                    },
+                    is_packed,
                 }
             },
             LLVMValueKind::LLVMConstantArrayValueKind => {

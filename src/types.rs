@@ -1,9 +1,12 @@
 use crate::module::AddrSpace;
 //use crate::name::Name;
 use either::Either;
+use std::rc;
+use std::rc::Rc;
+use std::cell::RefCell;
 
 /// See [LLVM 8 docs on Type System](https://releases.llvm.org/8.0.0/docs/LangRef.html#type-system)
-#[derive(PartialEq, Eq, Clone, Debug, Hash)]
+#[derive(Clone, Debug)]
 #[allow(non_camel_case_types)]
 pub enum Type {
     /// See [LLVM 8 docs on Void Type](https://releases.llvm.org/8.0.0/docs/LangRef.html#void-type)
@@ -34,7 +37,8 @@ pub enum Type {
         name: String,  // llvm-hs-pure has Name rather than String
         /// The actual struct type, which will be a `StructType` variant.
         /// A `None` here indicates an opaque type; see [LLVM 8 docs on Opaque Structure Types](https://releases.llvm.org/8.0.0/docs/LangRef.html#t-opaque).
-        ty: Option<Box<Type>>,
+        /// The weak reference should remain valid for at least the lifetime of the `Module` in which the named struct type is defined.
+        ty: Option<rc::Weak<RefCell<Type>>>,
     },
     /// See [LLVM 8 docs on X86_MMX Type](https://releases.llvm.org/8.0.0/docs/LangRef.html#x86-mmx-type)
     X86_MMXType,  // llvm-hs-pure doesn't have this, not sure what they do with LLVM's http://llvm.org/docs/LangRef.html#x86-mmx-type
@@ -46,6 +50,48 @@ pub enum Type {
     /// See [LLVM 8 docs on Token Type](https://releases.llvm.org/8.0.0/docs/LangRef.html#token-type)
     TokenType,
 }
+
+// `PartialEq` cannot be automatically derived for `Type` because of the `rc::Weak` in `NamedStructType`
+impl PartialEq for Type {
+    fn eq(&self, other: &Type) -> bool {
+        match (self, other) {
+            (Type::VoidType, Type::VoidType) => true,
+            (Type::IntegerType { bits: bits_a },
+             Type::IntegerType { bits: bits_b })
+            => bits_a == bits_b,
+            (Type::PointerType { pointee_type: pt_a, addr_space: as_a },
+             Type::PointerType { pointee_type: pt_b, addr_space: as_b })
+            => pt_a == pt_b && as_a == as_b,
+            (Type::FPType(fp_a),
+             Type::FPType(fp_b))
+            => fp_a == fp_b,
+            (Type::FuncType { result_type: rt_a, param_types: pt_a, is_var_arg: iva_a },
+             Type::FuncType { result_type: rt_b, param_types: pt_b, is_var_arg: iva_b })
+            => rt_a == rt_b && pt_a == pt_b && iva_a == iva_b,
+            (Type::VectorType { element_type: et_a, num_elements: num_a },
+             Type::VectorType { element_type: et_b, num_elements: num_b })
+            => et_a == et_b && num_a == num_b,
+            (Type::ArrayType { element_type: et_a, num_elements: num_a },
+             Type::ArrayType { element_type: et_b, num_elements: num_b })
+            => et_a == et_b && num_a == num_b,
+            (Type::StructType { element_types: et_a, is_packed: ip_a },
+             Type::StructType { element_types: et_b, is_packed: ip_b })
+            => et_a == et_b && ip_a == ip_b,
+            // Named structs are equal if their names and opaquenesses are equal,
+            //   disregarding their weak refs.
+            (Type::NamedStructType { name: name_a, ty: ty_a },
+             Type::NamedStructType { name: name_b, ty: ty_b })
+            => name_a == name_b && ty_a.is_some() == ty_b.is_some(),
+            (Type::X86_MMXType, Type::X86_MMXType) => true,
+            (Type::MetadataType, Type::MetadataType) => true,
+            (Type::LabelType, Type::LabelType) => true,
+            (Type::TokenType, Type::TokenType) => true,
+            _ => false,
+        }
+    }
+}
+// Our `PartialEq` still satisfies the required properties of `Eq`
+impl Eq for Type {}
 
 impl Type {
     pub fn bool() -> Type {
@@ -135,9 +181,9 @@ impl<A,B> Typed for Either<A,B> where A: Typed, B:Typed {
 
 use crate::from_llvm::*;
 use llvm_sys::LLVMTypeKind;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
-pub(crate) type TyNameMap = HashMap<String, Option<Type>>;
+pub(crate) type TyNameMap = HashMap<String, Option<Rc<RefCell<Type>>>>;
 
 impl Type {
     pub(crate) fn from_llvm_ref(ty: LLVMTypeRef, tynamemap: &mut TyNameMap) -> Self {
@@ -168,17 +214,22 @@ impl Type {
 
                 match name {
                     Some(ref s) if !s.is_empty() => {
-                        let actual_type: Option<Type> = if tynamemap.contains_key(s) {
+                        let actual_type: Option<Rc<RefCell<Type>>> = if tynamemap.contains_key(s) {
                             tynamemap.get(s).unwrap().clone()
                         } else {
                             // first fill in the entry as opaque for now, so that the call to struct_type_from_llvm_ref will terminate
                             tynamemap.insert(s.clone(), None);
-                            // now compute and put in the actual correct type
-                            let actual_type = Type::struct_type_from_llvm_ref(ty, tynamemap);
-                            tynamemap.insert(s.clone(), Some(actual_type.clone()));
-                            Some(actual_type)
+                            // now compute the actual correct type. Any self-references will be opaqued
+                            let type_with_opaqued_self_refs = Type::struct_type_from_llvm_ref(ty, tynamemap);
+                            // recursively replace any opaqued self-references with weak refs to self
+                            let rc = Rc::new(RefCell::new(type_with_opaqued_self_refs.clone()));
+                            let actual_type = Type::replace_in_type(type_with_opaqued_self_refs, s, &rc);
+                            rc.replace(actual_type);
+                            // and finally, put the completed type in the map
+                            tynamemap.insert(s.clone(), Some(rc.clone()));
+                            Some(rc)
                         };
-                        Type::NamedStructType { name: s.clone(), ty: actual_type.map(Box::new) }
+                        Type::NamedStructType { name: s.clone(), ty: actual_type.map(|rc| Rc::downgrade(&rc)) }
                     },
                     _ => Type::struct_type_from_llvm_ref(ty, tynamemap),
                 }
@@ -206,6 +257,62 @@ impl Type {
             LLVMTypeKind::LLVMMetadataTypeKind => Type::MetadataType,
             LLVMTypeKind::LLVMLabelTypeKind => Type::LabelType,
             LLVMTypeKind::LLVMTokenTypeKind => Type::TokenType,
+        }
+    }
+
+    /// Replace any opaqued named structs with the given `name`, with weak references to the given `Rc<RefCell<Type>>`
+    fn replace_in_type(ty: Type, target_name: &str, replacement: &Rc<RefCell<Type>>) -> Type {
+        Type::_replace_in_type(ty, target_name, replacement, HashSet::new())
+    }
+
+    // `seen_names` is here to prevent infinite recursion on self-referential
+    // struct types; we don't need to continue into any recursive reference (as
+    // we've been there already and done any necessary replacements)
+    fn _replace_in_type(ty: Type, target_name: &str, replacement: &Rc<RefCell<Type>>, mut seen_names: HashSet<String>) -> Type {
+        match ty {
+            Type::NamedStructType { ref name, ty: None } if name == target_name => Type::NamedStructType {
+                name: name.clone(),
+                ty: Some(Rc::downgrade(replacement)),
+            },
+            // confused on the proper syntax here; neither `{ ref name, ref ty: Some(weak) }` nor
+            // `{ ref name, ty: ref Some(weak) }` parse as valid, and just `ty: Some(weak)` errors due to
+            // attempting to move the value. For now we have this hack instead.
+            Type::NamedStructType { ref name, ref ty } if ty.is_some() && !seen_names.contains(name) => {
+                let weak = ty.as_ref().expect("we checked that ty.is_some() in the pattern guard");
+                seen_names.insert(name.clone());
+                let rc_opt: Option<Rc<RefCell<Type>>> = weak.upgrade();
+                if let Some(rc) = rc_opt.as_ref() {
+                    rc.replace_with(|t| Type::_replace_in_type(t.clone(), target_name, replacement, seen_names));
+                }
+                Type::NamedStructType {
+                    name: name.clone(),
+                    ty: rc_opt.map(|rc| Rc::downgrade(&rc)),
+                }
+            }
+            Type::PointerType { pointee_type, addr_space } => Type::PointerType {
+                pointee_type: Box::new(Type::_replace_in_type(*pointee_type, target_name, replacement, seen_names)),
+                addr_space,
+            },
+            Type::FuncType { result_type, param_types, is_var_arg } => Type::FuncType {
+                // we need to `seen_names.clone()` in every recursive call because one recursive call seeing a name
+                // shouldn't mark it as seen for any of the other calls
+                result_type: Box::new(Type::_replace_in_type(*result_type, target_name, replacement, seen_names.clone())),
+                param_types: param_types.into_iter().map(|t| Type::_replace_in_type(t, target_name, replacement, seen_names.clone())).collect(),
+                is_var_arg,
+            },
+            Type::VectorType { element_type, num_elements } => Type::VectorType {
+                element_type: Box::new(Type::_replace_in_type(*element_type, target_name, replacement, seen_names)), num_elements,
+            },
+            Type::ArrayType { element_type, num_elements } => Type::ArrayType {
+                element_type: Box::new(Type::_replace_in_type(*element_type, target_name, replacement, seen_names)), num_elements,
+            },
+            Type::StructType { element_types, is_packed } => Type::StructType {
+                // we need to `seen_names.clone()` in every recursive call because one recursive call seeing a name
+                // shouldn't mark it as seen for any of the other calls
+                element_types: element_types.into_iter().map(|t| Type::_replace_in_type(t, target_name, replacement, seen_names.clone())).collect(),
+                is_packed,
+            },
+            _ => ty,  // nothing to replace. In particular we don't need to replace anything in opaque named structs when name != target_name.
         }
     }
 

@@ -89,6 +89,9 @@ llvm_test!("tests/llvm_bc/weak-macho-3.5.ll.bc", weak_macho);
 
 use llvm_ir::*;
 use std::convert::TryInto;
+use std::rc::Rc;
+use std::cell::RefCell;
+use std::ops::Deref;
 use either::Either;
 
 /// Additionally ensure that certain constructs were parsed correctly
@@ -113,8 +116,11 @@ fn DILocation_implicit_code_extra_checks() {
     if let Operand::LocalOperand { name, ty: Type::PointerType { pointee_type, .. } } = &invoke.arguments[0].0 {
         assert_eq!(name, &Name::Name("a".to_owned()));
         if let Type::NamedStructType { ref ty, .. } = **pointee_type {
-            let struct_type = ty.clone().unwrap_or_else(|| panic!("Didn't expect {:?} to be an opaque type", **pointee_type));
-            assert_eq!(*struct_type, Type::StructType { element_types: vec![Type::i8()], is_packed: false });
+            let struct_type: Rc<RefCell<Type>> = ty.as_ref()
+                .unwrap_or_else(|| panic!("Didn't expect {:?} to be an opaque type", **pointee_type))
+                .upgrade()
+                .expect("Failed to upgrade weak ref");
+            assert_eq!(*struct_type.borrow().deref(), Type::StructType { element_types: vec![Type::i8()], is_packed: false });
         } else {
             panic!("Expected invoke.arguments[0].0 to be a pointer to a Type::NamedStructTypeReference; instead it was a pointer to a {:?}", **pointee_type);
         }

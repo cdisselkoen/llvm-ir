@@ -4,6 +4,8 @@ use crate::name::Name;
 use crate::types::{Type, Typed};
 use std::collections::HashMap;
 use std::path::Path;
+use std::rc::Rc;
+use std::cell::RefCell;
 use log::debug;
 
 /// See [LLVM 8 docs on Module Structure](https://releases.llvm.org/8.0.0/docs/LangRef.html#module-structure)
@@ -28,7 +30,7 @@ pub struct Module {
     /// See [LLVM 8 docs on Structure Type](https://releases.llvm.org/8.0.0/docs/LangRef.html#structure-type).
     /// A `None` value indicates an opaque type; see [LLVM 8 docs on Opaque Structure Types](https://releases.llvm.org/8.0.0/docs/LangRef.html#t-opaque).
     /// Note that this map is from struct name to `Type::StructType` variant, not to `Type::NamedStructType` variant (which would be redundant).
-    pub named_struct_types: HashMap<String, Option<Type>>,
+    pub named_struct_types: HashMap<String, Option<Rc<RefCell<Type>>>>,
     // --TODO not yet implemented-- pub function_attribute_groups: Vec<FunctionAttributeGroup>,
     /// See [LLVM 8 docs on Module-Level Inline Assembly](https://releases.llvm.org/8.0.0/docs/LangRef.html#moduleasm)
     pub inline_assembly: String,
@@ -73,10 +75,12 @@ impl Module {
         };
         debug!("Created a MemoryBuffer");
 
-        use llvm_sys::bit_reader::LLVMParseBitcode2;
+        let context = crate::from_llvm::Context::new();
+
+        use llvm_sys::bit_reader::LLVMParseBitcodeInContext2;
         let module = unsafe {
             let mut module: mem::MaybeUninit::<LLVMModuleRef> = mem::MaybeUninit::uninit();
-            let return_code = LLVMParseBitcode2(memory_buffer, module.as_mut_ptr());
+            let return_code = LLVMParseBitcodeInContext2(context.ctx, memory_buffer, module.as_mut_ptr());
             if return_code != 0 {
                 return Err("Failed to parse bitcode".to_string());
             }

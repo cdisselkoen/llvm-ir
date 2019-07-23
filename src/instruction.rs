@@ -1,6 +1,7 @@
 use either::Either;
 use std::convert::TryFrom;
 use std::fmt::Debug;
+use std::ops::Deref;
 use crate::constant::Constant;
 use crate::function::{CallingConvention, FunctionAttribute, ParameterAttribute};
 use crate::name::Name;
@@ -1044,7 +1045,7 @@ impl Typed for GetElementPtr {
     }
 }
 
-fn gep_type<'t>(cur_type: &'t Type, mut indices: impl Iterator<Item=&'t Operand>) -> Type {
+fn gep_type<'a, 'b>(cur_type: &'a Type, mut indices: impl Iterator<Item=&'b Operand>) -> Type {
     match indices.next() {
         None => Type::pointer_to(cur_type.clone()),  // iterator is done
         Some(index) => match cur_type {
@@ -1060,15 +1061,15 @@ fn gep_type<'t>(cur_type: &'t Type, mut indices: impl Iterator<Item=&'t Operand>
             },
             Type::NamedStructType { ty, .. } => match ty {
                 None => panic!("GEP on an opaque struct type"),
-                Some(ty) => match **ty {
-                    Type::StructType { ref element_types, .. } => {
+                Some(weak) => match weak.upgrade().expect("Weak reference disappeared").borrow().deref() {
+                    Type::StructType { element_types, .. } => {
                         if let Operand::ConstantOperand(Constant::Int { value, .. }) = index {
                             gep_type(element_types.get(*value as usize).expect("GEP index out of range"), indices)
                         } else {
                             panic!("Expected GEP index on a struct to be a Operand::ConstantOperand(Constant::Int); got {:?}", index)
                         }
                     },
-                    _ => panic!("Expected NamedStructType inner type to be a StructType; got {:?}", **ty),
+                    ty => panic!("Expected NamedStructType inner type to be a StructType; got {:?}", ty),
                 },
             }
             _ => panic!("Expected GEP base type to be a PointerType, VectorType, ArrayType, StructType, or NamedStructType; got {:?}", cur_type),

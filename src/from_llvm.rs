@@ -63,3 +63,22 @@ pub unsafe fn op_to_bb(op: LLVMValueRef) -> LLVMBasicBlockRef {
     assert!(LLVMValueIsBasicBlock(op) != 0);
     LLVMValueAsBasicBlock(op)
 }
+
+/// LLVM Context wrapper that frees the underlying context when the wrapper is dropped
+pub struct Context {
+    pub ctx: LLVMContextRef,
+}
+
+impl Context {
+    pub fn new() -> Self {
+        Self {
+            ctx: unsafe { LLVMContextCreate() },
+        }
+    }
+}
+
+impl Drop for Context {
+    fn drop(&mut self) {
+        unsafe { LLVMContextDispose(self.ctx); }
+    }
+}

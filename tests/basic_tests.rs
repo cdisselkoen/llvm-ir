@@ -9,6 +9,9 @@ use llvm_ir::instruction;
 use llvm_ir::IntPredicate;
 use std::convert::TryInto;
 use std::path::Path;
+use std::rc::Rc;
+use std::cell::RefCell;
+use std::ops::Deref;
 use either::Either;
 
 fn init_logging() {
@@ -233,4 +236,132 @@ fn switchbc() {
     let phibb = &func.get_bb_by_name(&Name::Number(12)).expect("Failed to find bb %12");
     let phi: &instruction::Phi = &phibb.instrs[0].clone().try_into().expect("Should be a phi");
     assert_eq!(phi.incoming_values.len(), 10);
+}
+
+#[test]
+fn simple_linked_list() {
+    init_logging();
+    let path = Path::new("tests/basic_bc/linkedlist.bc");
+    let module = Module::from_bc_path(&path).expect("Failed to parse module");
+
+    let structty: Rc<RefCell<Type>> = module.named_struct_types.get("struct.SimpleLinkedList")
+        .unwrap_or_else(|| { let names: Vec<_> = module.named_struct_types.keys().collect(); panic!("Failed to find struct.SimpleLinkedList in named_struct_types; have names {:?}", names) })
+        .as_ref()
+        .expect("SimpleLinkedList should not be an opaque type")
+        .clone();
+    if let Type::StructType { element_types, .. } = structty.borrow().deref() {
+        assert_eq!(element_types.len(), 2);
+        assert_eq!(element_types[0], Type::i32());
+        if let Type::PointerType { pointee_type, .. } = &element_types[1] {
+            if let Type::NamedStructType { ref name, ref ty } = **pointee_type {
+                assert_eq!(name, "struct.SimpleLinkedList");
+                let ty: Rc<RefCell<Type>> = ty.as_ref()
+                    .expect("Inner type should not be opaque")
+                    .upgrade()
+                    .expect("Failed to upgrade weak ref");
+                assert_eq!(ty.borrow().deref(), structty.borrow().deref());  // the type should be truly recursive, in that the pointed-to type should be the same as the original type
+            } else {
+                panic!("Expected pointee type to be a NamedStructType, got {:?}", pointee_type);
+            }
+        } else {
+            panic!("Expected inner type to be a PointerType, got {:?}", element_types[1]);
+        }
+    } else {
+        panic!("Expected SimpleLinkedList to be a StructType, got {:?}", structty);
+    }
+
+    let func = module.get_func_by_name("simple_linked_list").expect("Failed to find function");
+    let alloca: &instruction::Alloca = &func.basic_blocks[0].instrs[1].clone().try_into().expect("Should be an alloca");
+    if let Type::NamedStructType { ref name, ref ty } = alloca.allocated_type {
+        assert_eq!(name, "struct.SimpleLinkedList");
+        let inner_ty: Rc<RefCell<Type>> = ty.as_ref()
+            .expect("Allocated type should not be opaque")
+            .upgrade()
+            .expect("Failed to upgrade weak ref");
+        assert_eq!(inner_ty.borrow().deref(), structty.borrow().deref());  // this should be exactly the same struct type as when we accessed it through the module above
+    } else {
+        panic!("Expected alloca.allocated_type to be a NamedStructType, got {:?}", alloca.allocated_type);
+    }
+}
+
+#[test]
+fn indirectly_recursive_type() {
+    init_logging();
+    let path = Path::new("tests/basic_bc/linkedlist.bc");
+    let module = Module::from_bc_path(&path).expect("Failed to parse module");
+
+    let aty: Rc<RefCell<Type>> = module.named_struct_types.get("struct.NodeA")
+        .unwrap_or_else(|| { let names: Vec<_> = module.named_struct_types.keys().collect(); panic!("Failed to find struct.NodeA in named_struct_types; have names {:?}", names) })
+        .as_ref()
+        .expect("NodeA should not be an opaque type")
+        .clone();
+    let bty: Rc<RefCell<Type>> = module.named_struct_types.get("struct.NodeB")
+        .unwrap_or_else(|| { let names: Vec<_> = module.named_struct_types.keys().collect(); panic!("Failed to find struct.NodeB in named_struct_types; have names {:?}", names) })
+        .as_ref()
+        .expect("NodeB should not be an opaque type")
+        .clone();
+    if let Type::StructType { element_types, .. } = aty.borrow().deref() {
+        assert_eq!(element_types.len(), 2);
+        assert_eq!(element_types[0], Type::i32());
+        if let Type::PointerType { pointee_type, .. } = &element_types[1] {
+            if let Type::NamedStructType { ref name, ref ty } = **pointee_type {
+                assert_eq!(name, "struct.NodeB");
+                let ty: Rc<RefCell<Type>> = ty.as_ref()
+                    .expect("Inner type should not be opaque")
+                    .upgrade()
+                    .expect("Failed to upgrade weak ref");
+                assert_eq!(ty.borrow().deref(), bty.borrow().deref());
+            } else {
+                panic!("Expected pointee type to be a NamedStructType, got {:?}", **pointee_type);
+            }
+        } else {
+            panic!("Expected inner type to be a PointerType, got {:?}", element_types[1]);
+        }
+    } else {
+        panic!("Expected NodeA to be a StructType, got {:?}", aty);
+    }
+    if let Type::StructType { element_types, .. } = bty.borrow().deref() {
+        assert_eq!(element_types.len(), 2);
+        assert_eq!(element_types[0], Type::i32());
+        if let Type::PointerType { pointee_type, .. } = &element_types[1] {
+            if let Type::NamedStructType { ref name, ref ty } = **pointee_type {
+                assert_eq!(name, "struct.NodeA");
+                let ty: Rc<RefCell<Type>> = ty.as_ref()
+                    .expect("Inner type should not be opaque")
+                    .upgrade()
+                    .expect("Failed to upgrade weak ref");
+                assert_eq!(ty.borrow().deref(), aty.borrow().deref());
+            } else {
+                panic!("Expected pointee type to be a NamedStructType, got {:?}", **pointee_type);
+            }
+        } else {
+            panic!("Expected inner type to be a PointerType, got {:?}", element_types[1]);
+        }
+    } else {
+        panic!("Expected NodeB to be a StructType, got {:?}", bty);
+    }
+
+    let func = module.get_func_by_name("indirectly_recursive_type").expect("Failed to find function");
+    let alloca_a: &instruction::Alloca = &func.basic_blocks[0].instrs[1].clone().try_into().expect("Should be an alloca");
+    let alloca_b: &instruction::Alloca = &func.basic_blocks[0].instrs[2].clone().try_into().expect("Should be an alloca");
+    if let Type::NamedStructType { ref name, ref ty } = alloca_a.allocated_type {
+        assert_eq!(name, "struct.NodeA");
+        let inner_ty: Rc<RefCell<Type>> = ty.as_ref()
+            .expect("Allocated type should not be opaque")
+            .upgrade()
+            .expect("Failed to upgrade weak ref");
+        assert_eq!(inner_ty.borrow().deref(), aty.borrow().deref());  // this should be exactly the same struct type as when we accessed it through the module above
+    } else {
+        panic!("Expected alloca_a.allocated_type to be a NamedStructType, got {:?}", alloca_a.allocated_type);
+    }
+    if let Type::NamedStructType { ref name, ref ty } = alloca_b.allocated_type {
+        assert_eq!(name, "struct.NodeB");
+        let inner_ty: Rc<RefCell<Type>> = ty.as_ref()
+            .expect("Allocated type should not be opaque")
+            .upgrade()
+            .expect("Failed to upgrade weak ref");
+        assert_eq!(inner_ty.borrow().deref(), bty.borrow().deref());
+    } else {
+        panic!("Expected alloca_b.allocated_type to be a NamedStructType, got {:?}", alloca_b.allocated_type);
+    }
 }
