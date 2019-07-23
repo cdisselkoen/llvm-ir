@@ -1,15 +1,2 @@
 var ALIASES = {};
-ALIASES["bincode"] = {};
-ALIASES["byteorder"] = {};
-ALIASES["cfg_if"] = {};
-ALIASES["either"] = {};
-ALIASES["libc"] = {};
 ALIASES["llvm_ir"] = {};
-ALIASES["llvm_sys"] = {};
-ALIASES["log"] = {};
-ALIASES["proc_macro2"] = {};
-ALIASES["quote"] = {};
-ALIASES["serde"] = {};
-ALIASES["serde_derive"] = {};
-ALIASES["syn"] = {};
-ALIASES["unicode_xid"] = {};
