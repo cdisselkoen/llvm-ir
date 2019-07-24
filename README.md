@@ -3,40 +3,39 @@
 [![Crates.io](http://meritbadge.herokuapp.com/llvm-ir)](https://crates.io/crates/llvm-ir)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/cdisselkoen/llvm-ir/master/LICENSE)
 
-`llvm-ir` is a crate which seeks to provide a more Rust-y representation of
-LLVM IR than crates like [`llvm-sys`] or [`inkwell`] which rely on continuous
-FFI to the LLVM API.
+`llvm-ir` seeks to provide a more Rust-y representation of LLVM IR than
+crates like [`llvm-sys`] or [`inkwell`] which rely on continuous FFI to the
+LLVM API.
 It's based on the idea that an LLVM [`Instruction`] shouldn't be an opaque
-datatype (which is under-the-hood just an FFI pointer), but rather an `enum`
-with variants like [`Add`], [`Call`], and [`Store`].
+datatype, but rather an `enum` with variants like [`Add`], [`Call`], and
+[`Store`].
 Likewise, types like [`BasicBlock`], [`Function`], and [`Module`] should be
-Rust structs with as much information as possible contained in them.
+Rust structs containing as much information as possible.
 
 `llvm-ir` is intended for consumption of LLVM IR, and not necessarily
 production of LLVM IR (yet).
 That is, it is aimed at program analysis and related applications which want
-to read and compute on LLVM IR; it's currently not set up to output its
-`Module`s back into LLVM files, or to send them off to the LLVM library for
-compiling.
-If producing LLVM IR with `llvm-ir` interests you, contributions are welcome!
+to read and analyze LLVM IR.
+In the future, perhaps `llvm-ir` could be able to output its `Module`s back
+into LLVM files, or even send them directly to the LLVM library for compiling.
+If this interests you, contributions are welcome!
 (Or in the meantime, check out [`inkwell`] for a different safe interface for
 producing LLVM IR.)
-But if what you want is to have a nice read-oriented representation of LLVM
-IR for working in pure Rust, that's exactly what `llvm-ir` can (attempt to)
-provide today.
+But if you're looking for a nice read-oriented representation of LLVM IR for
+working in pure Rust, that's exactly what `llvm-ir` can provide today.
 
 Currently, `llvm-ir` does rely on FFI to the LLVM API via `llvm-sys`, but
 only for its initial parsing step.
-Once a given LLVM file has been parsed in to create a [`Module`] data
-structure, `llvm-ir` drops the LLVM FFI objects and makes no further FFI
-calls.
-This allows you to work with the resulting LLVM IR in pure Rust.
+Once `llvm-ir` creates a [`Module`] data structure by parsing an LLVM
+file, it drops the LLVM FFI objects and makes no further FFI calls.
+This allows you to work with the resulting LLVM IR in pure safe Rust.
 
 ## Getting started
 The easiest way to get started is to parse some existing LLVM IR into this
 crate's data structures.
-To do this, you need LLVM bitcode (`*.bc`) files; if you currently have C/C++
-sources (say, `source.c`), you can generate `*.bc` files by running
+To do this, you need LLVM bitcode (`*.bc`) files.
+If you currently have C/C++ sources (say, `source.c`), you can generate
+`*.bc` files by running
 ```bash
 clang -S -emit-llvm source.c -o source.ll
 llvm-as source.ll -o source.bc
