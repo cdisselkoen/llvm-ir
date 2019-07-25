@@ -34,7 +34,7 @@
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">/// Many LLVM objects have a `Name`, which is either a string name, or just a</span>
 <span class="doccomment">/// sequential numbering (e.g. `%3`).</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Hash</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">PartialOrd</span>, <span class="ident">Ord</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Hash</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Name</span> {
     <span class="doccomment">/// has a string name</span>
     <span class="ident">Name</span>(<span class="ident">String</span>),
