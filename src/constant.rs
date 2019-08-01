@@ -853,12 +853,12 @@ impl Constant {
                         FPType::Half => Float::Half,
                         FPType::Single => Float::Single( unsafe {
                             let mut b = 0;
-                            let b_ptr: *mut libc::c_int = &mut b;
+                            let b_ptr: *mut std::os::raw::c_int = &mut b;
                             LLVMConstRealGetDouble(constant, b_ptr)
                         } as f32),
                         FPType::Double => Float::Double( unsafe {
                             let mut b = 0;
-                            let b_ptr: *mut libc::c_int = &mut b;
+                            let b_ptr: *mut std::os::raw::c_int = &mut b;
                             LLVMConstRealGetDouble(constant, b_ptr)
                         } ),
                         FPType::FP128 => Float::Quadruple,
