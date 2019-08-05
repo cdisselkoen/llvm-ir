@@ -35,10 +35,9 @@ The easiest way to get started is to parse some existing LLVM IR into this
 crate's data structures.
 To do this, you need LLVM bitcode (`*.bc`) files.
 If you currently have C/C++ sources (say, `source.c`), you can generate
-`*.bc` files by running
+`*.bc` files with `clang`'s `-c` and `-emit-llvm` flags:
 ```bash
-clang -S -emit-llvm source.c -o source.ll
-llvm-as source.ll -o source.bc
+clang -c -emit-llvm source.c -o source.bc
 ```
 Then, in Rust, you can use `llvm-ir`'s `Module::from_bc_path` function:
 ```rust
@@ -60,6 +59,16 @@ Currently, `llvm-ir` only supports LLVM 8. Unfortunately, I'm only one
 person. Again, contributions are welcome.
 
 `llvm-ir` works on stable Rust, and requires Rust 1.36+.
+
+## Development/Debugging
+For development or debugging, you may want LLVM text-format (`*.ll`) files in
+addition to `*.bc` files.
+You can generate these by passing `-S -emit-llvm` to `clang`, instead of
+`-c -emit-llvm`.
+E.g.,
+```bash
+clang -S -emit-llvm source.c -o source.ll
+```
 
 ## Limitations
 A few features of LLVM IR are not yet represented in `llvm-ir`'s data

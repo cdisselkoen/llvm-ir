@@ -1,6 +1,5 @@
 CC=clang-8
 CFLAGS=-O3
-LLVMAS=llvm-as
 
 .PHONY: all
 all: hello.bc hello.ll \
@@ -11,12 +10,14 @@ all: hello.bc hello.ll \
 %.ll : %.c
 	$(CC) $(CFLAGS) -S -emit-llvm $^ -o $@
 
-%.bc : %.ll
-	$(LLVMAS) $^ -o $@
+%.bc : %.c
+	$(CC) $(CFLAGS) -c -emit-llvm $^ -o $@
 
 # use -O0 on linkedlist.c
 linkedlist.ll : linkedlist.c
 	$(CC) -O0 -S -emit-llvm $^ -o $@
+linkedlist.bc : linkedlist.c
+	$(CC) -O0 -c -emit-llvm $^ -o $@
 
 .PHONY: clean
 clean:
