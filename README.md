@@ -102,7 +102,10 @@ opcode for an existing `AtomicRMW` instruction.
 - the ["prefix data"](https://releases.llvm.org/8.0.0/docs/LangRef.html#prefix-data)
 associated with a function
 
-Work is in progress on rectifying at least some of these limitations.
+These issues with the LLVM C API have also been reported as
+[LLVM bug #42692](https://bugs.llvm.org/show_bug.cgi?id=42692).
+Anyone who has additional insight about these problems, please chime in
+either with an issue on this repo or on the LLVM bug thread itself!
 
 ## Acknowledgments
 `llvm-ir` is heavily inspired by the [`llvm-hs-pure` Haskell package].
