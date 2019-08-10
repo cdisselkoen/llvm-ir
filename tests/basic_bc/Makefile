@@ -6,6 +6,7 @@ all: hello.bc hello.ll \
 		loop.bc loop.ll \
 		switch.bc switch.ll \
 		linkedlist.bc linkedlist.ll \
+		variables.bc variables.ll \
 
 %.ll : %.c
 	$(CC) $(CFLAGS) -S -emit-llvm $^ -o $@

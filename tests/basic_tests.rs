@@ -138,6 +138,7 @@ fn loopbc() {
     let lifetimestart: &instruction::Call =
         &bb2.instrs[2].clone().try_into().expect("Should be a call");
     if let Either::Right(Operand::ConstantOperand(Constant::GlobalReference { ref name, ref ty } )) = lifetimestart.function {
+        assert_eq!(lifetimestart.function.get_type(), Type::pointer_to(ty.clone()));  // lifetimestart.function should be a constant function pointer
         assert_eq!(*name, Name::Name("llvm.lifetime.start.p0i8".to_owned()));
         if let Type::FuncType { ref result_type, ref param_types, ref is_var_arg } = *ty {
             assert_eq!(**result_type, Type::VoidType);
@@ -297,6 +298,37 @@ fn switchbc() {
         .expect("Failed to find bb %12");
     let phi: &instruction::Phi = &phibb.instrs[0].clone().try_into().expect("Should be a phi");
     assert_eq!(phi.incoming_values.len(), 10);
+}
+
+#[test]
+fn variablesbc() {
+    init_logging();
+    let path = Path::new("tests/basic_bc/variables.bc");
+    let module = Module::from_bc_path(&path).expect("Failed to parse module");
+    assert_eq!(module.global_vars.len(), 1);
+    let var = &module.global_vars[0];
+    assert_eq!(var.name, Name::Name("global".to_owned()));
+    assert_eq!(var.is_constant, false);
+    assert_eq!(var.ty, Type::pointer_to(Type::i32()));
+    assert_eq!(var.initializer, Some(Constant::Int { bits: 32, value: 5 }));
+    assert_eq!(var.alignment, 4);
+
+    assert_eq!(module.functions.len(), 1);
+    let func = &module.functions[0];
+    assert_eq!(func.name, "variables");
+    let bb = &func.basic_blocks[0];
+    let store: &instruction::Store = &bb.instrs[2].clone().try_into().expect("Should be a store");
+    assert_eq!(store.address, Operand::LocalOperand { name: Name::Number(3), ty: Type::pointer_to(Type::i32()) });
+    assert_eq!(store.get_type(), Type::VoidType);
+    let load: &instruction::Load = &bb.instrs[8].clone().try_into().expect("Should be a load");
+    assert_eq!(load.address, Operand::LocalOperand { name: Name::Number(4), ty: Type::pointer_to(Type::i32()) });
+    assert_eq!(load.get_type(), Type::i32());
+    let global_load: &instruction::Load = &bb.instrs[14].clone().try_into().expect("Should be a load");
+    assert_eq!(global_load.address, Operand::ConstantOperand(Constant::GlobalReference { name: Name::Name("global".to_owned()), ty: Type::i32() }));
+    assert_eq!(global_load.get_type(), Type::i32());
+    let global_store: &instruction::Store = &bb.instrs[16].clone().try_into().expect("Should be a store");
+    assert_eq!(global_store.address, Operand::ConstantOperand(Constant::GlobalReference { name: Name::Name("global".to_owned()), ty: Type::i32() }));
+    assert_eq!(global_store.get_type(), Type::VoidType);
 }
 
 #[test]

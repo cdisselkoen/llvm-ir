@@ -147,7 +147,7 @@ impl Typed for Constant {
             },
             Constant::Undef(t) => t.clone(),
             Constant::BlockAddress { .. } => Type::LabelType,
-            Constant::GlobalReference { ty, .. } => ty.clone(),
+            Constant::GlobalReference { ty, .. } => Type::pointer_to(ty.clone()),
             Constant::TokenNone => Type::TokenType,
             Constant::Add(a) => a.get_type(),
             Constant::Sub(s) => s.get_type(),

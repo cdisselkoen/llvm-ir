@@ -952,10 +952,9 @@ impl_hasresult!(Load);
 
 impl Typed for Load {
     fn get_type(&self) -> Type {
-        if let Type::PointerType { pointee_type, .. } = self.address.get_type() {
-            *pointee_type
-        } else {
-            panic!("self.address has a type that's not PointerType")
+        match self.address.get_type() {
+            Type::PointerType { pointee_type, .. } => *pointee_type,
+            ty => panic!("Expected a load address to be PointerType, got {:?}", ty),
         }
     }
 }
@@ -1371,10 +1370,12 @@ impl_inst!(Call, Call);
 
 impl Typed for Call {
     fn get_type(&self) -> Type {
-        if let Type::FuncType { result_type, .. } = self.function.get_type() {
-            *result_type
-        } else {
-            panic!("self.function has a type that's not FuncType")
+        match self.function.get_type() {
+            Type::PointerType { pointee_type, .. } => match *pointee_type {
+                Type::FuncType { result_type, .. } => *result_type,
+                ty => panic!("Expected Call's function argument to be of type pointer-to-function, got pointer-to-{:?}", ty),
+            },
+            ty => panic!("Expected Call's function argument to be of type pointer-to-function, got {:?}", ty),
         }
     }
 }
