@@ -43,12 +43,7 @@ impl Module {
     /// Get the `Function` having the given `Name` (if any).
     /// Note that `Function`s are named with `String`s and not `Name`s.
     pub fn get_func_by_name(&self, name: &str) -> Option<&Function> {
-        for func in self.functions.iter() {
-            if func.name == name {
-                return Some(func);
-            }
-        }
-        None
+        self.functions.iter().find(|func| func.name == name)
     }
 
     /// Parse the LLVM bitcode (.bc) file at the given path to create a `Module`
