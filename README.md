@@ -122,6 +122,6 @@ package] as well.
 [`Add`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/instruction/struct.Add.html
 [`Call`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/instruction/struct.Call.html
 [`Store`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/instruction/struct.Store.html
-[`BasicBlock`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/struct.BasicBlock.html
-[`Function`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/struct.Function.html
-[`Module`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/struct.Module.html
+[`BasicBlock`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/basicblock/struct.BasicBlock.html
+[`Function`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/function/struct.Function.html
+[`Module`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/module/struct.Module.html
