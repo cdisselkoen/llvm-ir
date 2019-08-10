@@ -799,10 +799,9 @@ pub struct ExtractElement {
 
 impl Typed for ExtractElement {
     fn get_type(&self) -> Type {
-        if let Type::VectorType { element_type, .. } = self.vector.get_type() {
-            *element_type.clone()
-        } else {
-            panic!("ExtractElement vector is not VectorType")
+        match self.vector.get_type() {
+            Type::VectorType { element_type, .. } => *element_type.clone(),
+            ty => panic!("Expected an ExtractElement vector to be VectorType, got {:?}", ty),
         }
     }
 }
@@ -845,16 +844,14 @@ impl_hasresult!(ShuffleVector);
 
 impl Typed for ShuffleVector {
     fn get_type(&self) -> Type {
-        let t = self.operand0.get_type();
-        assert_eq!(t, self.operand1.get_type());
-        if let Type::VectorType { element_type, .. } = t {
-            if let Type::VectorType { num_elements, .. } = self.mask.get_type() {
-                Type::VectorType { element_type, num_elements }
-            } else {
-                panic!("ShuffleVector mask is not VectorType")
-            }
-        } else {
-            panic!("ShuffleVector operand is not VectorType")
+        let ty = self.operand0.get_type();
+        assert_eq!(ty, self.operand1.get_type());
+        match ty {
+            Type::VectorType { element_type, .. } => match self.mask.get_type() {
+                Type::VectorType { num_elements, .. } => Type::VectorType { element_type, num_elements },
+                ty => panic!("Expected a ShuffleVector mask to be VectorType, got {:?}", ty),
+            },
+            _ => panic!("Expected a ShuffleVector operand to be VectorType, got {:?}", ty),
         }
     }
 }
@@ -890,7 +887,7 @@ fn ev_type(cur_type: Type, mut indices: impl Iterator<Item = u32>) -> Type {
                     .clone(),
                 indices,
             ),
-            _ => panic!("ExtractValue from something that's not ArrayType or StructType"),
+            _ => panic!("ExtractValue from something that's not ArrayType or StructType; its type is {:?}", cur_type),
         },
     }
 }
