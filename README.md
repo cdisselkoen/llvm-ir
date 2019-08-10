@@ -45,7 +45,7 @@ use llvm_ir::Module;
 use std::path::Path;
 
 let path = Path::new("path/to/my/file.bc");
-module = Module::from_bc_path(&path)?;
+let module = Module::from_bc_path(&path)?;
 ```
 
 ## Documentation
