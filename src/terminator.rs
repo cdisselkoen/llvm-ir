@@ -204,10 +204,9 @@ impl_hasresult!(Invoke);
 
 impl Typed for Invoke {
     fn get_type(&self) -> Type {
-        if let Type::FuncType { result_type, .. } = self.function.get_type() {
-            *result_type
-        } else {
-            panic!("self.function has a type that's not FuncType");
+        match self.function.get_type() {
+            Type::FuncType { result_type, .. } => *result_type,
+            ty => panic!("Expected the function argument of an Invoke to have type FuncType; got {:?}", ty),
         }
     }
 }

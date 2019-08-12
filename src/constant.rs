@@ -482,10 +482,9 @@ impl_constexpr!(ExtractElement, ExtractElement);
 
 impl Typed for ExtractElement {
     fn get_type(&self) -> Type {
-        if let Type::VectorType { element_type, .. } = self.vector.get_type() {
-            *element_type.clone()
-        } else {
-            panic!("ExtractElement vector is not VectorType")
+        match self.vector.get_type() {
+            Type::VectorType { element_type, .. } => *element_type.clone(),
+            ty => panic!("Expected an ExtractElement vector to be VectorType, got {:?}", ty),
         }
     }
 }
@@ -517,16 +516,14 @@ impl_binop!(ShuffleVector);
 
 impl Typed for ShuffleVector {
     fn get_type(&self) -> Type {
-        let t = self.operand0.get_type();
-        assert_eq!(t, self.operand1.get_type());
-        if let Type::VectorType { element_type, .. } = t {
-            if let Type::VectorType { num_elements, .. } = self.mask.get_type() {
-                Type::VectorType { element_type, num_elements }
-            } else {
-                panic!("ShuffleVector mask is not VectorType")
-            }
-        } else {
-            panic!("ShuffleVector operand is not VectorType")
+        let ty = self.operand0.get_type();
+        assert_eq!(ty, self.operand1.get_type());
+        match ty {
+            Type::VectorType { element_type, .. } => match self.mask.get_type() {
+                Type::VectorType { num_elements, .. } => Type::VectorType { element_type, num_elements },
+                ty => panic!("Expected a ShuffleVector mask to be VectorType, got {:?}", ty),
+            },
+            _ => panic!("Expected a ShuffleVector operand to be VectorType, got {:?}", ty),
         }
     }
 }
@@ -557,7 +554,7 @@ fn ev_type(cur_type: Type, mut indices: impl Iterator<Item = u32>) -> Type {
                     .clone(),
                 indices,
             ),
-            _ => panic!("ExtractValue from something that's not ArrayType or StructType"),
+            _ => panic!("ExtractValue from something that's not ArrayType or StructType; its type is {:?}", cur_type),
         },
     }
 }
@@ -609,10 +606,10 @@ fn gep_type(cur_type: Type, mut indices: impl Iterator<Item = Constant>) -> Type
                         indices,
                     )
                 } else {
-                    panic!("GEP index is not a Constant::Int")
+                    panic!("Expected GEP index on a constant struct to be a Constant::Int; got {:?}", index)
                 }
             }
-            _ => panic!("GEP on something that's not a PointerType, VectorType, ArrayType, or StructType"),
+            _ => panic!("Expected GEP base type to be a PointerType, VectorType, ArrayType, or StructType; got {:?}", cur_type),
         },
     }
 }
@@ -838,18 +835,17 @@ impl Constant {
         }
         match unsafe { LLVMGetValueKind(constant) } {
             LLVMValueKind::LLVMConstantIntValueKind => {
-                if let Type::IntegerType { bits } = Type::from_llvm_ref( unsafe { LLVMTypeOf(constant) }, tnmap ) {
-                    Constant::Int {
+                match Type::from_llvm_ref( unsafe { LLVMTypeOf(constant) }, tnmap ) {
+                    Type::IntegerType { bits } => Constant::Int {
                         bits,
                         value: unsafe { LLVMConstIntGetZExtValue(constant) } as u64,
-                    }
-                } else {
-                    panic!("Constant::Int apparently doesn't have type Type::IntegerType")
+                    },
+                    ty => panic!("Expected Constant::Int to have type Type::IntegerType; got {:?}", ty),
                 }
             },
             LLVMValueKind::LLVMConstantFPValueKind => {
-                if let Type::FPType(fptype) = Type::from_llvm_ref( unsafe { LLVMTypeOf(constant) }, tnmap ) {
-                    Constant::Float(match fptype {
+                match Type::from_llvm_ref( unsafe { LLVMTypeOf(constant) }, tnmap ) {
+                    Type::FPType(fptype) => Constant::Float(match fptype {
                         FPType::Half => Float::Half,
                         FPType::Single => Float::Single( unsafe {
                             let mut b = 0;
@@ -864,9 +860,8 @@ impl Constant {
                         FPType::FP128 => Float::Quadruple,
                         FPType::X86_FP80 => Float::X86_FP80,
                         FPType::PPC_FP128 => Float::PPC_FP128,
-                    })
-                } else {
-                    panic!("Constant::Float apparently doesn't have type Type::FPType")
+                    }),
+                    ty => panic!("Expected Constant::Float to have type Type::FPType; got {:?}", ty),
                 }
             },
             LLVMValueKind::LLVMConstantStructValueKind => {
@@ -884,7 +879,7 @@ impl Constant {
                             panic!("Expected NamedStructType inner type to be a StructType, but it actually is a {:?}", innerty)
                         }
                     },
-                    ty => panic!("Constant::Struct apparently has type {:?}", ty),
+                    ty => panic!("Expected Constant::Struct to have type StructType or NamedStructType; got {:?}", ty),
                 };
                 Constant::Struct {
                     name: None,  // --TODO not yet implemented: Constant::Struct name
@@ -897,15 +892,14 @@ impl Constant {
                 }
             },
             LLVMValueKind::LLVMConstantArrayValueKind => {
-                if let Type::ArrayType { element_type, num_elements } = Type::from_llvm_ref( unsafe { LLVMTypeOf(constant) }, tnmap ) {
-                    Constant::Array {
+                match Type::from_llvm_ref( unsafe { LLVMTypeOf(constant) }, tnmap ) {
+                    Type::ArrayType { element_type, num_elements } => Constant::Array {
                         element_type: *element_type,
                         elements: {
                             (0 .. num_elements).map(|i| Constant::from_llvm_ref( unsafe { LLVMGetOperand(constant, i as u32) }, gnmap, tnmap)).collect()
                         },
-                    }
-                } else {
-                    panic!("Constant::Array apparently doesn't have type Type::ArrayType")
+                    },
+                    ty => panic!("Expected Constant::Array to have type Type::ArrayType; got {:?}", ty),
                 }
             },
             LLVMValueKind::LLVMConstantVectorValueKind => {
@@ -915,24 +909,22 @@ impl Constant {
                 )
             },
             LLVMValueKind::LLVMConstantDataArrayValueKind => {
-                if let Type::ArrayType { element_type, num_elements } = Type::from_llvm_ref( unsafe { LLVMTypeOf(constant) }, tnmap ) {
-                    Constant::Array {
+                match Type::from_llvm_ref( unsafe { LLVMTypeOf(constant) }, tnmap ) {
+                    Type::ArrayType { element_type, num_elements } => Constant::Array {
                         element_type: *element_type,
                         elements: {
                             (0 .. num_elements).map(|i| Constant::from_llvm_ref( unsafe { LLVMGetElementAsConstant(constant, i as u32) }, gnmap, tnmap)).collect()
                         },
-                    }
-                } else {
-                    panic!("ConstantDataArray apparently doesn't have type Type::ArrayType")
+                    },
+                    ty => panic!("Expected ConstantDataArray to have type Type::ArrayType; got {:?}", ty),
                 }
             },
             LLVMValueKind::LLVMConstantDataVectorValueKind => {
-                if let Type::VectorType { num_elements, .. } = Type::from_llvm_ref( unsafe { LLVMTypeOf(constant) }, tnmap ) {
-                    Constant::Vector(
+                match Type::from_llvm_ref( unsafe { LLVMTypeOf(constant) }, tnmap ) {
+                    Type::VectorType { num_elements, .. } => Constant::Vector(
                         (0 .. num_elements).map(|i| Constant::from_llvm_ref( unsafe { LLVMGetElementAsConstant(constant, i as u32) }, gnmap, tnmap)).collect()
-                    )
-                } else {
-                    panic!("ConstantDataVector apparently doesn't have type Type::VectorType")
+                    ),
+                    ty => panic!("Expected ConstantDataVector to have type Type::VectorType; got {:?}", ty),
                 }
             },
             LLVMValueKind::LLVMConstantPointerNullValueKind => {
