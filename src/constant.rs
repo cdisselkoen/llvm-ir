@@ -3,6 +3,7 @@ use crate::predicates::*;
 use crate::types::{Type, Typed};
 use std::cell::RefCell;
 use std::convert::TryFrom;
+use std::ops::Deref;
 use std::rc::Rc;
 
 /// See [LLVM 8 docs on Constants](https://releases.llvm.org/8.0.0/docs/LangRef.html#constants).
@@ -585,31 +586,41 @@ impl_constexpr!(GetElementPtr, GetElementPtr);
 
 impl Typed for GetElementPtr {
     fn get_type(&self) -> Type {
-        gep_type(self.address.get_type(), self.indices.iter().cloned())
+        gep_type(&self.address.get_type(), self.indices.iter())
     }
 }
 
-fn gep_type(cur_type: Type, mut indices: impl Iterator<Item = Constant>) -> Type {
+fn gep_type<'a, 'b>(cur_type: &'a Type, mut indices: impl Iterator<Item = &'b Constant>) -> Type {
     match indices.next() {
-        None => Type::pointer_to(cur_type), // iterator is done
+        None => Type::pointer_to(cur_type.clone()), // iterator is done
         Some(index) => match cur_type {
-            Type::PointerType { pointee_type, .. } => gep_type(*pointee_type, indices),
-            Type::VectorType { element_type, .. } => gep_type(*element_type, indices),
-            Type::ArrayType { element_type, .. } => gep_type(*element_type, indices),
+            Type::PointerType { pointee_type, .. } => gep_type(pointee_type, indices),
+            Type::VectorType { element_type, .. } => gep_type(element_type, indices),
+            Type::ArrayType { element_type, .. } => gep_type(element_type, indices),
             Type::StructType { element_types, .. } => {
                 if let Constant::Int { value, .. } = index {
                     gep_type(
-                        element_types
-                            .get(value as usize)
-                            .expect("GEP index out of range")
-                            .clone(),
+                        element_types.get(*value as usize).expect("GEP index out of range"),
                         indices,
                     )
                 } else {
                     panic!("Expected GEP index on a constant struct to be a Constant::Int; got {:?}", index)
                 }
+            },
+            Type::NamedStructType { ty, .. } => match ty {
+                None => panic!("GEP on an opaque struct type"),
+                Some(weak) => match weak.upgrade().expect("Weak reference disappeared").borrow().deref() {
+                    Type::StructType { element_types, .. } => {
+                        if let Constant::Int { value, .. } = index {
+                            gep_type(element_types.get(*value as usize).expect("GEP index out of range"), indices)
+                        } else {
+                            panic!("Expected GEP index on a struct to be a Constant::Int; got {:?}", index)
+                        }
+                    },
+                    ty => panic!("Expected NamedStructType inner type to be a StructType; got {:?}", ty),
+                },
             }
-            _ => panic!("Expected GEP base type to be a PointerType, VectorType, ArrayType, or StructType; got {:?}", cur_type),
+            _ => panic!("Expected GEP base type to be a PointerType, VectorType, ArrayType, StructType, or NamedStructType; got {:?}", cur_type),
         },
     }
 }

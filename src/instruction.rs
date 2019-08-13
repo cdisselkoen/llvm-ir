@@ -1055,7 +1055,10 @@ fn gep_type<'a, 'b>(cur_type: &'a Type, mut indices: impl Iterator<Item = &'b Op
             Type::ArrayType { element_type, .. } => gep_type(element_type, indices),
             Type::StructType { element_types, .. } => {
                 if let Operand::ConstantOperand(Constant::Int { value, .. }) = index {
-                    gep_type(element_types.get(*value as usize).expect("GEP index out of range"), indices)
+                    gep_type(
+                        element_types.get(*value as usize).expect("GEP index out of range"),
+                        indices,
+                    )
                 } else {
                     panic!("Expected GEP index on a struct to be a Operand::ConstantOperand(Constant::Int); got {:?}", index)
                 }
