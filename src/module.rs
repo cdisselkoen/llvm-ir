@@ -168,6 +168,7 @@ pub enum Linkage {
     LinkerPrivateWeak,
 }
 
+/// See [LLVM 8 docs on Visibility Styles](https://releases.llvm.org/8.0.0/docs/LangRef.html#visibility-styles)
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub enum Visibility {
     Default,
