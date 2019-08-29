@@ -627,7 +627,6 @@
 <span id="627">627</span>
 <span id="628">628</span>
 <span id="629">629</span>
-<span id="630">630</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">constant</span>::<span class="ident">Constant</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">function</span>::{<span class="ident">CallingConvention</span>, <span class="ident">FunctionAttribute</span>, <span class="ident">ParameterAttribute</span>};
@@ -835,10 +834,9 @@ impl Terminator {
 
 <span class="kw">impl</span> <span class="ident">Typed</span> <span class="kw">for</span> <span class="ident">Invoke</span> {
     <span class="kw">fn</span> <span class="ident">get_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">Type</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Type</span>::<span class="ident">FuncType</span> { <span class="ident">result_type</span>, .. } <span class="op">=</span> <span class="self">self</span>.<span class="ident">function</span>.<span class="ident">get_type</span>() {
-            <span class="kw-2">*</span><span class="ident">result_type</span>
-        } <span class="kw">else</span> {
-            <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;self.function has a type that&#39;s not FuncType&quot;</span>);
+        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">function</span>.<span class="ident">get_type</span>() {
+            <span class="ident">Type</span>::<span class="ident">FuncType</span> { <span class="ident">result_type</span>, .. } <span class="op">=&gt;</span> <span class="kw-2">*</span><span class="ident">result_type</span>,
+            <span class="ident">ty</span> <span class="op">=&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Expected the function argument of an Invoke to have type FuncType; got {:?}&quot;</span>, <span class="ident">ty</span>),
         }
     }
 }

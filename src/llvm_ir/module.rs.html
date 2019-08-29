@@ -496,10 +496,6 @@
 <span id="496">496</span>
 <span id="497">497</span>
 <span id="498">498</span>
-<span id="499">499</span>
-<span id="500">500</span>
-<span id="501">501</span>
-<span id="502">502</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">constant</span>::<span class="ident">Constant</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">function</span>::{<span class="ident">Function</span>, <span class="ident">FunctionAttribute</span>, <span class="ident">GroupID</span>};
@@ -546,12 +542,7 @@
     <span class="doccomment">/// Get the `Function` having the given `Name` (if any).</span>
     <span class="doccomment">/// Note that `Function`s are named with `String`s and not `Name`s.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_func_by_name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Function</span><span class="op">&gt;</span> {
-        <span class="kw">for</span> <span class="ident">func</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">functions</span>.<span class="ident">iter</span>() {
-            <span class="kw">if</span> <span class="ident">func</span>.<span class="ident">name</span> <span class="op">==</span> <span class="ident">name</span> {
-                <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">func</span>);
-            }
-        }
-        <span class="prelude-val">None</span>
+        <span class="self">self</span>.<span class="ident">functions</span>.<span class="ident">iter</span>().<span class="ident">find</span>(<span class="op">|</span><span class="ident">func</span><span class="op">|</span> <span class="ident">func</span>.<span class="ident">name</span> <span class="op">==</span> <span class="ident">name</span>)
     }
 
     <span class="doccomment">/// Parse the LLVM bitcode (.bc) file at the given path to create a `Module`</span>
@@ -676,6 +667,7 @@
     <span class="ident">LinkerPrivateWeak</span>,
 }
 
+<span class="doccomment">/// See [LLVM 8 docs on Visibility Styles](https://releases.llvm.org/8.0.0/docs/LangRef.html#visibility-styles)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Visibility</span> {
     <span class="ident">Default</span>,

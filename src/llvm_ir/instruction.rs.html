@@ -2513,6 +2513,7 @@
 <span id="2513">2513</span>
 <span id="2514">2514</span>
 <span id="2515">2515</span>
+<span id="2516">2516</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">constant</span>::<span class="ident">Constant</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">function</span>::{<span class="ident">CallingConvention</span>, <span class="ident">FunctionAttribute</span>, <span class="ident">ParameterAttribute</span>};
@@ -3315,10 +3316,9 @@ impl HasMetadata for Instruction {
 
 <span class="kw">impl</span> <span class="ident">Typed</span> <span class="kw">for</span> <span class="ident">ExtractElement</span> {
     <span class="kw">fn</span> <span class="ident">get_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">Type</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Type</span>::<span class="ident">VectorType</span> { <span class="ident">element_type</span>, .. } <span class="op">=</span> <span class="self">self</span>.<span class="ident">vector</span>.<span class="ident">get_type</span>() {
-            <span class="kw-2">*</span><span class="ident">element_type</span>.<span class="ident">clone</span>()
-        } <span class="kw">else</span> {
-            <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;ExtractElement vector is not VectorType&quot;</span>)
+        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">vector</span>.<span class="ident">get_type</span>() {
+            <span class="ident">Type</span>::<span class="ident">VectorType</span> { <span class="ident">element_type</span>, .. } <span class="op">=&gt;</span> <span class="kw-2">*</span><span class="ident">element_type</span>.<span class="ident">clone</span>(),
+            <span class="ident">ty</span> <span class="op">=&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Expected an ExtractElement vector to be VectorType, got {:?}&quot;</span>, <span class="ident">ty</span>),
         }
     }
 }
@@ -3361,16 +3361,14 @@ impl HasMetadata for Instruction {
 
 <span class="kw">impl</span> <span class="ident">Typed</span> <span class="kw">for</span> <span class="ident">ShuffleVector</span> {
     <span class="kw">fn</span> <span class="ident">get_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">Type</span> {
-        <span class="kw">let</span> <span class="ident">t</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">operand0</span>.<span class="ident">get_type</span>();
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">t</span>, <span class="self">self</span>.<span class="ident">operand1</span>.<span class="ident">get_type</span>());
-        <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Type</span>::<span class="ident">VectorType</span> { <span class="ident">element_type</span>, .. } <span class="op">=</span> <span class="ident">t</span> {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Type</span>::<span class="ident">VectorType</span> { <span class="ident">num_elements</span>, .. } <span class="op">=</span> <span class="self">self</span>.<span class="ident">mask</span>.<span class="ident">get_type</span>() {
-                <span class="ident">Type</span>::<span class="ident">VectorType</span> { <span class="ident">element_type</span>, <span class="ident">num_elements</span> }
-            } <span class="kw">else</span> {
-                <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;ShuffleVector mask is not VectorType&quot;</span>)
-            }
-        } <span class="kw">else</span> {
-            <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;ShuffleVector operand is not VectorType&quot;</span>)
+        <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">operand0</span>.<span class="ident">get_type</span>();
+        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">ty</span>, <span class="self">self</span>.<span class="ident">operand1</span>.<span class="ident">get_type</span>());
+        <span class="kw">match</span> <span class="ident">ty</span> {
+            <span class="ident">Type</span>::<span class="ident">VectorType</span> { <span class="ident">element_type</span>, .. } <span class="op">=&gt;</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">mask</span>.<span class="ident">get_type</span>() {
+                <span class="ident">Type</span>::<span class="ident">VectorType</span> { <span class="ident">num_elements</span>, .. } <span class="op">=&gt;</span> <span class="ident">Type</span>::<span class="ident">VectorType</span> { <span class="ident">element_type</span>, <span class="ident">num_elements</span> },
+                <span class="ident">ty</span> <span class="op">=&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Expected a ShuffleVector mask to be VectorType, got {:?}&quot;</span>, <span class="ident">ty</span>),
+            },
+            <span class="kw">_</span> <span class="op">=&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Expected a ShuffleVector operand to be VectorType, got {:?}&quot;</span>, <span class="ident">ty</span>),
         }
     }
 }
@@ -3406,7 +3404,7 @@ impl HasMetadata for Instruction {
                     .<span class="ident">clone</span>(),
                 <span class="ident">indices</span>,
             ),
-            <span class="kw">_</span> <span class="op">=&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;ExtractValue from something that&#39;s not ArrayType or StructType&quot;</span>),
+            <span class="kw">_</span> <span class="op">=&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;ExtractValue from something that&#39;s not ArrayType or StructType; its type is {:?}&quot;</span>, <span class="ident">cur_type</span>),
         },
     }
 }
@@ -3468,10 +3466,9 @@ impl HasMetadata for Instruction {
 
 <span class="kw">impl</span> <span class="ident">Typed</span> <span class="kw">for</span> <span class="ident">Load</span> {
     <span class="kw">fn</span> <span class="ident">get_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">Type</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Type</span>::<span class="ident">PointerType</span> { <span class="ident">pointee_type</span>, .. } <span class="op">=</span> <span class="self">self</span>.<span class="ident">address</span>.<span class="ident">get_type</span>() {
-            <span class="kw-2">*</span><span class="ident">pointee_type</span>
-        } <span class="kw">else</span> {
-            <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;self.address has a type that&#39;s not PointerType&quot;</span>)
+        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">address</span>.<span class="ident">get_type</span>() {
+            <span class="ident">Type</span>::<span class="ident">PointerType</span> { <span class="ident">pointee_type</span>, .. } <span class="op">=&gt;</span> <span class="kw-2">*</span><span class="ident">pointee_type</span>,
+            <span class="ident">ty</span> <span class="op">=&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Expected a load address to be PointerType, got {:?}&quot;</span>, <span class="ident">ty</span>),
         }
     }
 }
@@ -3575,7 +3572,10 @@ impl HasMetadata for Instruction {
             <span class="ident">Type</span>::<span class="ident">ArrayType</span> { <span class="ident">element_type</span>, .. } <span class="op">=&gt;</span> <span class="ident">gep_type</span>(<span class="ident">element_type</span>, <span class="ident">indices</span>),
             <span class="ident">Type</span>::<span class="ident">StructType</span> { <span class="ident">element_types</span>, .. } <span class="op">=&gt;</span> {
                 <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Operand</span>::<span class="ident">ConstantOperand</span>(<span class="ident">Constant</span>::<span class="ident">Int</span> { <span class="ident">value</span>, .. }) <span class="op">=</span> <span class="ident">index</span> {
-                    <span class="ident">gep_type</span>(<span class="ident">element_types</span>.<span class="ident">get</span>(<span class="kw-2">*</span><span class="ident">value</span> <span class="kw">as</span> <span class="ident">usize</span>).<span class="ident">expect</span>(<span class="string">&quot;GEP index out of range&quot;</span>), <span class="ident">indices</span>)
+                    <span class="ident">gep_type</span>(
+                        <span class="ident">element_types</span>.<span class="ident">get</span>(<span class="kw-2">*</span><span class="ident">value</span> <span class="kw">as</span> <span class="ident">usize</span>).<span class="ident">expect</span>(<span class="string">&quot;GEP index out of range&quot;</span>),
+                        <span class="ident">indices</span>,
+                    )
                 } <span class="kw">else</span> {
                     <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Expected GEP index on a struct to be a Operand::ConstantOperand(Constant::Int); got {:?}&quot;</span>, <span class="ident">index</span>)
                 }
@@ -3887,10 +3887,12 @@ impl HasMetadata for Instruction {
 
 <span class="kw">impl</span> <span class="ident">Typed</span> <span class="kw">for</span> <span class="ident">Call</span> {
     <span class="kw">fn</span> <span class="ident">get_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">Type</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Type</span>::<span class="ident">FuncType</span> { <span class="ident">result_type</span>, .. } <span class="op">=</span> <span class="self">self</span>.<span class="ident">function</span>.<span class="ident">get_type</span>() {
-            <span class="kw-2">*</span><span class="ident">result_type</span>
-        } <span class="kw">else</span> {
-            <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;self.function has a type that&#39;s not FuncType&quot;</span>)
+        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">function</span>.<span class="ident">get_type</span>() {
+            <span class="ident">Type</span>::<span class="ident">PointerType</span> { <span class="ident">pointee_type</span>, .. } <span class="op">=&gt;</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">pointee_type</span> {
+                <span class="ident">Type</span>::<span class="ident">FuncType</span> { <span class="ident">result_type</span>, .. } <span class="op">=&gt;</span> <span class="kw-2">*</span><span class="ident">result_type</span>,
+                <span class="ident">ty</span> <span class="op">=&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Expected Call&#39;s function argument to be of type pointer-to-function, got pointer-to-{:?}&quot;</span>, <span class="ident">ty</span>),
+            },
+            <span class="ident">ty</span> <span class="op">=&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Expected Call&#39;s function argument to be of type pointer-to-function, got {:?}&quot;</span>, <span class="ident">ty</span>),
         }
     }
 }
