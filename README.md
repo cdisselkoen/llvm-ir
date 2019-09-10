@@ -3,14 +3,21 @@
 [![Crates.io](http://meritbadge.herokuapp.com/llvm-ir)](https://crates.io/crates/llvm-ir)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/cdisselkoen/llvm-ir/master/LICENSE)
 
-`llvm-ir` seeks to provide a more Rust-y representation of LLVM IR than
-crates like [`llvm-sys`] or [`inkwell`] which rely on continuous FFI to the
-LLVM API.
+`llvm-ir` seeks to provide a Rust-y representation of LLVM IR.
 It's based on the idea that an LLVM [`Instruction`] shouldn't be an opaque
 datatype, but rather an `enum` with variants like [`Add`], [`Call`], and
 [`Store`].
 Likewise, types like [`BasicBlock`], [`Function`], and [`Module`] should be
 Rust structs containing as much information as possible.
+
+Unlike other safe LLVM bindings such as [`inkwell`], `llvm-ir` does not rely
+on continuous FFI to the LLVM API.
+It uses the LLVM API only for its initial parsing step, to pull in all the
+data it needs to construct its rich representation of LLVM IR.
+Once `llvm-ir` creates a [`Module`] data structure by parsing an LLVM file
+(using the excellent [`llvm-sys`] low-level LLVM bindings), it drops the LLVM
+FFI objects and makes no further FFI calls.
+This allows you to work with the resulting LLVM IR in pure safe Rust.
 
 `llvm-ir` is intended for consumption of LLVM IR, and not necessarily
 production of LLVM IR (yet).
@@ -23,12 +30,6 @@ If this interests you, contributions are welcome!
 producing LLVM IR.)
 But if you're looking for a nice read-oriented representation of LLVM IR for
 working in pure Rust, that's exactly what `llvm-ir` can provide today.
-
-Currently, `llvm-ir` does rely on FFI to the LLVM API via `llvm-sys`, but
-only for its initial parsing step.
-Once `llvm-ir` creates a [`Module`] data structure by parsing an LLVM
-file, it drops the LLVM FFI objects and makes no further FFI calls.
-This allows you to work with the resulting LLVM IR in pure safe Rust.
 
 ## Getting started
 The easiest way to get started is to parse some existing LLVM IR into this
