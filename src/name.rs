@@ -26,6 +26,12 @@ impl From<String> for Name {
     }
 }
 
+impl From<&str> for Name {
+    fn from(s: &str) -> Self {
+        Name::Name(s.to_owned())
+    }
+}
+
 impl From<usize> for Name {
     fn from(u: usize) -> Self {
         Name::Number(u)
