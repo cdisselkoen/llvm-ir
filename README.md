@@ -32,8 +32,15 @@ But if you're looking for a nice read-oriented representation of LLVM IR for
 working in pure Rust, that's exactly what `llvm-ir` can provide today.
 
 ## Getting started
-The easiest way to get started is to parse some existing LLVM IR into this
-crate's data structures.
+This crate is on [crates.io](https://crates.io/crates/llvm-ir), so you can simply
+add it as a dependency in your `Cargo.toml`:
+```toml
+[dependencies]
+llvm-ir = "0.2.2"
+```
+
+Then, the easiest way to get started is to parse some existing LLVM IR into
+this crate's data structures.
 To do this, you need LLVM bitcode (`*.bc`) files.
 If you currently have C/C++ sources (say, `source.c`), you can generate
 `*.bc` files with `clang`'s `-c` and `-emit-llvm` flags:
