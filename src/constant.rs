@@ -1,10 +1,9 @@
 use crate::name::Name;
 use crate::predicates::*;
 use crate::types::{Type, Typed};
-use std::cell::RefCell;
 use std::convert::TryFrom;
 use std::ops::Deref;
-use std::rc::Rc;
+use std::sync::{Arc, RwLock};
 
 /// See [LLVM 8 docs on Constants](https://releases.llvm.org/8.0.0/docs/LangRef.html#constants).
 /// Constants can be either values, or expressions involving other constants (see [LLVM 8 docs on Constant Expressions](https://releases.llvm.org/8.0.0/docs/LangRef.html#constant-expressions)).
@@ -609,7 +608,7 @@ fn gep_type<'a, 'b>(cur_type: &'a Type, mut indices: impl Iterator<Item = &'b Co
             },
             Type::NamedStructType { ty, .. } => match ty {
                 None => panic!("GEP on an opaque struct type"),
-                Some(weak) => match weak.upgrade().expect("Weak reference disappeared").borrow().deref() {
+                Some(weak) => match weak.upgrade().expect("Weak reference disappeared").read().unwrap().deref() {
                     Type::StructType { element_types, .. } => {
                         if let Constant::Int { value, .. } = index {
                             gep_type(element_types.get(*value as usize).expect("GEP index out of range"), indices)
@@ -879,11 +878,11 @@ impl Constant {
                 let (num_elements, is_packed) = match Type::from_llvm_ref( unsafe { LLVMTypeOf(constant) }, tnmap ) {
                     Type::StructType { element_types, is_packed } => (element_types.len(), is_packed),
                     Type::NamedStructType { ref ty, .. } => {
-                        let rc: Rc<RefCell<Type>> = ty.as_ref()
+                        let arc: Arc<RwLock<Type>> = ty.as_ref()
                             .expect("Constant of opaque struct type")
                             .upgrade()
                             .expect("Weak reference should be valid for at least the lifetime of tnmap");
-                        let innerty: &Type = &rc.borrow();
+                        let innerty: &Type = &arc.read().unwrap();
                         if let Type::StructType { element_types, is_packed } = innerty {
                             (element_types.len(), *is_packed)
                         } else {

@@ -1,9 +1,7 @@
 use crate::module::AddrSpace;
 //use crate::name::Name;
 use either::Either;
-use std::cell::RefCell;
-use std::rc;
-use std::rc::Rc;
+use std::sync::{Arc, RwLock, Weak};
 
 /// See [LLVM 8 docs on Type System](https://releases.llvm.org/8.0.0/docs/LangRef.html#type-system)
 #[derive(Clone, Debug)]
@@ -54,7 +52,7 @@ pub enum Type {
         /// The actual struct type, which will be a `StructType` variant.
         /// A `None` here indicates an opaque type; see [LLVM 8 docs on Opaque Structure Types](https://releases.llvm.org/8.0.0/docs/LangRef.html#t-opaque).
         /// The weak reference should remain valid for at least the lifetime of the `Module` in which the named struct type is defined.
-        ty: Option<rc::Weak<RefCell<Type>>>,
+        ty: Option<Weak<RwLock<Type>>>,
     },
     /// See [LLVM 8 docs on X86_MMX Type](https://releases.llvm.org/8.0.0/docs/LangRef.html#x86-mmx-type)
     X86_MMXType, // llvm-hs-pure doesn't have this, not sure what they do with LLVM's http://llvm.org/docs/LangRef.html#x86-mmx-type
@@ -67,7 +65,7 @@ pub enum Type {
     TokenType,
 }
 
-// `PartialEq` cannot be automatically derived for `Type` because of the `rc::Weak` in `NamedStructType`
+// `PartialEq` cannot be automatically derived for `Type` because of the `Weak` in `NamedStructType`
 impl PartialEq for Type {
     fn eq(&self, other: &Type) -> bool {
         match (self, other) {
@@ -206,7 +204,7 @@ use crate::from_llvm::*;
 use llvm_sys::LLVMTypeKind;
 use std::collections::{HashMap, HashSet};
 
-pub(crate) type TyNameMap = HashMap<String, Option<Rc<RefCell<Type>>>>;
+pub(crate) type TyNameMap = HashMap<String, Option<Arc<RwLock<Type>>>>;
 
 impl Type {
     pub(crate) fn from_llvm_ref(ty: LLVMTypeRef, tynamemap: &mut TyNameMap) -> Self {
@@ -246,7 +244,7 @@ impl Type {
 
                 match name {
                     Some(ref s) if !s.is_empty() => {
-                        let actual_type: Option<Rc<RefCell<Type>>> = if tynamemap.contains_key(s) {
+                        let actual_type: Option<Arc<RwLock<Type>>> = if tynamemap.contains_key(s) {
                             tynamemap.get(s).unwrap().clone()
                         } else {
                             // first fill in the entry as opaque for now, so that the call to struct_type_from_llvm_ref will terminate
@@ -255,17 +253,17 @@ impl Type {
                             let type_with_opaqued_self_refs =
                                 Type::struct_type_from_llvm_ref(ty, tynamemap);
                             // recursively replace any opaqued self-references with weak refs to self
-                            let rc = Rc::new(RefCell::new(type_with_opaqued_self_refs.clone()));
+                            let arc = Arc::new(RwLock::new(type_with_opaqued_self_refs.clone()));
                             let actual_type =
-                                Type::replace_in_type(type_with_opaqued_self_refs, s, &rc);
-                            rc.replace(actual_type);
+                                Type::replace_in_type(type_with_opaqued_self_refs, s, &arc);
+                            *arc.write().unwrap() = actual_type;
                             // and finally, put the completed type in the map
-                            tynamemap.insert(s.clone(), Some(rc.clone()));
-                            Some(rc)
+                            tynamemap.insert(s.clone(), Some(arc.clone()));
+                            Some(arc)
                         };
                         Type::NamedStructType {
                             name: s.clone(),
-                            ty: actual_type.map(|rc| Rc::downgrade(&rc)),
+                            ty: actual_type.map(|arc| Arc::downgrade(&arc)),
                         }
                     }
                     _ => Type::struct_type_from_llvm_ref(ty, tynamemap),
@@ -303,8 +301,8 @@ impl Type {
         }
     }
 
-    /// Replace any opaqued named structs with the given `name`, with weak references to the given `Rc<RefCell<Type>>`
-    fn replace_in_type(ty: Type, target_name: &str, replacement: &Rc<RefCell<Type>>) -> Type {
+    /// Replace any opaqued named structs with the given `name`, with weak references to the given `Arc<RwLock<Type>>`
+    fn replace_in_type(ty: Type, target_name: &str, replacement: &Arc<RwLock<Type>>) -> Type {
         Type::_replace_in_type(ty, target_name, replacement, HashSet::new())
     }
 
@@ -314,14 +312,14 @@ impl Type {
     fn _replace_in_type(
         ty: Type,
         target_name: &str,
-        replacement: &Rc<RefCell<Type>>,
+        replacement: &Arc<RwLock<Type>>,
         mut seen_names: HashSet<String>,
     ) -> Type {
         match ty {
             Type::NamedStructType { ref name, ty: None } if name == target_name => {
                 Type::NamedStructType {
                     name: name.clone(),
-                    ty: Some(Rc::downgrade(replacement)),
+                    ty: Some(Arc::downgrade(replacement)),
                 }
             }
             // confused on the proper syntax here; neither `{ ref name, ref ty: Some(weak) }` nor
@@ -332,15 +330,14 @@ impl Type {
                     .as_ref()
                     .expect("we checked that ty.is_some() in the pattern guard");
                 seen_names.insert(name.clone());
-                let rc_opt: Option<Rc<RefCell<Type>>> = weak.upgrade();
-                if let Some(rc) = rc_opt.as_ref() {
-                    rc.replace_with(|t| {
-                        Type::_replace_in_type(t.clone(), target_name, replacement, seen_names)
-                    });
+                let arc_opt: Option<Arc<RwLock<Type>>> = weak.upgrade();
+                if let Some(arc) = arc_opt.as_ref() {
+                    let inner_ty = arc.read().unwrap().clone();
+                    *arc.write().unwrap() = Type::_replace_in_type(inner_ty, target_name, replacement, seen_names);
                 }
                 Type::NamedStructType {
                     name: name.clone(),
-                    ty: rc_opt.map(|rc| Rc::downgrade(&rc)),
+                    ty: arc_opt.map(|arc| Arc::downgrade(&arc)),
                 }
             }
             Type::PointerType { pointee_type, addr_space } => Type::PointerType {

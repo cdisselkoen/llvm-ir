@@ -89,10 +89,9 @@ llvm_test!("tests/llvm_bc/weak-macho-3.5.ll.bc", weak_macho);
 
 use either::Either;
 use llvm_ir::*;
-use std::cell::RefCell;
 use std::convert::TryInto;
 use std::ops::Deref;
-use std::rc::Rc;
+use std::sync::{Arc, RwLock};
 
 /// Additionally ensure that certain constructs were parsed correctly
 /// (these constructs don't currently appear in any of the basic_tests)
@@ -127,7 +126,7 @@ fn DILocation_implicit_code_extra_checks() {
     if let Operand::LocalOperand { name, ty: Type::PointerType { pointee_type, .. } } = &invoke.arguments[0].0 {
         assert_eq!(name, &Name::Name("a".to_owned()));
         if let Type::NamedStructType { ref ty, .. } = **pointee_type {
-            let struct_type: Rc<RefCell<Type>> = ty
+            let struct_type: Arc<RwLock<Type>> = ty
                 .as_ref()
                 .unwrap_or_else(|| {
                     panic!("Didn't expect {:?} to be an opaque type", **pointee_type)
@@ -135,7 +134,7 @@ fn DILocation_implicit_code_extra_checks() {
                 .upgrade()
                 .expect("Failed to upgrade weak ref");
             assert_eq!(
-                *struct_type.borrow().deref(),
+                *struct_type.read().unwrap().deref(),
                 Type::StructType {
                     element_types: vec![Type::i8()],
                     is_packed: false

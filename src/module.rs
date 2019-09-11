@@ -3,10 +3,9 @@ use crate::function::{Function, FunctionAttribute, GroupID};
 use crate::name::Name;
 use crate::types::{Type, Typed};
 use log::debug;
-use std::cell::RefCell;
 use std::collections::HashMap;
 use std::path::Path;
-use std::rc::Rc;
+use std::sync::{Arc, RwLock};
 
 /// See [LLVM 8 docs on Module Structure](https://releases.llvm.org/8.0.0/docs/LangRef.html#module-structure)
 #[derive(Clone, Debug)]
@@ -30,7 +29,11 @@ pub struct Module {
     /// See [LLVM 8 docs on Structure Type](https://releases.llvm.org/8.0.0/docs/LangRef.html#structure-type).
     /// A `None` value indicates an opaque type; see [LLVM 8 docs on Opaque Structure Types](https://releases.llvm.org/8.0.0/docs/LangRef.html#t-opaque).
     /// Note that this map is from struct name to `Type::StructType` variant, not to `Type::NamedStructType` variant (which would be redundant).
-    pub named_struct_types: HashMap<String, Option<Rc<RefCell<Type>>>>,
+    ///
+    /// `Arc<RwLock<_>>` is used rather than `Rc<RefCell<_>>` so that `Module` can remain `Sync`.
+    /// This is important because it allows multiple threads to simultaneously access a
+    /// single (immutable) `Module`.
+    pub named_struct_types: HashMap<String, Option<Arc<RwLock<Type>>>>,
     // --TODO not yet implemented-- pub function_attribute_groups: Vec<FunctionAttributeGroup>,
     /// See [LLVM 8 docs on Module-Level Inline Assembly](https://releases.llvm.org/8.0.0/docs/LangRef.html#moduleasm)
     pub inline_assembly: String,

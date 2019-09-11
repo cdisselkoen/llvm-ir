@@ -1065,7 +1065,7 @@ fn gep_type<'a, 'b>(cur_type: &'a Type, mut indices: impl Iterator<Item = &'b Op
             },
             Type::NamedStructType { ty, .. } => match ty {
                 None => panic!("GEP on an opaque struct type"),
-                Some(weak) => match weak.upgrade().expect("Weak reference disappeared").borrow().deref() {
+                Some(weak) => match weak.upgrade().expect("Weak reference disappeared").read().unwrap().deref() {
                     Type::StructType { element_types, .. } => {
                         if let Operand::ConstantOperand(Constant::Int { value, .. }) = index {
                             gep_type(element_types.get(*value as usize).expect("GEP index out of range"), indices)
