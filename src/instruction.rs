@@ -177,7 +177,7 @@ impl Instruction {
             Instruction::Store(_) => None,
             Instruction::Fence(_) => None,
             Instruction::CmpXchg(i) => Some(&i.dest),
-            Instruction::AtomicRMW(_) => None,
+            Instruction::AtomicRMW(i) => Some(&i.dest),
             Instruction::GetElementPtr(i) => Some(&i.dest),
             Instruction::Trunc(i) => Some(&i.dest),
             Instruction::ZExt(i) => Some(&i.dest),
@@ -1017,13 +1017,23 @@ pub struct AtomicRMW {
     // pub operation: RMWOperation,  // this seems to not be exposed in the LLVM C API, only the C++ API
     pub address: Operand,
     pub value: Operand,
+    pub dest: Name,
     pub volatile: bool,
     pub atomicity: Atomicity,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
 impl_inst!(AtomicRMW, AtomicRMW);
-void_typed!(AtomicRMW);
+impl_hasresult!(AtomicRMW);
+
+impl Typed for AtomicRMW {
+    fn get_type(&self) -> Type {
+        match self.address.get_type() {
+            Type::PointerType { pointee_type, .. } => *pointee_type,
+            ty => panic!("Expected an AtomicRMW address to be PointerType, got {:?}", ty),
+        }
+    }
+}
 
 /// Get the address of a subelement of an aggregate data structure.
 /// Only performs address calculation, does not actually access memory.
@@ -1621,7 +1631,7 @@ impl Instruction {
             LLVMOpcode::LLVMStore => Instruction::Store(Store::from_llvm_ref(inst, vnmap, gnmap, tnmap)),
             LLVMOpcode::LLVMFence => Instruction::Fence(Fence::from_llvm_ref(inst)),
             LLVMOpcode::LLVMAtomicCmpXchg => Instruction::CmpXchg(CmpXchg::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMAtomicRMW => Instruction::AtomicRMW(AtomicRMW::from_llvm_ref(inst, vnmap, gnmap, tnmap)),
+            LLVMOpcode::LLVMAtomicRMW => Instruction::AtomicRMW(AtomicRMW::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
             LLVMOpcode::LLVMGetElementPtr => Instruction::GetElementPtr(GetElementPtr::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
             LLVMOpcode::LLVMTrunc => Instruction::Trunc(Trunc::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
             LLVMOpcode::LLVMZExt => Instruction::ZExt(ZExt::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
@@ -2012,6 +2022,7 @@ impl CmpXchg {
 impl AtomicRMW {
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
+        ctr: &mut usize,
         vnmap: &ValToNameMap,
         gnmap: &GlobalNameMap,
         tnmap: &mut TyNameMap,
@@ -2025,6 +2036,7 @@ impl AtomicRMW {
                 tnmap,
             ),
             value: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 1) }, vnmap, gnmap, tnmap),
+            dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
             volatile: unsafe { LLVMGetVolatile(inst) } != 0,
             atomicity: Atomicity {
                 synch_scope: SynchronizationScope::from_llvm_ref(inst),

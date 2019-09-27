@@ -282,3 +282,19 @@ fn DILocation_implicit_code_extra_checks() {
         }
     );
 }
+
+#[test]
+fn atomicrmw() {
+    let _ = env_logger::builder().is_test(true).try_init(); // capture log messages with test harness
+    let path = Path::new("tests/llvm_bc/compatibility-6.0.ll.bc");
+    let module = Module::from_bc_path(&path).expect("Failed to parse module");
+    let func = module
+        .get_func_by_name("atomics")
+        .expect("Failed to find function");
+    let bb = &func.basic_blocks[0];
+    let atomicrmw: &instruction::AtomicRMW = &bb.instrs[8].clone().try_into().unwrap_or_else(|_| panic!("Expected an atomicrmw, got {:?}", &bb.instrs[8]));
+    assert_eq!(atomicrmw.address, Operand::LocalOperand { name: Name::Number(0), ty: Type::pointer_to(Type::i32()) });
+    assert_eq!(atomicrmw.value, Operand::ConstantOperand(Constant::Int { bits: 32, value: 12 }));
+    assert_eq!(atomicrmw.dest, Name::from("atomicrmw.xchg"));
+    assert_eq!(atomicrmw.get_type(), Type::i32());
+}

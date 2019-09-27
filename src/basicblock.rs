@@ -99,7 +99,6 @@ fn needs_name(inst: LLVMValueRef) -> bool {
     match unsafe { LLVMGetInstructionOpcode(inst) } {
         LLVMOpcode::LLVMStore => false,
         LLVMOpcode::LLVMFence => false,
-        LLVMOpcode::LLVMAtomicRMW => false,
         LLVMOpcode::LLVMCall => {
             let kind =
                 unsafe { LLVMGetTypeKind(LLVMGetReturnType(LLVMGetCalledFunctionType(inst))) };
