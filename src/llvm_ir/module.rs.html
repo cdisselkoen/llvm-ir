@@ -496,16 +496,18 @@
 <span id="496">496</span>
 <span id="497">497</span>
 <span id="498">498</span>
+<span id="499">499</span>
+<span id="500">500</span>
+<span id="501">501</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">constant</span>::<span class="ident">Constant</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">function</span>::{<span class="ident">Function</span>, <span class="ident">FunctionAttribute</span>, <span class="ident">GroupID</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">name</span>::<span class="ident">Name</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::{<span class="ident">Type</span>, <span class="ident">Typed</span>};
 <span class="kw">use</span> <span class="ident">log</span>::<span class="ident">debug</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">cell</span>::<span class="ident">RefCell</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::<span class="ident">HashMap</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">path</span>::<span class="ident">Path</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">rc</span>::<span class="ident">Rc</span>;
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::{<span class="ident">Arc</span>, <span class="ident">RwLock</span>};
 
 <span class="doccomment">/// See [LLVM 8 docs on Module Structure](https://releases.llvm.org/8.0.0/docs/LangRef.html#module-structure)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
@@ -529,7 +531,11 @@
     <span class="doccomment">/// See [LLVM 8 docs on Structure Type](https://releases.llvm.org/8.0.0/docs/LangRef.html#structure-type).</span>
     <span class="doccomment">/// A `None` value indicates an opaque type; see [LLVM 8 docs on Opaque Structure Types](https://releases.llvm.org/8.0.0/docs/LangRef.html#t-opaque).</span>
     <span class="doccomment">/// Note that this map is from struct name to `Type::StructType` variant, not to `Type::NamedStructType` variant (which would be redundant).</span>
-    <span class="kw">pub</span> <span class="ident">named_struct_types</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">RefCell</span><span class="op">&lt;</span><span class="ident">Type</span><span class="op">&gt;&gt;</span><span class="op">&gt;&gt;</span>,
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// `Arc&lt;RwLock&lt;_&gt;&gt;` is used rather than `Rc&lt;RefCell&lt;_&gt;&gt;` so that `Module` can remain `Sync`.</span>
+    <span class="doccomment">/// This is important because it allows multiple threads to simultaneously access a</span>
+    <span class="doccomment">/// single (immutable) `Module`.</span>
+    <span class="kw">pub</span> <span class="ident">named_struct_types</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">Type</span><span class="op">&gt;&gt;</span><span class="op">&gt;&gt;</span>,
     <span class="comment">// --TODO not yet implemented-- pub function_attribute_groups: Vec&lt;FunctionAttributeGroup&gt;,</span>
     <span class="doccomment">/// See [LLVM 8 docs on Module-Level Inline Assembly](https://releases.llvm.org/8.0.0/docs/LangRef.html#moduleasm)</span>
     <span class="kw">pub</span> <span class="ident">inline_assembly</span>: <span class="ident">String</span>,

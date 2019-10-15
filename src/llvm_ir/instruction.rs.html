@@ -2514,6 +2514,18 @@
 <span id="2514">2514</span>
 <span id="2515">2515</span>
 <span id="2516">2516</span>
+<span id="2517">2517</span>
+<span id="2518">2518</span>
+<span id="2519">2519</span>
+<span id="2520">2520</span>
+<span id="2521">2521</span>
+<span id="2522">2522</span>
+<span id="2523">2523</span>
+<span id="2524">2524</span>
+<span id="2525">2525</span>
+<span id="2526">2526</span>
+<span id="2527">2527</span>
+<span id="2528">2528</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">constant</span>::<span class="ident">Constant</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">function</span>::{<span class="ident">CallingConvention</span>, <span class="ident">FunctionAttribute</span>, <span class="ident">ParameterAttribute</span>};
@@ -2694,7 +2706,7 @@
             <span class="ident">Instruction</span>::<span class="ident">Store</span>(<span class="kw">_</span>) <span class="op">=&gt;</span> <span class="prelude-val">None</span>,
             <span class="ident">Instruction</span>::<span class="ident">Fence</span>(<span class="kw">_</span>) <span class="op">=&gt;</span> <span class="prelude-val">None</span>,
             <span class="ident">Instruction</span>::<span class="ident">CmpXchg</span>(<span class="ident">i</span>) <span class="op">=&gt;</span> <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">i</span>.<span class="ident">dest</span>),
-            <span class="ident">Instruction</span>::<span class="ident">AtomicRMW</span>(<span class="kw">_</span>) <span class="op">=&gt;</span> <span class="prelude-val">None</span>,
+            <span class="ident">Instruction</span>::<span class="ident">AtomicRMW</span>(<span class="ident">i</span>) <span class="op">=&gt;</span> <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">i</span>.<span class="ident">dest</span>),
             <span class="ident">Instruction</span>::<span class="ident">GetElementPtr</span>(<span class="ident">i</span>) <span class="op">=&gt;</span> <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">i</span>.<span class="ident">dest</span>),
             <span class="ident">Instruction</span>::<span class="ident">Trunc</span>(<span class="ident">i</span>) <span class="op">=&gt;</span> <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">i</span>.<span class="ident">dest</span>),
             <span class="ident">Instruction</span>::<span class="ident">ZExt</span>(<span class="ident">i</span>) <span class="op">=&gt;</span> <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">i</span>.<span class="ident">dest</span>),
@@ -3534,13 +3546,23 @@ impl HasMetadata for Instruction {
     <span class="comment">// pub operation: RMWOperation,  // this seems to not be exposed in the LLVM C API, only the C++ API</span>
     <span class="kw">pub</span> <span class="ident">address</span>: <span class="ident">Operand</span>,
     <span class="kw">pub</span> <span class="ident">value</span>: <span class="ident">Operand</span>,
+    <span class="kw">pub</span> <span class="ident">dest</span>: <span class="ident">Name</span>,
     <span class="kw">pub</span> <span class="ident">volatile</span>: <span class="ident">bool</span>,
     <span class="kw">pub</span> <span class="ident">atomicity</span>: <span class="ident">Atomicity</span>,
     <span class="comment">// --TODO not yet implemented-- pub metadata: InstructionMetadata,</span>
 }
 
 <span class="macro">impl_inst</span><span class="macro">!</span>(<span class="ident">AtomicRMW</span>, <span class="ident">AtomicRMW</span>);
-<span class="macro">void_typed</span><span class="macro">!</span>(<span class="ident">AtomicRMW</span>);
+<span class="macro">impl_hasresult</span><span class="macro">!</span>(<span class="ident">AtomicRMW</span>);
+
+<span class="kw">impl</span> <span class="ident">Typed</span> <span class="kw">for</span> <span class="ident">AtomicRMW</span> {
+    <span class="kw">fn</span> <span class="ident">get_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">Type</span> {
+        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">address</span>.<span class="ident">get_type</span>() {
+            <span class="ident">Type</span>::<span class="ident">PointerType</span> { <span class="ident">pointee_type</span>, .. } <span class="op">=&gt;</span> <span class="kw-2">*</span><span class="ident">pointee_type</span>,
+            <span class="ident">ty</span> <span class="op">=&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Expected an AtomicRMW address to be PointerType, got {:?}&quot;</span>, <span class="ident">ty</span>),
+        }
+    }
+}
 
 <span class="doccomment">/// Get the address of a subelement of an aggregate data structure.</span>
 <span class="doccomment">/// Only performs address calculation, does not actually access memory.</span>
@@ -3582,7 +3604,7 @@ impl HasMetadata for Instruction {
             },
             <span class="ident">Type</span>::<span class="ident">NamedStructType</span> { <span class="ident">ty</span>, .. } <span class="op">=&gt;</span> <span class="kw">match</span> <span class="ident">ty</span> {
                 <span class="prelude-val">None</span> <span class="op">=&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;GEP on an opaque struct type&quot;</span>),
-                <span class="prelude-val">Some</span>(<span class="ident">weak</span>) <span class="op">=&gt;</span> <span class="kw">match</span> <span class="ident">weak</span>.<span class="ident">upgrade</span>().<span class="ident">expect</span>(<span class="string">&quot;Weak reference disappeared&quot;</span>).<span class="ident">borrow</span>().<span class="ident">deref</span>() {
+                <span class="prelude-val">Some</span>(<span class="ident">weak</span>) <span class="op">=&gt;</span> <span class="kw">match</span> <span class="ident">weak</span>.<span class="ident">upgrade</span>().<span class="ident">expect</span>(<span class="string">&quot;Weak reference disappeared&quot;</span>).<span class="ident">read</span>().<span class="ident">unwrap</span>().<span class="ident">deref</span>() {
                     <span class="ident">Type</span>::<span class="ident">StructType</span> { <span class="ident">element_types</span>, .. } <span class="op">=&gt;</span> {
                         <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Operand</span>::<span class="ident">ConstantOperand</span>(<span class="ident">Constant</span>::<span class="ident">Int</span> { <span class="ident">value</span>, .. }) <span class="op">=</span> <span class="ident">index</span> {
                             <span class="ident">gep_type</span>(<span class="ident">element_types</span>.<span class="ident">get</span>(<span class="kw-2">*</span><span class="ident">value</span> <span class="kw">as</span> <span class="ident">usize</span>).<span class="ident">expect</span>(<span class="string">&quot;GEP index out of range&quot;</span>), <span class="ident">indices</span>)
@@ -4138,7 +4160,7 @@ pub enum LandingPadClause {
             <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMStore</span> <span class="op">=&gt;</span> <span class="ident">Instruction</span>::<span class="ident">Store</span>(<span class="ident">Store</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">inst</span>, <span class="ident">vnmap</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>)),
             <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMFence</span> <span class="op">=&gt;</span> <span class="ident">Instruction</span>::<span class="ident">Fence</span>(<span class="ident">Fence</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">inst</span>)),
             <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMAtomicCmpXchg</span> <span class="op">=&gt;</span> <span class="ident">Instruction</span>::<span class="ident">CmpXchg</span>(<span class="ident">CmpXchg</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">inst</span>, <span class="ident">ctr</span>, <span class="ident">vnmap</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>)),
-            <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMAtomicRMW</span> <span class="op">=&gt;</span> <span class="ident">Instruction</span>::<span class="ident">AtomicRMW</span>(<span class="ident">AtomicRMW</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">inst</span>, <span class="ident">vnmap</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>)),
+            <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMAtomicRMW</span> <span class="op">=&gt;</span> <span class="ident">Instruction</span>::<span class="ident">AtomicRMW</span>(<span class="ident">AtomicRMW</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">inst</span>, <span class="ident">ctr</span>, <span class="ident">vnmap</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>)),
             <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMGetElementPtr</span> <span class="op">=&gt;</span> <span class="ident">Instruction</span>::<span class="ident">GetElementPtr</span>(<span class="ident">GetElementPtr</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">inst</span>, <span class="ident">ctr</span>, <span class="ident">vnmap</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>)),
             <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMTrunc</span> <span class="op">=&gt;</span> <span class="ident">Instruction</span>::<span class="ident">Trunc</span>(<span class="ident">Trunc</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">inst</span>, <span class="ident">ctr</span>, <span class="ident">vnmap</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>)),
             <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMZExt</span> <span class="op">=&gt;</span> <span class="ident">Instruction</span>::<span class="ident">ZExt</span>(<span class="ident">ZExt</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">inst</span>, <span class="ident">ctr</span>, <span class="ident">vnmap</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>)),
@@ -4529,6 +4551,7 @@ pub enum LandingPadClause {
 <span class="kw">impl</span> <span class="ident">AtomicRMW</span> {
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">from_llvm_ref</span>(
         <span class="ident">inst</span>: <span class="ident">LLVMValueRef</span>,
+        <span class="ident">ctr</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">usize</span>,
         <span class="ident">vnmap</span>: <span class="kw-2">&amp;</span><span class="ident">ValToNameMap</span>,
         <span class="ident">gnmap</span>: <span class="kw-2">&amp;</span><span class="ident">GlobalNameMap</span>,
         <span class="ident">tnmap</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">TyNameMap</span>,
@@ -4542,6 +4565,7 @@ pub enum LandingPadClause {
                 <span class="ident">tnmap</span>,
             ),
             <span class="ident">value</span>: <span class="ident">Operand</span>::<span class="ident">from_llvm_ref</span>(<span class="kw">unsafe</span> { <span class="ident">LLVMGetOperand</span>(<span class="ident">inst</span>, <span class="number">1</span>) }, <span class="ident">vnmap</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>),
+            <span class="ident">dest</span>: <span class="ident">Name</span>::<span class="ident">name_or_num</span>(<span class="kw">unsafe</span> { <span class="ident">get_value_name</span>(<span class="ident">inst</span>) }, <span class="ident">ctr</span>),
             <span class="ident">volatile</span>: <span class="kw">unsafe</span> { <span class="ident">LLVMGetVolatile</span>(<span class="ident">inst</span>) } <span class="op">!=</span> <span class="number">0</span>,
             <span class="ident">atomicity</span>: <span class="ident">Atomicity</span> {
                 <span class="ident">synch_scope</span>: <span class="ident">SynchronizationScope</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">inst</span>),
