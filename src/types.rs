@@ -246,6 +246,9 @@ impl Type {
                     Some(ref s) if !s.is_empty() => {
                         let actual_type: Option<Arc<RwLock<Type>>> = if tynamemap.contains_key(s) {
                             tynamemap.get(s).unwrap().clone()
+                        } else if unsafe { LLVMIsOpaqueStruct(ty) } != 0 {
+                            tynamemap.insert(s.clone(), None);
+                            None
                         } else {
                             // first fill in the entry as opaque for now, so that the call to struct_type_from_llvm_ref will terminate
                             tynamemap.insert(s.clone(), None);
@@ -395,7 +398,12 @@ impl Type {
     }
 
     /// creates an actual `StructType`, regardless of whether the struct is named or not
+    ///
+    /// Caller is responsible for ensuring that `ty` is not an opaque struct type
     fn struct_type_from_llvm_ref(ty: LLVMTypeRef, tynamemap: &mut TyNameMap) -> Self {
+        if unsafe { LLVMIsOpaqueStruct(ty) } != 0 {
+            panic!("struct_type_from_llvm_ref: shouldn't pass an opaque struct type to this function");
+        }
         Type::StructType {
             element_types: {
                 let num_types = unsafe { LLVMCountStructElementTypes(ty) };

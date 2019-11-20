@@ -41,3 +41,10 @@ int indirectly_recursive_type(int x) {
   a_1.b = &b;
   return a.b->a->b->a->b->a->b->val;
 }
+
+// also test opaque structs
+struct SomeOpaqueStruct;
+
+int takes_opaque_struct(struct SomeOpaqueStruct* s) {
+  return s != NULL;
+}

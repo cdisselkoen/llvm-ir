@@ -401,6 +401,32 @@ fn simple_linked_list() {
             alloca.allocated_type
         );
     }
+
+    let structty: &Option<Arc<RwLock<Type>>> = &module
+        .named_struct_types
+        .get("struct.SomeOpaqueStruct")
+        .unwrap_or_else(|| {
+            let names: Vec<_> = module.named_struct_types.keys().collect();
+            panic!(
+                "Failed to find struct.SomeOpaqueStruct in named_struct_types; have names {:?}",
+                names
+            )
+        });
+    assert!(structty.is_none(), "SomeOpaqueStruct should be an opaque type");
+    let func = module
+        .get_func_by_name("takes_opaque_struct")
+        .expect("Failed to find function");
+    let paramty = &func.parameters[0].ty;
+    match paramty {
+        Type::PointerType { pointee_type, .. } => match &**pointee_type {
+            Type::NamedStructType { ref name, ref ty } => {
+                assert_eq!(name, "struct.SomeOpaqueStruct");
+                assert!(ty.is_none(), "SomeOpaqueStruct should be an opaque type");
+            },
+            ty => panic!("Expected parameter type to be pointer to named struct, but got pointer to {:?}", ty),
+        },
+        _ => panic!("Expected parameter type to be pointer type, but got {:?}", paramty),
+    };
 }
 
 #[test]
