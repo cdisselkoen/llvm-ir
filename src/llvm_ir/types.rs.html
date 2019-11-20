@@ -413,6 +413,14 @@
 <span id="413">413</span>
 <span id="414">414</span>
 <span id="415">415</span>
+<span id="416">416</span>
+<span id="417">417</span>
+<span id="418">418</span>
+<span id="419">419</span>
+<span id="420">420</span>
+<span id="421">421</span>
+<span id="422">422</span>
+<span id="423">423</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">module</span>::<span class="ident">AddrSpace</span>;
 <span class="comment">//use crate::name::Name;</span>
@@ -662,6 +670,9 @@
                     <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">s</span>) <span class="kw">if</span> <span class="op">!</span><span class="ident">s</span>.<span class="ident">is_empty</span>() <span class="op">=&gt;</span> {
                         <span class="kw">let</span> <span class="ident">actual_type</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">Type</span><span class="op">&gt;&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">tynamemap</span>.<span class="ident">contains_key</span>(<span class="ident">s</span>) {
                             <span class="ident">tynamemap</span>.<span class="ident">get</span>(<span class="ident">s</span>).<span class="ident">unwrap</span>().<span class="ident">clone</span>()
+                        } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">unsafe</span> { <span class="ident">LLVMIsOpaqueStruct</span>(<span class="ident">ty</span>) } <span class="op">!=</span> <span class="number">0</span> {
+                            <span class="ident">tynamemap</span>.<span class="ident">insert</span>(<span class="ident">s</span>.<span class="ident">clone</span>(), <span class="prelude-val">None</span>);
+                            <span class="prelude-val">None</span>
                         } <span class="kw">else</span> {
                             <span class="comment">// first fill in the entry as opaque for now, so that the call to struct_type_from_llvm_ref will terminate</span>
                             <span class="ident">tynamemap</span>.<span class="ident">insert</span>(<span class="ident">s</span>.<span class="ident">clone</span>(), <span class="prelude-val">None</span>);
@@ -811,7 +822,12 @@
     }
 
     <span class="doccomment">/// creates an actual `StructType`, regardless of whether the struct is named or not</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Caller is responsible for ensuring that `ty` is not an opaque struct type</span>
     <span class="kw">fn</span> <span class="ident">struct_type_from_llvm_ref</span>(<span class="ident">ty</span>: <span class="ident">LLVMTypeRef</span>, <span class="ident">tynamemap</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">TyNameMap</span>) <span class="op">-&gt;</span> <span class="self">Self</span> {
+        <span class="kw">if</span> <span class="kw">unsafe</span> { <span class="ident">LLVMIsOpaqueStruct</span>(<span class="ident">ty</span>) } <span class="op">!=</span> <span class="number">0</span> {
+            <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;struct_type_from_llvm_ref: shouldn&#39;t pass an opaque struct type to this function&quot;</span>);
+        }
         <span class="ident">Type</span>::<span class="ident">StructType</span> {
             <span class="ident">element_types</span>: {
                 <span class="kw">let</span> <span class="ident">num_types</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">LLVMCountStructElementTypes</span>(<span class="ident">ty</span>) };
