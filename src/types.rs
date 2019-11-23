@@ -91,11 +91,12 @@ impl PartialEq for Type {
             (Type::StructType { element_types: et_a, is_packed: ip_a },
              Type::StructType { element_types: et_b, is_packed: ip_b })
             => et_a == et_b && ip_a == ip_b,
-            // Named structs are equal if their names and opaquenesses are equal,
-            //   disregarding their weak refs.
-            (Type::NamedStructType { name: name_a, ty: ty_a },
-             Type::NamedStructType { name: name_b, ty: ty_b })
-            => name_a == name_b && ty_a.is_some() == ty_b.is_some(),
+            // Named structs are equal if their names are equal, disregarding their weak refs.
+            // This means even an opaque definition is considered equal to a
+            //   non-opaque definition (they still refer to the same type).
+            (Type::NamedStructType { name: name_a, .. },
+             Type::NamedStructType { name: name_b, .. })
+            => name_a == name_b,
             (Type::X86_MMXType, Type::X86_MMXType) => true,
             (Type::MetadataType, Type::MetadataType) => true,
             (Type::LabelType, Type::LabelType) => true,
