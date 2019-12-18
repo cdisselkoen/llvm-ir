@@ -6,5 +6,4 @@ implementors["llvm_ir"] = [{text:"impl Freeze for <a class=\"struct\" href=\"llv
             } else {
                 window.pending_implementors = implementors;
             }
-        
-})()
+        })()

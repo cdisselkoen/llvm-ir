@@ -1357,108 +1357,108 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Typed</span> <span class="kw">for</span> <span class="ident">Float</span> {
-    <span class="kw">fn</span> <span class="ident">get_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">Type</span> {
+    <span class="kw">fn</span> <span class="ident">get_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Type</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">Float</span>::<span class="ident">Half</span> <span class="op">=&gt;</span> <span class="ident">Type</span>::<span class="ident">half</span>(),
-            <span class="ident">Float</span>::<span class="ident">Single</span>(<span class="kw">_</span>) <span class="op">=&gt;</span> <span class="ident">Type</span>::<span class="ident">single</span>(),
-            <span class="ident">Float</span>::<span class="ident">Double</span>(<span class="kw">_</span>) <span class="op">=&gt;</span> <span class="ident">Type</span>::<span class="ident">double</span>(),
-            <span class="ident">Float</span>::<span class="ident">Quadruple</span> <span class="op">=&gt;</span> <span class="ident">Type</span>::<span class="ident">FPType</span>(<span class="ident">FPType</span>::<span class="ident">FP128</span>),
-            <span class="ident">Float</span>::<span class="ident">X86_FP80</span> <span class="op">=&gt;</span> <span class="ident">Type</span>::<span class="ident">FPType</span>(<span class="ident">FPType</span>::<span class="ident">X86_FP80</span>),
-            <span class="ident">Float</span>::<span class="ident">PPC_FP128</span> <span class="op">=&gt;</span> <span class="ident">Type</span>::<span class="ident">FPType</span>(<span class="ident">FPType</span>::<span class="ident">PPC_FP128</span>),
+            <span class="ident">Float</span>::<span class="ident">Half</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type</span>::<span class="ident">half</span>(),
+            <span class="ident">Float</span>::<span class="ident">Single</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type</span>::<span class="ident">single</span>(),
+            <span class="ident">Float</span>::<span class="ident">Double</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type</span>::<span class="ident">double</span>(),
+            <span class="ident">Float</span>::<span class="ident">Quadruple</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type</span>::<span class="ident">FPType</span>(<span class="ident">FPType</span>::<span class="ident">FP128</span>),
+            <span class="ident">Float</span>::<span class="ident">X86_FP80</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type</span>::<span class="ident">FPType</span>(<span class="ident">FPType</span>::<span class="ident">X86_FP80</span>),
+            <span class="ident">Float</span>::<span class="ident">PPC_FP128</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type</span>::<span class="ident">FPType</span>(<span class="ident">FPType</span>::<span class="ident">PPC_FP128</span>),
         }
     }
 }
 
 <span class="kw">impl</span> <span class="ident">Typed</span> <span class="kw">for</span> <span class="ident">Constant</span> {
-    <span class="kw">fn</span> <span class="ident">get_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">Type</span> {
+    <span class="kw">fn</span> <span class="ident">get_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Type</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">Constant</span>::<span class="ident">Int</span> { <span class="ident">bits</span>, .. } <span class="op">=&gt;</span> <span class="ident">Type</span>::<span class="ident">IntegerType</span> { <span class="ident">bits</span>: <span class="kw-2">*</span><span class="ident">bits</span> },
-            <span class="ident">Constant</span>::<span class="ident">Float</span>(<span class="ident">f</span>) <span class="op">=&gt;</span> <span class="ident">f</span>.<span class="ident">get_type</span>(),
-            <span class="ident">Constant</span>::<span class="ident">Null</span>(<span class="ident">t</span>) <span class="op">=&gt;</span> <span class="ident">t</span>.<span class="ident">clone</span>(),
-            <span class="ident">Constant</span>::<span class="ident">AggregateZero</span>(<span class="ident">t</span>) <span class="op">=&gt;</span> <span class="ident">t</span>.<span class="ident">clone</span>(),
-            <span class="ident">Constant</span>::<span class="ident">Struct</span> { <span class="ident">values</span>, <span class="ident">is_packed</span>, .. } <span class="op">=&gt;</span> <span class="ident">Type</span>::<span class="ident">StructType</span> {
+            <span class="ident">Constant</span>::<span class="ident">Int</span> { <span class="ident">bits</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type</span>::<span class="ident">IntegerType</span> { <span class="ident">bits</span>: <span class="kw-2">*</span><span class="ident">bits</span> },
+            <span class="ident">Constant</span>::<span class="ident">Float</span>(<span class="ident">f</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">get_type</span>(),
+            <span class="ident">Constant</span>::<span class="ident">Null</span>(<span class="ident">t</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">t</span>.<span class="ident">clone</span>(),
+            <span class="ident">Constant</span>::<span class="ident">AggregateZero</span>(<span class="ident">t</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">t</span>.<span class="ident">clone</span>(),
+            <span class="ident">Constant</span>::<span class="ident">Struct</span> { <span class="ident">values</span>, <span class="ident">is_packed</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type</span>::<span class="ident">StructType</span> {
                 <span class="ident">element_types</span>: <span class="ident">values</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">v</span><span class="op">|</span> <span class="ident">v</span>.<span class="ident">get_type</span>()).<span class="ident">collect</span>(),
                 <span class="ident">is_packed</span>: <span class="kw-2">*</span><span class="ident">is_packed</span>,
             },
-            <span class="ident">Constant</span>::<span class="ident">Array</span> { <span class="ident">element_type</span>, <span class="ident">elements</span> } <span class="op">=&gt;</span> <span class="ident">Type</span>::<span class="ident">ArrayType</span> {
+            <span class="ident">Constant</span>::<span class="ident">Array</span> { <span class="ident">element_type</span>, <span class="ident">elements</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type</span>::<span class="ident">ArrayType</span> {
                 <span class="ident">element_type</span>: <span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">element_type</span>.<span class="ident">clone</span>()),
                 <span class="ident">num_elements</span>: <span class="ident">elements</span>.<span class="ident">len</span>(),
             },
-            <span class="ident">Constant</span>::<span class="ident">Vector</span>(<span class="ident">v</span>) <span class="op">=&gt;</span> <span class="ident">Type</span>::<span class="ident">VectorType</span> {
+            <span class="ident">Constant</span>::<span class="ident">Vector</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type</span>::<span class="ident">VectorType</span> {
                 <span class="ident">element_type</span>: <span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">v</span>[<span class="number">0</span>].<span class="ident">get_type</span>()),
                 <span class="ident">num_elements</span>: <span class="ident">v</span>.<span class="ident">len</span>(),
             },
-            <span class="ident">Constant</span>::<span class="ident">Undef</span>(<span class="ident">t</span>) <span class="op">=&gt;</span> <span class="ident">t</span>.<span class="ident">clone</span>(),
-            <span class="ident">Constant</span>::<span class="ident">BlockAddress</span> { .. } <span class="op">=&gt;</span> <span class="ident">Type</span>::<span class="ident">LabelType</span>,
-            <span class="ident">Constant</span>::<span class="ident">GlobalReference</span> { <span class="ident">ty</span>, .. } <span class="op">=&gt;</span> <span class="ident">Type</span>::<span class="ident">pointer_to</span>(<span class="ident">ty</span>.<span class="ident">clone</span>()),
-            <span class="ident">Constant</span>::<span class="ident">TokenNone</span> <span class="op">=&gt;</span> <span class="ident">Type</span>::<span class="ident">TokenType</span>,
-            <span class="ident">Constant</span>::<span class="ident">Add</span>(<span class="ident">a</span>) <span class="op">=&gt;</span> <span class="ident">a</span>.<span class="ident">get_type</span>(),
-            <span class="ident">Constant</span>::<span class="ident">Sub</span>(<span class="ident">s</span>) <span class="op">=&gt;</span> <span class="ident">s</span>.<span class="ident">get_type</span>(),
-            <span class="ident">Constant</span>::<span class="ident">Mul</span>(<span class="ident">m</span>) <span class="op">=&gt;</span> <span class="ident">m</span>.<span class="ident">get_type</span>(),
-            <span class="ident">Constant</span>::<span class="ident">UDiv</span>(<span class="ident">d</span>) <span class="op">=&gt;</span> <span class="ident">d</span>.<span class="ident">get_type</span>(),
-            <span class="ident">Constant</span>::<span class="ident">SDiv</span>(<span class="ident">d</span>) <span class="op">=&gt;</span> <span class="ident">d</span>.<span class="ident">get_type</span>(),
-            <span class="ident">Constant</span>::<span class="ident">URem</span>(<span class="ident">r</span>) <span class="op">=&gt;</span> <span class="ident">r</span>.<span class="ident">get_type</span>(),
-            <span class="ident">Constant</span>::<span class="ident">SRem</span>(<span class="ident">r</span>) <span class="op">=&gt;</span> <span class="ident">r</span>.<span class="ident">get_type</span>(),
-            <span class="ident">Constant</span>::<span class="ident">And</span>(<span class="ident">a</span>) <span class="op">=&gt;</span> <span class="ident">a</span>.<span class="ident">get_type</span>(),
-            <span class="ident">Constant</span>::<span class="ident">Or</span>(<span class="ident">o</span>) <span class="op">=&gt;</span> <span class="ident">o</span>.<span class="ident">get_type</span>(),
-            <span class="ident">Constant</span>::<span class="ident">Xor</span>(<span class="ident">x</span>) <span class="op">=&gt;</span> <span class="ident">x</span>.<span class="ident">get_type</span>(),
-            <span class="ident">Constant</span>::<span class="ident">Shl</span>(<span class="ident">s</span>) <span class="op">=&gt;</span> <span class="ident">s</span>.<span class="ident">get_type</span>(),
-            <span class="ident">Constant</span>::<span class="ident">LShr</span>(<span class="ident">l</span>) <span class="op">=&gt;</span> <span class="ident">l</span>.<span class="ident">get_type</span>(),
-            <span class="ident">Constant</span>::<span class="ident">AShr</span>(<span class="ident">a</span>) <span class="op">=&gt;</span> <span class="ident">a</span>.<span class="ident">get_type</span>(),
-            <span class="ident">Constant</span>::<span class="ident">FAdd</span>(<span class="ident">f</span>) <span class="op">=&gt;</span> <span class="ident">f</span>.<span class="ident">get_type</span>(),
-            <span class="ident">Constant</span>::<span class="ident">FSub</span>(<span class="ident">f</span>) <span class="op">=&gt;</span> <span class="ident">f</span>.<span class="ident">get_type</span>(),
-            <span class="ident">Constant</span>::<span class="ident">FMul</span>(<span class="ident">f</span>) <span class="op">=&gt;</span> <span class="ident">f</span>.<span class="ident">get_type</span>(),
-            <span class="ident">Constant</span>::<span class="ident">FDiv</span>(<span class="ident">f</span>) <span class="op">=&gt;</span> <span class="ident">f</span>.<span class="ident">get_type</span>(),
-            <span class="ident">Constant</span>::<span class="ident">FRem</span>(<span class="ident">f</span>) <span class="op">=&gt;</span> <span class="ident">f</span>.<span class="ident">get_type</span>(),
-            <span class="ident">Constant</span>::<span class="ident">ExtractElement</span>(<span class="ident">e</span>) <span class="op">=&gt;</span> <span class="ident">e</span>.<span class="ident">get_type</span>(),
-            <span class="ident">Constant</span>::<span class="ident">InsertElement</span>(<span class="ident">i</span>) <span class="op">=&gt;</span> <span class="ident">i</span>.<span class="ident">get_type</span>(),
-            <span class="ident">Constant</span>::<span class="ident">ShuffleVector</span>(<span class="ident">s</span>) <span class="op">=&gt;</span> <span class="ident">s</span>.<span class="ident">get_type</span>(),
-            <span class="ident">Constant</span>::<span class="ident">ExtractValue</span>(<span class="ident">e</span>) <span class="op">=&gt;</span> <span class="ident">e</span>.<span class="ident">get_type</span>(),
-            <span class="ident">Constant</span>::<span class="ident">InsertValue</span>(<span class="ident">i</span>) <span class="op">=&gt;</span> <span class="ident">i</span>.<span class="ident">get_type</span>(),
-            <span class="ident">Constant</span>::<span class="ident">GetElementPtr</span>(<span class="ident">g</span>) <span class="op">=&gt;</span> <span class="ident">g</span>.<span class="ident">get_type</span>(),
-            <span class="ident">Constant</span>::<span class="ident">Trunc</span>(<span class="ident">t</span>) <span class="op">=&gt;</span> <span class="ident">t</span>.<span class="ident">get_type</span>(),
-            <span class="ident">Constant</span>::<span class="ident">ZExt</span>(<span class="ident">z</span>) <span class="op">=&gt;</span> <span class="ident">z</span>.<span class="ident">get_type</span>(),
-            <span class="ident">Constant</span>::<span class="ident">SExt</span>(<span class="ident">s</span>) <span class="op">=&gt;</span> <span class="ident">s</span>.<span class="ident">get_type</span>(),
-            <span class="ident">Constant</span>::<span class="ident">FPTrunc</span>(<span class="ident">f</span>) <span class="op">=&gt;</span> <span class="ident">f</span>.<span class="ident">get_type</span>(),
-            <span class="ident">Constant</span>::<span class="ident">FPExt</span>(<span class="ident">f</span>) <span class="op">=&gt;</span> <span class="ident">f</span>.<span class="ident">get_type</span>(),
-            <span class="ident">Constant</span>::<span class="ident">FPToUI</span>(<span class="ident">f</span>) <span class="op">=&gt;</span> <span class="ident">f</span>.<span class="ident">get_type</span>(),
-            <span class="ident">Constant</span>::<span class="ident">FPToSI</span>(<span class="ident">f</span>) <span class="op">=&gt;</span> <span class="ident">f</span>.<span class="ident">get_type</span>(),
-            <span class="ident">Constant</span>::<span class="ident">UIToFP</span>(<span class="ident">u</span>) <span class="op">=&gt;</span> <span class="ident">u</span>.<span class="ident">get_type</span>(),
-            <span class="ident">Constant</span>::<span class="ident">SIToFP</span>(<span class="ident">s</span>) <span class="op">=&gt;</span> <span class="ident">s</span>.<span class="ident">get_type</span>(),
-            <span class="ident">Constant</span>::<span class="ident">PtrToInt</span>(<span class="ident">p</span>) <span class="op">=&gt;</span> <span class="ident">p</span>.<span class="ident">get_type</span>(),
-            <span class="ident">Constant</span>::<span class="ident">IntToPtr</span>(<span class="ident">i</span>) <span class="op">=&gt;</span> <span class="ident">i</span>.<span class="ident">get_type</span>(),
-            <span class="ident">Constant</span>::<span class="ident">BitCast</span>(<span class="ident">b</span>) <span class="op">=&gt;</span> <span class="ident">b</span>.<span class="ident">get_type</span>(),
-            <span class="ident">Constant</span>::<span class="ident">AddrSpaceCast</span>(<span class="ident">a</span>) <span class="op">=&gt;</span> <span class="ident">a</span>.<span class="ident">get_type</span>(),
-            <span class="ident">Constant</span>::<span class="ident">ICmp</span>(<span class="ident">i</span>) <span class="op">=&gt;</span> <span class="ident">i</span>.<span class="ident">get_type</span>(),
-            <span class="ident">Constant</span>::<span class="ident">FCmp</span>(<span class="ident">f</span>) <span class="op">=&gt;</span> <span class="ident">f</span>.<span class="ident">get_type</span>(),
-            <span class="ident">Constant</span>::<span class="ident">Select</span>(<span class="ident">s</span>) <span class="op">=&gt;</span> <span class="ident">s</span>.<span class="ident">get_type</span>(),
+            <span class="ident">Constant</span>::<span class="ident">Undef</span>(<span class="ident">t</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">t</span>.<span class="ident">clone</span>(),
+            <span class="ident">Constant</span>::<span class="ident">BlockAddress</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type</span>::<span class="ident">LabelType</span>,
+            <span class="ident">Constant</span>::<span class="ident">GlobalReference</span> { <span class="ident">ty</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type</span>::<span class="ident">pointer_to</span>(<span class="ident">ty</span>.<span class="ident">clone</span>()),
+            <span class="ident">Constant</span>::<span class="ident">TokenNone</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type</span>::<span class="ident">TokenType</span>,
+            <span class="ident">Constant</span>::<span class="ident">Add</span>(<span class="ident">a</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">a</span>.<span class="ident">get_type</span>(),
+            <span class="ident">Constant</span>::<span class="ident">Sub</span>(<span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">s</span>.<span class="ident">get_type</span>(),
+            <span class="ident">Constant</span>::<span class="ident">Mul</span>(<span class="ident">m</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">m</span>.<span class="ident">get_type</span>(),
+            <span class="ident">Constant</span>::<span class="ident">UDiv</span>(<span class="ident">d</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">d</span>.<span class="ident">get_type</span>(),
+            <span class="ident">Constant</span>::<span class="ident">SDiv</span>(<span class="ident">d</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">d</span>.<span class="ident">get_type</span>(),
+            <span class="ident">Constant</span>::<span class="ident">URem</span>(<span class="ident">r</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">r</span>.<span class="ident">get_type</span>(),
+            <span class="ident">Constant</span>::<span class="ident">SRem</span>(<span class="ident">r</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">r</span>.<span class="ident">get_type</span>(),
+            <span class="ident">Constant</span>::<span class="ident">And</span>(<span class="ident">a</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">a</span>.<span class="ident">get_type</span>(),
+            <span class="ident">Constant</span>::<span class="ident">Or</span>(<span class="ident">o</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">o</span>.<span class="ident">get_type</span>(),
+            <span class="ident">Constant</span>::<span class="ident">Xor</span>(<span class="ident">x</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">x</span>.<span class="ident">get_type</span>(),
+            <span class="ident">Constant</span>::<span class="ident">Shl</span>(<span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">s</span>.<span class="ident">get_type</span>(),
+            <span class="ident">Constant</span>::<span class="ident">LShr</span>(<span class="ident">l</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">l</span>.<span class="ident">get_type</span>(),
+            <span class="ident">Constant</span>::<span class="ident">AShr</span>(<span class="ident">a</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">a</span>.<span class="ident">get_type</span>(),
+            <span class="ident">Constant</span>::<span class="ident">FAdd</span>(<span class="ident">f</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">get_type</span>(),
+            <span class="ident">Constant</span>::<span class="ident">FSub</span>(<span class="ident">f</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">get_type</span>(),
+            <span class="ident">Constant</span>::<span class="ident">FMul</span>(<span class="ident">f</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">get_type</span>(),
+            <span class="ident">Constant</span>::<span class="ident">FDiv</span>(<span class="ident">f</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">get_type</span>(),
+            <span class="ident">Constant</span>::<span class="ident">FRem</span>(<span class="ident">f</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">get_type</span>(),
+            <span class="ident">Constant</span>::<span class="ident">ExtractElement</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">e</span>.<span class="ident">get_type</span>(),
+            <span class="ident">Constant</span>::<span class="ident">InsertElement</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_type</span>(),
+            <span class="ident">Constant</span>::<span class="ident">ShuffleVector</span>(<span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">s</span>.<span class="ident">get_type</span>(),
+            <span class="ident">Constant</span>::<span class="ident">ExtractValue</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">e</span>.<span class="ident">get_type</span>(),
+            <span class="ident">Constant</span>::<span class="ident">InsertValue</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_type</span>(),
+            <span class="ident">Constant</span>::<span class="ident">GetElementPtr</span>(<span class="ident">g</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">g</span>.<span class="ident">get_type</span>(),
+            <span class="ident">Constant</span>::<span class="ident">Trunc</span>(<span class="ident">t</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">t</span>.<span class="ident">get_type</span>(),
+            <span class="ident">Constant</span>::<span class="ident">ZExt</span>(<span class="ident">z</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">z</span>.<span class="ident">get_type</span>(),
+            <span class="ident">Constant</span>::<span class="ident">SExt</span>(<span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">s</span>.<span class="ident">get_type</span>(),
+            <span class="ident">Constant</span>::<span class="ident">FPTrunc</span>(<span class="ident">f</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">get_type</span>(),
+            <span class="ident">Constant</span>::<span class="ident">FPExt</span>(<span class="ident">f</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">get_type</span>(),
+            <span class="ident">Constant</span>::<span class="ident">FPToUI</span>(<span class="ident">f</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">get_type</span>(),
+            <span class="ident">Constant</span>::<span class="ident">FPToSI</span>(<span class="ident">f</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">get_type</span>(),
+            <span class="ident">Constant</span>::<span class="ident">UIToFP</span>(<span class="ident">u</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">u</span>.<span class="ident">get_type</span>(),
+            <span class="ident">Constant</span>::<span class="ident">SIToFP</span>(<span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">s</span>.<span class="ident">get_type</span>(),
+            <span class="ident">Constant</span>::<span class="ident">PtrToInt</span>(<span class="ident">p</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">p</span>.<span class="ident">get_type</span>(),
+            <span class="ident">Constant</span>::<span class="ident">IntToPtr</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_type</span>(),
+            <span class="ident">Constant</span>::<span class="ident">BitCast</span>(<span class="ident">b</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">b</span>.<span class="ident">get_type</span>(),
+            <span class="ident">Constant</span>::<span class="ident">AddrSpaceCast</span>(<span class="ident">a</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">a</span>.<span class="ident">get_type</span>(),
+            <span class="ident">Constant</span>::<span class="ident">ICmp</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_type</span>(),
+            <span class="ident">Constant</span>::<span class="ident">FCmp</span>(<span class="ident">f</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">get_type</span>(),
+            <span class="ident">Constant</span>::<span class="ident">Select</span>(<span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">s</span>.<span class="ident">get_type</span>(),
         }
     }
 }
 
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">ConstUnaryOp</span> {
-    <span class="kw">fn</span> <span class="ident">get_operand</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="kw-2">&amp;</span><span class="ident">Constant</span>;
+    <span class="kw">fn</span> <span class="ident">get_operand</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">Constant</span>;
 }
 
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">ConstBinaryOp</span> {
-    <span class="kw">fn</span> <span class="ident">get_operand0</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="kw-2">&amp;</span><span class="ident">Constant</span>;
-    <span class="kw">fn</span> <span class="ident">get_operand1</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="kw-2">&amp;</span><span class="ident">Constant</span>;
+    <span class="kw">fn</span> <span class="ident">get_operand0</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">Constant</span>;
+    <span class="kw">fn</span> <span class="ident">get_operand1</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">Constant</span>;
 }
 
 <span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">impl_constexpr</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">expr</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">id</span>:<span class="ident">ident</span>) <span class="op">=&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">expr</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">id</span>:<span class="ident">ident</span>) <span class="op">=</span><span class="op">&gt;</span> {
         <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">expr</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Constant</span> {
-            <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">expr</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">expr</span>) <span class="op">-&gt;</span> <span class="ident">Constant</span> {
+            <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">expr</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">expr</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Constant</span> {
                 <span class="ident">Constant</span>::<span class="macro-nonterminal">$</span><span class="macro-nonterminal">id</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">expr</span>))
             }
         }
 
         <span class="kw">impl</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">Constant</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">expr</span> {
             <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>;
-            <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">constant</span>: <span class="ident">Constant</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="self">Self</span>::<span class="ident">Error</span><span class="op">&gt;</span> {
+            <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">constant</span>: <span class="ident">Constant</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="self">Self</span>::<span class="ident">Error</span><span class="op">&gt;</span> {
                 <span class="kw">match</span> <span class="ident">constant</span> {
-                    <span class="ident">Constant</span>::<span class="macro-nonterminal">$</span><span class="macro-nonterminal">id</span>(<span class="ident">expr</span>) <span class="op">=&gt;</span> <span class="prelude-val">Ok</span>(<span class="kw-2">*</span><span class="ident">expr</span>),
-                    <span class="kw">_</span> <span class="op">=&gt;</span> <span class="prelude-val">Err</span>(<span class="string">&quot;Constant is not of requested type&quot;</span>),
+                    <span class="ident">Constant</span>::<span class="macro-nonterminal">$</span><span class="macro-nonterminal">id</span>(<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="kw-2">*</span><span class="ident">expr</span>),
+                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="string">&quot;Constant is not of requested type&quot;</span>),
                 }
             }
         }
@@ -1466,9 +1466,9 @@
 }
 
 <span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">impl_unop</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">expr</span>:<span class="ident">ty</span>) <span class="op">=&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">expr</span>:<span class="ident">ty</span>) <span class="op">=</span><span class="op">&gt;</span> {
         <span class="kw">impl</span> <span class="ident">ConstUnaryOp</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">expr</span> {
-            <span class="kw">fn</span> <span class="ident">get_operand</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="kw-2">&amp;</span><span class="ident">Constant</span> {
+            <span class="kw">fn</span> <span class="ident">get_operand</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">Constant</span> {
                 <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">operand</span>
             }
         }
@@ -1476,12 +1476,12 @@
 }
 
 <span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">impl_binop</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">expr</span>:<span class="ident">ty</span>) <span class="op">=&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">expr</span>:<span class="ident">ty</span>) <span class="op">=</span><span class="op">&gt;</span> {
         <span class="kw">impl</span> <span class="ident">ConstBinaryOp</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">expr</span> {
-            <span class="kw">fn</span> <span class="ident">get_operand0</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="kw-2">&amp;</span><span class="ident">Constant</span> {
+            <span class="kw">fn</span> <span class="ident">get_operand0</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">Constant</span> {
                 <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">operand0</span>
             }
-            <span class="kw">fn</span> <span class="ident">get_operand1</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="kw-2">&amp;</span><span class="ident">Constant</span> {
+            <span class="kw">fn</span> <span class="ident">get_operand1</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">Constant</span> {
                 <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">operand1</span>
             }
         }
@@ -1490,9 +1490,9 @@
 
 <span class="comment">// Use on binops where the result type is the same as both operand types</span>
 <span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">binop_same_type</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">expr</span>:<span class="ident">ty</span>) <span class="op">=&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">expr</span>:<span class="ident">ty</span>) <span class="op">=</span><span class="op">&gt;</span> {
         <span class="kw">impl</span> <span class="ident">Typed</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">expr</span> {
-            <span class="kw">fn</span> <span class="ident">get_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">Type</span> {
+            <span class="kw">fn</span> <span class="ident">get_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Type</span> {
                 <span class="kw">let</span> <span class="ident">t</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_operand0</span>().<span class="ident">get_type</span>();
                 <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">t</span>, <span class="self">self</span>.<span class="ident">get_operand1</span>().<span class="ident">get_type</span>());
                 <span class="ident">t</span>
@@ -1503,9 +1503,9 @@
 
 <span class="comment">// Use on binops where the result type is the same as the first operand type</span>
 <span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">binop_left_type</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">expr</span>:<span class="ident">ty</span>) <span class="op">=&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">expr</span>:<span class="ident">ty</span>) <span class="op">=</span><span class="op">&gt;</span> {
         <span class="kw">impl</span> <span class="ident">Typed</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">expr</span> {
-            <span class="kw">fn</span> <span class="ident">get_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">Type</span> {
+            <span class="kw">fn</span> <span class="ident">get_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Type</span> {
                 <span class="self">self</span>.<span class="ident">get_operand0</span>().<span class="ident">get_type</span>()
             }
         }
@@ -1514,9 +1514,9 @@
 
 <span class="comment">// Use on anything that has a &#39;to_type&#39; field which indicates its result type</span>
 <span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">explicitly_typed</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">expr</span>:<span class="ident">ty</span>) <span class="op">=&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">expr</span>:<span class="ident">ty</span>) <span class="op">=</span><span class="op">&gt;</span> {
         <span class="kw">impl</span> <span class="ident">Typed</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">expr</span> {
-            <span class="kw">fn</span> <span class="ident">get_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">Type</span> {
+            <span class="kw">fn</span> <span class="ident">get_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Type</span> {
                 <span class="self">self</span>.<span class="ident">to_type</span>.<span class="ident">clone</span>()
             }
         }
@@ -1724,10 +1724,10 @@
 <span class="macro">impl_constexpr</span><span class="macro">!</span>(<span class="ident">ExtractElement</span>, <span class="ident">ExtractElement</span>);
 
 <span class="kw">impl</span> <span class="ident">Typed</span> <span class="kw">for</span> <span class="ident">ExtractElement</span> {
-    <span class="kw">fn</span> <span class="ident">get_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">Type</span> {
+    <span class="kw">fn</span> <span class="ident">get_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Type</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">vector</span>.<span class="ident">get_type</span>() {
-            <span class="ident">Type</span>::<span class="ident">VectorType</span> { <span class="ident">element_type</span>, .. } <span class="op">=&gt;</span> <span class="kw-2">*</span><span class="ident">element_type</span>.<span class="ident">clone</span>(),
-            <span class="ident">ty</span> <span class="op">=&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Expected an ExtractElement vector to be VectorType, got {:?}&quot;</span>, <span class="ident">ty</span>),
+            <span class="ident">Type</span>::<span class="ident">VectorType</span> { <span class="ident">element_type</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="ident">element_type</span>.<span class="ident">clone</span>(),
+            <span class="ident">ty</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Expected an ExtractElement vector to be VectorType, got {:?}&quot;</span>, <span class="ident">ty</span>),
         }
     }
 }
@@ -1742,7 +1742,7 @@
 <span class="macro">impl_constexpr</span><span class="macro">!</span>(<span class="ident">InsertElement</span>, <span class="ident">InsertElement</span>);
 
 <span class="kw">impl</span> <span class="ident">Typed</span> <span class="kw">for</span> <span class="ident">InsertElement</span> {
-    <span class="kw">fn</span> <span class="ident">get_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">Type</span> {
+    <span class="kw">fn</span> <span class="ident">get_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Type</span> {
         <span class="self">self</span>.<span class="ident">vector</span>.<span class="ident">get_type</span>()
     }
 }
@@ -1758,15 +1758,15 @@
 <span class="macro">impl_binop</span><span class="macro">!</span>(<span class="ident">ShuffleVector</span>);
 
 <span class="kw">impl</span> <span class="ident">Typed</span> <span class="kw">for</span> <span class="ident">ShuffleVector</span> {
-    <span class="kw">fn</span> <span class="ident">get_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">Type</span> {
+    <span class="kw">fn</span> <span class="ident">get_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Type</span> {
         <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">operand0</span>.<span class="ident">get_type</span>();
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">ty</span>, <span class="self">self</span>.<span class="ident">operand1</span>.<span class="ident">get_type</span>());
         <span class="kw">match</span> <span class="ident">ty</span> {
-            <span class="ident">Type</span>::<span class="ident">VectorType</span> { <span class="ident">element_type</span>, .. } <span class="op">=&gt;</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">mask</span>.<span class="ident">get_type</span>() {
-                <span class="ident">Type</span>::<span class="ident">VectorType</span> { <span class="ident">num_elements</span>, .. } <span class="op">=&gt;</span> <span class="ident">Type</span>::<span class="ident">VectorType</span> { <span class="ident">element_type</span>, <span class="ident">num_elements</span> },
-                <span class="ident">ty</span> <span class="op">=&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Expected a ShuffleVector mask to be VectorType, got {:?}&quot;</span>, <span class="ident">ty</span>),
+            <span class="ident">Type</span>::<span class="ident">VectorType</span> { <span class="ident">element_type</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">mask</span>.<span class="ident">get_type</span>() {
+                <span class="ident">Type</span>::<span class="ident">VectorType</span> { <span class="ident">num_elements</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type</span>::<span class="ident">VectorType</span> { <span class="ident">element_type</span>, <span class="ident">num_elements</span> },
+                <span class="ident">ty</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Expected a ShuffleVector mask to be VectorType, got {:?}&quot;</span>, <span class="ident">ty</span>),
             },
-            <span class="kw">_</span> <span class="op">=&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Expected a ShuffleVector operand to be VectorType, got {:?}&quot;</span>, <span class="ident">ty</span>),
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Expected a ShuffleVector operand to be VectorType, got {:?}&quot;</span>, <span class="ident">ty</span>),
         }
     }
 }
@@ -1780,24 +1780,24 @@
 <span class="macro">impl_constexpr</span><span class="macro">!</span>(<span class="ident">ExtractValue</span>, <span class="ident">ExtractValue</span>);
 
 <span class="kw">impl</span> <span class="ident">Typed</span> <span class="kw">for</span> <span class="ident">ExtractValue</span> {
-    <span class="kw">fn</span> <span class="ident">get_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">Type</span> {
+    <span class="kw">fn</span> <span class="ident">get_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Type</span> {
         <span class="ident">ev_type</span>(<span class="self">self</span>.<span class="ident">aggregate</span>.<span class="ident">get_type</span>(), <span class="self">self</span>.<span class="ident">indices</span>.<span class="ident">iter</span>().<span class="ident">copied</span>())
     }
 }
 
-<span class="kw">fn</span> <span class="ident">ev_type</span>(<span class="ident">cur_type</span>: <span class="ident">Type</span>, <span class="kw-2">mut</span> <span class="ident">indices</span>: <span class="kw">impl</span> <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">u32</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="ident">Type</span> {
+<span class="kw">fn</span> <span class="ident">ev_type</span>(<span class="ident">cur_type</span>: <span class="ident">Type</span>, <span class="kw-2">mut</span> <span class="ident">indices</span>: <span class="kw">impl</span> <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">u32</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Type</span> {
     <span class="kw">match</span> <span class="ident">indices</span>.<span class="ident">next</span>() {
-        <span class="prelude-val">None</span> <span class="op">=&gt;</span> <span class="ident">cur_type</span>,
-        <span class="prelude-val">Some</span>(<span class="ident">index</span>) <span class="op">=&gt;</span> <span class="kw">match</span> <span class="ident">cur_type</span> {
-            <span class="ident">Type</span>::<span class="ident">ArrayType</span> { <span class="ident">element_type</span>, .. } <span class="op">=&gt;</span> <span class="ident">ev_type</span>(<span class="kw-2">*</span><span class="ident">element_type</span>, <span class="ident">indices</span>),
-            <span class="ident">Type</span>::<span class="ident">StructType</span> { <span class="ident">element_types</span>, .. } <span class="op">=&gt;</span> <span class="ident">ev_type</span>(
+        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cur_type</span>,
+        <span class="prelude-val">Some</span>(<span class="ident">index</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">cur_type</span> {
+            <span class="ident">Type</span>::<span class="ident">ArrayType</span> { <span class="ident">element_type</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ev_type</span>(<span class="kw-2">*</span><span class="ident">element_type</span>, <span class="ident">indices</span>),
+            <span class="ident">Type</span>::<span class="ident">StructType</span> { <span class="ident">element_types</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ev_type</span>(
                 <span class="ident">element_types</span>
                     .<span class="ident">get</span>(<span class="ident">index</span> <span class="kw">as</span> <span class="ident">usize</span>)
                     .<span class="ident">expect</span>(<span class="string">&quot;ExtractValue index out of range&quot;</span>)
                     .<span class="ident">clone</span>(),
                 <span class="ident">indices</span>,
             ),
-            <span class="kw">_</span> <span class="op">=&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;ExtractValue from something that&#39;s not ArrayType or StructType; its type is {:?}&quot;</span>, <span class="ident">cur_type</span>),
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;ExtractValue from something that&#39;s not ArrayType or StructType; its type is {:?}&quot;</span>, <span class="ident">cur_type</span>),
         },
     }
 }
@@ -1812,7 +1812,7 @@
 <span class="macro">impl_constexpr</span><span class="macro">!</span>(<span class="ident">InsertValue</span>, <span class="ident">InsertValue</span>);
 
 <span class="kw">impl</span> <span class="ident">Typed</span> <span class="kw">for</span> <span class="ident">InsertValue</span> {
-    <span class="kw">fn</span> <span class="ident">get_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">Type</span> {
+    <span class="kw">fn</span> <span class="ident">get_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Type</span> {
         <span class="self">self</span>.<span class="ident">aggregate</span>.<span class="ident">get_type</span>()
     }
 }
@@ -1827,19 +1827,19 @@
 <span class="macro">impl_constexpr</span><span class="macro">!</span>(<span class="ident">GetElementPtr</span>, <span class="ident">GetElementPtr</span>);
 
 <span class="kw">impl</span> <span class="ident">Typed</span> <span class="kw">for</span> <span class="ident">GetElementPtr</span> {
-    <span class="kw">fn</span> <span class="ident">get_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">Type</span> {
+    <span class="kw">fn</span> <span class="ident">get_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Type</span> {
         <span class="ident">gep_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">address</span>.<span class="ident">get_type</span>(), <span class="self">self</span>.<span class="ident">indices</span>.<span class="ident">iter</span>())
     }
 }
 
-<span class="kw">fn</span> <span class="ident">gep_type</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;b</span><span class="op">&gt;</span>(<span class="ident">cur_type</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Type</span>, <span class="kw-2">mut</span> <span class="ident">indices</span>: <span class="kw">impl</span> <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;b</span> <span class="ident">Constant</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="ident">Type</span> {
+<span class="kw">fn</span> <span class="ident">gep_type</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;b</span><span class="op">&gt;</span>(<span class="ident">cur_type</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Type</span>, <span class="kw-2">mut</span> <span class="ident">indices</span>: <span class="kw">impl</span> <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;b</span> <span class="ident">Constant</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Type</span> {
     <span class="kw">match</span> <span class="ident">indices</span>.<span class="ident">next</span>() {
-        <span class="prelude-val">None</span> <span class="op">=&gt;</span> <span class="ident">Type</span>::<span class="ident">pointer_to</span>(<span class="ident">cur_type</span>.<span class="ident">clone</span>()), <span class="comment">// iterator is done</span>
-        <span class="prelude-val">Some</span>(<span class="ident">index</span>) <span class="op">=&gt;</span> <span class="kw">match</span> <span class="ident">cur_type</span> {
-            <span class="ident">Type</span>::<span class="ident">PointerType</span> { <span class="ident">pointee_type</span>, .. } <span class="op">=&gt;</span> <span class="ident">gep_type</span>(<span class="ident">pointee_type</span>, <span class="ident">indices</span>),
-            <span class="ident">Type</span>::<span class="ident">VectorType</span> { <span class="ident">element_type</span>, .. } <span class="op">=&gt;</span> <span class="ident">gep_type</span>(<span class="ident">element_type</span>, <span class="ident">indices</span>),
-            <span class="ident">Type</span>::<span class="ident">ArrayType</span> { <span class="ident">element_type</span>, .. } <span class="op">=&gt;</span> <span class="ident">gep_type</span>(<span class="ident">element_type</span>, <span class="ident">indices</span>),
-            <span class="ident">Type</span>::<span class="ident">StructType</span> { <span class="ident">element_types</span>, .. } <span class="op">=&gt;</span> {
+        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type</span>::<span class="ident">pointer_to</span>(<span class="ident">cur_type</span>.<span class="ident">clone</span>()), <span class="comment">// iterator is done</span>
+        <span class="prelude-val">Some</span>(<span class="ident">index</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">cur_type</span> {
+            <span class="ident">Type</span>::<span class="ident">PointerType</span> { <span class="ident">pointee_type</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">gep_type</span>(<span class="ident">pointee_type</span>, <span class="ident">indices</span>),
+            <span class="ident">Type</span>::<span class="ident">VectorType</span> { <span class="ident">element_type</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">gep_type</span>(<span class="ident">element_type</span>, <span class="ident">indices</span>),
+            <span class="ident">Type</span>::<span class="ident">ArrayType</span> { <span class="ident">element_type</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">gep_type</span>(<span class="ident">element_type</span>, <span class="ident">indices</span>),
+            <span class="ident">Type</span>::<span class="ident">StructType</span> { <span class="ident">element_types</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Constant</span>::<span class="ident">Int</span> { <span class="ident">value</span>, .. } <span class="op">=</span> <span class="ident">index</span> {
                     <span class="ident">gep_type</span>(
                         <span class="ident">element_types</span>.<span class="ident">get</span>(<span class="kw-2">*</span><span class="ident">value</span> <span class="kw">as</span> <span class="ident">usize</span>).<span class="ident">expect</span>(<span class="string">&quot;GEP index out of range&quot;</span>),
@@ -1849,20 +1849,20 @@
                     <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Expected GEP index on a constant struct to be a Constant::Int; got {:?}&quot;</span>, <span class="ident">index</span>)
                 }
             },
-            <span class="ident">Type</span>::<span class="ident">NamedStructType</span> { <span class="ident">ty</span>, .. } <span class="op">=&gt;</span> <span class="kw">match</span> <span class="ident">ty</span> {
-                <span class="prelude-val">None</span> <span class="op">=&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;GEP on an opaque struct type&quot;</span>),
-                <span class="prelude-val">Some</span>(<span class="ident">weak</span>) <span class="op">=&gt;</span> <span class="kw">match</span> <span class="ident">weak</span>.<span class="ident">upgrade</span>().<span class="ident">expect</span>(<span class="string">&quot;Weak reference disappeared&quot;</span>).<span class="ident">read</span>().<span class="ident">unwrap</span>().<span class="ident">deref</span>() {
-                    <span class="ident">Type</span>::<span class="ident">StructType</span> { <span class="ident">element_types</span>, .. } <span class="op">=&gt;</span> {
+            <span class="ident">Type</span>::<span class="ident">NamedStructType</span> { <span class="ident">ty</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">ty</span> {
+                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;GEP on an opaque struct type&quot;</span>),
+                <span class="prelude-val">Some</span>(<span class="ident">weak</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">weak</span>.<span class="ident">upgrade</span>().<span class="ident">expect</span>(<span class="string">&quot;Weak reference disappeared&quot;</span>).<span class="ident">read</span>().<span class="ident">unwrap</span>().<span class="ident">deref</span>() {
+                    <span class="ident">Type</span>::<span class="ident">StructType</span> { <span class="ident">element_types</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Constant</span>::<span class="ident">Int</span> { <span class="ident">value</span>, .. } <span class="op">=</span> <span class="ident">index</span> {
                             <span class="ident">gep_type</span>(<span class="ident">element_types</span>.<span class="ident">get</span>(<span class="kw-2">*</span><span class="ident">value</span> <span class="kw">as</span> <span class="ident">usize</span>).<span class="ident">expect</span>(<span class="string">&quot;GEP index out of range&quot;</span>), <span class="ident">indices</span>)
                         } <span class="kw">else</span> {
                             <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Expected GEP index on a struct to be a Constant::Int; got {:?}&quot;</span>, <span class="ident">index</span>)
                         }
                     },
-                    <span class="ident">ty</span> <span class="op">=&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Expected NamedStructType inner type to be a StructType; got {:?}&quot;</span>, <span class="ident">ty</span>),
+                    <span class="ident">ty</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Expected NamedStructType inner type to be a StructType; got {:?}&quot;</span>, <span class="ident">ty</span>),
                 },
             }
-            <span class="kw">_</span> <span class="op">=&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Expected GEP base type to be a PointerType, VectorType, ArrayType, StructType, or NamedStructType; got {:?}&quot;</span>, <span class="ident">cur_type</span>),
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Expected GEP base type to be a PointerType, VectorType, ArrayType, StructType, or NamedStructType; got {:?}&quot;</span>, <span class="ident">cur_type</span>),
         },
     }
 }
@@ -2008,15 +2008,15 @@
 <span class="macro">impl_binop</span><span class="macro">!</span>(<span class="ident">ICmp</span>);
 
 <span class="kw">impl</span> <span class="ident">Typed</span> <span class="kw">for</span> <span class="ident">ICmp</span> {
-    <span class="kw">fn</span> <span class="ident">get_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">Type</span> {
+    <span class="kw">fn</span> <span class="ident">get_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Type</span> {
         <span class="kw">let</span> <span class="ident">t</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">operand0</span>.<span class="ident">get_type</span>();
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">t</span>, <span class="self">self</span>.<span class="ident">operand1</span>.<span class="ident">get_type</span>());
         <span class="kw">match</span> <span class="ident">t</span> {
-            <span class="ident">Type</span>::<span class="ident">VectorType</span> { <span class="ident">num_elements</span>, .. } <span class="op">=&gt;</span> <span class="ident">Type</span>::<span class="ident">VectorType</span> {
+            <span class="ident">Type</span>::<span class="ident">VectorType</span> { <span class="ident">num_elements</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type</span>::<span class="ident">VectorType</span> {
                 <span class="ident">element_type</span>: <span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">Type</span>::<span class="ident">bool</span>()),
                 <span class="ident">num_elements</span>,
             },
-            <span class="kw">_</span> <span class="op">=&gt;</span> <span class="ident">Type</span>::<span class="ident">bool</span>(),
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type</span>::<span class="ident">bool</span>(),
         }
     }
 }
@@ -2032,15 +2032,15 @@
 <span class="macro">impl_binop</span><span class="macro">!</span>(<span class="ident">FCmp</span>);
 
 <span class="kw">impl</span> <span class="ident">Typed</span> <span class="kw">for</span> <span class="ident">FCmp</span> {
-    <span class="kw">fn</span> <span class="ident">get_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">Type</span> {
+    <span class="kw">fn</span> <span class="ident">get_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Type</span> {
         <span class="kw">let</span> <span class="ident">t</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">operand0</span>.<span class="ident">get_type</span>();
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">t</span>, <span class="self">self</span>.<span class="ident">operand1</span>.<span class="ident">get_type</span>());
         <span class="kw">match</span> <span class="ident">t</span> {
-            <span class="ident">Type</span>::<span class="ident">VectorType</span> { <span class="ident">num_elements</span>, .. } <span class="op">=&gt;</span> <span class="ident">Type</span>::<span class="ident">VectorType</span> {
+            <span class="ident">Type</span>::<span class="ident">VectorType</span> { <span class="ident">num_elements</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type</span>::<span class="ident">VectorType</span> {
                 <span class="ident">element_type</span>: <span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">Type</span>::<span class="ident">bool</span>()),
                 <span class="ident">num_elements</span>,
             },
-            <span class="kw">_</span> <span class="op">=&gt;</span> <span class="ident">Type</span>::<span class="ident">bool</span>(),
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type</span>::<span class="ident">bool</span>(),
         }
     }
 }
@@ -2055,7 +2055,7 @@
 <span class="macro">impl_constexpr</span><span class="macro">!</span>(<span class="ident">Select</span>, <span class="ident">Select</span>);
 
 <span class="kw">impl</span> <span class="ident">Typed</span> <span class="kw">for</span> <span class="ident">Select</span> {
-    <span class="kw">fn</span> <span class="ident">get_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">Type</span> {
+    <span class="kw">fn</span> <span class="ident">get_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Type</span> {
         <span class="kw">let</span> <span class="ident">t</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">true_value</span>.<span class="ident">get_type</span>();
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">t</span>, <span class="self">self</span>.<span class="ident">false_value</span>.<span class="ident">get_type</span>());
         <span class="ident">t</span>
@@ -2078,7 +2078,7 @@
         <span class="ident">constant</span>: <span class="ident">LLVMValueRef</span>,
         <span class="ident">gnmap</span>: <span class="kw-2">&amp;</span><span class="ident">GlobalNameMap</span>,
         <span class="ident">tnmap</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">TyNameMap</span>,
-    ) <span class="op">-&gt;</span> <span class="self">Self</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">use</span> <span class="ident">llvm_sys</span>::<span class="ident">LLVMValueKind</span>;
         <span class="kw">if</span> <span class="kw">unsafe</span> { <span class="ident">LLVMIsAConstant</span>(<span class="ident">constant</span>).<span class="ident">is_null</span>() } {
             <span class="macro">panic</span><span class="macro">!</span>(
@@ -2087,41 +2087,41 @@
             )
         }
         <span class="kw">match</span> <span class="kw">unsafe</span> { <span class="ident">LLVMGetValueKind</span>(<span class="ident">constant</span>) } {
-            <span class="ident">LLVMValueKind</span>::<span class="ident">LLVMConstantIntValueKind</span> <span class="op">=&gt;</span> {
+            <span class="ident">LLVMValueKind</span>::<span class="ident">LLVMConstantIntValueKind</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">match</span> <span class="ident">Type</span>::<span class="ident">from_llvm_ref</span>( <span class="kw">unsafe</span> { <span class="ident">LLVMTypeOf</span>(<span class="ident">constant</span>) }, <span class="ident">tnmap</span> ) {
-                    <span class="ident">Type</span>::<span class="ident">IntegerType</span> { <span class="ident">bits</span> } <span class="op">=&gt;</span> <span class="ident">Constant</span>::<span class="ident">Int</span> {
+                    <span class="ident">Type</span>::<span class="ident">IntegerType</span> { <span class="ident">bits</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Constant</span>::<span class="ident">Int</span> {
                         <span class="ident">bits</span>,
                         <span class="ident">value</span>: <span class="kw">unsafe</span> { <span class="ident">LLVMConstIntGetZExtValue</span>(<span class="ident">constant</span>) } <span class="kw">as</span> <span class="ident">u64</span>,
                     },
-                    <span class="ident">ty</span> <span class="op">=&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Expected Constant::Int to have type Type::IntegerType; got {:?}&quot;</span>, <span class="ident">ty</span>),
+                    <span class="ident">ty</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Expected Constant::Int to have type Type::IntegerType; got {:?}&quot;</span>, <span class="ident">ty</span>),
                 }
             },
-            <span class="ident">LLVMValueKind</span>::<span class="ident">LLVMConstantFPValueKind</span> <span class="op">=&gt;</span> {
+            <span class="ident">LLVMValueKind</span>::<span class="ident">LLVMConstantFPValueKind</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">match</span> <span class="ident">Type</span>::<span class="ident">from_llvm_ref</span>( <span class="kw">unsafe</span> { <span class="ident">LLVMTypeOf</span>(<span class="ident">constant</span>) }, <span class="ident">tnmap</span> ) {
-                    <span class="ident">Type</span>::<span class="ident">FPType</span>(<span class="ident">fptype</span>) <span class="op">=&gt;</span> <span class="ident">Constant</span>::<span class="ident">Float</span>(<span class="kw">match</span> <span class="ident">fptype</span> {
-                        <span class="ident">FPType</span>::<span class="ident">Half</span> <span class="op">=&gt;</span> <span class="ident">Float</span>::<span class="ident">Half</span>,
-                        <span class="ident">FPType</span>::<span class="ident">Single</span> <span class="op">=&gt;</span> <span class="ident">Float</span>::<span class="ident">Single</span>( <span class="kw">unsafe</span> {
+                    <span class="ident">Type</span>::<span class="ident">FPType</span>(<span class="ident">fptype</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Constant</span>::<span class="ident">Float</span>(<span class="kw">match</span> <span class="ident">fptype</span> {
+                        <span class="ident">FPType</span>::<span class="ident">Half</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Float</span>::<span class="ident">Half</span>,
+                        <span class="ident">FPType</span>::<span class="ident">Single</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Float</span>::<span class="ident">Single</span>( <span class="kw">unsafe</span> {
                             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">b</span> <span class="op">=</span> <span class="number">0</span>;
                             <span class="kw">let</span> <span class="ident">b_ptr</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">std</span>::<span class="ident">os</span>::<span class="ident">raw</span>::<span class="ident">c_int</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">b</span>;
                             <span class="ident">LLVMConstRealGetDouble</span>(<span class="ident">constant</span>, <span class="ident">b_ptr</span>)
                         } <span class="kw">as</span> <span class="ident">f32</span>),
-                        <span class="ident">FPType</span>::<span class="ident">Double</span> <span class="op">=&gt;</span> <span class="ident">Float</span>::<span class="ident">Double</span>( <span class="kw">unsafe</span> {
+                        <span class="ident">FPType</span>::<span class="ident">Double</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Float</span>::<span class="ident">Double</span>( <span class="kw">unsafe</span> {
                             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">b</span> <span class="op">=</span> <span class="number">0</span>;
                             <span class="kw">let</span> <span class="ident">b_ptr</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">std</span>::<span class="ident">os</span>::<span class="ident">raw</span>::<span class="ident">c_int</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">b</span>;
                             <span class="ident">LLVMConstRealGetDouble</span>(<span class="ident">constant</span>, <span class="ident">b_ptr</span>)
                         } ),
-                        <span class="ident">FPType</span>::<span class="ident">FP128</span> <span class="op">=&gt;</span> <span class="ident">Float</span>::<span class="ident">Quadruple</span>,
-                        <span class="ident">FPType</span>::<span class="ident">X86_FP80</span> <span class="op">=&gt;</span> <span class="ident">Float</span>::<span class="ident">X86_FP80</span>,
-                        <span class="ident">FPType</span>::<span class="ident">PPC_FP128</span> <span class="op">=&gt;</span> <span class="ident">Float</span>::<span class="ident">PPC_FP128</span>,
+                        <span class="ident">FPType</span>::<span class="ident">FP128</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Float</span>::<span class="ident">Quadruple</span>,
+                        <span class="ident">FPType</span>::<span class="ident">X86_FP80</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Float</span>::<span class="ident">X86_FP80</span>,
+                        <span class="ident">FPType</span>::<span class="ident">PPC_FP128</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Float</span>::<span class="ident">PPC_FP128</span>,
                     }),
-                    <span class="ident">ty</span> <span class="op">=&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Expected Constant::Float to have type Type::FPType; got {:?}&quot;</span>, <span class="ident">ty</span>),
+                    <span class="ident">ty</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Expected Constant::Float to have type Type::FPType; got {:?}&quot;</span>, <span class="ident">ty</span>),
                 }
             },
-            <span class="ident">LLVMValueKind</span>::<span class="ident">LLVMConstantStructValueKind</span> <span class="op">=&gt;</span> {
+            <span class="ident">LLVMValueKind</span>::<span class="ident">LLVMConstantStructValueKind</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> (<span class="ident">num_elements</span>, <span class="ident">is_packed</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">Type</span>::<span class="ident">from_llvm_ref</span>( <span class="kw">unsafe</span> { <span class="ident">LLVMTypeOf</span>(<span class="ident">constant</span>) }, <span class="ident">tnmap</span> ) {
-                    <span class="ident">Type</span>::<span class="ident">StructType</span> { <span class="ident">element_types</span>, <span class="ident">is_packed</span> } <span class="op">=&gt;</span> (<span class="ident">element_types</span>.<span class="ident">len</span>(), <span class="ident">is_packed</span>),
-                    <span class="ident">Type</span>::<span class="ident">NamedStructType</span> { <span class="kw-2">ref</span> <span class="ident">ty</span>, .. } <span class="op">=&gt;</span> {
-                        <span class="kw">let</span> <span class="ident">arc</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">Type</span><span class="op">&gt;&gt;</span> <span class="op">=</span> <span class="ident">ty</span>.<span class="ident">as_ref</span>()
+                    <span class="ident">Type</span>::<span class="ident">StructType</span> { <span class="ident">element_types</span>, <span class="ident">is_packed</span> } <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">element_types</span>.<span class="ident">len</span>(), <span class="ident">is_packed</span>),
+                    <span class="ident">Type</span>::<span class="ident">NamedStructType</span> { <span class="kw-2">ref</span> <span class="ident">ty</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="kw">let</span> <span class="ident">arc</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">Type</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">ty</span>.<span class="ident">as_ref</span>()
                             .<span class="ident">expect</span>(<span class="string">&quot;Constant of opaque struct type&quot;</span>)
                             .<span class="ident">upgrade</span>()
                             .<span class="ident">expect</span>(<span class="string">&quot;Weak reference should be valid for at least the lifetime of tnmap&quot;</span>);
@@ -2132,7 +2132,7 @@
                             <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Expected NamedStructType inner type to be a StructType, but it actually is a {:?}&quot;</span>, <span class="ident">innerty</span>)
                         }
                     },
-                    <span class="ident">ty</span> <span class="op">=&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Expected Constant::Struct to have type StructType or NamedStructType; got {:?}&quot;</span>, <span class="ident">ty</span>),
+                    <span class="ident">ty</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Expected Constant::Struct to have type StructType or NamedStructType; got {:?}&quot;</span>, <span class="ident">ty</span>),
                 };
                 <span class="ident">Constant</span>::<span class="ident">Struct</span> {
                     <span class="ident">name</span>: <span class="prelude-val">None</span>,  <span class="comment">// --TODO not yet implemented: Constant::Struct name</span>
@@ -2144,124 +2144,124 @@
                     <span class="ident">is_packed</span>,
                 }
             },
-            <span class="ident">LLVMValueKind</span>::<span class="ident">LLVMConstantArrayValueKind</span> <span class="op">=&gt;</span> {
+            <span class="ident">LLVMValueKind</span>::<span class="ident">LLVMConstantArrayValueKind</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">match</span> <span class="ident">Type</span>::<span class="ident">from_llvm_ref</span>( <span class="kw">unsafe</span> { <span class="ident">LLVMTypeOf</span>(<span class="ident">constant</span>) }, <span class="ident">tnmap</span> ) {
-                    <span class="ident">Type</span>::<span class="ident">ArrayType</span> { <span class="ident">element_type</span>, <span class="ident">num_elements</span> } <span class="op">=&gt;</span> <span class="ident">Constant</span>::<span class="ident">Array</span> {
+                    <span class="ident">Type</span>::<span class="ident">ArrayType</span> { <span class="ident">element_type</span>, <span class="ident">num_elements</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Constant</span>::<span class="ident">Array</span> {
                         <span class="ident">element_type</span>: <span class="kw-2">*</span><span class="ident">element_type</span>,
                         <span class="ident">elements</span>: {
                             (<span class="number">0</span> .. <span class="ident">num_elements</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">i</span><span class="op">|</span> <span class="ident">Constant</span>::<span class="ident">from_llvm_ref</span>( <span class="kw">unsafe</span> { <span class="ident">LLVMGetOperand</span>(<span class="ident">constant</span>, <span class="ident">i</span> <span class="kw">as</span> <span class="ident">u32</span>) }, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>)).<span class="ident">collect</span>()
                         },
                     },
-                    <span class="ident">ty</span> <span class="op">=&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Expected Constant::Array to have type Type::ArrayType; got {:?}&quot;</span>, <span class="ident">ty</span>),
+                    <span class="ident">ty</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Expected Constant::Array to have type Type::ArrayType; got {:?}&quot;</span>, <span class="ident">ty</span>),
                 }
             },
-            <span class="ident">LLVMValueKind</span>::<span class="ident">LLVMConstantVectorValueKind</span> <span class="op">=&gt;</span> {
+            <span class="ident">LLVMValueKind</span>::<span class="ident">LLVMConstantVectorValueKind</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">num_elements</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">LLVMGetNumOperands</span>(<span class="ident">constant</span>) };
                 <span class="ident">Constant</span>::<span class="ident">Vector</span>(
                     (<span class="number">0</span> .. <span class="ident">num_elements</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">i</span><span class="op">|</span> <span class="ident">Constant</span>::<span class="ident">from_llvm_ref</span>( <span class="kw">unsafe</span> { <span class="ident">LLVMGetOperand</span>(<span class="ident">constant</span>, <span class="ident">i</span> <span class="kw">as</span> <span class="ident">u32</span>) }, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>)).<span class="ident">collect</span>()
                 )
             },
-            <span class="ident">LLVMValueKind</span>::<span class="ident">LLVMConstantDataArrayValueKind</span> <span class="op">=&gt;</span> {
+            <span class="ident">LLVMValueKind</span>::<span class="ident">LLVMConstantDataArrayValueKind</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">match</span> <span class="ident">Type</span>::<span class="ident">from_llvm_ref</span>( <span class="kw">unsafe</span> { <span class="ident">LLVMTypeOf</span>(<span class="ident">constant</span>) }, <span class="ident">tnmap</span> ) {
-                    <span class="ident">Type</span>::<span class="ident">ArrayType</span> { <span class="ident">element_type</span>, <span class="ident">num_elements</span> } <span class="op">=&gt;</span> <span class="ident">Constant</span>::<span class="ident">Array</span> {
+                    <span class="ident">Type</span>::<span class="ident">ArrayType</span> { <span class="ident">element_type</span>, <span class="ident">num_elements</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Constant</span>::<span class="ident">Array</span> {
                         <span class="ident">element_type</span>: <span class="kw-2">*</span><span class="ident">element_type</span>,
                         <span class="ident">elements</span>: {
                             (<span class="number">0</span> .. <span class="ident">num_elements</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">i</span><span class="op">|</span> <span class="ident">Constant</span>::<span class="ident">from_llvm_ref</span>( <span class="kw">unsafe</span> { <span class="ident">LLVMGetElementAsConstant</span>(<span class="ident">constant</span>, <span class="ident">i</span> <span class="kw">as</span> <span class="ident">u32</span>) }, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>)).<span class="ident">collect</span>()
                         },
                     },
-                    <span class="ident">ty</span> <span class="op">=&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Expected ConstantDataArray to have type Type::ArrayType; got {:?}&quot;</span>, <span class="ident">ty</span>),
+                    <span class="ident">ty</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Expected ConstantDataArray to have type Type::ArrayType; got {:?}&quot;</span>, <span class="ident">ty</span>),
                 }
             },
-            <span class="ident">LLVMValueKind</span>::<span class="ident">LLVMConstantDataVectorValueKind</span> <span class="op">=&gt;</span> {
+            <span class="ident">LLVMValueKind</span>::<span class="ident">LLVMConstantDataVectorValueKind</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">match</span> <span class="ident">Type</span>::<span class="ident">from_llvm_ref</span>( <span class="kw">unsafe</span> { <span class="ident">LLVMTypeOf</span>(<span class="ident">constant</span>) }, <span class="ident">tnmap</span> ) {
-                    <span class="ident">Type</span>::<span class="ident">VectorType</span> { <span class="ident">num_elements</span>, .. } <span class="op">=&gt;</span> <span class="ident">Constant</span>::<span class="ident">Vector</span>(
+                    <span class="ident">Type</span>::<span class="ident">VectorType</span> { <span class="ident">num_elements</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Constant</span>::<span class="ident">Vector</span>(
                         (<span class="number">0</span> .. <span class="ident">num_elements</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">i</span><span class="op">|</span> <span class="ident">Constant</span>::<span class="ident">from_llvm_ref</span>( <span class="kw">unsafe</span> { <span class="ident">LLVMGetElementAsConstant</span>(<span class="ident">constant</span>, <span class="ident">i</span> <span class="kw">as</span> <span class="ident">u32</span>) }, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>)).<span class="ident">collect</span>()
                     ),
-                    <span class="ident">ty</span> <span class="op">=&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Expected ConstantDataVector to have type Type::VectorType; got {:?}&quot;</span>, <span class="ident">ty</span>),
+                    <span class="ident">ty</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Expected ConstantDataVector to have type Type::VectorType; got {:?}&quot;</span>, <span class="ident">ty</span>),
                 }
             },
-            <span class="ident">LLVMValueKind</span>::<span class="ident">LLVMConstantPointerNullValueKind</span> <span class="op">=&gt;</span> {
+            <span class="ident">LLVMValueKind</span>::<span class="ident">LLVMConstantPointerNullValueKind</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">Constant</span>::<span class="ident">Null</span>(<span class="ident">Type</span>::<span class="ident">from_llvm_ref</span>( <span class="kw">unsafe</span> { <span class="ident">LLVMTypeOf</span>(<span class="ident">constant</span>) }, <span class="ident">tnmap</span> ))
             },
-            <span class="ident">LLVMValueKind</span>::<span class="ident">LLVMConstantAggregateZeroValueKind</span> <span class="op">=&gt;</span> {
+            <span class="ident">LLVMValueKind</span>::<span class="ident">LLVMConstantAggregateZeroValueKind</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">Constant</span>::<span class="ident">AggregateZero</span>(<span class="ident">Type</span>::<span class="ident">from_llvm_ref</span>( <span class="kw">unsafe</span> { <span class="ident">LLVMTypeOf</span>(<span class="ident">constant</span>) }, <span class="ident">tnmap</span> ))
             },
-            <span class="ident">LLVMValueKind</span>::<span class="ident">LLVMUndefValueValueKind</span> <span class="op">=&gt;</span> {
+            <span class="ident">LLVMValueKind</span>::<span class="ident">LLVMUndefValueValueKind</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">Constant</span>::<span class="ident">Undef</span>(<span class="ident">Type</span>::<span class="ident">from_llvm_ref</span>( <span class="kw">unsafe</span> { <span class="ident">LLVMTypeOf</span>(<span class="ident">constant</span>) }, <span class="ident">tnmap</span> ))
             },
-            <span class="ident">LLVMValueKind</span>::<span class="ident">LLVMConstantTokenNoneValueKind</span> <span class="op">=&gt;</span> {
+            <span class="ident">LLVMValueKind</span>::<span class="ident">LLVMConstantTokenNoneValueKind</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">Constant</span>::<span class="ident">TokenNone</span>
             },
-            <span class="ident">LLVMValueKind</span>::<span class="ident">LLVMBlockAddressValueKind</span> <span class="op">=&gt;</span> {
+            <span class="ident">LLVMValueKind</span>::<span class="ident">LLVMBlockAddressValueKind</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">Constant</span>::<span class="ident">BlockAddress</span>
             },
-            <span class="ident">LLVMValueKind</span>::<span class="ident">LLVMConstantExprValueKind</span> <span class="op">=&gt;</span> {
+            <span class="ident">LLVMValueKind</span>::<span class="ident">LLVMConstantExprValueKind</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">use</span> <span class="ident">llvm_sys</span>::<span class="ident">LLVMOpcode</span>;
                 <span class="kw">match</span> <span class="kw">unsafe</span> { <span class="ident">LLVMGetConstOpcode</span>(<span class="ident">constant</span>) } {
-                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMAdd</span> <span class="op">=&gt;</span> <span class="ident">Constant</span>::<span class="ident">Add</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">Add</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
-                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMSub</span> <span class="op">=&gt;</span> <span class="ident">Constant</span>::<span class="ident">Sub</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">Sub</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
-                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMMul</span> <span class="op">=&gt;</span> <span class="ident">Constant</span>::<span class="ident">Mul</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">Mul</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
-                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMUDiv</span> <span class="op">=&gt;</span> <span class="ident">Constant</span>::<span class="ident">UDiv</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">UDiv</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
-                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMSDiv</span> <span class="op">=&gt;</span> <span class="ident">Constant</span>::<span class="ident">SDiv</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">SDiv</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
-                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMURem</span> <span class="op">=&gt;</span> <span class="ident">Constant</span>::<span class="ident">URem</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">URem</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
-                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMSRem</span> <span class="op">=&gt;</span> <span class="ident">Constant</span>::<span class="ident">SRem</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">SRem</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
-                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMAnd</span> <span class="op">=&gt;</span> <span class="ident">Constant</span>::<span class="ident">And</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">And</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
-                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMOr</span> <span class="op">=&gt;</span> <span class="ident">Constant</span>::<span class="ident">Or</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">Or</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
-                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMXor</span> <span class="op">=&gt;</span> <span class="ident">Constant</span>::<span class="ident">Xor</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">Xor</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
-                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMShl</span> <span class="op">=&gt;</span> <span class="ident">Constant</span>::<span class="ident">Shl</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">Shl</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
-                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMLShr</span> <span class="op">=&gt;</span> <span class="ident">Constant</span>::<span class="ident">LShr</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">LShr</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
-                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMAShr</span> <span class="op">=&gt;</span> <span class="ident">Constant</span>::<span class="ident">AShr</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">AShr</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
-                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMFAdd</span> <span class="op">=&gt;</span> <span class="ident">Constant</span>::<span class="ident">FAdd</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">FAdd</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
-                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMFSub</span> <span class="op">=&gt;</span> <span class="ident">Constant</span>::<span class="ident">FSub</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">FSub</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
-                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMFMul</span> <span class="op">=&gt;</span> <span class="ident">Constant</span>::<span class="ident">FMul</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">FMul</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
-                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMFDiv</span> <span class="op">=&gt;</span> <span class="ident">Constant</span>::<span class="ident">FDiv</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">FDiv</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
-                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMFRem</span> <span class="op">=&gt;</span> <span class="ident">Constant</span>::<span class="ident">FRem</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">FRem</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
-                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMExtractElement</span> <span class="op">=&gt;</span> <span class="ident">Constant</span>::<span class="ident">ExtractElement</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">ExtractElement</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
-                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMInsertElement</span> <span class="op">=&gt;</span> <span class="ident">Constant</span>::<span class="ident">InsertElement</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">InsertElement</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
-                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMShuffleVector</span> <span class="op">=&gt;</span> <span class="ident">Constant</span>::<span class="ident">ShuffleVector</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">ShuffleVector</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
-                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMExtractValue</span> <span class="op">=&gt;</span> <span class="ident">Constant</span>::<span class="ident">ExtractValue</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">ExtractValue</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
-                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMInsertValue</span> <span class="op">=&gt;</span> <span class="ident">Constant</span>::<span class="ident">InsertValue</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">InsertValue</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
-                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMGetElementPtr</span> <span class="op">=&gt;</span> <span class="ident">Constant</span>::<span class="ident">GetElementPtr</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">GetElementPtr</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
-                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMTrunc</span> <span class="op">=&gt;</span> <span class="ident">Constant</span>::<span class="ident">Trunc</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">Trunc</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
-                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMZExt</span> <span class="op">=&gt;</span> <span class="ident">Constant</span>::<span class="ident">ZExt</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">ZExt</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
-                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMSExt</span> <span class="op">=&gt;</span> <span class="ident">Constant</span>::<span class="ident">SExt</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">SExt</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
-                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMFPTrunc</span> <span class="op">=&gt;</span> <span class="ident">Constant</span>::<span class="ident">FPTrunc</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">FPTrunc</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
-                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMFPExt</span> <span class="op">=&gt;</span> <span class="ident">Constant</span>::<span class="ident">FPExt</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">FPExt</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
-                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMFPToUI</span> <span class="op">=&gt;</span> <span class="ident">Constant</span>::<span class="ident">FPToUI</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">FPToUI</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
-                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMFPToSI</span> <span class="op">=&gt;</span> <span class="ident">Constant</span>::<span class="ident">FPToSI</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">FPToSI</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
-                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMUIToFP</span> <span class="op">=&gt;</span> <span class="ident">Constant</span>::<span class="ident">UIToFP</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">UIToFP</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
-                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMSIToFP</span> <span class="op">=&gt;</span> <span class="ident">Constant</span>::<span class="ident">SIToFP</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">SIToFP</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
-                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMPtrToInt</span> <span class="op">=&gt;</span> <span class="ident">Constant</span>::<span class="ident">PtrToInt</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">PtrToInt</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
-                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMIntToPtr</span> <span class="op">=&gt;</span> <span class="ident">Constant</span>::<span class="ident">IntToPtr</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">IntToPtr</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
-                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMBitCast</span> <span class="op">=&gt;</span> <span class="ident">Constant</span>::<span class="ident">BitCast</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">BitCast</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
-                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMAddrSpaceCast</span> <span class="op">=&gt;</span> <span class="ident">Constant</span>::<span class="ident">AddrSpaceCast</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">AddrSpaceCast</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
-                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMICmp</span> <span class="op">=&gt;</span> <span class="ident">Constant</span>::<span class="ident">ICmp</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">ICmp</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
-                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMFCmp</span> <span class="op">=&gt;</span> <span class="ident">Constant</span>::<span class="ident">FCmp</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">FCmp</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
-                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMSelect</span> <span class="op">=&gt;</span> <span class="ident">Constant</span>::<span class="ident">Select</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">Select</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
-                    <span class="ident">opcode</span> <span class="op">=&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;ConstantExpr has unexpected opcode {:?}&quot;</span>, <span class="ident">opcode</span>),
+                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMAdd</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Constant</span>::<span class="ident">Add</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">Add</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
+                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMSub</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Constant</span>::<span class="ident">Sub</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">Sub</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
+                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMMul</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Constant</span>::<span class="ident">Mul</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">Mul</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
+                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMUDiv</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Constant</span>::<span class="ident">UDiv</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">UDiv</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
+                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMSDiv</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Constant</span>::<span class="ident">SDiv</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">SDiv</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
+                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMURem</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Constant</span>::<span class="ident">URem</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">URem</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
+                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMSRem</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Constant</span>::<span class="ident">SRem</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">SRem</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
+                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMAnd</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Constant</span>::<span class="ident">And</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">And</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
+                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMOr</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Constant</span>::<span class="ident">Or</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">Or</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
+                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMXor</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Constant</span>::<span class="ident">Xor</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">Xor</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
+                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMShl</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Constant</span>::<span class="ident">Shl</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">Shl</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
+                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMLShr</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Constant</span>::<span class="ident">LShr</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">LShr</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
+                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMAShr</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Constant</span>::<span class="ident">AShr</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">AShr</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
+                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMFAdd</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Constant</span>::<span class="ident">FAdd</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">FAdd</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
+                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMFSub</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Constant</span>::<span class="ident">FSub</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">FSub</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
+                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMFMul</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Constant</span>::<span class="ident">FMul</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">FMul</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
+                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMFDiv</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Constant</span>::<span class="ident">FDiv</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">FDiv</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
+                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMFRem</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Constant</span>::<span class="ident">FRem</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">FRem</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
+                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMExtractElement</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Constant</span>::<span class="ident">ExtractElement</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">ExtractElement</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
+                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMInsertElement</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Constant</span>::<span class="ident">InsertElement</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">InsertElement</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
+                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMShuffleVector</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Constant</span>::<span class="ident">ShuffleVector</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">ShuffleVector</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
+                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMExtractValue</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Constant</span>::<span class="ident">ExtractValue</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">ExtractValue</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
+                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMInsertValue</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Constant</span>::<span class="ident">InsertValue</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">InsertValue</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
+                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMGetElementPtr</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Constant</span>::<span class="ident">GetElementPtr</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">GetElementPtr</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
+                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMTrunc</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Constant</span>::<span class="ident">Trunc</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">Trunc</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
+                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMZExt</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Constant</span>::<span class="ident">ZExt</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">ZExt</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
+                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMSExt</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Constant</span>::<span class="ident">SExt</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">SExt</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
+                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMFPTrunc</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Constant</span>::<span class="ident">FPTrunc</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">FPTrunc</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
+                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMFPExt</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Constant</span>::<span class="ident">FPExt</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">FPExt</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
+                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMFPToUI</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Constant</span>::<span class="ident">FPToUI</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">FPToUI</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
+                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMFPToSI</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Constant</span>::<span class="ident">FPToSI</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">FPToSI</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
+                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMUIToFP</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Constant</span>::<span class="ident">UIToFP</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">UIToFP</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
+                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMSIToFP</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Constant</span>::<span class="ident">SIToFP</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">SIToFP</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
+                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMPtrToInt</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Constant</span>::<span class="ident">PtrToInt</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">PtrToInt</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
+                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMIntToPtr</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Constant</span>::<span class="ident">IntToPtr</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">IntToPtr</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
+                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMBitCast</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Constant</span>::<span class="ident">BitCast</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">BitCast</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
+                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMAddrSpaceCast</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Constant</span>::<span class="ident">AddrSpaceCast</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">AddrSpaceCast</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
+                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMICmp</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Constant</span>::<span class="ident">ICmp</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">ICmp</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
+                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMFCmp</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Constant</span>::<span class="ident">FCmp</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">FCmp</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
+                    <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMSelect</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Constant</span>::<span class="ident">Select</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">Select</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))),
+                    <span class="ident">opcode</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;ConstantExpr has unexpected opcode {:?}&quot;</span>, <span class="ident">opcode</span>),
                 }
             },
-            <span class="kw">_</span> <span class="kw">if</span> <span class="kw">unsafe</span> { <span class="op">!</span><span class="ident">LLVMIsAGlobalValue</span>(<span class="ident">constant</span>).<span class="ident">is_null</span>() } <span class="op">=&gt;</span> {
+            <span class="kw">_</span> <span class="kw">if</span> <span class="kw">unsafe</span> { <span class="op">!</span><span class="ident">LLVMIsAGlobalValue</span>(<span class="ident">constant</span>).<span class="ident">is_null</span>() } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">Constant</span>::<span class="ident">GlobalReference</span> {
                     <span class="ident">name</span>: <span class="ident">gnmap</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">constant</span>)
-                        .<span class="ident">unwrap_or_else</span>(<span class="op">||</span> { <span class="kw">let</span> <span class="ident">names</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">gnmap</span>.<span class="ident">values</span>().<span class="ident">collect</span>(); <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Global not found in GlobalNameMap; have names {:?}&quot;</span>, <span class="ident">names</span>) })
+                        .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> { <span class="kw">let</span> <span class="ident">names</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">gnmap</span>.<span class="ident">values</span>().<span class="ident">collect</span>(); <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Global not found in GlobalNameMap; have names {:?}&quot;</span>, <span class="ident">names</span>) })
                         .<span class="ident">clone</span>(),
                     <span class="ident">ty</span>: <span class="ident">Type</span>::<span class="ident">from_llvm_ref</span>( <span class="kw">unsafe</span> { <span class="ident">LLVMGlobalGetValueType</span>(<span class="ident">constant</span>) }, <span class="ident">tnmap</span> ),
                 }
             },
-            <span class="ident">k</span> <span class="op">=&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Constant::from_llvm_ref: don&#39;t know how to handle this Constant with ValueKind {:?}&quot;</span>, <span class="ident">k</span>),
+            <span class="ident">k</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Constant::from_llvm_ref: don&#39;t know how to handle this Constant with ValueKind {:?}&quot;</span>, <span class="ident">k</span>),
         }
     }
 }
 
 <span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">binop_from_llvm</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">expr</span>:<span class="ident">ident</span>) <span class="op">=&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">expr</span>:<span class="ident">ident</span>) <span class="op">=</span><span class="op">&gt;</span> {
         <span class="kw">impl</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">expr</span> {
             <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">from_llvm_ref</span>(
                 <span class="ident">expr</span>: <span class="ident">LLVMValueRef</span>,
                 <span class="ident">gnmap</span>: <span class="kw-2">&amp;</span><span class="ident">GlobalNameMap</span>,
                 <span class="ident">tnmap</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">TyNameMap</span>,
-            ) <span class="op">-&gt;</span> <span class="self">Self</span> {
+            ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="kw">unsafe</span> { <span class="ident">LLVMGetNumOperands</span>(<span class="ident">expr</span>) }, <span class="number">2</span>);
                 <span class="self">Self</span> {
                     <span class="ident">operand0</span>: <span class="ident">Constant</span>::<span class="ident">from_llvm_ref</span>(
@@ -2304,7 +2304,7 @@
         <span class="ident">expr</span>: <span class="ident">LLVMValueRef</span>,
         <span class="ident">gnmap</span>: <span class="kw-2">&amp;</span><span class="ident">GlobalNameMap</span>,
         <span class="ident">tnmap</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">TyNameMap</span>,
-    ) <span class="op">-&gt;</span> <span class="self">Self</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="kw">unsafe</span> { <span class="ident">LLVMGetNumOperands</span>(<span class="ident">expr</span>) }, <span class="number">2</span>);
         <span class="self">Self</span> {
             <span class="ident">vector</span>: <span class="ident">Constant</span>::<span class="ident">from_llvm_ref</span>(<span class="kw">unsafe</span> { <span class="ident">LLVMGetOperand</span>(<span class="ident">expr</span>, <span class="number">0</span>) }, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>),
@@ -2318,7 +2318,7 @@
         <span class="ident">expr</span>: <span class="ident">LLVMValueRef</span>,
         <span class="ident">gnmap</span>: <span class="kw-2">&amp;</span><span class="ident">GlobalNameMap</span>,
         <span class="ident">tnmap</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">TyNameMap</span>,
-    ) <span class="op">-&gt;</span> <span class="self">Self</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="kw">unsafe</span> { <span class="ident">LLVMGetNumOperands</span>(<span class="ident">expr</span>) }, <span class="number">3</span>);
         <span class="self">Self</span> {
             <span class="ident">vector</span>: <span class="ident">Constant</span>::<span class="ident">from_llvm_ref</span>(<span class="kw">unsafe</span> { <span class="ident">LLVMGetOperand</span>(<span class="ident">expr</span>, <span class="number">0</span>) }, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>),
@@ -2333,7 +2333,7 @@
         <span class="ident">expr</span>: <span class="ident">LLVMValueRef</span>,
         <span class="ident">gnmap</span>: <span class="kw-2">&amp;</span><span class="ident">GlobalNameMap</span>,
         <span class="ident">tnmap</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">TyNameMap</span>,
-    ) <span class="op">-&gt;</span> <span class="self">Self</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="kw">unsafe</span> { <span class="ident">LLVMGetNumOperands</span>(<span class="ident">expr</span>) }, <span class="number">3</span>);
         <span class="self">Self</span> {
             <span class="ident">operand0</span>: <span class="ident">Constant</span>::<span class="ident">from_llvm_ref</span>(<span class="kw">unsafe</span> { <span class="ident">LLVMGetOperand</span>(<span class="ident">expr</span>, <span class="number">0</span>) }, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>),
@@ -2348,7 +2348,7 @@
         <span class="ident">expr</span>: <span class="ident">LLVMValueRef</span>,
         <span class="ident">gnmap</span>: <span class="kw-2">&amp;</span><span class="ident">GlobalNameMap</span>,
         <span class="ident">tnmap</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">TyNameMap</span>,
-    ) <span class="op">-&gt;</span> <span class="self">Self</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="kw">unsafe</span> { <span class="ident">LLVMGetNumOperands</span>(<span class="ident">expr</span>) }, <span class="number">2</span>);
         <span class="self">Self</span> {
             <span class="ident">aggregate</span>: <span class="ident">Constant</span>::<span class="ident">from_llvm_ref</span>(<span class="kw">unsafe</span> { <span class="ident">LLVMGetOperand</span>(<span class="ident">expr</span>, <span class="number">0</span>) }, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>),
@@ -2366,7 +2366,7 @@
         <span class="ident">expr</span>: <span class="ident">LLVMValueRef</span>,
         <span class="ident">gnmap</span>: <span class="kw-2">&amp;</span><span class="ident">GlobalNameMap</span>,
         <span class="ident">tnmap</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">TyNameMap</span>,
-    ) <span class="op">-&gt;</span> <span class="self">Self</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="kw">unsafe</span> { <span class="ident">LLVMGetNumOperands</span>(<span class="ident">expr</span>) }, <span class="number">3</span>);
         <span class="self">Self</span> {
             <span class="ident">aggregate</span>: <span class="ident">Constant</span>::<span class="ident">from_llvm_ref</span>(<span class="kw">unsafe</span> { <span class="ident">LLVMGetOperand</span>(<span class="ident">expr</span>, <span class="number">0</span>) }, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>),
@@ -2385,18 +2385,18 @@
         <span class="ident">expr</span>: <span class="ident">LLVMValueRef</span>,
         <span class="ident">gnmap</span>: <span class="kw-2">&amp;</span><span class="ident">GlobalNameMap</span>,
         <span class="ident">tnmap</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">TyNameMap</span>,
-    ) <span class="op">-&gt;</span> <span class="self">Self</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">address</span>: <span class="ident">Constant</span>::<span class="ident">from_llvm_ref</span>(<span class="kw">unsafe</span> { <span class="ident">LLVMGetOperand</span>(<span class="ident">expr</span>, <span class="number">0</span>) }, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>),
             <span class="ident">indices</span>: {
                 <span class="kw">let</span> <span class="ident">num_indices</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">LLVMGetNumOperands</span>(<span class="ident">expr</span>) <span class="kw">as</span> <span class="ident">u32</span> } <span class="op">-</span> <span class="number">1</span>; <span class="comment">// LLVMGetNumIndices(), which we use for instruction::GetElementPtr, appears empirically to not work for constant::GetElementPtr</span>
-                (<span class="number">1</span>..=<span class="ident">num_indices</span>)
+                (<span class="number">1</span>..<span class="op">=</span><span class="ident">num_indices</span>)
                     .<span class="ident">map</span>(<span class="op">|</span><span class="ident">i</span><span class="op">|</span> {
                         <span class="ident">Constant</span>::<span class="ident">from_llvm_ref</span>(<span class="kw">unsafe</span> { <span class="ident">LLVMGetOperand</span>(<span class="ident">expr</span>, <span class="ident">i</span>) }, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>)
                     })
                     .<span class="ident">collect</span>()
             },
-            <span class="ident">in_bounds</span>: <span class="kw">unsafe</span> { <span class="ident">LLVMIsInBounds</span>(<span class="ident">expr</span>) } <span class="op">!=</span> <span class="number">0</span>,
+            <span class="ident">in_bounds</span>: <span class="kw">unsafe</span> { <span class="ident">LLVMIsInBounds</span>(<span class="ident">expr</span>) } <span class="op">!</span><span class="op">=</span> <span class="number">0</span>,
         }
     }
 }
@@ -2404,13 +2404,13 @@
 <span class="comment">// These constexprs have the property that their result type is ambiguous from</span>
 <span class="comment">//   knowing only their operands.</span>
 <span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">typed_unop_from_llvm</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">expr</span>:<span class="ident">ident</span>) <span class="op">=&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">expr</span>:<span class="ident">ident</span>) <span class="op">=</span><span class="op">&gt;</span> {
         <span class="kw">impl</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">expr</span> {
             <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">from_llvm_ref</span>(
                 <span class="ident">expr</span>: <span class="ident">LLVMValueRef</span>,
                 <span class="ident">gnmap</span>: <span class="kw-2">&amp;</span><span class="ident">GlobalNameMap</span>,
                 <span class="ident">tnmap</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">TyNameMap</span>,
-            ) <span class="op">-&gt;</span> <span class="self">Self</span> {
+            ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
                 <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="kw">unsafe</span> { <span class="ident">LLVMGetNumOperands</span>(<span class="ident">expr</span>) }, <span class="number">1</span>);
                 <span class="self">Self</span> {
                     <span class="ident">operand</span>: <span class="ident">Constant</span>::<span class="ident">from_llvm_ref</span>(
@@ -2444,7 +2444,7 @@
         <span class="ident">expr</span>: <span class="ident">LLVMValueRef</span>,
         <span class="ident">gnmap</span>: <span class="kw-2">&amp;</span><span class="ident">GlobalNameMap</span>,
         <span class="ident">tnmap</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">TyNameMap</span>,
-    ) <span class="op">-&gt;</span> <span class="self">Self</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="kw">unsafe</span> { <span class="ident">LLVMGetNumOperands</span>(<span class="ident">expr</span>) }, <span class="number">2</span>);
         <span class="self">Self</span> {
             <span class="ident">predicate</span>: <span class="ident">IntPredicate</span>::<span class="ident">from_llvm</span>(<span class="kw">unsafe</span> { <span class="ident">LLVMGetICmpPredicate</span>(<span class="ident">expr</span>) }),
@@ -2459,7 +2459,7 @@
         <span class="ident">expr</span>: <span class="ident">LLVMValueRef</span>,
         <span class="ident">gnmap</span>: <span class="kw-2">&amp;</span><span class="ident">GlobalNameMap</span>,
         <span class="ident">tnmap</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">TyNameMap</span>,
-    ) <span class="op">-&gt;</span> <span class="self">Self</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="kw">unsafe</span> { <span class="ident">LLVMGetNumOperands</span>(<span class="ident">expr</span>) }, <span class="number">2</span>);
         <span class="self">Self</span> {
             <span class="ident">predicate</span>: <span class="ident">FPPredicate</span>::<span class="ident">from_llvm</span>(<span class="kw">unsafe</span> { <span class="ident">LLVMGetFCmpPredicate</span>(<span class="ident">expr</span>) }),
@@ -2474,7 +2474,7 @@
         <span class="ident">expr</span>: <span class="ident">LLVMValueRef</span>,
         <span class="ident">gnmap</span>: <span class="kw-2">&amp;</span><span class="ident">GlobalNameMap</span>,
         <span class="ident">tnmap</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">TyNameMap</span>,
-    ) <span class="op">-&gt;</span> <span class="self">Self</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="kw">unsafe</span> { <span class="ident">LLVMGetNumOperands</span>(<span class="ident">expr</span>) }, <span class="number">3</span>);
         <span class="self">Self</span> {
             <span class="ident">condition</span>: <span class="ident">Constant</span>::<span class="ident">from_llvm_ref</span>(<span class="kw">unsafe</span> { <span class="ident">LLVMGetOperand</span>(<span class="ident">expr</span>, <span class="number">0</span>) }, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>),

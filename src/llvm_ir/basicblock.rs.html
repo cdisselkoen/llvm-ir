@@ -136,7 +136,7 @@
 
 <span class="kw">impl</span> <span class="ident">BasicBlock</span> {
     <span class="doccomment">/// A `BasicBlock` instance with no instructions and an `Unreachable` terminator</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">name</span>: <span class="ident">Name</span>) <span class="op">-&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">name</span>: <span class="ident">Name</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">terminator</span>::<span class="ident">Unreachable</span>;
         <span class="self">Self</span> {
             <span class="ident">name</span>,
@@ -169,7 +169,7 @@
         <span class="ident">bbmap</span>: <span class="kw-2">&amp;</span><span class="ident">BBMap</span>,
         <span class="ident">gnmap</span>: <span class="kw-2">&amp;</span><span class="ident">GlobalNameMap</span>,
         <span class="ident">tnmap</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">TyNameMap</span>,
-    ) <span class="op">-&gt;</span> <span class="self">Self</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="ident">Name</span>::<span class="ident">name_or_num</span>(<span class="kw">unsafe</span> { <span class="ident">get_bb_name</span>(<span class="ident">bb</span>) }, <span class="ident">ctr</span>);
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="kw-2">&amp;</span><span class="ident">name</span>, <span class="ident">bbmap</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">bb</span>).<span class="ident">expect</span>(<span class="string">&quot;Expected to find bb in bbmap&quot;</span>));
         <span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;Processing a basic block named {:?}&quot;</span>, <span class="ident">name</span>);
@@ -193,7 +193,7 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">first_pass_names</span>(
         <span class="ident">bb</span>: <span class="ident">LLVMBasicBlockRef</span>,
         <span class="ident">ctr</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">usize</span>,
-    ) <span class="op">-&gt;</span> (<span class="ident">Name</span>, <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">LLVMValueRef</span>, <span class="ident">Name</span>)<span class="op">&gt;</span>) {
+    ) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">Name</span>, <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">LLVMValueRef</span>, <span class="ident">Name</span>)<span class="op">&gt;</span>) {
         <span class="kw">let</span> <span class="ident">bbname</span> <span class="op">=</span> <span class="ident">Name</span>::<span class="ident">name_or_num</span>(<span class="kw">unsafe</span> { <span class="ident">get_bb_name</span>(<span class="ident">bb</span>) }, <span class="ident">ctr</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instnames</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[];
         <span class="kw">for</span> <span class="ident">inst</span> <span class="kw">in</span> <span class="ident">all_but_last</span>(<span class="ident">get_instructions</span>(<span class="ident">bb</span>)).<span class="ident">filter</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">i</span><span class="op">|</span> <span class="ident">needs_name</span>(<span class="ident">i</span>)) {
@@ -214,31 +214,31 @@
 }
 
 <span class="comment">// Given only the LLVMValueRef for an Instruction, determine whether it needs a name</span>
-<span class="kw">fn</span> <span class="ident">needs_name</span>(<span class="ident">inst</span>: <span class="ident">LLVMValueRef</span>) <span class="op">-&gt;</span> <span class="ident">bool</span> {
-    <span class="kw">if</span> <span class="kw">unsafe</span> { <span class="ident">get_value_name</span>(<span class="ident">inst</span>) <span class="op">!=</span> <span class="string">&quot;&quot;</span> } {
+<span class="kw">fn</span> <span class="ident">needs_name</span>(<span class="ident">inst</span>: <span class="ident">LLVMValueRef</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">if</span> <span class="kw">unsafe</span> { <span class="ident">get_value_name</span>(<span class="ident">inst</span>) <span class="op">!</span><span class="op">=</span> <span class="string">&quot;&quot;</span> } {
         <span class="kw">return</span> <span class="bool-val">true</span>; <span class="comment">// has a string name</span>
     }
     <span class="kw">match</span> <span class="kw">unsafe</span> { <span class="ident">LLVMGetInstructionOpcode</span>(<span class="ident">inst</span>) } {
-        <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMStore</span> <span class="op">=&gt;</span> <span class="bool-val">false</span>,
-        <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMFence</span> <span class="op">=&gt;</span> <span class="bool-val">false</span>,
-        <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMCall</span> <span class="op">=&gt;</span> {
+        <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMStore</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+        <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMFence</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+        <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMCall</span> <span class="op">=</span><span class="op">&gt;</span> {
             <span class="kw">let</span> <span class="ident">kind</span> <span class="op">=</span>
                 <span class="kw">unsafe</span> { <span class="ident">LLVMGetTypeKind</span>(<span class="ident">LLVMGetReturnType</span>(<span class="ident">LLVMGetCalledFunctionType</span>(<span class="ident">inst</span>))) };
-            <span class="ident">kind</span> <span class="op">!=</span> <span class="ident">LLVMVoidTypeKind</span>
+            <span class="ident">kind</span> <span class="op">!</span><span class="op">=</span> <span class="ident">LLVMVoidTypeKind</span>
         }
-        <span class="kw">_</span> <span class="op">=&gt;</span> <span class="bool-val">true</span>, <span class="comment">// all other instructions have results (destinations) and thus will need names</span>
+        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>, <span class="comment">// all other instructions have results (destinations) and thus will need names</span>
     }
 }
 
 <span class="comment">// Given only the LLVMValueRef for a Terminator, determine whether it needs a name</span>
-<span class="kw">fn</span> <span class="ident">term_needs_name</span>(<span class="ident">term</span>: <span class="ident">LLVMValueRef</span>) <span class="op">-&gt;</span> <span class="ident">bool</span> {
-    <span class="kw">if</span> <span class="kw">unsafe</span> { <span class="ident">get_value_name</span>(<span class="ident">term</span>) <span class="op">!=</span> <span class="string">&quot;&quot;</span> } {
+<span class="kw">fn</span> <span class="ident">term_needs_name</span>(<span class="ident">term</span>: <span class="ident">LLVMValueRef</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">if</span> <span class="kw">unsafe</span> { <span class="ident">get_value_name</span>(<span class="ident">term</span>) <span class="op">!</span><span class="op">=</span> <span class="string">&quot;&quot;</span> } {
         <span class="kw">return</span> <span class="bool-val">true</span>; <span class="comment">// has a string name</span>
     }
     <span class="kw">match</span> <span class="kw">unsafe</span> { <span class="ident">LLVMGetInstructionOpcode</span>(<span class="ident">term</span>) } {
-        <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMInvoke</span> <span class="op">=&gt;</span> <span class="bool-val">true</span>,
-        <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMCatchSwitch</span> <span class="op">=&gt;</span> <span class="bool-val">true</span>,
-        <span class="kw">_</span> <span class="op">=&gt;</span> <span class="bool-val">false</span>, <span class="comment">// all other terminators have no result (destination) and thus don&#39;t need names</span>
+        <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMInvoke</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
+        <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMCatchSwitch</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
+        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>, <span class="comment">// all other terminators have no result (destination) and thus don&#39;t need names</span>
     }
 }
 </pre></div>

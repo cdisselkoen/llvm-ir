@@ -121,41 +121,41 @@
 <span class="kw">use</span> <span class="ident">llvm_sys</span>::<span class="ident">LLVMRealPredicate</span>;
 
 <span class="kw">impl</span> <span class="ident">IntPredicate</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">from_llvm</span>(<span class="ident">pred</span>: <span class="ident">LLVMIntPredicate</span>) <span class="op">-&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">from_llvm</span>(<span class="ident">pred</span>: <span class="ident">LLVMIntPredicate</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">match</span> <span class="ident">pred</span> {
-            <span class="ident">LLVMIntPredicate</span>::<span class="ident">LLVMIntEQ</span> <span class="op">=&gt;</span> <span class="ident">IntPredicate</span>::<span class="ident">EQ</span>,
-            <span class="ident">LLVMIntPredicate</span>::<span class="ident">LLVMIntNE</span> <span class="op">=&gt;</span> <span class="ident">IntPredicate</span>::<span class="ident">NE</span>,
-            <span class="ident">LLVMIntPredicate</span>::<span class="ident">LLVMIntUGT</span> <span class="op">=&gt;</span> <span class="ident">IntPredicate</span>::<span class="ident">UGT</span>,
-            <span class="ident">LLVMIntPredicate</span>::<span class="ident">LLVMIntUGE</span> <span class="op">=&gt;</span> <span class="ident">IntPredicate</span>::<span class="ident">UGE</span>,
-            <span class="ident">LLVMIntPredicate</span>::<span class="ident">LLVMIntULT</span> <span class="op">=&gt;</span> <span class="ident">IntPredicate</span>::<span class="ident">ULT</span>,
-            <span class="ident">LLVMIntPredicate</span>::<span class="ident">LLVMIntULE</span> <span class="op">=&gt;</span> <span class="ident">IntPredicate</span>::<span class="ident">ULE</span>,
-            <span class="ident">LLVMIntPredicate</span>::<span class="ident">LLVMIntSGT</span> <span class="op">=&gt;</span> <span class="ident">IntPredicate</span>::<span class="ident">SGT</span>,
-            <span class="ident">LLVMIntPredicate</span>::<span class="ident">LLVMIntSGE</span> <span class="op">=&gt;</span> <span class="ident">IntPredicate</span>::<span class="ident">SGE</span>,
-            <span class="ident">LLVMIntPredicate</span>::<span class="ident">LLVMIntSLT</span> <span class="op">=&gt;</span> <span class="ident">IntPredicate</span>::<span class="ident">SLT</span>,
-            <span class="ident">LLVMIntPredicate</span>::<span class="ident">LLVMIntSLE</span> <span class="op">=&gt;</span> <span class="ident">IntPredicate</span>::<span class="ident">SLE</span>,
+            <span class="ident">LLVMIntPredicate</span>::<span class="ident">LLVMIntEQ</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">IntPredicate</span>::<span class="ident">EQ</span>,
+            <span class="ident">LLVMIntPredicate</span>::<span class="ident">LLVMIntNE</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">IntPredicate</span>::<span class="ident">NE</span>,
+            <span class="ident">LLVMIntPredicate</span>::<span class="ident">LLVMIntUGT</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">IntPredicate</span>::<span class="ident">UGT</span>,
+            <span class="ident">LLVMIntPredicate</span>::<span class="ident">LLVMIntUGE</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">IntPredicate</span>::<span class="ident">UGE</span>,
+            <span class="ident">LLVMIntPredicate</span>::<span class="ident">LLVMIntULT</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">IntPredicate</span>::<span class="ident">ULT</span>,
+            <span class="ident">LLVMIntPredicate</span>::<span class="ident">LLVMIntULE</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">IntPredicate</span>::<span class="ident">ULE</span>,
+            <span class="ident">LLVMIntPredicate</span>::<span class="ident">LLVMIntSGT</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">IntPredicate</span>::<span class="ident">SGT</span>,
+            <span class="ident">LLVMIntPredicate</span>::<span class="ident">LLVMIntSGE</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">IntPredicate</span>::<span class="ident">SGE</span>,
+            <span class="ident">LLVMIntPredicate</span>::<span class="ident">LLVMIntSLT</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">IntPredicate</span>::<span class="ident">SLT</span>,
+            <span class="ident">LLVMIntPredicate</span>::<span class="ident">LLVMIntSLE</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">IntPredicate</span>::<span class="ident">SLE</span>,
         }
     }
 }
 
 <span class="kw">impl</span> <span class="ident">FPPredicate</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">from_llvm</span>(<span class="ident">pred</span>: <span class="ident">LLVMRealPredicate</span>) <span class="op">-&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">from_llvm</span>(<span class="ident">pred</span>: <span class="ident">LLVMRealPredicate</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">match</span> <span class="ident">pred</span> {
-            <span class="ident">LLVMRealPredicate</span>::<span class="ident">LLVMRealPredicateFalse</span> <span class="op">=&gt;</span> <span class="ident">FPPredicate</span>::<span class="ident">False</span>,
-            <span class="ident">LLVMRealPredicate</span>::<span class="ident">LLVMRealOEQ</span> <span class="op">=&gt;</span> <span class="ident">FPPredicate</span>::<span class="ident">OEQ</span>,
-            <span class="ident">LLVMRealPredicate</span>::<span class="ident">LLVMRealOGT</span> <span class="op">=&gt;</span> <span class="ident">FPPredicate</span>::<span class="ident">OGT</span>,
-            <span class="ident">LLVMRealPredicate</span>::<span class="ident">LLVMRealOGE</span> <span class="op">=&gt;</span> <span class="ident">FPPredicate</span>::<span class="ident">OGE</span>,
-            <span class="ident">LLVMRealPredicate</span>::<span class="ident">LLVMRealOLT</span> <span class="op">=&gt;</span> <span class="ident">FPPredicate</span>::<span class="ident">OLT</span>,
-            <span class="ident">LLVMRealPredicate</span>::<span class="ident">LLVMRealOLE</span> <span class="op">=&gt;</span> <span class="ident">FPPredicate</span>::<span class="ident">OLE</span>,
-            <span class="ident">LLVMRealPredicate</span>::<span class="ident">LLVMRealONE</span> <span class="op">=&gt;</span> <span class="ident">FPPredicate</span>::<span class="ident">ONE</span>,
-            <span class="ident">LLVMRealPredicate</span>::<span class="ident">LLVMRealORD</span> <span class="op">=&gt;</span> <span class="ident">FPPredicate</span>::<span class="ident">ORD</span>,
-            <span class="ident">LLVMRealPredicate</span>::<span class="ident">LLVMRealUNO</span> <span class="op">=&gt;</span> <span class="ident">FPPredicate</span>::<span class="ident">UNO</span>,
-            <span class="ident">LLVMRealPredicate</span>::<span class="ident">LLVMRealUEQ</span> <span class="op">=&gt;</span> <span class="ident">FPPredicate</span>::<span class="ident">UEQ</span>,
-            <span class="ident">LLVMRealPredicate</span>::<span class="ident">LLVMRealUGT</span> <span class="op">=&gt;</span> <span class="ident">FPPredicate</span>::<span class="ident">UGT</span>,
-            <span class="ident">LLVMRealPredicate</span>::<span class="ident">LLVMRealUGE</span> <span class="op">=&gt;</span> <span class="ident">FPPredicate</span>::<span class="ident">UGE</span>,
-            <span class="ident">LLVMRealPredicate</span>::<span class="ident">LLVMRealULT</span> <span class="op">=&gt;</span> <span class="ident">FPPredicate</span>::<span class="ident">ULT</span>,
-            <span class="ident">LLVMRealPredicate</span>::<span class="ident">LLVMRealULE</span> <span class="op">=&gt;</span> <span class="ident">FPPredicate</span>::<span class="ident">ULE</span>,
-            <span class="ident">LLVMRealPredicate</span>::<span class="ident">LLVMRealUNE</span> <span class="op">=&gt;</span> <span class="ident">FPPredicate</span>::<span class="ident">UNE</span>,
-            <span class="ident">LLVMRealPredicate</span>::<span class="ident">LLVMRealPredicateTrue</span> <span class="op">=&gt;</span> <span class="ident">FPPredicate</span>::<span class="ident">True</span>,
+            <span class="ident">LLVMRealPredicate</span>::<span class="ident">LLVMRealPredicateFalse</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">FPPredicate</span>::<span class="ident">False</span>,
+            <span class="ident">LLVMRealPredicate</span>::<span class="ident">LLVMRealOEQ</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">FPPredicate</span>::<span class="ident">OEQ</span>,
+            <span class="ident">LLVMRealPredicate</span>::<span class="ident">LLVMRealOGT</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">FPPredicate</span>::<span class="ident">OGT</span>,
+            <span class="ident">LLVMRealPredicate</span>::<span class="ident">LLVMRealOGE</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">FPPredicate</span>::<span class="ident">OGE</span>,
+            <span class="ident">LLVMRealPredicate</span>::<span class="ident">LLVMRealOLT</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">FPPredicate</span>::<span class="ident">OLT</span>,
+            <span class="ident">LLVMRealPredicate</span>::<span class="ident">LLVMRealOLE</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">FPPredicate</span>::<span class="ident">OLE</span>,
+            <span class="ident">LLVMRealPredicate</span>::<span class="ident">LLVMRealONE</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">FPPredicate</span>::<span class="ident">ONE</span>,
+            <span class="ident">LLVMRealPredicate</span>::<span class="ident">LLVMRealORD</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">FPPredicate</span>::<span class="ident">ORD</span>,
+            <span class="ident">LLVMRealPredicate</span>::<span class="ident">LLVMRealUNO</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">FPPredicate</span>::<span class="ident">UNO</span>,
+            <span class="ident">LLVMRealPredicate</span>::<span class="ident">LLVMRealUEQ</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">FPPredicate</span>::<span class="ident">UEQ</span>,
+            <span class="ident">LLVMRealPredicate</span>::<span class="ident">LLVMRealUGT</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">FPPredicate</span>::<span class="ident">UGT</span>,
+            <span class="ident">LLVMRealPredicate</span>::<span class="ident">LLVMRealUGE</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">FPPredicate</span>::<span class="ident">UGE</span>,
+            <span class="ident">LLVMRealPredicate</span>::<span class="ident">LLVMRealULT</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">FPPredicate</span>::<span class="ident">ULT</span>,
+            <span class="ident">LLVMRealPredicate</span>::<span class="ident">LLVMRealULE</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">FPPredicate</span>::<span class="ident">ULE</span>,
+            <span class="ident">LLVMRealPredicate</span>::<span class="ident">LLVMRealUNE</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">FPPredicate</span>::<span class="ident">UNE</span>,
+            <span class="ident">LLVMRealPredicate</span>::<span class="ident">LLVMRealPredicateTrue</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">FPPredicate</span>::<span class="ident">True</span>,
         }
     }
 }

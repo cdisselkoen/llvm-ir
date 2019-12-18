@@ -6,5 +6,4 @@ implementors["llvm_ir"] = [];
             } else {
                 window.pending_implementors = implementors;
             }
-        
-})()
+        })()

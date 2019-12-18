@@ -661,19 +661,19 @@
 <span class="doccomment">/// instruction using something like `%3 = ret i32 %2`.</span>
 <span class="doccomment">/// See [LLVM docs on Terminator Instructions](https://releases.llvm.org/8.0.0/docs/LangRef.html#terminator-instructions)</span>
 <span class="kw">impl</span> <span class="ident">Typed</span> <span class="kw">for</span> <span class="ident">Terminator</span> {
-    <span class="kw">fn</span> <span class="ident">get_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">Type</span> {
+    <span class="kw">fn</span> <span class="ident">get_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Type</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">Terminator</span>::<span class="ident">Ret</span>(<span class="ident">t</span>) <span class="op">=&gt;</span> <span class="ident">t</span>.<span class="ident">get_type</span>(),
-            <span class="ident">Terminator</span>::<span class="ident">Br</span>(<span class="ident">t</span>) <span class="op">=&gt;</span> <span class="ident">t</span>.<span class="ident">get_type</span>(),
-            <span class="ident">Terminator</span>::<span class="ident">CondBr</span>(<span class="ident">t</span>) <span class="op">=&gt;</span> <span class="ident">t</span>.<span class="ident">get_type</span>(),
-            <span class="ident">Terminator</span>::<span class="ident">Switch</span>(<span class="ident">t</span>) <span class="op">=&gt;</span> <span class="ident">t</span>.<span class="ident">get_type</span>(),
-            <span class="ident">Terminator</span>::<span class="ident">IndirectBr</span>(<span class="ident">t</span>) <span class="op">=&gt;</span> <span class="ident">t</span>.<span class="ident">get_type</span>(),
-            <span class="ident">Terminator</span>::<span class="ident">Invoke</span>(<span class="ident">t</span>) <span class="op">=&gt;</span> <span class="ident">t</span>.<span class="ident">get_type</span>(),
-            <span class="ident">Terminator</span>::<span class="ident">Resume</span>(<span class="ident">t</span>) <span class="op">=&gt;</span> <span class="ident">t</span>.<span class="ident">get_type</span>(),
-            <span class="ident">Terminator</span>::<span class="ident">Unreachable</span>(<span class="ident">t</span>) <span class="op">=&gt;</span> <span class="ident">t</span>.<span class="ident">get_type</span>(),
-            <span class="ident">Terminator</span>::<span class="ident">CleanupRet</span>(<span class="ident">t</span>) <span class="op">=&gt;</span> <span class="ident">t</span>.<span class="ident">get_type</span>(),
-            <span class="ident">Terminator</span>::<span class="ident">CatchRet</span>(<span class="ident">t</span>) <span class="op">=&gt;</span> <span class="ident">t</span>.<span class="ident">get_type</span>(),
-            <span class="ident">Terminator</span>::<span class="ident">CatchSwitch</span>(<span class="ident">t</span>) <span class="op">=&gt;</span> <span class="ident">t</span>.<span class="ident">get_type</span>(),
+            <span class="ident">Terminator</span>::<span class="ident">Ret</span>(<span class="ident">t</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">t</span>.<span class="ident">get_type</span>(),
+            <span class="ident">Terminator</span>::<span class="ident">Br</span>(<span class="ident">t</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">t</span>.<span class="ident">get_type</span>(),
+            <span class="ident">Terminator</span>::<span class="ident">CondBr</span>(<span class="ident">t</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">t</span>.<span class="ident">get_type</span>(),
+            <span class="ident">Terminator</span>::<span class="ident">Switch</span>(<span class="ident">t</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">t</span>.<span class="ident">get_type</span>(),
+            <span class="ident">Terminator</span>::<span class="ident">IndirectBr</span>(<span class="ident">t</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">t</span>.<span class="ident">get_type</span>(),
+            <span class="ident">Terminator</span>::<span class="ident">Invoke</span>(<span class="ident">t</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">t</span>.<span class="ident">get_type</span>(),
+            <span class="ident">Terminator</span>::<span class="ident">Resume</span>(<span class="ident">t</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">t</span>.<span class="ident">get_type</span>(),
+            <span class="ident">Terminator</span>::<span class="ident">Unreachable</span>(<span class="ident">t</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">t</span>.<span class="ident">get_type</span>(),
+            <span class="ident">Terminator</span>::<span class="ident">CleanupRet</span>(<span class="ident">t</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">t</span>.<span class="ident">get_type</span>(),
+            <span class="ident">Terminator</span>::<span class="ident">CatchRet</span>(<span class="ident">t</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">t</span>.<span class="ident">get_type</span>(),
+            <span class="ident">Terminator</span>::<span class="ident">CatchSwitch</span>(<span class="ident">t</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">t</span>.<span class="ident">get_type</span>(),
         }
     }
 }
@@ -699,19 +699,19 @@ impl Terminator {
 */</span>
 
 <span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">impl_term</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">term</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">id</span>:<span class="ident">ident</span>) <span class="op">=&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">term</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">id</span>:<span class="ident">ident</span>) <span class="op">=</span><span class="op">&gt;</span> {
         <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">term</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Terminator</span> {
-            <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">term</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">term</span>) <span class="op">-&gt;</span> <span class="ident">Terminator</span> {
+            <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">term</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">term</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Terminator</span> {
                 <span class="ident">Terminator</span>::<span class="macro-nonterminal">$</span><span class="macro-nonterminal">id</span>(<span class="ident">term</span>)
             }
         }
 
         <span class="kw">impl</span> <span class="ident">TryFrom</span><span class="op">&lt;</span><span class="ident">Terminator</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">term</span> {
             <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>;
-            <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">term</span>: <span class="ident">Terminator</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="self">Self</span>::<span class="ident">Error</span><span class="op">&gt;</span> {
+            <span class="kw">fn</span> <span class="ident">try_from</span>(<span class="ident">term</span>: <span class="ident">Terminator</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="self">Self</span>::<span class="ident">Error</span><span class="op">&gt;</span> {
                 <span class="kw">match</span> <span class="ident">term</span> {
-                    <span class="ident">Terminator</span>::<span class="macro-nonterminal">$</span><span class="macro-nonterminal">id</span>(<span class="ident">term</span>) <span class="op">=&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">term</span>),
-                    <span class="kw">_</span> <span class="op">=&gt;</span> <span class="prelude-val">Err</span>(<span class="string">&quot;Terminator is not of requested type&quot;</span>),
+                    <span class="ident">Terminator</span>::<span class="macro-nonterminal">$</span><span class="macro-nonterminal">id</span>(<span class="ident">term</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">term</span>),
+                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="string">&quot;Terminator is not of requested type&quot;</span>),
                 }
             }
         }
@@ -727,9 +727,9 @@ impl Terminator {
 }
 
 <span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">impl_hasresult</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">term</span>:<span class="ident">ty</span>) <span class="op">=&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">term</span>:<span class="ident">ty</span>) <span class="op">=</span><span class="op">&gt;</span> {
         <span class="kw">impl</span> <span class="ident">HasResult</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">term</span> {
-            <span class="kw">fn</span> <span class="ident">get_result</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="kw-2">&amp;</span><span class="ident">Name</span> {
+            <span class="kw">fn</span> <span class="ident">get_result</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">Name</span> {
                 <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">result</span>
             }
         }
@@ -737,9 +737,9 @@ impl Terminator {
 }
 
 <span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">void_typed</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">term</span>:<span class="ident">ty</span>) <span class="op">=&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">term</span>:<span class="ident">ty</span>) <span class="op">=</span><span class="op">&gt;</span> {
         <span class="kw">impl</span> <span class="ident">Typed</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">term</span> {
-            <span class="kw">fn</span> <span class="ident">get_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">Type</span> {
+            <span class="kw">fn</span> <span class="ident">get_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Type</span> {
                 <span class="ident">Type</span>::<span class="ident">VoidType</span>
             }
         }
@@ -833,10 +833,10 @@ impl Terminator {
 <span class="macro">impl_hasresult</span><span class="macro">!</span>(<span class="ident">Invoke</span>);
 
 <span class="kw">impl</span> <span class="ident">Typed</span> <span class="kw">for</span> <span class="ident">Invoke</span> {
-    <span class="kw">fn</span> <span class="ident">get_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">Type</span> {
+    <span class="kw">fn</span> <span class="ident">get_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Type</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">function</span>.<span class="ident">get_type</span>() {
-            <span class="ident">Type</span>::<span class="ident">FuncType</span> { <span class="ident">result_type</span>, .. } <span class="op">=&gt;</span> <span class="kw-2">*</span><span class="ident">result_type</span>,
-            <span class="ident">ty</span> <span class="op">=&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Expected the function argument of an Invoke to have type FuncType; got {:?}&quot;</span>, <span class="ident">ty</span>),
+            <span class="ident">Type</span>::<span class="ident">FuncType</span> { <span class="ident">result_type</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="ident">result_type</span>,
+            <span class="ident">ty</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Expected the function argument of an Invoke to have type FuncType; got {:?}&quot;</span>, <span class="ident">ty</span>),
         }
     }
 }
@@ -899,7 +899,7 @@ impl Terminator {
 <span class="macro">impl_hasresult</span><span class="macro">!</span>(<span class="ident">CatchSwitch</span>);
 
 <span class="kw">impl</span> <span class="ident">Typed</span> <span class="kw">for</span> <span class="ident">CatchSwitch</span> {
-    <span class="kw">fn</span> <span class="ident">get_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">Type</span> {
+    <span class="kw">fn</span> <span class="ident">get_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Type</span> {
         <span class="macro">unimplemented</span><span class="macro">!</span>(<span class="string">&quot;Typed for CatchSwitch&quot;</span>)
         <span class="comment">// It&#39;s clear that there is a result of this instruction, but the documentation doesn&#39;t appear to clearly describe what its type is</span>
     }
@@ -925,26 +925,26 @@ impl Terminator {
         <span class="ident">bbmap</span>: <span class="kw-2">&amp;</span><span class="ident">BBMap</span>,
         <span class="ident">gnmap</span>: <span class="kw-2">&amp;</span><span class="ident">GlobalNameMap</span>,
         <span class="ident">tnmap</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">TyNameMap</span>,
-    ) <span class="op">-&gt;</span> <span class="self">Self</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;Processing terminator {:?}&quot;</span>, <span class="kw">unsafe</span> {
             <span class="ident">print_to_string</span>(<span class="ident">term</span>)
         });
         <span class="kw">match</span> <span class="kw">unsafe</span> { <span class="ident">LLVMGetInstructionOpcode</span>(<span class="ident">term</span>) } {
-            <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMRet</span> <span class="op">=&gt;</span> <span class="ident">Terminator</span>::<span class="ident">Ret</span>(<span class="ident">Ret</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">term</span>, <span class="ident">vnmap</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>)),
-            <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMBr</span> <span class="op">=&gt;</span> <span class="kw">match</span> <span class="kw">unsafe</span> { <span class="ident">LLVMGetNumOperands</span>(<span class="ident">term</span>) } {
-                <span class="number">1</span> <span class="op">=&gt;</span> <span class="ident">Terminator</span>::<span class="ident">Br</span>(<span class="ident">Br</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">term</span>, <span class="ident">bbmap</span>)),
-                <span class="number">3</span> <span class="op">=&gt;</span> <span class="ident">Terminator</span>::<span class="ident">CondBr</span>(<span class="ident">CondBr</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">term</span>, <span class="ident">vnmap</span>, <span class="ident">bbmap</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>)),
-                <span class="ident">n</span> <span class="op">=&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;LLVMBr with {} operands, expected 1 or 3&quot;</span>, <span class="ident">n</span>),
+            <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMRet</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Terminator</span>::<span class="ident">Ret</span>(<span class="ident">Ret</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">term</span>, <span class="ident">vnmap</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>)),
+            <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMBr</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="kw">unsafe</span> { <span class="ident">LLVMGetNumOperands</span>(<span class="ident">term</span>) } {
+                <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Terminator</span>::<span class="ident">Br</span>(<span class="ident">Br</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">term</span>, <span class="ident">bbmap</span>)),
+                <span class="number">3</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Terminator</span>::<span class="ident">CondBr</span>(<span class="ident">CondBr</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">term</span>, <span class="ident">vnmap</span>, <span class="ident">bbmap</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>)),
+                <span class="ident">n</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;LLVMBr with {} operands, expected 1 or 3&quot;</span>, <span class="ident">n</span>),
             },
-            <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMSwitch</span> <span class="op">=&gt;</span> <span class="ident">Terminator</span>::<span class="ident">Switch</span>(<span class="ident">Switch</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">term</span>, <span class="ident">vnmap</span>, <span class="ident">bbmap</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>)),
-            <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMIndirectBr</span> <span class="op">=&gt;</span> <span class="ident">Terminator</span>::<span class="ident">IndirectBr</span>(<span class="ident">IndirectBr</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">term</span>, <span class="ident">vnmap</span>, <span class="ident">bbmap</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>)),
-            <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMInvoke</span> <span class="op">=&gt;</span> <span class="ident">Terminator</span>::<span class="ident">Invoke</span>(<span class="ident">Invoke</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">term</span>, <span class="ident">ctr</span>, <span class="ident">vnmap</span>, <span class="ident">bbmap</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>)),
-            <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMResume</span> <span class="op">=&gt;</span> <span class="ident">Terminator</span>::<span class="ident">Resume</span>(<span class="ident">Resume</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">term</span>, <span class="ident">vnmap</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>)),
-            <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMUnreachable</span> <span class="op">=&gt;</span> <span class="ident">Terminator</span>::<span class="ident">Unreachable</span>(<span class="ident">Unreachable</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">term</span>)),
-            <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMCleanupRet</span> <span class="op">=&gt;</span> <span class="ident">Terminator</span>::<span class="ident">CleanupRet</span>(<span class="ident">CleanupRet</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">term</span>, <span class="ident">vnmap</span>, <span class="ident">bbmap</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>)),
-            <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMCatchRet</span> <span class="op">=&gt;</span> <span class="ident">Terminator</span>::<span class="ident">CatchRet</span>(<span class="ident">CatchRet</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">term</span>, <span class="ident">vnmap</span>, <span class="ident">bbmap</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>)),
-            <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMCatchSwitch</span> <span class="op">=&gt;</span> <span class="ident">Terminator</span>::<span class="ident">CatchSwitch</span>(<span class="ident">CatchSwitch</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">term</span>, <span class="ident">ctr</span>, <span class="ident">vnmap</span>, <span class="ident">bbmap</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>)),
-            <span class="ident">opcode</span> <span class="op">=&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Terminator::from_llvm_ref called with a non-terminator instruction (opcode {:?})&quot;</span>, <span class="ident">opcode</span>),
+            <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMSwitch</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Terminator</span>::<span class="ident">Switch</span>(<span class="ident">Switch</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">term</span>, <span class="ident">vnmap</span>, <span class="ident">bbmap</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>)),
+            <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMIndirectBr</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Terminator</span>::<span class="ident">IndirectBr</span>(<span class="ident">IndirectBr</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">term</span>, <span class="ident">vnmap</span>, <span class="ident">bbmap</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>)),
+            <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMInvoke</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Terminator</span>::<span class="ident">Invoke</span>(<span class="ident">Invoke</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">term</span>, <span class="ident">ctr</span>, <span class="ident">vnmap</span>, <span class="ident">bbmap</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>)),
+            <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMResume</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Terminator</span>::<span class="ident">Resume</span>(<span class="ident">Resume</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">term</span>, <span class="ident">vnmap</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>)),
+            <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMUnreachable</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Terminator</span>::<span class="ident">Unreachable</span>(<span class="ident">Unreachable</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">term</span>)),
+            <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMCleanupRet</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Terminator</span>::<span class="ident">CleanupRet</span>(<span class="ident">CleanupRet</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">term</span>, <span class="ident">vnmap</span>, <span class="ident">bbmap</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>)),
+            <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMCatchRet</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Terminator</span>::<span class="ident">CatchRet</span>(<span class="ident">CatchRet</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">term</span>, <span class="ident">vnmap</span>, <span class="ident">bbmap</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>)),
+            <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMCatchSwitch</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Terminator</span>::<span class="ident">CatchSwitch</span>(<span class="ident">CatchSwitch</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">term</span>, <span class="ident">ctr</span>, <span class="ident">vnmap</span>, <span class="ident">bbmap</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>)),
+            <span class="ident">opcode</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Terminator::from_llvm_ref called with a non-terminator instruction (opcode {:?})&quot;</span>, <span class="ident">opcode</span>),
         }
     }
 }
@@ -955,17 +955,17 @@ impl Terminator {
         <span class="ident">vnmap</span>: <span class="kw-2">&amp;</span><span class="ident">ValToNameMap</span>,
         <span class="ident">gnmap</span>: <span class="kw-2">&amp;</span><span class="ident">GlobalNameMap</span>,
         <span class="ident">tnmap</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">TyNameMap</span>,
-    ) <span class="op">-&gt;</span> <span class="self">Self</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">return_operand</span>: <span class="kw">match</span> <span class="kw">unsafe</span> { <span class="ident">LLVMGetNumOperands</span>(<span class="ident">term</span>) } {
-                <span class="number">0</span> <span class="op">=&gt;</span> <span class="prelude-val">None</span>,
-                <span class="number">1</span> <span class="op">=&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Operand</span>::<span class="ident">from_llvm_ref</span>(
+                <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+                <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Operand</span>::<span class="ident">from_llvm_ref</span>(
                     <span class="kw">unsafe</span> { <span class="ident">LLVMGetOperand</span>(<span class="ident">term</span>, <span class="number">0</span>) },
                     <span class="ident">vnmap</span>,
                     <span class="ident">gnmap</span>,
                     <span class="ident">tnmap</span>,
                 )),
-                <span class="ident">n</span> <span class="op">=&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Ret instruction with {} operands&quot;</span>, <span class="ident">n</span>),
+                <span class="ident">n</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Ret instruction with {} operands&quot;</span>, <span class="ident">n</span>),
             },
             <span class="comment">// metadata: InstructionMetadata::from_llvm_inst(term),</span>
         }
@@ -973,7 +973,7 @@ impl Terminator {
 }
 
 <span class="kw">impl</span> <span class="ident">Br</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">from_llvm_ref</span>(<span class="ident">term</span>: <span class="ident">LLVMValueRef</span>, <span class="ident">bbmap</span>: <span class="kw-2">&amp;</span><span class="ident">BBMap</span>) <span class="op">-&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">from_llvm_ref</span>(<span class="ident">term</span>: <span class="ident">LLVMValueRef</span>, <span class="ident">bbmap</span>: <span class="kw-2">&amp;</span><span class="ident">BBMap</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="kw">unsafe</span> { <span class="ident">LLVMGetNumOperands</span>(<span class="ident">term</span>) }, <span class="number">1</span>);
         <span class="self">Self</span> {
             <span class="ident">dest</span>: <span class="ident">bbmap</span>
@@ -992,7 +992,7 @@ impl Terminator {
         <span class="ident">bbmap</span>: <span class="kw-2">&amp;</span><span class="ident">BBMap</span>,
         <span class="ident">gnmap</span>: <span class="kw-2">&amp;</span><span class="ident">GlobalNameMap</span>,
         <span class="ident">tnmap</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">TyNameMap</span>,
-    ) <span class="op">-&gt;</span> <span class="self">Self</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="kw">unsafe</span> { <span class="ident">LLVMGetNumOperands</span>(<span class="ident">term</span>) }, <span class="number">3</span>);
         <span class="self">Self</span> {
             <span class="ident">condition</span>: <span class="ident">Operand</span>::<span class="ident">from_llvm_ref</span>(
@@ -1021,7 +1021,7 @@ impl Terminator {
         <span class="ident">bbmap</span>: <span class="kw-2">&amp;</span><span class="ident">BBMap</span>,
         <span class="ident">gnmap</span>: <span class="kw-2">&amp;</span><span class="ident">GlobalNameMap</span>,
         <span class="ident">tnmap</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">TyNameMap</span>,
-    ) <span class="op">-&gt;</span> <span class="self">Self</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">operand</span>: <span class="ident">Operand</span>::<span class="ident">from_llvm_ref</span>(
                 <span class="kw">unsafe</span> { <span class="ident">LLVMGetOperand</span>(<span class="ident">term</span>, <span class="number">0</span>) },
@@ -1031,7 +1031,7 @@ impl Terminator {
             ),
             <span class="ident">dests</span>: {
                 <span class="kw">let</span> <span class="ident">num_dests</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">LLVMGetNumSuccessors</span>(<span class="ident">term</span>) };
-                <span class="kw">let</span> <span class="ident">dest_bbs</span> <span class="op">=</span> (<span class="number">1</span>..=<span class="ident">num_dests</span>) <span class="comment">// LLVMGetSuccessor(0) apparently gives the default dest</span>
+                <span class="kw">let</span> <span class="ident">dest_bbs</span> <span class="op">=</span> (<span class="number">1</span>..<span class="op">=</span><span class="ident">num_dests</span>) <span class="comment">// LLVMGetSuccessor(0) apparently gives the default dest</span>
                     .<span class="ident">map</span>(<span class="op">|</span><span class="ident">i</span><span class="op">|</span> {
                         <span class="ident">bbmap</span>
                             .<span class="ident">get</span>(<span class="kw">unsafe</span> { <span class="kw-2">&amp;</span><span class="ident">LLVMGetSuccessor</span>(<span class="ident">term</span>, <span class="ident">i</span>) })
@@ -1059,7 +1059,7 @@ impl Terminator {
         <span class="ident">bbmap</span>: <span class="kw-2">&amp;</span><span class="ident">BBMap</span>,
         <span class="ident">gnmap</span>: <span class="kw-2">&amp;</span><span class="ident">GlobalNameMap</span>,
         <span class="ident">tnmap</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">TyNameMap</span>,
-    ) <span class="op">-&gt;</span> <span class="self">Self</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">operand</span>: <span class="ident">Operand</span>::<span class="ident">from_llvm_ref</span>(
                 <span class="kw">unsafe</span> { <span class="ident">LLVMGetOperand</span>(<span class="ident">term</span>, <span class="number">0</span>) },
@@ -1091,7 +1091,7 @@ impl Terminator {
         <span class="ident">bbmap</span>: <span class="kw-2">&amp;</span><span class="ident">BBMap</span>,
         <span class="ident">gnmap</span>: <span class="kw-2">&amp;</span><span class="ident">GlobalNameMap</span>,
         <span class="ident">tnmap</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">TyNameMap</span>,
-    ) <span class="op">-&gt;</span> <span class="self">Self</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">instruction</span>::<span class="ident">CallInfo</span>;
         <span class="kw">let</span> <span class="ident">callinfo</span> <span class="op">=</span> <span class="ident">CallInfo</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">term</span>, <span class="ident">vnmap</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>);
         <span class="self">Self</span> {
@@ -1120,7 +1120,7 @@ impl Terminator {
         <span class="ident">vnmap</span>: <span class="kw-2">&amp;</span><span class="ident">ValToNameMap</span>,
         <span class="ident">gnmap</span>: <span class="kw-2">&amp;</span><span class="ident">GlobalNameMap</span>,
         <span class="ident">tnmap</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">TyNameMap</span>,
-    ) <span class="op">-&gt;</span> <span class="self">Self</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="kw">unsafe</span> { <span class="ident">LLVMGetNumOperands</span>(<span class="ident">term</span>) }, <span class="number">1</span>);
         <span class="self">Self</span> {
             <span class="ident">operand</span>: <span class="ident">Operand</span>::<span class="ident">from_llvm_ref</span>(
@@ -1135,7 +1135,7 @@ impl Terminator {
 }
 
 <span class="kw">impl</span> <span class="ident">Unreachable</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">from_llvm_ref</span>(<span class="ident">term</span>: <span class="ident">LLVMValueRef</span>) <span class="op">-&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">from_llvm_ref</span>(<span class="ident">term</span>: <span class="ident">LLVMValueRef</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="kw">unsafe</span> { <span class="ident">LLVMGetNumOperands</span>(<span class="ident">term</span>) }, <span class="number">0</span>);
         <span class="self">Self</span> {
             <span class="comment">// metadata: InstructionMetadata::from_llvm_inst(term),</span>
@@ -1150,7 +1150,7 @@ impl Terminator {
         <span class="ident">bbmap</span>: <span class="kw-2">&amp;</span><span class="ident">BBMap</span>,
         <span class="ident">gnmap</span>: <span class="kw-2">&amp;</span><span class="ident">GlobalNameMap</span>,
         <span class="ident">tnmap</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">TyNameMap</span>,
-    ) <span class="op">-&gt;</span> <span class="self">Self</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="kw">unsafe</span> { <span class="ident">LLVMGetNumOperands</span>(<span class="ident">term</span>) }, <span class="number">1</span>);
         <span class="self">Self</span> {
             <span class="ident">cleanup_pad</span>: <span class="ident">Operand</span>::<span class="ident">from_llvm_ref</span>(
@@ -1167,7 +1167,7 @@ impl Terminator {
                     <span class="prelude-val">Some</span>(
                         <span class="ident">bbmap</span>
                             .<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">dest</span>)
-                            .<span class="ident">unwrap_or_else</span>(<span class="op">||</span> {
+                            .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> {
                                 <span class="kw">let</span> <span class="ident">names</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">bbmap</span>.<span class="ident">values</span>().<span class="ident">collect</span>();
                                 <span class="macro">panic</span><span class="macro">!</span>(
                                     <span class="string">&quot;Failed to find unwind destination in map; have names {:?}&quot;</span>,
@@ -1190,7 +1190,7 @@ impl Terminator {
         <span class="ident">bbmap</span>: <span class="kw-2">&amp;</span><span class="ident">BBMap</span>,
         <span class="ident">gnmap</span>: <span class="kw-2">&amp;</span><span class="ident">GlobalNameMap</span>,
         <span class="ident">tnmap</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">TyNameMap</span>,
-    ) <span class="op">-&gt;</span> <span class="self">Self</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">catch_pad</span>: <span class="ident">Operand</span>::<span class="ident">from_llvm_ref</span>(
                 <span class="kw">unsafe</span> { <span class="ident">LLVMGetOperand</span>(<span class="ident">term</span>, <span class="number">0</span>) },
@@ -1215,7 +1215,7 @@ impl Terminator {
         <span class="ident">bbmap</span>: <span class="kw-2">&amp;</span><span class="ident">BBMap</span>,
         <span class="ident">gnmap</span>: <span class="kw-2">&amp;</span><span class="ident">GlobalNameMap</span>,
         <span class="ident">tnmap</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">TyNameMap</span>,
-    ) <span class="op">-&gt;</span> <span class="self">Self</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">parent_pad</span>: <span class="ident">Operand</span>::<span class="ident">from_llvm_ref</span>(
                 <span class="kw">unsafe</span> { <span class="ident">LLVMGetOperand</span>(<span class="ident">term</span>, <span class="number">0</span>) },
@@ -1247,7 +1247,7 @@ impl Terminator {
                     <span class="prelude-val">None</span>
                 } <span class="kw">else</span> {
                     <span class="prelude-val">Some</span>(<span class="ident">bbmap</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">dest</span>)
-                        .<span class="ident">unwrap_or_else</span>(<span class="op">||</span> { <span class="kw">let</span> <span class="ident">names</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">bbmap</span>.<span class="ident">values</span>().<span class="ident">collect</span>(); <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Failed to find CatchSwitch default unwind destination in map; have names {:?}&quot;</span>, <span class="ident">names</span>) })
+                        .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> { <span class="kw">let</span> <span class="ident">names</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">bbmap</span>.<span class="ident">values</span>().<span class="ident">collect</span>(); <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Failed to find CatchSwitch default unwind destination in map; have names {:?}&quot;</span>, <span class="ident">names</span>) })
                         .<span class="ident">clone</span>()
                     )
                 }
