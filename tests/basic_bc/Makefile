@@ -1,5 +1,7 @@
 CC=clang-8
 CFLAGS=-O3
+RUSTC=rustc
+RUSTFLAGS=--crate-type=lib
 
 .PHONY: all
 all: hello.bc hello.ll \
@@ -7,12 +9,19 @@ all: hello.bc hello.ll \
 		switch.bc switch.ll \
 		linkedlist.bc linkedlist.ll \
 		variables.bc variables.ll \
+		rust.bc rust.ll \
 
 %.ll : %.c
 	$(CC) $(CFLAGS) -S -emit-llvm $^ -o $@
 
 %.bc : %.c
 	$(CC) $(CFLAGS) -c -emit-llvm $^ -o $@
+
+%.ll : %.rs
+	$(RUSTC) $(RUSTFLAGS) --emit=llvm-ir $^ -o $@
+
+%.bc : %.rs
+	$(RUSTC) $(RUSTFLAGS) --emit=llvm-bc $^ -o $@
 
 # use -O0 on linkedlist.c
 linkedlist.ll : linkedlist.c

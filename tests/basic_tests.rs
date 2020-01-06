@@ -331,6 +331,60 @@ fn variablesbc() {
 }
 
 #[test]
+fn rustbc() {
+    // This tests against the checked-in rust.bc, which was generated from the checked-in rust.rs with rustc 1.37.0
+    init_logging();
+    let path = Path::new("tests/basic_bc/rust.bc");
+    let module = Module::from_bc_path(&path).expect("Failed to parse module");
+    let func = module.get_func_by_name("_ZN4rust9rust_loop17h3ed0672b8cf44eb1E").expect("Failed to find function");
+
+    assert_eq!(func.parameters.len(), 3);
+    assert_eq!(func.parameters[0].name, Name::from("a"));
+    assert_eq!(func.parameters[1].name, Name::from("b"));
+    assert_eq!(func.parameters[2].name, Name::from("v"));
+    assert_eq!(func.parameters[0].ty, Type::i64());
+    assert_eq!(func.parameters[1].ty, Type::i64());
+    assert_eq!(func.parameters[2].ty, Type::pointer_to(Type::NamedStructType { name: "alloc::vec::Vec<isize>".to_owned(), ty: None }));  // we don't actually expect ty to be `None`, but named structs should compare equal as long as their names are the same
+
+    let startbb = func.get_bb_by_name(&Name::from("start")).expect("Failed to find bb 'start'");
+    let alloca_iter: &instruction::Alloca = &startbb.instrs[5].clone().try_into().expect("Should be an alloca");
+    assert_eq!(alloca_iter.dest, Name::from("iter"));
+    let alloca_sum: &instruction::Alloca = &startbb.instrs[6].clone().try_into().expect("Should be an alloca");
+    assert_eq!(alloca_sum.dest, Name::from("sum"));
+    let store: &instruction::Store = &startbb.instrs[7].clone().try_into().expect("Should be a store");
+    assert_eq!(store.address, Operand::LocalOperand { name: Name::from("sum"), ty: Type::pointer_to(Type::i64()) });
+    let call: &instruction::Call = &startbb.instrs[8].clone().try_into().expect("Should be a call");
+    let param_type = Type::pointer_to(Type::NamedStructType { name: "alloc::vec::Vec<isize>".to_owned(), ty: None });  // we don't actually expect ty to be `None`, but named structs should compare equal as long as their names are the same
+    let ret_type = Type::StructType { is_packed: false, element_types: vec![
+        Type::pointer_to(Type::ArrayType { element_type: Box::new(Type::i64()), num_elements: 0 }),
+        Type::i64(),
+    ]};
+    if let Either::Right(Operand::ConstantOperand(Constant::GlobalReference { ref name, ref ty })) = call.function {
+        assert_eq!(name, &Name::from("_ZN68_$LT$alloc..vec..Vec$LT$T$GT$$u20$as$u20$core..ops..deref..Deref$GT$5deref17h378128d7d9378466E"));
+        match ty {
+            Type::FuncType { result_type, param_types, is_var_arg } => {
+                assert_eq!(**result_type, ret_type);
+                assert_eq!(param_types[0], param_type);
+                assert_eq!(*is_var_arg, false);
+            },
+            _ => panic!("Expected called global to have FuncType, but got {:?}", ty),
+        }
+        assert_eq!(call.get_type(), ret_type);
+    } else {
+        panic!(
+            "call.function not a GlobalReference as expected; it is actually {:?}",
+            call.function
+        );
+    }
+    assert_eq!(call.arguments.len(), 1);
+    assert_eq!(call.arguments[0].0, Operand::LocalOperand {
+        name: Name::from("v"),
+        ty: param_type,
+    });
+    assert_eq!(call.dest, Some(Name::Number(0)));
+}
+
+#[test]
 fn simple_linked_list() {
     init_logging();
     let path = Path::new("tests/basic_bc/linkedlist.bc");

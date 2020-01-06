@@ -100,6 +100,7 @@ fn needs_name(inst: LLVMValueRef) -> bool {
         LLVMOpcode::LLVMStore => false,
         LLVMOpcode::LLVMFence => false,
         LLVMOpcode::LLVMCall => {
+            // needs a name unless we're calling a void function
             let kind =
                 unsafe { LLVMGetTypeKind(LLVMGetReturnType(LLVMGetCalledFunctionType(inst))) };
             kind != LLVMVoidTypeKind

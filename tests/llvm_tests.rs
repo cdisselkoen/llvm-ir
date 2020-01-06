@@ -89,6 +89,7 @@ llvm_test!("tests/llvm_bc/weak-macho-3.5.ll.bc", weak_macho);
 
 use either::Either;
 use llvm_ir::*;
+use llvm_ir::instruction::{Atomicity, MemoryOrdering, SynchronizationScope};
 use std::convert::TryInto;
 use std::ops::Deref;
 use std::sync::{Arc, RwLock};
@@ -284,7 +285,7 @@ fn DILocation_implicit_code_extra_checks() {
 }
 
 #[test]
-fn atomicrmw() {
+fn atomics() {
     let _ = env_logger::builder().is_test(true).try_init(); // capture log messages with test harness
     let path = Path::new("tests/llvm_bc/compatibility-6.0.ll.bc");
     let module = Module::from_bc_path(&path).expect("Failed to parse module");
@@ -292,8 +293,16 @@ fn atomicrmw() {
         .get_func_by_name("atomics")
         .expect("Failed to find function");
     let bb = &func.basic_blocks[0];
+    let cmpxchg: &instruction::CmpXchg = &bb.instrs[0].clone().try_into().unwrap_or_else(|_| panic!("Expected a cmpxchg, got {:?}", &bb.instrs[0]));
+    assert_eq!(cmpxchg.address, Operand::LocalOperand { name: Name::from("word"), ty: Type::pointer_to(Type::i32()) });
+    assert_eq!(cmpxchg.expected, Operand::ConstantOperand(Constant::Int { bits: 32, value: 0 }));
+    assert_eq!(cmpxchg.replacement, Operand::ConstantOperand(Constant::Int { bits: 32, value: 4 }));
+    assert_eq!(cmpxchg.dest, Name::from("cmpxchg.0"));
+    assert_eq!(cmpxchg.volatile, false);
+    assert_eq!(cmpxchg.atomicity, Atomicity { synch_scope: SynchronizationScope::System, mem_ordering: MemoryOrdering::Monotonic });
+    assert_eq!(cmpxchg.failure_memory_ordering, MemoryOrdering::Monotonic);
     let atomicrmw: &instruction::AtomicRMW = &bb.instrs[8].clone().try_into().unwrap_or_else(|_| panic!("Expected an atomicrmw, got {:?}", &bb.instrs[8]));
-    assert_eq!(atomicrmw.address, Operand::LocalOperand { name: Name::Number(0), ty: Type::pointer_to(Type::i32()) });
+    assert_eq!(atomicrmw.address, Operand::LocalOperand { name: Name::from("word"), ty: Type::pointer_to(Type::i32()) });
     assert_eq!(atomicrmw.value, Operand::ConstantOperand(Constant::Int { bits: 32, value: 12 }));
     assert_eq!(atomicrmw.dest, Name::from("atomicrmw.xchg"));
     assert_eq!(atomicrmw.get_type(), Type::i32());

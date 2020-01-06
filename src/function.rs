@@ -253,7 +253,7 @@ impl Function {
         debug!("Processing func {:?}", unsafe { get_value_name(func) });
         let mut local_ctr = 0; // this ctr is used to number parameters, variables, and basic blocks that aren't named
 
-        let parameters = {
+        let parameters: Vec<Parameter> = {
             get_parameters(func)
                 .enumerate()
                 .map(|(i, p)| Parameter {
@@ -296,11 +296,7 @@ impl Function {
         let vnmap: ValToNameMap = bbresults
             .into_iter()
             .flat_map(|(_, (_, namepairs))| namepairs.into_iter())
-            .chain(
-                get_parameters(func)
-                    .enumerate()
-                    .map(|(i, p)| (p, Name::Number(i))),
-            )
+            .chain(get_parameters(func).zip(parameters.iter().map(|p| p.name.clone())))
             .collect();
         debug!("Collected a ValToNameMap with {} entries", vnmap.len());
 
