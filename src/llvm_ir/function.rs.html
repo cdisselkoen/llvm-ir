@@ -458,10 +458,6 @@
 <span id="458">458</span>
 <span id="459">459</span>
 <span id="460">460</span>
-<span id="461">461</span>
-<span id="462">462</span>
-<span id="463">463</span>
-<span id="464">464</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">basicblock</span>::<span class="ident">BasicBlock</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">constant</span>::<span class="ident">Constant</span>;
@@ -718,7 +714,7 @@ pub enum ParameterAttribute {
         <span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;Processing func {:?}&quot;</span>, <span class="kw">unsafe</span> { <span class="ident">get_value_name</span>(<span class="ident">func</span>) });
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">local_ctr</span> <span class="op">=</span> <span class="number">0</span>; <span class="comment">// this ctr is used to number parameters, variables, and basic blocks that aren&#39;t named</span>
 
-        <span class="kw">let</span> <span class="ident">parameters</span> <span class="op">=</span> {
+        <span class="kw">let</span> <span class="ident">parameters</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Parameter</span><span class="op">&gt;</span> <span class="op">=</span> {
             <span class="ident">get_parameters</span>(<span class="ident">func</span>)
                 .<span class="ident">enumerate</span>()
                 .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">i</span>, <span class="ident">p</span>)<span class="op">|</span> <span class="ident">Parameter</span> {
@@ -761,11 +757,7 @@ pub enum ParameterAttribute {
         <span class="kw">let</span> <span class="ident">vnmap</span>: <span class="ident">ValToNameMap</span> <span class="op">=</span> <span class="ident">bbresults</span>
             .<span class="ident">into_iter</span>()
             .<span class="ident">flat_map</span>(<span class="op">|</span>(<span class="kw">_</span>, (<span class="kw">_</span>, <span class="ident">namepairs</span>))<span class="op">|</span> <span class="ident">namepairs</span>.<span class="ident">into_iter</span>())
-            .<span class="ident">chain</span>(
-                <span class="ident">get_parameters</span>(<span class="ident">func</span>)
-                    .<span class="ident">enumerate</span>()
-                    .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">i</span>, <span class="ident">p</span>)<span class="op">|</span> (<span class="ident">p</span>, <span class="ident">Name</span>::<span class="ident">Number</span>(<span class="ident">i</span>))),
-            )
+            .<span class="ident">chain</span>(<span class="ident">get_parameters</span>(<span class="ident">func</span>).<span class="ident">zip</span>(<span class="ident">parameters</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">p</span><span class="op">|</span> <span class="ident">p</span>.<span class="ident">name</span>.<span class="ident">clone</span>())))
             .<span class="ident">collect</span>();
         <span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;Collected a ValToNameMap with {} entries&quot;</span>, <span class="ident">vnmap</span>.<span class="ident">len</span>());
 
