@@ -1,3 +1,5 @@
+// this ensures that crate users generating docs with --no-deps will still
+// properly get links to the public docs for llvm-ir's types
 #![doc(html_root_url = "https://cdisselkoen.github.io/llvm-ir")]
 
 pub mod basicblock;
