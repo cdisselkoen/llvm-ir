@@ -120,6 +120,7 @@
 <span id="120">120</span>
 <span id="121">121</span>
 <span id="122">122</span>
+<span id="123">123</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">instruction</span>::<span class="ident">Instruction</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">name</span>::<span class="ident">Name</span>;
@@ -127,7 +128,7 @@
 
 <span class="doccomment">/// A `BasicBlock` is a sequence of zero or more non-terminator instructions</span>
 <span class="doccomment">/// followed by a single terminator instruction which ends the block.</span>
-<span class="doccomment">/// Basic blocks are discussed in the [LLVM 8 docs on Functions](https://releases.llvm.org/8.0.0/docs/LangRef.html#functionstructure)</span>
+<span class="doccomment">/// Basic blocks are discussed in the [LLVM 9 docs on Functions](https://releases.llvm.org/9.0.0/docs/LangRef.html#functionstructure)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BasicBlock</span> {
     <span class="kw">pub</span> <span class="ident">name</span>: <span class="ident">Name</span>,
@@ -240,6 +241,7 @@
     <span class="kw">match</span> <span class="kw">unsafe</span> { <span class="ident">LLVMGetInstructionOpcode</span>(<span class="ident">term</span>) } {
         <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMInvoke</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
         <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMCatchSwitch</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
+        <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMCallBr</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
         <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>, <span class="comment">// all other terminators have no result (destination) and thus don&#39;t need names</span>
     }
 }

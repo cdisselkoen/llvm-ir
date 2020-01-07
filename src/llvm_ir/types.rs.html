@@ -428,65 +428,65 @@
 <span class="kw">use</span> <span class="ident">either</span>::<span class="ident">Either</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::{<span class="ident">Arc</span>, <span class="ident">RwLock</span>, <span class="ident">Weak</span>};
 
-<span class="doccomment">/// See [LLVM 8 docs on Type System](https://releases.llvm.org/8.0.0/docs/LangRef.html#type-system)</span>
+<span class="doccomment">/// See [LLVM 9 docs on Type System](https://releases.llvm.org/9.0.0/docs/LangRef.html#type-system)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">non_camel_case_types</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Type</span> {
-    <span class="doccomment">/// See [LLVM 8 docs on Void Type](https://releases.llvm.org/8.0.0/docs/LangRef.html#void-type)</span>
+    <span class="doccomment">/// See [LLVM 9 docs on Void Type](https://releases.llvm.org/9.0.0/docs/LangRef.html#void-type)</span>
     <span class="ident">VoidType</span>,
-    <span class="doccomment">/// See [LLVM 8 docs on Integer Type](https://releases.llvm.org/8.0.0/docs/LangRef.html#integer-type)</span>
+    <span class="doccomment">/// See [LLVM 9 docs on Integer Type](https://releases.llvm.org/9.0.0/docs/LangRef.html#integer-type)</span>
     <span class="ident">IntegerType</span> { <span class="ident">bits</span>: <span class="ident">u32</span> },
-    <span class="doccomment">/// See [LLVM 8 docs on Pointer Type](https://releases.llvm.org/8.0.0/docs/LangRef.html#pointer-type)</span>
+    <span class="doccomment">/// See [LLVM 9 docs on Pointer Type](https://releases.llvm.org/9.0.0/docs/LangRef.html#pointer-type)</span>
     <span class="ident">PointerType</span> {
         <span class="ident">pointee_type</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Type</span><span class="op">&gt;</span>,
         <span class="ident">addr_space</span>: <span class="ident">AddrSpace</span>,
     },
-    <span class="doccomment">/// See [LLVM 8 docs on Floating-Point Types](https://releases.llvm.org/8.0.0/docs/LangRef.html#floating-point-types)</span>
+    <span class="doccomment">/// See [LLVM 9 docs on Floating-Point Types](https://releases.llvm.org/9.0.0/docs/LangRef.html#floating-point-types)</span>
     <span class="ident">FPType</span>(<span class="ident">FPType</span>),
-    <span class="doccomment">/// See [LLVM 8 docs on Function Type](https://releases.llvm.org/8.0.0/docs/LangRef.html#function-type)</span>
+    <span class="doccomment">/// See [LLVM 9 docs on Function Type](https://releases.llvm.org/9.0.0/docs/LangRef.html#function-type)</span>
     <span class="ident">FuncType</span> {
         <span class="ident">result_type</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Type</span><span class="op">&gt;</span>,
         <span class="ident">param_types</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Type</span><span class="op">&gt;</span>,
         <span class="ident">is_var_arg</span>: <span class="ident">bool</span>,
     },
     <span class="doccomment">/// Vector types (along with integer, FP, pointer, and X86_MMX types) are &quot;first class types&quot;,</span>
-    <span class="doccomment">/// which means they can be produced by instructions (see [LLVM 8 docs on First Class Types](https://releases.llvm.org/8.0.0/docs/LangRef.html#first-class-types)).</span>
-    <span class="doccomment">/// See [LLVM 8 docs on Vector Type](https://releases.llvm.org/8.0.0/docs/LangRef.html#vector-type)</span>
+    <span class="doccomment">/// which means they can be produced by instructions (see [LLVM 9 docs on First Class Types](https://releases.llvm.org/9.0.0/docs/LangRef.html#first-class-types)).</span>
+    <span class="doccomment">/// See [LLVM 9 docs on Vector Type](https://releases.llvm.org/9.0.0/docs/LangRef.html#vector-type)</span>
     <span class="ident">VectorType</span> {
         <span class="ident">element_type</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Type</span><span class="op">&gt;</span>,
         <span class="ident">num_elements</span>: <span class="ident">usize</span>,
     },
     <span class="doccomment">/// Struct and Array types (but not vector types) are &quot;aggregate types&quot; and cannot be produced by</span>
-    <span class="doccomment">/// a single instruction (see [LLVM 8 docs on Aggregate Types](https://releases.llvm.org/8.0.0/docs/LangRef.html#aggregate-types)).</span>
-    <span class="doccomment">/// See [LLVM 8 docs on Array Type](https://releases.llvm.org/8.0.0/docs/LangRef.html#array-type)</span>
+    <span class="doccomment">/// a single instruction (see [LLVM 9 docs on Aggregate Types](https://releases.llvm.org/9.0.0/docs/LangRef.html#aggregate-types)).</span>
+    <span class="doccomment">/// See [LLVM 9 docs on Array Type](https://releases.llvm.org/9.0.0/docs/LangRef.html#array-type)</span>
     <span class="ident">ArrayType</span> {
         <span class="ident">element_type</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Type</span><span class="op">&gt;</span>,
         <span class="ident">num_elements</span>: <span class="ident">usize</span>,
     },
     <span class="doccomment">/// The `StructType` variant is used for a &quot;literal&quot; (i.e., anonymous) structure type.</span>
-    <span class="doccomment">/// See [LLVM 8 docs on Structure Type](https://releases.llvm.org/8.0.0/docs/LangRef.html#structure-type)</span>
+    <span class="doccomment">/// See [LLVM 9 docs on Structure Type](https://releases.llvm.org/9.0.0/docs/LangRef.html#structure-type)</span>
     <span class="ident">StructType</span> {
         <span class="ident">element_types</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Type</span><span class="op">&gt;</span>,
         <span class="ident">is_packed</span>: <span class="ident">bool</span>,
     },
     <span class="doccomment">/// Named structure types. Note that these may be self-referential (i.e., recursive).</span>
-    <span class="doccomment">/// See [LLVM 8 docs on Structure Type](https://releases.llvm.org/8.0.0/docs/LangRef.html#structure-type)</span>
+    <span class="doccomment">/// See [LLVM 9 docs on Structure Type](https://releases.llvm.org/9.0.0/docs/LangRef.html#structure-type)</span>
     <span class="ident">NamedStructType</span> {
         <span class="doccomment">/// Name of the struct type</span>
         <span class="ident">name</span>: <span class="ident">String</span>, <span class="comment">// llvm-hs-pure has Name rather than String</span>
         <span class="doccomment">/// The actual struct type, which will be a `StructType` variant.</span>
-        <span class="doccomment">/// A `None` here indicates an opaque type; see [LLVM 8 docs on Opaque Structure Types](https://releases.llvm.org/8.0.0/docs/LangRef.html#t-opaque).</span>
+        <span class="doccomment">/// A `None` here indicates an opaque type; see [LLVM 9 docs on Opaque Structure Types](https://releases.llvm.org/9.0.0/docs/LangRef.html#t-opaque).</span>
         <span class="doccomment">/// The weak reference should remain valid for at least the lifetime of the `Module` in which the named struct type is defined.</span>
         <span class="ident">ty</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Weak</span><span class="op">&lt;</span><span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">Type</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     },
-    <span class="doccomment">/// See [LLVM 8 docs on X86_MMX Type](https://releases.llvm.org/8.0.0/docs/LangRef.html#x86-mmx-type)</span>
+    <span class="doccomment">/// See [LLVM 9 docs on X86_MMX Type](https://releases.llvm.org/9.0.0/docs/LangRef.html#x86-mmx-type)</span>
     <span class="ident">X86_MMXType</span>, <span class="comment">// llvm-hs-pure doesn&#39;t have this, not sure what they do with LLVM&#39;s http://llvm.org/docs/LangRef.html#x86-mmx-type</span>
-    <span class="doccomment">/// See [LLVM 8 docs on Metadata Type](https://releases.llvm.org/8.0.0/docs/LangRef.html#metadata-type)</span>
+    <span class="doccomment">/// See [LLVM 9 docs on Metadata Type](https://releases.llvm.org/9.0.0/docs/LangRef.html#metadata-type)</span>
     <span class="ident">MetadataType</span>,
     <span class="doccomment">/// `LabelType` is the type of [`BasicBlock`](../struct.BasicBlock.html) labels.</span>
-    <span class="doccomment">/// See [LLVM 8 docs on Label Type](https://releases.llvm.org/8.0.0/docs/LangRef.html#label-type)</span>
+    <span class="doccomment">/// See [LLVM 9 docs on Label Type](https://releases.llvm.org/9.0.0/docs/LangRef.html#label-type)</span>
     <span class="ident">LabelType</span>,
-    <span class="doccomment">/// See [LLVM 8 docs on Token Type](https://releases.llvm.org/8.0.0/docs/LangRef.html#token-type)</span>
+    <span class="doccomment">/// See [LLVM 9 docs on Token Type](https://releases.llvm.org/9.0.0/docs/LangRef.html#token-type)</span>
     <span class="ident">TokenType</span>,
 }
 
@@ -574,7 +574,7 @@
     }
 }
 
-<span class="doccomment">/// See [LLVM 8 docs on Floating-Point Types](https://releases.llvm.org/8.0.0/docs/LangRef.html#floating-point-types)</span>
+<span class="doccomment">/// See [LLVM 9 docs on Floating-Point Types](https://releases.llvm.org/9.0.0/docs/LangRef.html#floating-point-types)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>, <span class="ident">Hash</span>)]</span>
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">non_camel_case_types</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">FPType</span> {

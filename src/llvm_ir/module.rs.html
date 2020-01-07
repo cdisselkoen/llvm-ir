@@ -509,27 +509,27 @@
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">path</span>::<span class="ident">Path</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::{<span class="ident">Arc</span>, <span class="ident">RwLock</span>};
 
-<span class="doccomment">/// See [LLVM 8 docs on Module Structure](https://releases.llvm.org/8.0.0/docs/LangRef.html#module-structure)</span>
+<span class="doccomment">/// See [LLVM 9 docs on Module Structure](https://releases.llvm.org/9.0.0/docs/LangRef.html#module-structure)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Module</span> {
     <span class="doccomment">/// The name of the module</span>
     <span class="kw">pub</span> <span class="ident">name</span>: <span class="ident">String</span>,
-    <span class="doccomment">/// See [LLVM 8 docs on Source Filename](https://releases.llvm.org/8.0.0/docs/LangRef.html#source-filename)</span>
+    <span class="doccomment">/// See [LLVM 9 docs on Source Filename](https://releases.llvm.org/9.0.0/docs/LangRef.html#source-filename)</span>
     <span class="kw">pub</span> <span class="ident">source_file_name</span>: <span class="ident">String</span>,
-    <span class="doccomment">/// See [LLVM 8 docs on Data Layout](https://releases.llvm.org/8.0.0/docs/LangRef.html#data-layout)</span>
+    <span class="doccomment">/// See [LLVM 9 docs on Data Layout](https://releases.llvm.org/9.0.0/docs/LangRef.html#data-layout)</span>
     <span class="kw">pub</span> <span class="ident">data_layout</span>: <span class="ident">String</span>, <span class="comment">// llvm-hs parses this String into Option&lt;DataLayout&gt; with a custom parser</span>
-    <span class="doccomment">/// See [LLVM 8 docs on Target Triple](https://releases.llvm.org/8.0.0/docs/LangRef.html#target-triple)</span>
+    <span class="doccomment">/// See [LLVM 9 docs on Target Triple](https://releases.llvm.org/9.0.0/docs/LangRef.html#target-triple)</span>
     <span class="kw">pub</span> <span class="ident">target_triple</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
     <span class="doccomment">/// Functions which are defined (not just declared) in this `Module`.</span>
-    <span class="doccomment">/// See [LLVM 8 docs on Functions](https://releases.llvm.org/8.0.0/docs/LangRef.html#functions)</span>
+    <span class="doccomment">/// See [LLVM 9 docs on Functions](https://releases.llvm.org/9.0.0/docs/LangRef.html#functions)</span>
     <span class="kw">pub</span> <span class="ident">functions</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Function</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// See [LLVM 8 docs on Global Variables](https://releases.llvm.org/8.0.0/docs/LangRef.html#global-variables)</span>
+    <span class="doccomment">/// See [LLVM 9 docs on Global Variables](https://releases.llvm.org/9.0.0/docs/LangRef.html#global-variables)</span>
     <span class="kw">pub</span> <span class="ident">global_vars</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">GlobalVariable</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// See [LLVM 8 docs on Global Aliases](https://releases.llvm.org/8.0.0/docs/LangRef.html#aliases)</span>
+    <span class="doccomment">/// See [LLVM 9 docs on Global Aliases](https://releases.llvm.org/9.0.0/docs/LangRef.html#aliases)</span>
     <span class="kw">pub</span> <span class="ident">global_aliases</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">GlobalAlias</span><span class="op">&gt;</span>,
     <span class="doccomment">/// Structure types can be &quot;identified&quot;, meaning named. This map holds the named structure types in this `Module`.</span>
-    <span class="doccomment">/// See [LLVM 8 docs on Structure Type](https://releases.llvm.org/8.0.0/docs/LangRef.html#structure-type).</span>
-    <span class="doccomment">/// A `None` value indicates an opaque type; see [LLVM 8 docs on Opaque Structure Types](https://releases.llvm.org/8.0.0/docs/LangRef.html#t-opaque).</span>
+    <span class="doccomment">/// See [LLVM 9 docs on Structure Type](https://releases.llvm.org/9.0.0/docs/LangRef.html#structure-type).</span>
+    <span class="doccomment">/// A `None` value indicates an opaque type; see [LLVM 9 docs on Opaque Structure Types](https://releases.llvm.org/9.0.0/docs/LangRef.html#t-opaque).</span>
     <span class="doccomment">/// Note that this map is from struct name to `Type::StructType` variant, not to `Type::NamedStructType` variant (which would be redundant).</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// `Arc&lt;RwLock&lt;_&gt;&gt;` is used rather than `Rc&lt;RefCell&lt;_&gt;&gt;` so that `Module` can remain `Sync`.</span>
@@ -537,7 +537,7 @@
     <span class="doccomment">/// single (immutable) `Module`.</span>
     <span class="kw">pub</span> <span class="ident">named_struct_types</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">Type</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="comment">// --TODO not yet implemented-- pub function_attribute_groups: Vec&lt;FunctionAttributeGroup&gt;,</span>
-    <span class="doccomment">/// See [LLVM 8 docs on Module-Level Inline Assembly](https://releases.llvm.org/8.0.0/docs/LangRef.html#moduleasm)</span>
+    <span class="doccomment">/// See [LLVM 9 docs on Module-Level Inline Assembly](https://releases.llvm.org/9.0.0/docs/LangRef.html#moduleasm)</span>
     <span class="kw">pub</span> <span class="ident">inline_assembly</span>: <span class="ident">String</span>,
     <span class="comment">// --TODO not yet implemented-- pub metadata_nodes: Vec&lt;(MetadataNodeID, MetadataNode)&gt;,</span>
     <span class="comment">// --TODO not yet implemented-- pub named_metadatas: Vec&lt;NamedMetadata&gt;,</span>
@@ -600,7 +600,7 @@
     }
 }
 
-<span class="doccomment">/// See [LLVM 8 docs on Global Variables](https://releases.llvm.org/8.0.0/docs/LangRef.html#global-variables)</span>
+<span class="doccomment">/// See [LLVM 9 docs on Global Variables](https://releases.llvm.org/9.0.0/docs/LangRef.html#global-variables)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">GlobalVariable</span> {
     <span class="kw">pub</span> <span class="ident">name</span>: <span class="ident">Name</span>,
@@ -625,7 +625,7 @@
     }
 }
 
-<span class="doccomment">/// See [LLVM 8 docs on Global Aliases](https://releases.llvm.org/8.0.0/docs/LangRef.html#aliases)</span>
+<span class="doccomment">/// See [LLVM 9 docs on Global Aliases](https://releases.llvm.org/9.0.0/docs/LangRef.html#aliases)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">GlobalAlias</span> {
     <span class="kw">pub</span> <span class="ident">name</span>: <span class="ident">Name</span>,
@@ -651,7 +651,7 @@
     <span class="ident">Global</span>,
 }
 
-<span class="doccomment">/// See [LLVM 8 docs on Linkage Types](https://releases.llvm.org/8.0.0/docs/LangRef.html#linkage)</span>
+<span class="doccomment">/// See [LLVM 9 docs on Linkage Types](https://releases.llvm.org/9.0.0/docs/LangRef.html#linkage)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Linkage</span> {
     <span class="ident">Private</span>,
@@ -673,7 +673,7 @@
     <span class="ident">LinkerPrivateWeak</span>,
 }
 
-<span class="doccomment">/// See [LLVM 8 docs on Visibility Styles](https://releases.llvm.org/8.0.0/docs/LangRef.html#visibility-styles)</span>
+<span class="doccomment">/// See [LLVM 9 docs on Visibility Styles](https://releases.llvm.org/9.0.0/docs/LangRef.html#visibility-styles)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Visibility</span> {
     <span class="ident">Default</span>,
@@ -681,7 +681,7 @@
     <span class="ident">Protected</span>,
 }
 
-<span class="doccomment">/// See [LLVM 8 docs on DLL Storage Classes](https://releases.llvm.org/8.0.0/docs/LangRef.html#dllstorageclass)</span>
+<span class="doccomment">/// See [LLVM 9 docs on DLL Storage Classes](https://releases.llvm.org/9.0.0/docs/LangRef.html#dllstorageclass)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">DLLStorageClass</span> {
     <span class="ident">Default</span>,
@@ -689,7 +689,7 @@
     <span class="ident">Export</span>,
 }
 
-<span class="doccomment">/// See [LLVM 8 docs on Thread Local Storage Models](https://releases.llvm.org/8.0.0/docs/LangRef.html#thread-local-storage-models)</span>
+<span class="doccomment">/// See [LLVM 9 docs on Thread Local Storage Models](https://releases.llvm.org/9.0.0/docs/LangRef.html#thread-local-storage-models)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ThreadLocalMode</span> {
     <span class="ident">NotThreadLocal</span>,
@@ -699,10 +699,10 @@
     <span class="ident">LocalExec</span>,
 }
 
-<span class="doccomment">/// For discussion of address spaces, see [LLVM 8 docs on Pointer Type](https://releases.llvm.org/8.0.0/docs/LangRef.html#pointer-type)</span>
+<span class="doccomment">/// For discussion of address spaces, see [LLVM 9 docs on Pointer Type](https://releases.llvm.org/9.0.0/docs/LangRef.html#pointer-type)</span>
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">AddrSpace</span> <span class="op">=</span> <span class="ident">u32</span>;
 
-<span class="doccomment">/// See [LLVM 8 docs on Attribute Groups](https://releases.llvm.org/8.0.0/docs/LangRef.html#attribute-groups)</span>
+<span class="doccomment">/// See [LLVM 9 docs on Attribute Groups](https://releases.llvm.org/9.0.0/docs/LangRef.html#attribute-groups)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">FunctionAttributeGroup</span> {
     <span class="kw">pub</span> <span class="ident">group_id</span>: <span class="ident">GroupID</span>,
@@ -710,7 +710,7 @@
 }
 
 <span class="comment">/* --TODO not yet implemented: metadata
-/// See [LLVM 8 docs on Named Metadata](https://releases.llvm.org/8.0.0/docs/LangRef.html#named-metadata)
+/// See [LLVM 9 docs on Named Metadata](https://releases.llvm.org/9.0.0/docs/LangRef.html#named-metadata)
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct NamedMetadata {
     pub name: String,
@@ -718,7 +718,7 @@ pub struct NamedMetadata {
 }
 */</span>
 
-<span class="doccomment">/// See [LLVM 8 docs on Comdats](https://releases.llvm.org/8.0.0/docs/LangRef.html#langref-comdats)</span>
+<span class="doccomment">/// See [LLVM 9 docs on Comdats](https://releases.llvm.org/9.0.0/docs/LangRef.html#langref-comdats)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Comdat</span> {
     <span class="kw">pub</span> <span class="ident">name</span>: <span class="ident">String</span>,

@@ -3040,7 +3040,7 @@ impl HasMetadata for Instruction {
     };
 }
 
-<span class="doccomment">/// See [LLVM 8 docs on the &#39;add&#39; instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#add-instruction)</span>
+<span class="doccomment">/// See [LLVM 9 docs on the &#39;add&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#add-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Add</span> {
     <span class="kw">pub</span> <span class="ident">operand0</span>: <span class="ident">Operand</span>,
@@ -3055,7 +3055,7 @@ impl HasMetadata for Instruction {
 <span class="macro">impl_binop</span><span class="macro">!</span>(<span class="ident">Add</span>, <span class="ident">Add</span>);
 <span class="macro">binop_same_type</span><span class="macro">!</span>(<span class="ident">Add</span>);
 
-<span class="doccomment">/// See [LLVM 8 docs on the &#39;sub&#39; instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#sub-instruction)</span>
+<span class="doccomment">/// See [LLVM 9 docs on the &#39;sub&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#sub-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Sub</span> {
     <span class="kw">pub</span> <span class="ident">operand0</span>: <span class="ident">Operand</span>,
@@ -3070,7 +3070,7 @@ impl HasMetadata for Instruction {
 <span class="macro">impl_binop</span><span class="macro">!</span>(<span class="ident">Sub</span>, <span class="ident">Sub</span>);
 <span class="macro">binop_same_type</span><span class="macro">!</span>(<span class="ident">Sub</span>);
 
-<span class="doccomment">/// See [LLVM 8 docs on the &#39;mul&#39; instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#mul-instruction)</span>
+<span class="doccomment">/// See [LLVM 9 docs on the &#39;mul&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#mul-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Mul</span> {
     <span class="kw">pub</span> <span class="ident">operand0</span>: <span class="ident">Operand</span>,
@@ -3085,7 +3085,7 @@ impl HasMetadata for Instruction {
 <span class="macro">impl_binop</span><span class="macro">!</span>(<span class="ident">Mul</span>, <span class="ident">Mul</span>);
 <span class="macro">binop_same_type</span><span class="macro">!</span>(<span class="ident">Mul</span>);
 
-<span class="doccomment">/// See [LLVM 8 docs on the &#39;udiv&#39; instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#udiv-instruction)</span>
+<span class="doccomment">/// See [LLVM 9 docs on the &#39;udiv&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#udiv-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">UDiv</span> {
     <span class="kw">pub</span> <span class="ident">operand0</span>: <span class="ident">Operand</span>,
@@ -3099,7 +3099,7 @@ impl HasMetadata for Instruction {
 <span class="macro">impl_binop</span><span class="macro">!</span>(<span class="ident">UDiv</span>, <span class="ident">UDiv</span>);
 <span class="macro">binop_same_type</span><span class="macro">!</span>(<span class="ident">UDiv</span>);
 
-<span class="doccomment">/// See [LLVM 8 docs on the &#39;sdiv&#39; instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#sdiv-instruction)</span>
+<span class="doccomment">/// See [LLVM 9 docs on the &#39;sdiv&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#sdiv-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SDiv</span> {
     <span class="kw">pub</span> <span class="ident">operand0</span>: <span class="ident">Operand</span>,
@@ -3113,7 +3113,7 @@ impl HasMetadata for Instruction {
 <span class="macro">impl_binop</span><span class="macro">!</span>(<span class="ident">SDiv</span>, <span class="ident">SDiv</span>);
 <span class="macro">binop_same_type</span><span class="macro">!</span>(<span class="ident">SDiv</span>);
 
-<span class="doccomment">/// See [LLVM 8 docs on the &#39;urem&#39; instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#urem-instruction)</span>
+<span class="doccomment">/// See [LLVM 9 docs on the &#39;urem&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#urem-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">URem</span> {
     <span class="kw">pub</span> <span class="ident">operand0</span>: <span class="ident">Operand</span>,
@@ -3126,7 +3126,7 @@ impl HasMetadata for Instruction {
 <span class="macro">impl_binop</span><span class="macro">!</span>(<span class="ident">URem</span>, <span class="ident">URem</span>);
 <span class="macro">binop_same_type</span><span class="macro">!</span>(<span class="ident">URem</span>);
 
-<span class="doccomment">/// See [LLVM 8 docs on the &#39;srem&#39; instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#srem-instruction)</span>
+<span class="doccomment">/// See [LLVM 9 docs on the &#39;srem&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#srem-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SRem</span> {
     <span class="kw">pub</span> <span class="ident">operand0</span>: <span class="ident">Operand</span>,
@@ -3140,7 +3140,7 @@ impl HasMetadata for Instruction {
 <span class="macro">binop_same_type</span><span class="macro">!</span>(<span class="ident">SRem</span>);
 
 <span class="doccomment">/// Bitwise logical and.</span>
-<span class="doccomment">/// See [LLVM 8 docs on the &#39;and&#39; instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#and-instruction)</span>
+<span class="doccomment">/// See [LLVM 9 docs on the &#39;and&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#and-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">And</span> {
     <span class="kw">pub</span> <span class="ident">operand0</span>: <span class="ident">Operand</span>,
@@ -3154,7 +3154,7 @@ impl HasMetadata for Instruction {
 <span class="macro">binop_same_type</span><span class="macro">!</span>(<span class="ident">And</span>);
 
 <span class="doccomment">/// Bitwise logical inclusive or.</span>
-<span class="doccomment">/// See [LLVM 8 docs on the &#39;or&#39; instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#or-instruction)</span>
+<span class="doccomment">/// See [LLVM 9 docs on the &#39;or&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#or-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Or</span> {
     <span class="kw">pub</span> <span class="ident">operand0</span>: <span class="ident">Operand</span>,
@@ -3168,7 +3168,7 @@ impl HasMetadata for Instruction {
 <span class="macro">binop_same_type</span><span class="macro">!</span>(<span class="ident">Or</span>);
 
 <span class="doccomment">/// Bitwise logical exclusive or.</span>
-<span class="doccomment">/// See [LLVM 8 docs on the &#39;xor&#39; instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#xor-instruction)</span>
+<span class="doccomment">/// See [LLVM 9 docs on the &#39;xor&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#xor-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Xor</span> {
     <span class="kw">pub</span> <span class="ident">operand0</span>: <span class="ident">Operand</span>,
@@ -3182,7 +3182,7 @@ impl HasMetadata for Instruction {
 <span class="macro">binop_same_type</span><span class="macro">!</span>(<span class="ident">Xor</span>);
 
 <span class="doccomment">/// Shift left.</span>
-<span class="doccomment">/// See [LLVM 8 docs on the &#39;shl&#39; instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#shl-instruction)</span>
+<span class="doccomment">/// See [LLVM 9 docs on the &#39;shl&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#shl-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Shl</span> {
     <span class="kw">pub</span> <span class="ident">operand0</span>: <span class="ident">Operand</span>,
@@ -3198,7 +3198,7 @@ impl HasMetadata for Instruction {
 <span class="macro">binop_left_type</span><span class="macro">!</span>(<span class="ident">Shl</span>);
 
 <span class="doccomment">/// Logical shift right.</span>
-<span class="doccomment">/// See [LLVM 8 docs on the &#39;lshr&#39; instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#lshr-instruction)</span>
+<span class="doccomment">/// See [LLVM 9 docs on the &#39;lshr&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#lshr-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">LShr</span> {
     <span class="kw">pub</span> <span class="ident">operand0</span>: <span class="ident">Operand</span>,
@@ -3213,7 +3213,7 @@ impl HasMetadata for Instruction {
 <span class="macro">binop_left_type</span><span class="macro">!</span>(<span class="ident">LShr</span>);
 
 <span class="doccomment">/// Arithmetic shift right.</span>
-<span class="doccomment">/// See [LLVM 8 docs on the &#39;ashr&#39; instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#ashr-instruction)</span>
+<span class="doccomment">/// See [LLVM 9 docs on the &#39;ashr&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#ashr-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AShr</span> {
     <span class="kw">pub</span> <span class="ident">operand0</span>: <span class="ident">Operand</span>,
@@ -3228,7 +3228,7 @@ impl HasMetadata for Instruction {
 <span class="macro">binop_left_type</span><span class="macro">!</span>(<span class="ident">AShr</span>);
 
 <span class="doccomment">/// Floating-point add.</span>
-<span class="doccomment">/// See [LLVM 8 docs on the &#39;fadd&#39; instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#fadd-instruction)</span>
+<span class="doccomment">/// See [LLVM 9 docs on the &#39;fadd&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#fadd-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">FAdd</span> {
     <span class="kw">pub</span> <span class="ident">operand0</span>: <span class="ident">Operand</span>,
@@ -3243,7 +3243,7 @@ impl HasMetadata for Instruction {
 <span class="macro">binop_same_type</span><span class="macro">!</span>(<span class="ident">FAdd</span>);
 
 <span class="doccomment">/// Floating-point sub.</span>
-<span class="doccomment">/// See [LLVM 8 docs on the &#39;fsub&#39; instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#fsub-instruction)</span>
+<span class="doccomment">/// See [LLVM 9 docs on the &#39;fsub&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#fsub-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">FSub</span> {
     <span class="kw">pub</span> <span class="ident">operand0</span>: <span class="ident">Operand</span>,
@@ -3258,7 +3258,7 @@ impl HasMetadata for Instruction {
 <span class="macro">binop_same_type</span><span class="macro">!</span>(<span class="ident">FSub</span>);
 
 <span class="doccomment">/// Floating-point multiply.</span>
-<span class="doccomment">/// See [LLVM 8 docs on the &#39;fmul&#39; instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#fmul-instruction)</span>
+<span class="doccomment">/// See [LLVM 9 docs on the &#39;fmul&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#fmul-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">FMul</span> {
     <span class="kw">pub</span> <span class="ident">operand0</span>: <span class="ident">Operand</span>,
@@ -3273,7 +3273,7 @@ impl HasMetadata for Instruction {
 <span class="macro">binop_same_type</span><span class="macro">!</span>(<span class="ident">FMul</span>);
 
 <span class="doccomment">/// Floating-point divide.</span>
-<span class="doccomment">/// See [LLVM 8 docs on the &#39;fdiv&#39; instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#fdiv-instruction)</span>
+<span class="doccomment">/// See [LLVM 9 docs on the &#39;fdiv&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#fdiv-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">FDiv</span> {
     <span class="kw">pub</span> <span class="ident">operand0</span>: <span class="ident">Operand</span>,
@@ -3288,7 +3288,7 @@ impl HasMetadata for Instruction {
 <span class="macro">binop_same_type</span><span class="macro">!</span>(<span class="ident">FDiv</span>);
 
 <span class="doccomment">/// Floating-point remainder.</span>
-<span class="doccomment">/// See [LLVM 8 docs on the &#39;frem&#39; instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#frem-instruction)</span>
+<span class="doccomment">/// See [LLVM 9 docs on the &#39;frem&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#frem-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">FRem</span> {
     <span class="kw">pub</span> <span class="ident">operand0</span>: <span class="ident">Operand</span>,
@@ -3303,7 +3303,7 @@ impl HasMetadata for Instruction {
 <span class="macro">binop_same_type</span><span class="macro">!</span>(<span class="ident">FRem</span>);
 
 <span class="doccomment">/// Floating-point unary negation.</span>
-<span class="doccomment">/// See [LLVM 8 docs on the &#39;fneg&#39; instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#fneg-instruction)</span>
+<span class="doccomment">/// See [LLVM 9 docs on the &#39;fneg&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#fneg-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">FNeg</span> {
     <span class="kw">pub</span> <span class="ident">operand</span>: <span class="ident">Operand</span>,
@@ -3317,7 +3317,7 @@ impl HasMetadata for Instruction {
 <span class="macro">unop_same_type</span><span class="macro">!</span>(<span class="ident">FNeg</span>);
 
 <span class="doccomment">/// Get an element from a vector at a specified index.</span>
-<span class="doccomment">/// See [LLVM 8 docs on the &#39;extractelement&#39; instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#extractelement-instruction)</span>
+<span class="doccomment">/// See [LLVM 9 docs on the &#39;extractelement&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#extractelement-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ExtractElement</span> {
     <span class="kw">pub</span> <span class="ident">vector</span>: <span class="ident">Operand</span>,
@@ -3339,7 +3339,7 @@ impl HasMetadata for Instruction {
 <span class="macro">impl_hasresult</span><span class="macro">!</span>(<span class="ident">ExtractElement</span>);
 
 <span class="doccomment">/// Insert an element into a vector at a specified index.</span>
-<span class="doccomment">/// See [LLVM 8 docs on the &#39;insertelement&#39; instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#insertelement-instruction)</span>
+<span class="doccomment">/// See [LLVM 9 docs on the &#39;insertelement&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#insertelement-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">InsertElement</span> {
     <span class="kw">pub</span> <span class="ident">vector</span>: <span class="ident">Operand</span>,
@@ -3358,7 +3358,7 @@ impl HasMetadata for Instruction {
     }
 }
 
-<span class="doccomment">/// See [LLVM 8 docs on the &#39;shufflevector&#39; instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#shufflevector-instruction)</span>
+<span class="doccomment">/// See [LLVM 9 docs on the &#39;shufflevector&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#shufflevector-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ShuffleVector</span> {
     <span class="kw">pub</span> <span class="ident">operand0</span>: <span class="ident">Operand</span>,
@@ -3386,7 +3386,7 @@ impl HasMetadata for Instruction {
 }
 
 <span class="doccomment">/// Extract the value of a member field from an aggregate (struct or array) type.</span>
-<span class="doccomment">/// See [LLVM 8 docs on the &#39;extractvalue&#39; instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#extractvalue-instruction)</span>
+<span class="doccomment">/// See [LLVM 9 docs on the &#39;extractvalue&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#extractvalue-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ExtractValue</span> {
     <span class="kw">pub</span> <span class="ident">aggregate</span>: <span class="ident">Operand</span>,
@@ -3422,7 +3422,7 @@ impl HasMetadata for Instruction {
 }
 
 <span class="doccomment">/// Insert a value into a member field of an aggregate (struct or array) type.</span>
-<span class="doccomment">/// See [LLVM 8 docs on the &#39;insertvalue&#39; instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#insertvalue-instruction)</span>
+<span class="doccomment">/// See [LLVM 9 docs on the &#39;insertvalue&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#insertvalue-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">InsertValue</span> {
     <span class="kw">pub</span> <span class="ident">aggregate</span>: <span class="ident">Operand</span>,
@@ -3442,7 +3442,7 @@ impl HasMetadata for Instruction {
 }
 
 <span class="doccomment">/// Allocate memory on the stack.</span>
-<span class="doccomment">/// See [LLVM 8 docs on the &#39;alloca&#39; instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#alloca-instruction)</span>
+<span class="doccomment">/// See [LLVM 9 docs on the &#39;alloca&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#alloca-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Alloca</span> {
     <span class="kw">pub</span> <span class="ident">allocated_type</span>: <span class="ident">Type</span>,
@@ -3462,7 +3462,7 @@ impl HasMetadata for Instruction {
 }
 
 <span class="doccomment">/// Load a value from memory.</span>
-<span class="doccomment">/// See [LLVM 8 docs on the &#39;load&#39; instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#load-instruction)</span>
+<span class="doccomment">/// See [LLVM 9 docs on the &#39;load&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#load-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Load</span> {
     <span class="kw">pub</span> <span class="ident">address</span>: <span class="ident">Operand</span>,
@@ -3486,7 +3486,7 @@ impl HasMetadata for Instruction {
 }
 
 <span class="doccomment">/// Store a value to memory.</span>
-<span class="doccomment">/// See [LLVM 8 docs on the &#39;store&#39; instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#store-instruction)</span>
+<span class="doccomment">/// See [LLVM 9 docs on the &#39;store&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#store-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Store</span> {
     <span class="kw">pub</span> <span class="ident">address</span>: <span class="ident">Operand</span>,
@@ -3500,7 +3500,7 @@ impl HasMetadata for Instruction {
 <span class="macro">impl_inst</span><span class="macro">!</span>(<span class="ident">Store</span>, <span class="ident">Store</span>);
 <span class="macro">void_typed</span><span class="macro">!</span>(<span class="ident">Store</span>);
 
-<span class="doccomment">/// See [LLVM 8 docs on the &#39;fence&#39; instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#fence-instruction)</span>
+<span class="doccomment">/// See [LLVM 9 docs on the &#39;fence&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#fence-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Fence</span> {
     <span class="kw">pub</span> <span class="ident">atomicity</span>: <span class="ident">Atomicity</span>,
@@ -3511,7 +3511,7 @@ impl HasMetadata for Instruction {
 <span class="macro">void_typed</span><span class="macro">!</span>(<span class="ident">Fence</span>);
 
 <span class="doccomment">/// Atomic compare and exchange.</span>
-<span class="doccomment">/// See [LLVM 8 docs on the &#39;cmpxchg&#39; instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#cmpxchg-instruction)</span>
+<span class="doccomment">/// See [LLVM 9 docs on the &#39;cmpxchg&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#cmpxchg-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CmpXchg</span> {
     <span class="kw">pub</span> <span class="ident">address</span>: <span class="ident">Operand</span>,
@@ -3540,7 +3540,7 @@ impl HasMetadata for Instruction {
 }
 
 <span class="doccomment">/// Atomic read-modify-write.</span>
-<span class="doccomment">/// See [LLVM 8 docs on the &#39;atomicrmw&#39; instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#atomicrmw-instruction)</span>
+<span class="doccomment">/// See [LLVM 9 docs on the &#39;atomicrmw&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#atomicrmw-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AtomicRMW</span> {
     <span class="comment">// pub operation: RMWOperation,  // this seems to not be exposed in the LLVM C API, only the C++ API</span>
@@ -3566,7 +3566,7 @@ impl HasMetadata for Instruction {
 
 <span class="doccomment">/// Get the address of a subelement of an aggregate data structure.</span>
 <span class="doccomment">/// Only performs address calculation, does not actually access memory.</span>
-<span class="doccomment">/// See [LLVM 8 docs on the &#39;getelementptr&#39; instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#getelementptr-instruction)</span>
+<span class="doccomment">/// See [LLVM 9 docs on the &#39;getelementptr&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#getelementptr-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">GetElementPtr</span> {
     <span class="kw">pub</span> <span class="ident">address</span>: <span class="ident">Operand</span>,
@@ -3621,7 +3621,7 @@ impl HasMetadata for Instruction {
 }
 
 <span class="doccomment">/// Truncate.</span>
-<span class="doccomment">/// See [LLVM 8 docs on the &#39;trunc&#39; instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#trunc-to-instruction)</span>
+<span class="doccomment">/// See [LLVM 9 docs on the &#39;trunc&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#trunc-to-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Trunc</span> {
     <span class="kw">pub</span> <span class="ident">operand</span>: <span class="ident">Operand</span>,
@@ -3635,7 +3635,7 @@ impl HasMetadata for Instruction {
 <span class="macro">explicitly_typed</span><span class="macro">!</span>(<span class="ident">Trunc</span>);
 
 <span class="doccomment">/// Zero-extend.</span>
-<span class="doccomment">/// See [LLVM 8 docs on the &#39;zext&#39; instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#zext-to-instruction)</span>
+<span class="doccomment">/// See [LLVM 9 docs on the &#39;zext&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#zext-to-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ZExt</span> {
     <span class="kw">pub</span> <span class="ident">operand</span>: <span class="ident">Operand</span>,
@@ -3649,7 +3649,7 @@ impl HasMetadata for Instruction {
 <span class="macro">explicitly_typed</span><span class="macro">!</span>(<span class="ident">ZExt</span>);
 
 <span class="doccomment">/// Sign-extend.</span>
-<span class="doccomment">/// See [LLVM 8 docs on the &#39;sext&#39; instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#sext-to-instruction)</span>
+<span class="doccomment">/// See [LLVM 9 docs on the &#39;sext&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#sext-to-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SExt</span> {
     <span class="kw">pub</span> <span class="ident">operand</span>: <span class="ident">Operand</span>,
@@ -3663,7 +3663,7 @@ impl HasMetadata for Instruction {
 <span class="macro">explicitly_typed</span><span class="macro">!</span>(<span class="ident">SExt</span>);
 
 <span class="doccomment">/// Truncate a floating-point value.</span>
-<span class="doccomment">/// See [LLVM 8 docs on the &#39;fptrunc&#39; instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#fptrunc-to-instruction)</span>
+<span class="doccomment">/// See [LLVM 9 docs on the &#39;fptrunc&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#fptrunc-to-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">FPTrunc</span> {
     <span class="kw">pub</span> <span class="ident">operand</span>: <span class="ident">Operand</span>,
@@ -3677,7 +3677,7 @@ impl HasMetadata for Instruction {
 <span class="macro">explicitly_typed</span><span class="macro">!</span>(<span class="ident">FPTrunc</span>);
 
 <span class="doccomment">/// Extend a floating-point value.</span>
-<span class="doccomment">/// See [LLVM 8 docs on the &#39;fpext&#39; instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#fpext-to-instruction)</span>
+<span class="doccomment">/// See [LLVM 9 docs on the &#39;fpext&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#fpext-to-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">FPExt</span> {
     <span class="kw">pub</span> <span class="ident">operand</span>: <span class="ident">Operand</span>,
@@ -3691,7 +3691,7 @@ impl HasMetadata for Instruction {
 <span class="macro">explicitly_typed</span><span class="macro">!</span>(<span class="ident">FPExt</span>);
 
 <span class="doccomment">/// Convert floating-point to unsigned integer.</span>
-<span class="doccomment">/// See [LLVM 8 docs on the &#39;fptoui&#39; instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#fptoui-to-instruction)</span>
+<span class="doccomment">/// See [LLVM 9 docs on the &#39;fptoui&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#fptoui-to-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">FPToUI</span> {
     <span class="kw">pub</span> <span class="ident">operand</span>: <span class="ident">Operand</span>,
@@ -3705,7 +3705,7 @@ impl HasMetadata for Instruction {
 <span class="macro">explicitly_typed</span><span class="macro">!</span>(<span class="ident">FPToUI</span>);
 
 <span class="doccomment">/// Convert floating-point to signed integer.</span>
-<span class="doccomment">/// See [LLVM 8 docs on the &#39;fptosi&#39; instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#fptosi-to-instruction)</span>
+<span class="doccomment">/// See [LLVM 9 docs on the &#39;fptosi&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#fptosi-to-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">FPToSI</span> {
     <span class="kw">pub</span> <span class="ident">operand</span>: <span class="ident">Operand</span>,
@@ -3719,7 +3719,7 @@ impl HasMetadata for Instruction {
 <span class="macro">explicitly_typed</span><span class="macro">!</span>(<span class="ident">FPToSI</span>);
 
 <span class="doccomment">/// Convert unsigned integer to floating-point.</span>
-<span class="doccomment">/// See [LLVM 8 docs on the &#39;uitofp&#39; instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#uitofp-to-instruction)</span>
+<span class="doccomment">/// See [LLVM 9 docs on the &#39;uitofp&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#uitofp-to-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">UIToFP</span> {
     <span class="kw">pub</span> <span class="ident">operand</span>: <span class="ident">Operand</span>,
@@ -3733,7 +3733,7 @@ impl HasMetadata for Instruction {
 <span class="macro">explicitly_typed</span><span class="macro">!</span>(<span class="ident">UIToFP</span>);
 
 <span class="doccomment">/// Convert signed integer to floating-point.</span>
-<span class="doccomment">/// See [LLVM 8 docs on the &#39;sitofp&#39; instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#sitofp-to-instruction)</span>
+<span class="doccomment">/// See [LLVM 9 docs on the &#39;sitofp&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#sitofp-to-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SIToFP</span> {
     <span class="kw">pub</span> <span class="ident">operand</span>: <span class="ident">Operand</span>,
@@ -3747,7 +3747,7 @@ impl HasMetadata for Instruction {
 <span class="macro">explicitly_typed</span><span class="macro">!</span>(<span class="ident">SIToFP</span>);
 
 <span class="doccomment">/// Convert pointer to integer.</span>
-<span class="doccomment">/// See [LLVM 8 docs on the &#39;ptrtoint&#39; instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#ptrtoint-to-instruction)</span>
+<span class="doccomment">/// See [LLVM 9 docs on the &#39;ptrtoint&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#ptrtoint-to-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PtrToInt</span> {
     <span class="kw">pub</span> <span class="ident">operand</span>: <span class="ident">Operand</span>,
@@ -3761,7 +3761,7 @@ impl HasMetadata for Instruction {
 <span class="macro">explicitly_typed</span><span class="macro">!</span>(<span class="ident">PtrToInt</span>);
 
 <span class="doccomment">/// Convert integer to pointer.</span>
-<span class="doccomment">/// See [LLVM 8 docs on the &#39;inttoptr&#39; instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#inttoptr-to-instruction)</span>
+<span class="doccomment">/// See [LLVM 9 docs on the &#39;inttoptr&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#inttoptr-to-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">IntToPtr</span> {
     <span class="kw">pub</span> <span class="ident">operand</span>: <span class="ident">Operand</span>,
@@ -3775,7 +3775,7 @@ impl HasMetadata for Instruction {
 <span class="macro">explicitly_typed</span><span class="macro">!</span>(<span class="ident">IntToPtr</span>);
 
 <span class="doccomment">/// Convert between types without changing any bits.</span>
-<span class="doccomment">/// See [LLVM 8 docs on the &#39;bitcast&#39; instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#bitcast-to-instruction)</span>
+<span class="doccomment">/// See [LLVM 9 docs on the &#39;bitcast&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#bitcast-to-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BitCast</span> {
     <span class="kw">pub</span> <span class="ident">operand</span>: <span class="ident">Operand</span>,
@@ -3788,7 +3788,7 @@ impl HasMetadata for Instruction {
 <span class="macro">impl_unop</span><span class="macro">!</span>(<span class="ident">BitCast</span>);
 <span class="macro">explicitly_typed</span><span class="macro">!</span>(<span class="ident">BitCast</span>);
 
-<span class="doccomment">/// See [LLVM 8 docs on the &#39;addrspacecast&#39; instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#addrspacecast-to-instruction)</span>
+<span class="doccomment">/// See [LLVM 9 docs on the &#39;addrspacecast&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#addrspacecast-to-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AddrSpaceCast</span> {
     <span class="kw">pub</span> <span class="ident">operand</span>: <span class="ident">Operand</span>,
@@ -3802,7 +3802,7 @@ impl HasMetadata for Instruction {
 <span class="macro">explicitly_typed</span><span class="macro">!</span>(<span class="ident">AddrSpaceCast</span>);
 
 <span class="doccomment">/// Compare integers, pointers, or vectors of integers or pointers.</span>
-<span class="doccomment">/// See [LLVM 8 docs on the &#39;icmp&#39; instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#icmp-instruction)</span>
+<span class="doccomment">/// See [LLVM 9 docs on the &#39;icmp&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#icmp-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ICmp</span> {
     <span class="kw">pub</span> <span class="ident">predicate</span>: <span class="ident">IntPredicate</span>,
@@ -3830,7 +3830,7 @@ impl HasMetadata for Instruction {
 }
 
 <span class="doccomment">/// Compare floating-point values or vectors of floating-point values.</span>
-<span class="doccomment">/// See [LLVM 8 docs on the &#39;fcmp&#39; instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#fcmp-instruction)</span>
+<span class="doccomment">/// See [LLVM 9 docs on the &#39;fcmp&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#fcmp-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">FCmp</span> {
     <span class="kw">pub</span> <span class="ident">predicate</span>: <span class="ident">FPPredicate</span>,
@@ -3857,7 +3857,7 @@ impl HasMetadata for Instruction {
     }
 }
 
-<span class="doccomment">/// See [LLVM 8 docs on the &#39;phi&#39; instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#phi-instruction)</span>
+<span class="doccomment">/// See [LLVM 9 docs on the &#39;phi&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#phi-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Phi</span> {
     <span class="kw">pub</span> <span class="ident">incoming_values</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Operand</span>, <span class="ident">Name</span>)<span class="op">&gt;</span>,
@@ -3870,7 +3870,7 @@ impl HasMetadata for Instruction {
 <span class="macro">impl_hasresult</span><span class="macro">!</span>(<span class="ident">Phi</span>);
 <span class="macro">explicitly_typed</span><span class="macro">!</span>(<span class="ident">Phi</span>);
 
-<span class="doccomment">/// See [LLVM 8 docs on the &#39;select&#39; instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#select-instruction)</span>
+<span class="doccomment">/// See [LLVM 9 docs on the &#39;select&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#select-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Select</span> {
     <span class="kw">pub</span> <span class="ident">condition</span>: <span class="ident">Operand</span>,
@@ -3892,7 +3892,7 @@ impl HasMetadata for Instruction {
 }
 
 <span class="doccomment">/// Function call.</span>
-<span class="doccomment">/// See [LLVM 8 docs on the &#39;call&#39; instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#call-instruction)</span>
+<span class="doccomment">/// See [LLVM 9 docs on the &#39;call&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#call-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Call</span> {
     <span class="kw">pub</span> <span class="ident">function</span>: <span class="ident">Either</span><span class="op">&lt;</span><span class="ident">InlineAssembly</span>, <span class="ident">Operand</span><span class="op">&gt;</span>,
@@ -3919,7 +3919,7 @@ impl HasMetadata for Instruction {
     }
 }
 
-<span class="doccomment">/// See [LLVM 8 docs on the &#39;va_arg&#39; instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#va-arg-instruction)</span>
+<span class="doccomment">/// See [LLVM 9 docs on the &#39;va_arg&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#va-arg-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">VAArg</span> {
     <span class="kw">pub</span> <span class="ident">arg_list</span>: <span class="ident">Operand</span>,
@@ -3938,7 +3938,7 @@ impl HasMetadata for Instruction {
 }
 
 <span class="doccomment">/// Used for exception handling.</span>
-<span class="doccomment">/// See [LLVM 8 docs on the &#39;landingpad&#39; instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#landingpad-instruction)</span>
+<span class="doccomment">/// See [LLVM 9 docs on the &#39;landingpad&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#landingpad-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">LandingPad</span> {
     <span class="kw">pub</span> <span class="ident">result_type</span>: <span class="ident">Type</span>,
@@ -3958,7 +3958,7 @@ impl HasMetadata for Instruction {
 }
 
 <span class="doccomment">/// Used for exception handling.</span>
-<span class="doccomment">/// See [LLVM 8 docs on the &#39;catchpad&#39; instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#catchpad-instruction)</span>
+<span class="doccomment">/// See [LLVM 9 docs on the &#39;catchpad&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#catchpad-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CatchPad</span> {
     <span class="kw">pub</span> <span class="ident">catch_switch</span>: <span class="ident">Operand</span>,
@@ -3977,7 +3977,7 @@ impl HasMetadata for Instruction {
 }
 
 <span class="doccomment">/// Used for exception handling.</span>
-<span class="doccomment">/// See [LLVM 8 docs on the &#39;cleanuppad&#39; instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#cleanuppad-instruction)</span>
+<span class="doccomment">/// See [LLVM 9 docs on the &#39;cleanuppad&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#cleanuppad-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CleanupPad</span> {
     <span class="kw">pub</span> <span class="ident">parent_pad</span>: <span class="ident">Operand</span>,
@@ -4002,7 +4002,7 @@ impl HasMetadata for Instruction {
     <span class="ident">NoTail</span>,
 }
 
-<span class="doccomment">/// See [LLVM 8 docs on Fast-Math Flags](https://releases.llvm.org/8.0.0/docs/LangRef.html#fastmath)</span>
+<span class="doccomment">/// See [LLVM 9 docs on Fast-Math Flags](https://releases.llvm.org/9.0.0/docs/LangRef.html#fastmath)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">non_snake_case</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">FastMathFlags</span> {
@@ -4015,21 +4015,21 @@ impl HasMetadata for Instruction {
     <span class="kw">pub</span> <span class="ident">approx_func</span>: <span class="ident">bool</span>,
 }
 
-<span class="doccomment">/// See [LLVM 8 docs on Atomic Memory Ordering Constraints](https://releases.llvm.org/8.0.0/docs/LangRef.html#ordering)</span>
+<span class="doccomment">/// See [LLVM 9 docs on Atomic Memory Ordering Constraints](https://releases.llvm.org/9.0.0/docs/LangRef.html#ordering)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Atomicity</span> {
     <span class="kw">pub</span> <span class="ident">synch_scope</span>: <span class="ident">SynchronizationScope</span>,
     <span class="kw">pub</span> <span class="ident">mem_ordering</span>: <span class="ident">MemoryOrdering</span>,
 }
 
-<span class="doccomment">/// See [LLVM 8 docs on Atomic Memory Ordering Constraints](https://releases.llvm.org/8.0.0/docs/LangRef.html#ordering)</span>
+<span class="doccomment">/// See [LLVM 9 docs on Atomic Memory Ordering Constraints](https://releases.llvm.org/9.0.0/docs/LangRef.html#ordering)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">SynchronizationScope</span> {
     <span class="ident">SingleThread</span>,
     <span class="ident">System</span>,
 }
 
-<span class="doccomment">/// See [LLVM 8 docs on Atomic Memory Ordering Constraints](https://releases.llvm.org/8.0.0/docs/LangRef.html#ordering)</span>
+<span class="doccomment">/// See [LLVM 9 docs on Atomic Memory Ordering Constraints](https://releases.llvm.org/9.0.0/docs/LangRef.html#ordering)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">MemoryOrdering</span> {
     <span class="ident">Unordered</span>,
@@ -4041,7 +4041,7 @@ impl HasMetadata for Instruction {
     <span class="ident">NotAtomic</span>, <span class="comment">// since we only have a `MemoryOrdering` on atomic instructions, we should never need this. But empirically, some atomic instructions -- e.g. the first &#39;atomicrmw&#39; instruction in our &#39;atomic_no_syncscope&#39; test -- have this `MemoryOrdering`</span>
 }
 
-<span class="doccomment">/// See [LLVM 8 docs on Inline Assembler Expressions](https://releases.llvm.org/8.0.0/docs/LangRef.html#inline-assembler-expressions).</span>
+<span class="doccomment">/// See [LLVM 9 docs on Inline Assembler Expressions](https://releases.llvm.org/9.0.0/docs/LangRef.html#inline-assembler-expressions).</span>
 <span class="comment">// --TODO this seems to be the data structure we want. But see notes on</span>
 <span class="comment">// InlineAssembly::from_llvm_ref()</span>
 <span class="comment">/*
@@ -4074,7 +4074,7 @@ pub enum AssemblyDialect {
     }
 }
 
-<span class="doccomment">/// See [LLVM 8 docs on the &#39;atomicrmw&#39; instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#i-atomicrmw)</span>
+<span class="doccomment">/// See [LLVM 9 docs on the &#39;atomicrmw&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#i-atomicrmw)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">RMWOperation</span> {
     <span class="ident">Xchg</span>,
