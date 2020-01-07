@@ -98,30 +98,33 @@ of this writing, let alone provide any meaningful functionality for crate
 users.
 
 A few other features are missing from `llvm-ir`'s data structures because
-getters for them are apparently (to my knowledge) missing from the LLVM C API
-and the Rust `llvm-sys` crate, only being present in the LLVM C++ API.
+getters for them are missing from the LLVM C API and the Rust `llvm-sys`
+crate, only being present in the LLVM C++ API.
 These include but are not limited to:
 
 - the `nsw` and `nuw` flags on `Add`, `Sub`, `Mul`, and `Shl`, and likewise
 the `exact` flag on `UDiv`, `SDiv`, `LShr`, and `AShr`. The C API has
 functionality to set these flags and/or create new instructions specifying
-values of these flags, but not (apparently, to my knowledge) to query the
-values of these flags on existing instructions.
+values of these flags, but not to query the values of these flags on existing
+instructions.
 - the "fast-math flags" on various floating-point operations
 - the specific opcode for the `AtomicRMW` instruction, i.e., `Xchg`, `Add`,
 `Max`, `Min`, and the like. Again, the C API allows creating `AtomicRMW`
-instructions with any of these opcodes, but it's unclear how to get the
-opcode for an existing `AtomicRMW` instruction.
+instructions with any of these opcodes, but has no way to get the opcode for
+an existing `AtomicRMW` instruction.
 - contents of inline assembly functions
 - information about the clauses in the variadic `LandingPad` instruction
 - information about the operands of a `BlockAddress` constant expression
-- the ["prefix data"](https://releases.llvm.org/8.0.0/docs/LangRef.html#prefix-data)
+- the "other labels" reachable from a `CallBr` terminator
+- the ["prefix data"](https://releases.llvm.org/9.0.0/docs/LangRef.html#prefix-data)
 associated with a function
 
 These issues with the LLVM C API have also been reported as
 [LLVM bug #42692](https://bugs.llvm.org/show_bug.cgi?id=42692).
-Anyone who has additional insight about these problems, please chime in
-either with an issue on this repo or on the LLVM bug thread itself!
+As discussed there, the `AtomicRMW` opcode getters have been added in trunk
+(and should be available in the LLVM 10 release), but the others remain open
+problems.
+Any contributions to filling these gaps in the C API are greatly appreciated!
 
 ## Acknowledgments
 `llvm-ir` is heavily inspired by the [`llvm-hs-pure` Haskell package].
