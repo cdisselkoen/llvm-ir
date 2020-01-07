@@ -1,3 +1,5 @@
+#![doc(html_root_url = "https://cdisselkoen.github.io/llvm-ir")]
+
 pub mod basicblock;
 pub use basicblock::BasicBlock;
 pub mod constant;
