@@ -1,4 +1,4 @@
-CC=clang-8
+CC=clang-9
 CFLAGS=-O3
 RUSTC=rustc
 RUSTFLAGS=--crate-type=lib

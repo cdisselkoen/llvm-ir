@@ -11,7 +11,7 @@ keywords = ["llvm", "ir"]
 license = "MIT"
 
 [dependencies]
-llvm-sys = "~80.1.1"
+llvm-sys = "90.0"
 either = "1.5.2"
 log = "0.4.0"
 

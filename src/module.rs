@@ -7,27 +7,27 @@ use std::collections::HashMap;
 use std::path::Path;
 use std::sync::{Arc, RwLock};
 
-/// See [LLVM 8 docs on Module Structure](https://releases.llvm.org/8.0.0/docs/LangRef.html#module-structure)
+/// See [LLVM 9 docs on Module Structure](https://releases.llvm.org/9.0.0/docs/LangRef.html#module-structure)
 #[derive(Clone, Debug)]
 pub struct Module {
     /// The name of the module
     pub name: String,
-    /// See [LLVM 8 docs on Source Filename](https://releases.llvm.org/8.0.0/docs/LangRef.html#source-filename)
+    /// See [LLVM 9 docs on Source Filename](https://releases.llvm.org/9.0.0/docs/LangRef.html#source-filename)
     pub source_file_name: String,
-    /// See [LLVM 8 docs on Data Layout](https://releases.llvm.org/8.0.0/docs/LangRef.html#data-layout)
+    /// See [LLVM 9 docs on Data Layout](https://releases.llvm.org/9.0.0/docs/LangRef.html#data-layout)
     pub data_layout: String, // llvm-hs parses this String into Option<DataLayout> with a custom parser
-    /// See [LLVM 8 docs on Target Triple](https://releases.llvm.org/8.0.0/docs/LangRef.html#target-triple)
+    /// See [LLVM 9 docs on Target Triple](https://releases.llvm.org/9.0.0/docs/LangRef.html#target-triple)
     pub target_triple: Option<String>,
     /// Functions which are defined (not just declared) in this `Module`.
-    /// See [LLVM 8 docs on Functions](https://releases.llvm.org/8.0.0/docs/LangRef.html#functions)
+    /// See [LLVM 9 docs on Functions](https://releases.llvm.org/9.0.0/docs/LangRef.html#functions)
     pub functions: Vec<Function>,
-    /// See [LLVM 8 docs on Global Variables](https://releases.llvm.org/8.0.0/docs/LangRef.html#global-variables)
+    /// See [LLVM 9 docs on Global Variables](https://releases.llvm.org/9.0.0/docs/LangRef.html#global-variables)
     pub global_vars: Vec<GlobalVariable>,
-    /// See [LLVM 8 docs on Global Aliases](https://releases.llvm.org/8.0.0/docs/LangRef.html#aliases)
+    /// See [LLVM 9 docs on Global Aliases](https://releases.llvm.org/9.0.0/docs/LangRef.html#aliases)
     pub global_aliases: Vec<GlobalAlias>,
     /// Structure types can be "identified", meaning named. This map holds the named structure types in this `Module`.
-    /// See [LLVM 8 docs on Structure Type](https://releases.llvm.org/8.0.0/docs/LangRef.html#structure-type).
-    /// A `None` value indicates an opaque type; see [LLVM 8 docs on Opaque Structure Types](https://releases.llvm.org/8.0.0/docs/LangRef.html#t-opaque).
+    /// See [LLVM 9 docs on Structure Type](https://releases.llvm.org/9.0.0/docs/LangRef.html#structure-type).
+    /// A `None` value indicates an opaque type; see [LLVM 9 docs on Opaque Structure Types](https://releases.llvm.org/9.0.0/docs/LangRef.html#t-opaque).
     /// Note that this map is from struct name to `Type::StructType` variant, not to `Type::NamedStructType` variant (which would be redundant).
     ///
     /// `Arc<RwLock<_>>` is used rather than `Rc<RefCell<_>>` so that `Module` can remain `Sync`.
@@ -35,7 +35,7 @@ pub struct Module {
     /// single (immutable) `Module`.
     pub named_struct_types: HashMap<String, Option<Arc<RwLock<Type>>>>,
     // --TODO not yet implemented-- pub function_attribute_groups: Vec<FunctionAttributeGroup>,
-    /// See [LLVM 8 docs on Module-Level Inline Assembly](https://releases.llvm.org/8.0.0/docs/LangRef.html#moduleasm)
+    /// See [LLVM 9 docs on Module-Level Inline Assembly](https://releases.llvm.org/9.0.0/docs/LangRef.html#moduleasm)
     pub inline_assembly: String,
     // --TODO not yet implemented-- pub metadata_nodes: Vec<(MetadataNodeID, MetadataNode)>,
     // --TODO not yet implemented-- pub named_metadatas: Vec<NamedMetadata>,
@@ -98,7 +98,7 @@ impl Module {
     }
 }
 
-/// See [LLVM 8 docs on Global Variables](https://releases.llvm.org/8.0.0/docs/LangRef.html#global-variables)
+/// See [LLVM 9 docs on Global Variables](https://releases.llvm.org/9.0.0/docs/LangRef.html#global-variables)
 #[derive(PartialEq, Clone, Debug)]
 pub struct GlobalVariable {
     pub name: Name,
@@ -123,7 +123,7 @@ impl Typed for GlobalVariable {
     }
 }
 
-/// See [LLVM 8 docs on Global Aliases](https://releases.llvm.org/8.0.0/docs/LangRef.html#aliases)
+/// See [LLVM 9 docs on Global Aliases](https://releases.llvm.org/9.0.0/docs/LangRef.html#aliases)
 #[derive(PartialEq, Clone, Debug)]
 pub struct GlobalAlias {
     pub name: Name,
@@ -149,7 +149,7 @@ pub enum UnnamedAddr {
     Global,
 }
 
-/// See [LLVM 8 docs on Linkage Types](https://releases.llvm.org/8.0.0/docs/LangRef.html#linkage)
+/// See [LLVM 9 docs on Linkage Types](https://releases.llvm.org/9.0.0/docs/LangRef.html#linkage)
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub enum Linkage {
     Private,
@@ -171,7 +171,7 @@ pub enum Linkage {
     LinkerPrivateWeak,
 }
 
-/// See [LLVM 8 docs on Visibility Styles](https://releases.llvm.org/8.0.0/docs/LangRef.html#visibility-styles)
+/// See [LLVM 9 docs on Visibility Styles](https://releases.llvm.org/9.0.0/docs/LangRef.html#visibility-styles)
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub enum Visibility {
     Default,
@@ -179,7 +179,7 @@ pub enum Visibility {
     Protected,
 }
 
-/// See [LLVM 8 docs on DLL Storage Classes](https://releases.llvm.org/8.0.0/docs/LangRef.html#dllstorageclass)
+/// See [LLVM 9 docs on DLL Storage Classes](https://releases.llvm.org/9.0.0/docs/LangRef.html#dllstorageclass)
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub enum DLLStorageClass {
     Default,
@@ -187,7 +187,7 @@ pub enum DLLStorageClass {
     Export,
 }
 
-/// See [LLVM 8 docs on Thread Local Storage Models](https://releases.llvm.org/8.0.0/docs/LangRef.html#thread-local-storage-models)
+/// See [LLVM 9 docs on Thread Local Storage Models](https://releases.llvm.org/9.0.0/docs/LangRef.html#thread-local-storage-models)
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub enum ThreadLocalMode {
     NotThreadLocal,
@@ -197,10 +197,10 @@ pub enum ThreadLocalMode {
     LocalExec,
 }
 
-/// For discussion of address spaces, see [LLVM 8 docs on Pointer Type](https://releases.llvm.org/8.0.0/docs/LangRef.html#pointer-type)
+/// For discussion of address spaces, see [LLVM 9 docs on Pointer Type](https://releases.llvm.org/9.0.0/docs/LangRef.html#pointer-type)
 pub type AddrSpace = u32;
 
-/// See [LLVM 8 docs on Attribute Groups](https://releases.llvm.org/8.0.0/docs/LangRef.html#attribute-groups)
+/// See [LLVM 9 docs on Attribute Groups](https://releases.llvm.org/9.0.0/docs/LangRef.html#attribute-groups)
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct FunctionAttributeGroup {
     pub group_id: GroupID,
@@ -208,7 +208,7 @@ pub struct FunctionAttributeGroup {
 }
 
 /* --TODO not yet implemented: metadata
-/// See [LLVM 8 docs on Named Metadata](https://releases.llvm.org/8.0.0/docs/LangRef.html#named-metadata)
+/// See [LLVM 9 docs on Named Metadata](https://releases.llvm.org/9.0.0/docs/LangRef.html#named-metadata)
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct NamedMetadata {
     pub name: String,
@@ -216,7 +216,7 @@ pub struct NamedMetadata {
 }
 */
 
-/// See [LLVM 8 docs on Comdats](https://releases.llvm.org/8.0.0/docs/LangRef.html#langref-comdats)
+/// See [LLVM 9 docs on Comdats](https://releases.llvm.org/9.0.0/docs/LangRef.html#langref-comdats)
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct Comdat {
     pub name: String,

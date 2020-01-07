@@ -3,65 +3,65 @@ use crate::module::AddrSpace;
 use either::Either;
 use std::sync::{Arc, RwLock, Weak};
 
-/// See [LLVM 8 docs on Type System](https://releases.llvm.org/8.0.0/docs/LangRef.html#type-system)
+/// See [LLVM 9 docs on Type System](https://releases.llvm.org/9.0.0/docs/LangRef.html#type-system)
 #[derive(Clone, Debug)]
 #[allow(non_camel_case_types)]
 pub enum Type {
-    /// See [LLVM 8 docs on Void Type](https://releases.llvm.org/8.0.0/docs/LangRef.html#void-type)
+    /// See [LLVM 9 docs on Void Type](https://releases.llvm.org/9.0.0/docs/LangRef.html#void-type)
     VoidType,
-    /// See [LLVM 8 docs on Integer Type](https://releases.llvm.org/8.0.0/docs/LangRef.html#integer-type)
+    /// See [LLVM 9 docs on Integer Type](https://releases.llvm.org/9.0.0/docs/LangRef.html#integer-type)
     IntegerType { bits: u32 },
-    /// See [LLVM 8 docs on Pointer Type](https://releases.llvm.org/8.0.0/docs/LangRef.html#pointer-type)
+    /// See [LLVM 9 docs on Pointer Type](https://releases.llvm.org/9.0.0/docs/LangRef.html#pointer-type)
     PointerType {
         pointee_type: Box<Type>,
         addr_space: AddrSpace,
     },
-    /// See [LLVM 8 docs on Floating-Point Types](https://releases.llvm.org/8.0.0/docs/LangRef.html#floating-point-types)
+    /// See [LLVM 9 docs on Floating-Point Types](https://releases.llvm.org/9.0.0/docs/LangRef.html#floating-point-types)
     FPType(FPType),
-    /// See [LLVM 8 docs on Function Type](https://releases.llvm.org/8.0.0/docs/LangRef.html#function-type)
+    /// See [LLVM 9 docs on Function Type](https://releases.llvm.org/9.0.0/docs/LangRef.html#function-type)
     FuncType {
         result_type: Box<Type>,
         param_types: Vec<Type>,
         is_var_arg: bool,
     },
     /// Vector types (along with integer, FP, pointer, and X86_MMX types) are "first class types",
-    /// which means they can be produced by instructions (see [LLVM 8 docs on First Class Types](https://releases.llvm.org/8.0.0/docs/LangRef.html#first-class-types)).
-    /// See [LLVM 8 docs on Vector Type](https://releases.llvm.org/8.0.0/docs/LangRef.html#vector-type)
+    /// which means they can be produced by instructions (see [LLVM 9 docs on First Class Types](https://releases.llvm.org/9.0.0/docs/LangRef.html#first-class-types)).
+    /// See [LLVM 9 docs on Vector Type](https://releases.llvm.org/9.0.0/docs/LangRef.html#vector-type)
     VectorType {
         element_type: Box<Type>,
         num_elements: usize,
     },
     /// Struct and Array types (but not vector types) are "aggregate types" and cannot be produced by
-    /// a single instruction (see [LLVM 8 docs on Aggregate Types](https://releases.llvm.org/8.0.0/docs/LangRef.html#aggregate-types)).
-    /// See [LLVM 8 docs on Array Type](https://releases.llvm.org/8.0.0/docs/LangRef.html#array-type)
+    /// a single instruction (see [LLVM 9 docs on Aggregate Types](https://releases.llvm.org/9.0.0/docs/LangRef.html#aggregate-types)).
+    /// See [LLVM 9 docs on Array Type](https://releases.llvm.org/9.0.0/docs/LangRef.html#array-type)
     ArrayType {
         element_type: Box<Type>,
         num_elements: usize,
     },
     /// The `StructType` variant is used for a "literal" (i.e., anonymous) structure type.
-    /// See [LLVM 8 docs on Structure Type](https://releases.llvm.org/8.0.0/docs/LangRef.html#structure-type)
+    /// See [LLVM 9 docs on Structure Type](https://releases.llvm.org/9.0.0/docs/LangRef.html#structure-type)
     StructType {
         element_types: Vec<Type>,
         is_packed: bool,
     },
     /// Named structure types. Note that these may be self-referential (i.e., recursive).
-    /// See [LLVM 8 docs on Structure Type](https://releases.llvm.org/8.0.0/docs/LangRef.html#structure-type)
+    /// See [LLVM 9 docs on Structure Type](https://releases.llvm.org/9.0.0/docs/LangRef.html#structure-type)
     NamedStructType {
         /// Name of the struct type
         name: String, // llvm-hs-pure has Name rather than String
         /// The actual struct type, which will be a `StructType` variant.
-        /// A `None` here indicates an opaque type; see [LLVM 8 docs on Opaque Structure Types](https://releases.llvm.org/8.0.0/docs/LangRef.html#t-opaque).
+        /// A `None` here indicates an opaque type; see [LLVM 9 docs on Opaque Structure Types](https://releases.llvm.org/9.0.0/docs/LangRef.html#t-opaque).
         /// The weak reference should remain valid for at least the lifetime of the `Module` in which the named struct type is defined.
         ty: Option<Weak<RwLock<Type>>>,
     },
-    /// See [LLVM 8 docs on X86_MMX Type](https://releases.llvm.org/8.0.0/docs/LangRef.html#x86-mmx-type)
+    /// See [LLVM 9 docs on X86_MMX Type](https://releases.llvm.org/9.0.0/docs/LangRef.html#x86-mmx-type)
     X86_MMXType, // llvm-hs-pure doesn't have this, not sure what they do with LLVM's http://llvm.org/docs/LangRef.html#x86-mmx-type
-    /// See [LLVM 8 docs on Metadata Type](https://releases.llvm.org/8.0.0/docs/LangRef.html#metadata-type)
+    /// See [LLVM 9 docs on Metadata Type](https://releases.llvm.org/9.0.0/docs/LangRef.html#metadata-type)
     MetadataType,
     /// `LabelType` is the type of [`BasicBlock`](../struct.BasicBlock.html) labels.
-    /// See [LLVM 8 docs on Label Type](https://releases.llvm.org/8.0.0/docs/LangRef.html#label-type)
+    /// See [LLVM 9 docs on Label Type](https://releases.llvm.org/9.0.0/docs/LangRef.html#label-type)
     LabelType,
-    /// See [LLVM 8 docs on Token Type](https://releases.llvm.org/8.0.0/docs/LangRef.html#token-type)
+    /// See [LLVM 9 docs on Token Type](https://releases.llvm.org/9.0.0/docs/LangRef.html#token-type)
     TokenType,
 }
 
@@ -149,7 +149,7 @@ impl Type {
     }
 }
 
-/// See [LLVM 8 docs on Floating-Point Types](https://releases.llvm.org/8.0.0/docs/LangRef.html#floating-point-types)
+/// See [LLVM 9 docs on Floating-Point Types](https://releases.llvm.org/9.0.0/docs/LangRef.html#floating-point-types)
 #[derive(PartialEq, Eq, Clone, Copy, Debug, Hash)]
 #[allow(non_camel_case_types)]
 pub enum FPType {

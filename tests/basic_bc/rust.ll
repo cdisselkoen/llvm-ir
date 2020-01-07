@@ -1737,7 +1737,7 @@ start:
   store i64 0, i64* %sum, align 8
 ; call <alloc::vec::Vec<T> as core::ops::deref::Deref>::deref
   %0 = call { [0 x i64]*, i64 } @"_ZN68_$LT$alloc..vec..Vec$LT$T$GT$$u20$as$u20$core..ops..deref..Deref$GT$5deref17h378128d7d9378466E"(%"alloc::vec::Vec<isize>"* noalias readonly align 8 dereferenceable(24) %v)
-  %from1 = extractvalue { [0 x i64]*, i64 } %0, 0
+  %1 = extractvalue { [0 x i64]*, i64 } %0, 0
   %2 = extractvalue { [0 x i64]*, i64 } %0, 1
   br label %bb1
 

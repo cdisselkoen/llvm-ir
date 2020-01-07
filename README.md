@@ -63,8 +63,16 @@ The documentation includes links to relevant parts of the LLVM documentation
 when appropriate.
 
 ## Compatibility
-Currently, `llvm-ir` only supports LLVM 8. Unfortunately, I'm only one
-person. Again, contributions are welcome.
+Currently, `llvm-ir` only supports LLVM 9. However, it should probably "just
+work" with LLVM 8 if you simply open `Cargo.toml` and change the line
+```toml
+llvm-sys = "90.0"
+```
+to
+```toml
+llvm-sys = "80.1"
+```
+then `cargo clean` and rebuild. LLVMs older than 8 are not supported.
 
 `llvm-ir` works on stable Rust, and requires Rust 1.36+.
 

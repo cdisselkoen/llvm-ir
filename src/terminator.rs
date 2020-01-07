@@ -8,7 +8,7 @@ use either::Either;
 use std::convert::TryFrom;
 
 /// Terminator instructions end a basic block.
-/// See [LLVM docs on Terminator Instructions](https://releases.llvm.org/8.0.0/docs/LangRef.html#terminator-instructions)
+/// See [LLVM 9 docs on Terminator Instructions](https://releases.llvm.org/9.0.0/docs/LangRef.html#terminator-instructions)
 #[derive(PartialEq, Clone, Debug)]
 pub enum Terminator {
     Ret(Ret),
@@ -22,6 +22,7 @@ pub enum Terminator {
     CleanupRet(CleanupRet),
     CatchRet(CatchRet),
     CatchSwitch(CatchSwitch),
+    CallBr(CallBr),
 }
 
 /// The [`Type`](../enum.Type.html) of a `Terminator` is its result type.
@@ -29,7 +30,7 @@ pub enum Terminator {
 /// For instance, a [`Ret`](struct.Ret.html) instruction has void type even if
 /// the function returns a non-void value; we do not store the result of a `Ret`
 /// instruction using something like `%3 = ret i32 %2`.
-/// See [LLVM docs on Terminator Instructions](https://releases.llvm.org/8.0.0/docs/LangRef.html#terminator-instructions)
+/// See [LLVM 9 docs on Terminator Instructions](https://releases.llvm.org/9.0.0/docs/LangRef.html#terminator-instructions)
 impl Typed for Terminator {
     fn get_type(&self) -> Type {
         match self {
@@ -44,6 +45,7 @@ impl Typed for Terminator {
             Terminator::CleanupRet(t) => t.get_type(),
             Terminator::CatchRet(t) => t.get_type(),
             Terminator::CatchSwitch(t) => t.get_type(),
+            Terminator::CallBr(t) => t.get_type(),
         }
     }
 }
@@ -63,6 +65,7 @@ impl Terminator {
             Terminator::CleanupRet(t) => &t.metadata,
             Terminator::CatchRet(t) => &t.metadata,
             Terminator::CatchSwitch(t) => &t.metadata,
+            Terminator::CallBr(t) => &t.metadata,
         }
     }
 }
@@ -116,7 +119,7 @@ macro_rules! void_typed {
     };
 }
 
-/// See [LLVM 8 docs on the 'ret' instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#ret-instruction)
+/// See [LLVM 9 docs on the 'ret' instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#ret-instruction)
 #[derive(PartialEq, Clone, Debug)]
 pub struct Ret {
     /// The value being returned, or `None` if returning void.
@@ -127,7 +130,7 @@ pub struct Ret {
 impl_term!(Ret, Ret);
 void_typed!(Ret); // technically the instruction has void type, even though the function may not
 
-/// See [LLVM 8 docs on the 'br' instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#br-instruction).
+/// See [LLVM 9 docs on the 'br' instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#br-instruction).
 /// The LLVM 'br' instruction has both conditional and unconditional variants, which we separate -- this is
 /// the unconditional variant, while the conditional variant is [`CondBr`](struct.CondBr.html).
 #[derive(PartialEq, Clone, Debug)]
@@ -140,7 +143,7 @@ pub struct Br {
 impl_term!(Br, Br);
 void_typed!(Br);
 
-/// See [LLVM 8 docs on the 'br' instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#br-instruction).
+/// See [LLVM 9 docs on the 'br' instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#br-instruction).
 /// The LLVM 'br' instruction has both conditional and unconditional variants, which we separate -- this is
 /// the conditional variant, while the unconditional variant is [`Br`](struct.Br.html).
 #[derive(PartialEq, Clone, Debug)]
@@ -157,7 +160,7 @@ pub struct CondBr {
 impl_term!(CondBr, CondBr);
 void_typed!(CondBr);
 
-/// See [LLVM 8 docs on the 'switch' instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#switch-instruction)
+/// See [LLVM 9 docs on the 'switch' instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#switch-instruction)
 #[derive(PartialEq, Clone, Debug)]
 pub struct Switch {
     pub operand: Operand,
@@ -169,7 +172,7 @@ pub struct Switch {
 impl_term!(Switch, Switch);
 void_typed!(Switch);
 
-/// See [LLVM 8 docs on the 'indirectbr' instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#indirectbr-instruction)
+/// See [LLVM 9 docs on the 'indirectbr' instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#indirectbr-instruction)
 #[derive(PartialEq, Clone, Debug)]
 pub struct IndirectBr {
     /// Address to jump to (must be derived from a [`Constant::BlockAddress`](../enum.Constant.html))
@@ -185,7 +188,7 @@ pub struct IndirectBr {
 impl_term!(IndirectBr, IndirectBr);
 void_typed!(IndirectBr);
 
-/// See [LLVM 8 docs on the 'invoke' instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#invoke-instruction)
+/// See [LLVM 9 docs on the 'invoke' instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#invoke-instruction)
 #[derive(PartialEq, Clone, Debug)]
 pub struct Invoke {
     pub function: Either<InlineAssembly, Operand>,
@@ -211,7 +214,7 @@ impl Typed for Invoke {
     }
 }
 
-/// See [LLVM 8 docs on the 'resume' instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#resume-instruction)
+/// See [LLVM 9 docs on the 'resume' instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#resume-instruction)
 #[derive(PartialEq, Clone, Debug)]
 pub struct Resume {
     pub operand: Operand,
@@ -221,7 +224,7 @@ pub struct Resume {
 impl_term!(Resume, Resume);
 void_typed!(Resume);
 
-/// See [LLVM 8 docs on the 'unreachable' instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#unreachable-instruction)
+/// See [LLVM 9 docs on the 'unreachable' instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#unreachable-instruction)
 #[derive(PartialEq, Clone, Debug)]
 pub struct Unreachable {
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
@@ -230,7 +233,7 @@ pub struct Unreachable {
 impl_term!(Unreachable, Unreachable);
 void_typed!(Unreachable);
 
-/// See [LLVM 8 docs on the 'cleanupret' instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#cleanupret-instruction)
+/// See [LLVM 9 docs on the 'cleanupret' instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#cleanupret-instruction)
 #[derive(PartialEq, Clone, Debug)]
 pub struct CleanupRet {
     pub cleanup_pad: Operand,
@@ -242,7 +245,7 @@ pub struct CleanupRet {
 impl_term!(CleanupRet, CleanupRet);
 void_typed!(CleanupRet);
 
-/// See [LLVM 8 docs on the 'catchret' instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#catchret-instruction)
+/// See [LLVM 9 docs on the 'catchret' instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#catchret-instruction)
 #[derive(PartialEq, Clone, Debug)]
 pub struct CatchRet {
     pub catch_pad: Operand,
@@ -253,7 +256,7 @@ pub struct CatchRet {
 impl_term!(CatchRet, CatchRet);
 void_typed!(CatchRet);
 
-/// See [LLVM 8 docs on the 'catchswitch' instruction](https://releases.llvm.org/8.0.0/docs/LangRef.html#catchswitch-instruction)
+/// See [LLVM 9 docs on the 'catchswitch' instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#catchswitch-instruction)
 #[derive(PartialEq, Clone, Debug)]
 pub struct CatchSwitch {
     pub parent_pad: Operand,
@@ -272,6 +275,33 @@ impl Typed for CatchSwitch {
     fn get_type(&self) -> Type {
         unimplemented!("Typed for CatchSwitch")
         // It's clear that there is a result of this instruction, but the documentation doesn't appear to clearly describe what its type is
+    }
+}
+
+/// See [LLVM 9 docs on the 'callbr' instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#callbr-instruction)
+#[derive(PartialEq, Clone, Debug)]
+pub struct CallBr {
+    pub function: Either<InlineAssembly, Operand>,
+    pub arguments: Vec<(Operand, Vec<ParameterAttribute>)>,
+    pub return_attributes: Vec<ParameterAttribute>,
+    pub result: Name, // The name of the variable that will get the result of the call (if the callee returns with 'ret')
+    pub return_label: Name, // Should be the name of a basic block. If the callee returns normally (i.e., with 'ret'), control flow resumes here.
+    /// `other_labels` should be `Vec<Name>`, but it appears there is no way to get this information with the LLVM C API (as opposed to the C++ API)
+    pub other_labels: (),  //Vec<Name>, // Should be names of basic blocks. The callee may use an inline-asm 'goto' to resume control flow at one of these places.
+    pub function_attributes: Vec<FunctionAttribute>,
+    pub calling_convention: CallingConvention,
+    // --TODO not yet implemented-- pub metadata: InstructionMetadata,
+}
+
+impl_term!(CallBr, CallBr);
+impl_hasresult!(CallBr);
+
+impl Typed for CallBr {
+    fn get_type(&self) -> Type {
+        match self.function.get_type() {
+            Type::FuncType { result_type, .. } => *result_type,
+            ty => panic!("Expected the function argument of a CallBr to have type FuncType; got {:?}", ty),
+        }
     }
 }
 
@@ -314,6 +344,7 @@ impl Terminator {
             LLVMOpcode::LLVMCleanupRet => Terminator::CleanupRet(CleanupRet::from_llvm_ref(term, vnmap, bbmap, gnmap, tnmap)),
             LLVMOpcode::LLVMCatchRet => Terminator::CatchRet(CatchRet::from_llvm_ref(term, vnmap, bbmap, gnmap, tnmap)),
             LLVMOpcode::LLVMCatchSwitch => Terminator::CatchSwitch(CatchSwitch::from_llvm_ref(term, ctr, vnmap, bbmap, gnmap, tnmap)),
+            LLVMOpcode::LLVMCallBr => Terminator::CallBr(CallBr::from_llvm_ref(term, ctr, vnmap, bbmap, gnmap, tnmap)),
             opcode => panic!("Terminator::from_llvm_ref called with a non-terminator instruction (opcode {:?})", opcode),
         }
     }
@@ -623,6 +654,34 @@ impl CatchSwitch {
                 }
             },
             result: Name::name_or_num(unsafe { get_value_name(term) }, ctr),
+            // metadata: InstructionMetadata::from_llvm_inst(term),
+        }
+    }
+}
+
+impl CallBr {
+    pub(crate) fn from_llvm_ref(
+        term: LLVMValueRef,
+        ctr: &mut usize,
+        vnmap: &ValToNameMap,
+        bbmap: &BBMap,
+        gnmap: &GlobalNameMap,
+        tnmap: &mut TyNameMap,
+    ) -> Self {
+        use crate::instruction::CallInfo;
+        let callinfo = CallInfo::from_llvm_ref(term, vnmap, gnmap, tnmap);
+        Self {
+            function: callinfo.function,
+            arguments: callinfo.arguments,
+            return_attributes: callinfo.return_attributes,
+            result: Name::name_or_num(unsafe { get_value_name(term) }, ctr),
+            return_label: bbmap
+                .get(unsafe { &LLVMGetNormalDest(term) })
+                .expect("Failed to find invoke return destination in map")
+                .clone(),
+            other_labels: (),
+            function_attributes: callinfo.function_attributes,
+            calling_convention: callinfo.calling_convention,
             // metadata: InstructionMetadata::from_llvm_inst(term),
         }
     }
