@@ -269,7 +269,7 @@ impl Function {
                         };
                         attrs
                             .into_iter()
-                            .map(ParameterAttribute::from_llvm_ref)
+                            .filter_map(ParameterAttribute::from_llvm_ref)
                             .collect()
                     },
                 })
@@ -329,7 +329,7 @@ impl Function {
                     };
                     attrs
                         .into_iter()
-                        .map(FunctionAttribute::from_llvm_ref)
+                        .filter_map(FunctionAttribute::from_llvm_ref)
                         .collect()
                 } else {
                     vec![]
@@ -350,7 +350,7 @@ impl Function {
                     };
                     attrs
                         .into_iter()
-                        .map(ParameterAttribute::from_llvm_ref)
+                        .filter_map(ParameterAttribute::from_llvm_ref)
                         .collect()
                 } else {
                     vec![]
@@ -442,19 +442,22 @@ impl CallingConvention {
 }
 
 impl Attribute {
-    pub(crate) fn from_llvm_ref(a: LLVMAttributeRef) -> Self {
+    /// Returns `None` if we encounter an attribute we don't know about or aren't
+    /// equipped to handle
+    pub(crate) fn from_llvm_ref(a: LLVMAttributeRef) -> Option<Self> {
         if unsafe { LLVMIsEnumAttribute(a) } != 0 {
-            Attribute::EnumAttribute {
+            Some(Attribute::EnumAttribute {
                 kind: unsafe { LLVMGetEnumAttributeKind(a) },
                 value: num::NonZeroU64::new(unsafe { LLVMGetEnumAttributeValue(a) }),
-            }
+            })
         } else if unsafe { LLVMIsStringAttribute(a) } != 0 {
-            Attribute::StringAttribute {
+            Some(Attribute::StringAttribute {
                 kind: unsafe { get_string_attribute_kind(a) },
                 value: unsafe { get_string_attribute_value(a) },
-            }
+            })
         } else {
-            panic!("Attribute is neither enum nor string")
+            debug!("Encountered an unknown attribute: neither enum nor string");
+            None
         }
     }
 }
