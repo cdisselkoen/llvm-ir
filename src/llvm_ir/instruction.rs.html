@@ -4830,7 +4830,7 @@ pub enum LandingPadClause {
                             };
                             <span class="ident">attrs</span>
                                 .<span class="ident">into_iter</span>()
-                                .<span class="ident">map</span>(<span class="ident">ParameterAttribute</span>::<span class="ident">from_llvm_ref</span>)
+                                .<span class="ident">filter_map</span>(<span class="ident">ParameterAttribute</span>::<span class="ident">from_llvm_ref</span>)
                                 .<span class="ident">collect</span>()
                         };
                         (<span class="ident">operand</span>, <span class="ident">attrs</span>)
@@ -4847,7 +4847,7 @@ pub enum LandingPadClause {
                 };
                 <span class="ident">attrs</span>
                     .<span class="ident">into_iter</span>()
-                    .<span class="ident">map</span>(<span class="ident">ParameterAttribute</span>::<span class="ident">from_llvm_ref</span>)
+                    .<span class="ident">filter_map</span>(<span class="ident">ParameterAttribute</span>::<span class="ident">from_llvm_ref</span>)
                     .<span class="ident">collect</span>()
             },
             <span class="ident">function_attributes</span>: {
@@ -4860,7 +4860,7 @@ pub enum LandingPadClause {
                 };
                 <span class="ident">attrs</span>
                     .<span class="ident">into_iter</span>()
-                    .<span class="ident">map</span>(<span class="ident">FunctionAttribute</span>::<span class="ident">from_llvm_ref</span>)
+                    .<span class="ident">filter_map</span>(<span class="ident">FunctionAttribute</span>::<span class="ident">from_llvm_ref</span>)
                     .<span class="ident">collect</span>()
             },
             <span class="ident">calling_convention</span>: <span class="ident">CallingConvention</span>::<span class="ident">from_u32</span>(<span class="kw">unsafe</span> {

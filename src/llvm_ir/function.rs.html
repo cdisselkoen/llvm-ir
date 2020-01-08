@@ -458,6 +458,9 @@
 <span id="458">458</span>
 <span id="459">459</span>
 <span id="460">460</span>
+<span id="461">461</span>
+<span id="462">462</span>
+<span id="463">463</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">basicblock</span>::<span class="ident">BasicBlock</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">constant</span>::<span class="ident">Constant</span>;
@@ -730,7 +733,7 @@ pub enum ParameterAttribute {
                         };
                         <span class="ident">attrs</span>
                             .<span class="ident">into_iter</span>()
-                            .<span class="ident">map</span>(<span class="ident">ParameterAttribute</span>::<span class="ident">from_llvm_ref</span>)
+                            .<span class="ident">filter_map</span>(<span class="ident">ParameterAttribute</span>::<span class="ident">from_llvm_ref</span>)
                             .<span class="ident">collect</span>()
                     },
                 })
@@ -790,7 +793,7 @@ pub enum ParameterAttribute {
                     };
                     <span class="ident">attrs</span>
                         .<span class="ident">into_iter</span>()
-                        .<span class="ident">map</span>(<span class="ident">FunctionAttribute</span>::<span class="ident">from_llvm_ref</span>)
+                        .<span class="ident">filter_map</span>(<span class="ident">FunctionAttribute</span>::<span class="ident">from_llvm_ref</span>)
                         .<span class="ident">collect</span>()
                 } <span class="kw">else</span> {
                     <span class="macro">vec</span><span class="macro">!</span>[]
@@ -811,7 +814,7 @@ pub enum ParameterAttribute {
                     };
                     <span class="ident">attrs</span>
                         .<span class="ident">into_iter</span>()
-                        .<span class="ident">map</span>(<span class="ident">ParameterAttribute</span>::<span class="ident">from_llvm_ref</span>)
+                        .<span class="ident">filter_map</span>(<span class="ident">ParameterAttribute</span>::<span class="ident">from_llvm_ref</span>)
                         .<span class="ident">collect</span>()
                 } <span class="kw">else</span> {
                     <span class="macro">vec</span><span class="macro">!</span>[]
@@ -903,19 +906,22 @@ pub enum ParameterAttribute {
 }
 
 <span class="kw">impl</span> <span class="ident">Attribute</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">from_llvm_ref</span>(<span class="ident">a</span>: <span class="ident">LLVMAttributeRef</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="doccomment">/// Returns `None` if we encounter an attribute we don&#39;t know about or aren&#39;t</span>
+    <span class="doccomment">/// equipped to handle</span>
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">from_llvm_ref</span>(<span class="ident">a</span>: <span class="ident">LLVMAttributeRef</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="kw">unsafe</span> { <span class="ident">LLVMIsEnumAttribute</span>(<span class="ident">a</span>) } <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="ident">Attribute</span>::<span class="ident">EnumAttribute</span> {
+            <span class="prelude-val">Some</span>(<span class="ident">Attribute</span>::<span class="ident">EnumAttribute</span> {
                 <span class="ident">kind</span>: <span class="kw">unsafe</span> { <span class="ident">LLVMGetEnumAttributeKind</span>(<span class="ident">a</span>) },
                 <span class="ident">value</span>: <span class="ident">num</span>::<span class="ident">NonZeroU64</span>::<span class="ident">new</span>(<span class="kw">unsafe</span> { <span class="ident">LLVMGetEnumAttributeValue</span>(<span class="ident">a</span>) }),
-            }
+            })
         } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">unsafe</span> { <span class="ident">LLVMIsStringAttribute</span>(<span class="ident">a</span>) } <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="ident">Attribute</span>::<span class="ident">StringAttribute</span> {
+            <span class="prelude-val">Some</span>(<span class="ident">Attribute</span>::<span class="ident">StringAttribute</span> {
                 <span class="ident">kind</span>: <span class="kw">unsafe</span> { <span class="ident">get_string_attribute_kind</span>(<span class="ident">a</span>) },
                 <span class="ident">value</span>: <span class="kw">unsafe</span> { <span class="ident">get_string_attribute_value</span>(<span class="ident">a</span>) },
-            }
+            })
         } <span class="kw">else</span> {
-            <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Attribute is neither enum nor string&quot;</span>)
+            <span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;Encountered an unknown attribute: neither enum nor string&quot;</span>);
+            <span class="prelude-val">None</span>
         }
     }
 }

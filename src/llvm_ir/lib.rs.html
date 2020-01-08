@@ -23,7 +23,15 @@
 <span id="23">23</span>
 <span id="24">24</span>
 <span id="25">25</span>
+<span id="26">26</span>
+<span id="27">27</span>
+<span id="28">28</span>
+<span id="29">29</span>
 </pre><div class="example-wrap"><pre class="rust ">
+<span class="comment">// this ensures that crate users generating docs with --no-deps will still</span>
+<span class="comment">// properly get links to the public docs for llvm-ir&#39;s types</span>
+<span class="attribute">#![<span class="ident">doc</span>(<span class="ident">html_root_url</span> <span class="op">=</span> <span class="string">&quot;https://cdisselkoen.github.io/llvm-ir&quot;</span>)]</span>
+
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">basicblock</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">basicblock</span>::<span class="ident">BasicBlock</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">constant</span>;
