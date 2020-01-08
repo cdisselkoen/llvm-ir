@@ -36,7 +36,7 @@ This crate is on [crates.io](https://crates.io/crates/llvm-ir), so you can simpl
 add it as a dependency in your `Cargo.toml`:
 ```toml
 [dependencies]
-llvm-ir = "0.4.0"
+llvm-ir = "0.4.1"
 ```
 
 Then, the easiest way to get started is to parse some existing LLVM IR into
