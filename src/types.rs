@@ -307,7 +307,7 @@ impl Type {
 
     /// Replace any opaqued named structs with the given `name`, with weak references to the given `Arc<RwLock<Type>>`
     fn replace_in_type(ty: Type, target_name: &str, replacement: &Arc<RwLock<Type>>) -> Type {
-        Type::_replace_in_type(ty, target_name, replacement, HashSet::new())
+        Type::_replace_in_type(ty, target_name, replacement, &mut HashSet::new())
     }
 
     // `seen_names` is here to prevent infinite recursion on self-referential
@@ -317,7 +317,7 @@ impl Type {
         ty: Type,
         target_name: &str,
         replacement: &Arc<RwLock<Type>>,
-        mut seen_names: HashSet<String>,
+        seen_names: &mut HashSet<String>,
     ) -> Type {
         match ty {
             Type::NamedStructType { ref name, ty: None } if name == target_name => {
@@ -330,18 +330,16 @@ impl Type {
             // `{ ref name, ty: ref Some(weak) }` parse as valid, and just `ty: Some(weak)` errors due to
             // attempting to move the value. For now we have this hack instead.
             Type::NamedStructType { ref name, ref ty } if ty.is_some() && !seen_names.contains(name) => {
+                seen_names.insert(name.clone());
                 let weak = ty
                     .as_ref()
                     .expect("we checked that ty.is_some() in the pattern guard");
-                seen_names.insert(name.clone());
-                let arc_opt: Option<Arc<RwLock<Type>>> = weak.upgrade();
-                if let Some(arc) = arc_opt.as_ref() {
-                    let inner_ty = arc.read().unwrap().clone();
-                    *arc.write().unwrap() = Type::_replace_in_type(inner_ty, target_name, replacement, seen_names);
-                }
+                let arc: Arc<RwLock<Type>> = weak.upgrade().expect("Failed to upgrade weak reference");
+                let inner_ty = arc.read().unwrap().clone();
+                *arc.write().unwrap() = Type::_replace_in_type(inner_ty, target_name, replacement, seen_names);
                 Type::NamedStructType {
                     name: name.clone(),
-                    ty: arc_opt.map(|arc| Arc::downgrade(&arc)),
+                    ty: Some(Arc::downgrade(&arc)),
                 }
             }
             Type::PointerType { pointee_type, addr_space } => Type::PointerType {
@@ -349,18 +347,23 @@ impl Type {
                 addr_space,
             },
             Type::FuncType { result_type, param_types, is_var_arg } => Type::FuncType {
-                // we need to `seen_names.clone()` in every recursive call because one recursive call seeing a name
-                // shouldn't mark it as seen for any of the other calls
+                // we don't mind that one recursive call here might add things
+                // to `seen_names` that will affect the processing of other
+                // recursive calls.
+                // All `NamedStructType`s with the same name should be refs to
+                // the same `StructType`, so once we've done the replacement in
+                // that `StructType` once, we don't need to do it again, even on
+                // another "branch" of the recursion
                 result_type: Box::new(Type::_replace_in_type(
                     *result_type,
                     target_name,
                     replacement,
-                    seen_names.clone(),
+                    seen_names,
                 )),
                 param_types: param_types
                     .into_iter()
                     .map(|t| {
-                        Type::_replace_in_type(t, target_name, replacement, seen_names.clone())
+                        Type::_replace_in_type(t, target_name, replacement, seen_names)
                     })
                     .collect(),
                 is_var_arg,
@@ -384,12 +387,17 @@ impl Type {
                 num_elements,
             },
             Type::StructType { element_types, is_packed } => Type::StructType {
-                // we need to `seen_names.clone()` in every recursive call because one recursive call seeing a name
-                // shouldn't mark it as seen for any of the other calls
+                // we don't mind that one recursive call here might add things
+                // to `seen_names` that will affect the processing of other
+                // recursive calls.
+                // All `NamedStructType`s with the same name should be refs to
+                // the same `StructType`, so once we've done the replacement in
+                // that `StructType` once, we don't need to do it again, even on
+                // another "branch" of the recursion
                 element_types: element_types
                     .into_iter()
                     .map(|t| {
-                        Type::_replace_in_type(t, target_name, replacement, seen_names.clone())
+                        Type::_replace_in_type(t, target_name, replacement, seen_names)
                     })
                     .collect(),
                 is_packed,
