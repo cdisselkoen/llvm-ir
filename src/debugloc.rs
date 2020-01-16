@@ -41,8 +41,8 @@ pub trait HasDebugLoc {
     /// have a `DebugLoc`.
     ///
     /// Reasons something might not have a `DebugLoc` include:
-    ///     - the file was compiled without debuginfo
-    ///     - for an `Instruction`, it might not directly correspond to any source
+    ///     (1) the file was compiled without debuginfo;
+    ///     (2) for an `Instruction`, it might not directly correspond to any source
     ///     line. For instance, it may be just setting up the stack frame for a
     ///     function.
     fn get_debug_loc(&self) -> &Option<DebugLoc>;
