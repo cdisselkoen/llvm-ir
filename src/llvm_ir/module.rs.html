@@ -499,8 +499,18 @@
 <span id="499">499</span>
 <span id="500">500</span>
 <span id="501">501</span>
+<span id="502">502</span>
+<span id="503">503</span>
+<span id="504">504</span>
+<span id="505">505</span>
+<span id="506">506</span>
+<span id="507">507</span>
+<span id="508">508</span>
+<span id="509">509</span>
+<span id="510">510</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">constant</span>::<span class="ident">Constant</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">debugloc</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">function</span>::{<span class="ident">Function</span>, <span class="ident">FunctionAttribute</span>, <span class="ident">GroupID</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">name</span>::<span class="ident">Name</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::{<span class="ident">Type</span>, <span class="ident">Typed</span>};
@@ -616,12 +626,19 @@
     <span class="kw">pub</span> <span class="ident">section</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">comdat</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Comdat</span><span class="op">&gt;</span>, <span class="comment">// llvm-hs-pure has Option&lt;String&gt; for some reason</span>
     <span class="kw">pub</span> <span class="ident">alignment</span>: <span class="ident">u32</span>,
+    <span class="kw">pub</span> <span class="ident">debugloc</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DebugLoc</span><span class="op">&gt;</span>,
     <span class="comment">// --TODO not yet implemented-- pub metadata: Vec&lt;(String, MetadataRef&lt;MetadataNode&gt;)&gt;,</span>
 }
 
 <span class="kw">impl</span> <span class="ident">Typed</span> <span class="kw">for</span> <span class="ident">GlobalVariable</span> {
     <span class="kw">fn</span> <span class="ident">get_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Type</span> {
         <span class="self">self</span>.<span class="ident">ty</span>.<span class="ident">clone</span>()
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">HasDebugLoc</span> <span class="kw">for</span> <span class="ident">GlobalVariable</span> {
+    <span class="kw">fn</span> <span class="ident">get_debug_loc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DebugLoc</span><span class="op">&gt;</span> {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">debugloc</span>
     }
 }
 
@@ -877,6 +894,7 @@ pub enum AlignType {
                 }
             },
             <span class="ident">alignment</span>: <span class="kw">unsafe</span> { <span class="ident">LLVMGetAlignment</span>(<span class="ident">global</span>) },
+            <span class="ident">debugloc</span>: <span class="ident">DebugLoc</span>::<span class="ident">from_llvm_no_col</span>(<span class="ident">global</span>),
             <span class="comment">// metadata: unimplemented!(&quot;metadata&quot;),</span>
         }
     }

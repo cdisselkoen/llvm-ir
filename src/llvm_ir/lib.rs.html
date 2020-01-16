@@ -27,6 +27,8 @@
 <span id="27">27</span>
 <span id="28">28</span>
 <span id="29">29</span>
+<span id="30">30</span>
+<span id="31">31</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// this ensures that crate users generating docs with --no-deps will still</span>
 <span class="comment">// properly get links to the public docs for llvm-ir&#39;s types</span>
@@ -36,6 +38,8 @@
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">basicblock</span>::<span class="ident">BasicBlock</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">constant</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">constant</span>::<span class="ident">Constant</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">debugloc</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">debugloc</span>::{<span class="ident">DebugLoc</span>, <span class="ident">HasDebugLoc</span>};
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">function</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">function</span>::<span class="ident">Function</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">instruction</span>;

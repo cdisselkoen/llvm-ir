@@ -461,9 +461,20 @@
 <span id="461">461</span>
 <span id="462">462</span>
 <span id="463">463</span>
+<span id="464">464</span>
+<span id="465">465</span>
+<span id="466">466</span>
+<span id="467">467</span>
+<span id="468">468</span>
+<span id="469">469</span>
+<span id="470">470</span>
+<span id="471">471</span>
+<span id="472">472</span>
+<span id="473">473</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">basicblock</span>::<span class="ident">BasicBlock</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">constant</span>::<span class="ident">Constant</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">debugloc</span>::{<span class="ident">DebugLoc</span>, <span class="ident">HasDebugLoc</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">module</span>::{<span class="ident">Comdat</span>, <span class="ident">DLLStorageClass</span>, <span class="ident">Linkage</span>, <span class="ident">Visibility</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">name</span>::<span class="ident">Name</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::{<span class="ident">Type</span>, <span class="ident">Typed</span>};
@@ -491,6 +502,7 @@
     <span class="comment">// pub prefix: Option&lt;Constant&gt;,  // appears to not be exposed in the LLVM C API, only the C++ API</span>
     <span class="doccomment">/// Personalities are used for exception handling. See [LLVM 9 docs on Personality Function](https://releases.llvm.org/9.0.0/docs/LangRef.html#personalityfn)</span>
     <span class="kw">pub</span> <span class="ident">personality_function</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Constant</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">debugloc</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DebugLoc</span><span class="op">&gt;</span>,
     <span class="comment">// --TODO not yet implemented-- pub metadata: Vec&lt;(String, MetadataRef&lt;MetadataNode&gt;)&gt;,</span>
 }
 
@@ -501,6 +513,12 @@
             <span class="ident">param_types</span>: <span class="self">self</span>.<span class="ident">parameters</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">p</span><span class="op">|</span> <span class="ident">p</span>.<span class="ident">get_type</span>()).<span class="ident">collect</span>(),
             <span class="ident">is_var_arg</span>: <span class="self">self</span>.<span class="ident">is_var_arg</span>,
         }
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">HasDebugLoc</span> <span class="kw">for</span> <span class="ident">Function</span> {
+    <span class="kw">fn</span> <span class="ident">get_debug_loc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DebugLoc</span><span class="op">&gt;</span> {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">debugloc</span>
     }
 }
 
@@ -534,6 +552,7 @@
             <span class="ident">alignment</span>: <span class="number">4</span>,
             <span class="ident">garbage_collector_name</span>: <span class="prelude-val">None</span>,
             <span class="ident">personality_function</span>: <span class="prelude-val">None</span>,
+            <span class="ident">debugloc</span>: <span class="prelude-val">None</span>,
         }
     }
 }
@@ -848,6 +867,7 @@ pub enum ParameterAttribute {
                     <span class="prelude-val">None</span>
                 }
             },
+            <span class="ident">debugloc</span>: <span class="ident">DebugLoc</span>::<span class="ident">from_llvm_no_col</span>(<span class="ident">func</span>),
             <span class="comment">// metadata: unimplemented!(&quot;Function.metadata&quot;),</span>
         }
     }

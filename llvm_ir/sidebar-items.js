@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["basicblock",""],["constant",""],["function",""],["instruction",""],["module",""],["name",""],["operand",""],["predicates",""],["terminator",""],["types",""]]});
+initSidebarItems({"mod":[["basicblock",""],["constant",""],["debugloc",""],["function",""],["instruction",""],["module",""],["name",""],["operand",""],["predicates",""],["terminator",""],["types",""]]});

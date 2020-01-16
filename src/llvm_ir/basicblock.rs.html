@@ -121,6 +121,8 @@
 <span id="121">121</span>
 <span id="122">122</span>
 <span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">instruction</span>::<span class="ident">Instruction</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">name</span>::<span class="ident">Name</span>;
@@ -143,7 +145,9 @@
         <span class="self">Self</span> {
             <span class="ident">name</span>,
             <span class="ident">instrs</span>: <span class="macro">vec</span><span class="macro">!</span>[],
-            <span class="ident">term</span>: <span class="ident">Terminator</span>::<span class="ident">Unreachable</span>(<span class="ident">Unreachable</span> {}),
+            <span class="ident">term</span>: <span class="ident">Terminator</span>::<span class="ident">Unreachable</span>(<span class="ident">Unreachable</span> {
+                <span class="ident">debugloc</span>: <span class="prelude-val">None</span>,
+            }),
         }
     }
 }

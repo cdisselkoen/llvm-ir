@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["DebugLoc","Describes a \"debug location\" (source location)"]],"trait":[["HasDebugLoc",""]]});
