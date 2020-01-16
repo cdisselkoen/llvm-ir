@@ -47,7 +47,12 @@ If you currently have C/C++ sources (say, `source.c`), you can generate
 ```bash
 clang -c -emit-llvm source.c -o source.bc
 ```
-Then, in Rust, you can use `llvm-ir`'s `Module::from_bc_path` function:
+
+Alternately, to compile Rust sources to LLVM bitcode, you can use `rustc`'s
+`--emit=llvm-bc` flag.
+
+In either case, once you have a bitcode file, then you can use `llvm-ir`'s
+`Module::from_bc_path` function:
 ```rust
 use llvm_ir::Module;
 use std::path::Path;
@@ -64,7 +69,8 @@ when appropriate.
 
 ## Compatibility
 Currently, `llvm-ir` only supports LLVM 9. However, it should probably "just
-work" with LLVM 8 if you simply open `Cargo.toml` and change the line
+work" with LLVM 8 if you simply open the `llvm-ir` `Cargo.toml` and change
+the line
 ```toml
 llvm-sys = "90.0"
 ```
@@ -79,12 +85,15 @@ then `cargo clean` and rebuild. LLVMs older than 8 are not supported.
 ## Development/Debugging
 For development or debugging, you may want LLVM text-format (`*.ll`) files in
 addition to `*.bc` files.
-You can generate these by passing `-S -emit-llvm` to `clang`, instead of
-`-c -emit-llvm`.
+
+For C/C++ sources, you can generate these by passing `-S -emit-llvm` to
+`clang`, instead of `-c -emit-llvm`.
 E.g.,
 ```bash
 clang -S -emit-llvm source.c -o source.ll
 ```
+
+For Rust sources, you can use `rustc`'s `--emit=llvm-ir` flag.
 
 ## Limitations
 A few features of LLVM IR are not yet represented in `llvm-ir`'s data
