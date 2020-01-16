@@ -2,6 +2,7 @@ use either::Either;
 use llvm_ir::instruction;
 use llvm_ir::terminator;
 use llvm_ir::Constant;
+use llvm_ir::HasDebugLoc;
 use llvm_ir::IntPredicate;
 use llvm_ir::Module;
 use llvm_ir::Name;
@@ -48,6 +49,38 @@ fn hellobc() {
             value: 0
         }))
     );
+
+    // this file was compiled without debuginfo, so nothing should have a debugloc
+    assert_eq!(func.debugloc, None);
+    assert_eq!(ret.debugloc, None);
+}
+
+// this test relates to the version of the file compiled with debuginfo
+#[test]
+fn hellobcg() {
+    init_logging();
+    let path = Path::new("tests/basic_bc/hello.bc-g");
+    let module = Module::from_bc_path(&path).expect("Failed to parse module");
+    assert_eq!(module.name, "tests/basic_bc/hello.bc-g");
+    assert_eq!(module.source_file_name, "hello.c");
+    let debug_filename = "hello.c";
+    let debug_directory = Some("/Users/craig/llvm-ir/tests/basic_bc".to_owned());
+
+    let func = &module.functions[0];
+    assert_eq!(func.name, "main");
+    let debugloc = func.get_debug_loc().as_ref().expect("Expected main() to have a debugloc");
+    assert_eq!(debugloc.line, 3);
+    assert_eq!(debugloc.col, None);
+    assert_eq!(debugloc.filename, debug_filename);
+    assert_eq!(debugloc.directory, debug_directory);
+
+    let bb = &func.basic_blocks[0];
+    let ret: &terminator::Ret = &bb.term.clone().try_into().unwrap_or_else(|_| panic!("Terminator should be a Ret but is {:?}", &bb.term));
+    let debugloc = ret.get_debug_loc().as_ref().expect("expected the Ret to have a debugloc");
+    assert_eq!(debugloc.line, 4);
+    assert_eq!(debugloc.col, Some(3));
+    assert_eq!(debugloc.filename, debug_filename);
+    assert_eq!(debugloc.directory, debug_directory);
 }
 
 #[test]
@@ -311,6 +344,7 @@ fn variablesbc() {
     assert_eq!(var.ty, Type::pointer_to(Type::i32()));
     assert_eq!(var.initializer, Some(Constant::Int { bits: 32, value: 5 }));
     assert_eq!(var.alignment, 4);
+    assert!(var.get_debug_loc().is_none());  // this file was compiled without debuginfo
 
     assert_eq!(module.functions.len(), 1);
     let func = &module.functions[0];
@@ -330,9 +364,30 @@ fn variablesbc() {
     assert_eq!(global_store.get_type(), Type::VoidType);
 }
 
+// this test relates to the version of the file compiled with debuginfo
+#[test]
+fn variablesbcg() {
+    init_logging();
+    let path = Path::new("tests/basic_bc/variables.bc-g");
+    let module = Module::from_bc_path(&path).expect("Failed to parse module");
+    let debug_filename = "variables.c";
+    let debug_directory = Some("/Users/craig/llvm-ir/tests/basic_bc".to_owned());
+
+    // really all we want to check is the debugloc of the global variable.
+    // other debuginfo stuff is covered in other tests
+    assert_eq!(module.global_vars.len(), 1);
+    let var = &module.global_vars[0];
+    assert_eq!(var.name, Name::from("global"));
+    let debugloc = var.get_debug_loc().as_ref().expect("expected the global to have a debugloc");
+    assert_eq!(debugloc.line, 5);
+    assert_eq!(debugloc.col, None);  // only `Instruction`s and `Terminator`s get column numbers
+    assert_eq!(debugloc.filename, debug_filename);
+    assert_eq!(debugloc.directory, debug_directory);
+}
+
 #[test]
 fn rustbc() {
-    // This tests against the checked-in rust.bc, which was generated from the checked-in rust.rs with rustc 1.37.0
+    // This tests against the checked-in rust.bc, which was generated from the checked-in rust.rs with rustc 1.39.0
     init_logging();
     let path = Path::new("tests/basic_bc/rust.bc");
     let module = Module::from_bc_path(&path).expect("Failed to parse module");
@@ -382,6 +437,48 @@ fn rustbc() {
         ty: param_type,
     });
     assert_eq!(call.dest, Some(Name::Number(0)));
+
+    // this file was compiled without debuginfo, so nothing should have a debugloc
+    assert!(func.get_debug_loc().is_none());
+    assert!(alloca_iter.get_debug_loc().is_none());
+    assert!(alloca_sum.get_debug_loc().is_none());
+    assert!(store.get_debug_loc().is_none());
+    assert!(call.get_debug_loc().is_none());
+}
+
+// this test relates to the version of the file compiled with debuginfo
+#[test]
+fn rustbcg() {
+    init_logging();
+    let path = Path::new("tests/basic_bc/rust.bc-g");
+    let module = Module::from_bc_path(&path).expect("Failed to parse module");
+    let debug_filename = "rust.rs";
+    let debug_directory = Some("/Users/craig/llvm-ir/tests/basic_bc".to_owned());
+
+    let func = module.get_func_by_name("_ZN4rust9rust_loop17h3ed0672b8cf44eb1E").expect("Failed to find function");
+    let debugloc = func.get_debug_loc().as_ref().expect("Expected function to have a debugloc");
+    assert_eq!(debugloc.line, 3);
+    assert_eq!(debugloc.col, None);
+    assert_eq!(debugloc.filename, debug_filename);
+    assert_eq!(debugloc.directory, debug_directory);
+
+    let startbb = func.get_bb_by_name(&Name::from("start")).expect("Failed to find bb 'start'");
+
+    // the first 17 instructions in the function should not have debuglocs - they are just setting up the stack frame
+    for i in 0..17 {
+        assert!(startbb.instrs[i].get_debug_loc().is_none());
+    }
+
+    let store_debugloc = startbb.instrs[31].get_debug_loc().as_ref().expect("Expected this store to have a debugloc");
+    assert_eq!(store_debugloc.line, 4);
+    assert_eq!(store_debugloc.col, Some(18));
+    assert_eq!(store_debugloc.filename, debug_filename);
+    assert_eq!(store_debugloc.directory, debug_directory);
+    let call_debugloc = startbb.instrs[33].get_debug_loc().as_ref().expect("Expected this call to have a debugloc");
+    assert_eq!(call_debugloc.line, 5);
+    assert_eq!(call_debugloc.col, Some(13));
+    assert_eq!(call_debugloc.filename, debug_filename);
+    assert_eq!(call_debugloc.directory, debug_directory);
 }
 
 #[test]
@@ -481,6 +578,42 @@ fn simple_linked_list() {
         },
         _ => panic!("Expected parameter type to be pointer type, but got {:?}", paramty),
     };
+}
+
+// this test relates to the version of the file compiled with debuginfo
+#[test]
+fn simple_linked_list_g() {
+    init_logging();
+    let path = Path::new("tests/basic_bc/linkedlist.bc-g");
+    let module = Module::from_bc_path(&path).expect("Failed to parse module");
+    let debug_filename = "linkedlist.c";
+    let debug_directory = Some("/Users/craig/llvm-ir/tests/basic_bc".to_owned());
+
+    let func = module.get_func_by_name("simple_linked_list").expect("Failed to find function");
+    let debugloc = func.get_debug_loc().as_ref().expect("expected simple_linked_list to have a debugloc");
+    assert_eq!(debugloc.line, 8);
+    assert_eq!(debugloc.col, None);
+    assert_eq!(debugloc.filename, debug_filename);
+    assert_eq!(debugloc.directory, debug_directory);
+
+    // the first seven instructions shouldn't have debuglocs - they are just setting up the stack frame
+    for i in 0..7 {
+        assert!(func.basic_blocks[0].instrs[i].get_debug_loc().is_none());
+    }
+
+    // the eighth instruction should have a debugloc
+    let debugloc = func.basic_blocks[0].instrs[7].get_debug_loc().as_ref().expect("expected this instruction to have a debugloc");
+    assert_eq!(debugloc.line, 8);
+    assert_eq!(debugloc.col, Some(28));
+    assert_eq!(debugloc.filename, debug_filename);
+    assert_eq!(debugloc.directory, debug_directory);
+
+    // the tenth instruction should have a different debugloc
+    let debugloc = func.basic_blocks[0].instrs[9].get_debug_loc().as_ref().expect("expected this instruction to have a debugloc");
+    assert_eq!(debugloc.line, 9);
+    assert_eq!(debugloc.col, Some(34));
+    assert_eq!(debugloc.filename, debug_filename);
+    assert_eq!(debugloc.directory, debug_directory);
 }
 
 #[test]

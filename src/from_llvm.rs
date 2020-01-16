@@ -43,6 +43,20 @@ macro_rules! wrap_with_len {
     };
 }
 
+macro_rules! wrap_with_len_maybe_null {
+    ($llvmFunc:ident, $argty:ty, $wrapperFunc:ident) => {
+        pub unsafe fn $wrapperFunc(arg: $argty) -> Option<String> {
+            let mut len = 0;
+            let ptr = $llvmFunc(arg, &mut len);
+            if ptr.is_null() {
+                None
+            } else {
+                Some(raw_to_string(ptr))
+            }
+        }
+    };
+}
+
 wrap_with_len!(LLVMGetModuleInlineAsm, LLVMModuleRef, get_module_inline_asm);
 wrap_with_len!(LLVMGetModuleIdentifier, LLVMModuleRef, get_module_identifier);
 wrap_with_len!(LLVMGetSourceFileName, LLVMModuleRef, get_source_file_name);
@@ -57,6 +71,8 @@ wrap!(LLVMPrintValueToString, LLVMValueRef, print_to_string);
 // wrap!(LLVMPrintTypeToString, LLVMTypeRef, print_type_to_string);
 wrap_with_len!(LLVMGetStringAttributeKind, LLVMAttributeRef, get_string_attribute_kind);
 wrap_with_len!(LLVMGetStringAttributeValue, LLVMAttributeRef, get_string_attribute_value);
+wrap_with_len_maybe_null!(LLVMGetDebugLocFilename, LLVMValueRef, get_debugloc_filename);
+wrap_with_len_maybe_null!(LLVMGetDebugLocDirectory, LLVMValueRef, get_debugloc_directory);
 
 // Panics if the LLVMValueRef is not a basic block
 pub unsafe fn op_to_bb(op: LLVMValueRef) -> LLVMBasicBlockRef {

@@ -95,12 +95,22 @@ clang -S -emit-llvm source.c -o source.ll
 
 For Rust sources, you can use `rustc`'s `--emit=llvm-ir` flag.
 
+Additionally, you may want to ensure you are generating LLVM bitcode with
+debuginfo; this will ensure that [`Instruction`]s, [`Terminator`]s,
+[`GlobalVariable`]s, and [`Function`]s have valid [`DebugLoc`]s attached.
+(See the [`HasDebugLoc`] trait.)
+You can do this by passing the `-g` flag to `clang`, `clang++`, or `rustc`
+when generating bitcode.
+
 ## Limitations
 A few features of LLVM IR are not yet represented in `llvm-ir`'s data
-structures, most notably debug information (metadata), which `llvm-ir`
-currently makes no attempt to recover.
+structures.
+
+Most notably, `llvm-ir` recovers debug-location metadata (for mapping back to
+source locations), but makes no attempt to recover any other debug metadata.
 LLVM files containing metadata can still be parsed in with no problems, but
-the resulting `Module` structures will not contain any of the metadata.
+the resulting `Module` structures will not contain any of the metadata,
+except debug locations.
 Work-in-progress on fixing this can be found on the `metadata` branch of this
 repo, but be warned that the `metadata` branch doesn't even build at the time
 of this writing, let alone provide any meaningful functionality for crate
@@ -153,3 +163,7 @@ package] as well.
 [`BasicBlock`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/basicblock/struct.BasicBlock.html
 [`Function`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/function/struct.Function.html
 [`Module`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/module/struct.Module.html
+[`Terminator`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/terminator/enum.Terminator.html
+[`GlobalVariable`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/module/struct.GlobalVariable.html
+[`DebugLoc`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/debugloc/struct.DebugLoc.html
+[`HasDebugLoc`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/debugloc/trait.HasDebugLoc.html

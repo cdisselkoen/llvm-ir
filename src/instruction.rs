@@ -1,4 +1,5 @@
 use crate::constant::Constant;
+use crate::debugloc::{DebugLoc, HasDebugLoc};
 use crate::function::{CallingConvention, FunctionAttribute, ParameterAttribute};
 use crate::name::Name;
 use crate::operand::Operand;
@@ -139,6 +140,66 @@ impl Typed for Instruction {
             Instruction::LandingPad(i) => i.get_type(),
             Instruction::CatchPad(i) => i.get_type(),
             Instruction::CleanupPad(i) => i.get_type(),
+        }
+    }
+}
+
+impl HasDebugLoc for Instruction {
+    fn get_debug_loc(&self) -> &Option<DebugLoc> {
+        match self {
+            Instruction::Add(i) => i.get_debug_loc(),
+            Instruction::Sub(i) => i.get_debug_loc(),
+            Instruction::Mul(i) => i.get_debug_loc(),
+            Instruction::UDiv(i) => i.get_debug_loc(),
+            Instruction::SDiv(i) => i.get_debug_loc(),
+            Instruction::URem(i) => i.get_debug_loc(),
+            Instruction::SRem(i) => i.get_debug_loc(),
+            Instruction::And(i) => i.get_debug_loc(),
+            Instruction::Or(i) => i.get_debug_loc(),
+            Instruction::Xor(i) => i.get_debug_loc(),
+            Instruction::Shl(i) => i.get_debug_loc(),
+            Instruction::LShr(i) => i.get_debug_loc(),
+            Instruction::AShr(i) => i.get_debug_loc(),
+            Instruction::FAdd(i) => i.get_debug_loc(),
+            Instruction::FSub(i) => i.get_debug_loc(),
+            Instruction::FMul(i) => i.get_debug_loc(),
+            Instruction::FDiv(i) => i.get_debug_loc(),
+            Instruction::FRem(i) => i.get_debug_loc(),
+            Instruction::FNeg(i) => i.get_debug_loc(),
+            Instruction::ExtractElement(i) => i.get_debug_loc(),
+            Instruction::InsertElement(i) => i.get_debug_loc(),
+            Instruction::ShuffleVector(i) => i.get_debug_loc(),
+            Instruction::ExtractValue(i) => i.get_debug_loc(),
+            Instruction::InsertValue(i) => i.get_debug_loc(),
+            Instruction::Alloca(i) => i.get_debug_loc(),
+            Instruction::Load(i) => i.get_debug_loc(),
+            Instruction::Store(i) => i.get_debug_loc(),
+            Instruction::Fence(i) => i.get_debug_loc(),
+            Instruction::CmpXchg(i) => i.get_debug_loc(),
+            Instruction::AtomicRMW(i) => i.get_debug_loc(),
+            Instruction::GetElementPtr(i) => i.get_debug_loc(),
+            Instruction::Trunc(i) => i.get_debug_loc(),
+            Instruction::ZExt(i) => i.get_debug_loc(),
+            Instruction::SExt(i) => i.get_debug_loc(),
+            Instruction::FPTrunc(i) => i.get_debug_loc(),
+            Instruction::FPExt(i) => i.get_debug_loc(),
+            Instruction::FPToUI(i) => i.get_debug_loc(),
+            Instruction::FPToSI(i) => i.get_debug_loc(),
+            Instruction::UIToFP(i) => i.get_debug_loc(),
+            Instruction::SIToFP(i) => i.get_debug_loc(),
+            Instruction::PtrToInt(i) => i.get_debug_loc(),
+            Instruction::IntToPtr(i) => i.get_debug_loc(),
+            Instruction::BitCast(i) => i.get_debug_loc(),
+            Instruction::AddrSpaceCast(i) => i.get_debug_loc(),
+            Instruction::ICmp(i) => i.get_debug_loc(),
+            Instruction::FCmp(i) => i.get_debug_loc(),
+            Instruction::Phi(i) => i.get_debug_loc(),
+            Instruction::Select(i) => i.get_debug_loc(),
+            Instruction::Call(i) => i.get_debug_loc(),
+            Instruction::VAArg(i) => i.get_debug_loc(),
+            Instruction::LandingPad(i) => i.get_debug_loc(),
+            Instruction::CatchPad(i) => i.get_debug_loc(),
+            Instruction::CleanupPad(i) => i.get_debug_loc(),
         }
     }
 }
@@ -392,6 +453,12 @@ macro_rules! impl_inst {
             }
         }
 
+        impl HasDebugLoc for $inst {
+            fn get_debug_loc(&self) -> &Option<DebugLoc> {
+                &self.debugloc
+            }
+        }
+
         /* --TODO not yet implemented: metadata
         impl HasMetadata for $inst {
             fn get_metadata(&self) -> &InstructionMetadata {
@@ -519,6 +586,7 @@ pub struct Add {
     pub dest: Name,
     // pub nsw: bool,  // getters for these seem to not be exposed in the LLVM C API, only in the C++ one
     // pub nuw: bool,  // getters for these seem to not be exposed in the LLVM C API, only in the C++ one
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -534,6 +602,7 @@ pub struct Sub {
     pub dest: Name,
     // pub nsw: bool,  // getters for these seem to not be exposed in the LLVM C API, only in the C++ one
     // pub nuw: bool,  // getters for these seem to not be exposed in the LLVM C API, only in the C++ one
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -549,6 +618,7 @@ pub struct Mul {
     pub dest: Name,
     // pub nsw: bool,  // getters for these seem to not be exposed in the LLVM C API, only in the C++ one
     // pub nuw: bool,  // getters for these seem to not be exposed in the LLVM C API, only in the C++ one
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -563,6 +633,7 @@ pub struct UDiv {
     pub operand1: Operand,
     pub dest: Name,
     // pub exact: bool,  // getters for these seem to not be exposed in the LLVM C API, only in the C++ one
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -577,6 +648,7 @@ pub struct SDiv {
     pub operand1: Operand,
     pub dest: Name,
     // pub exact: bool,  // getters for these seem to not be exposed in the LLVM C API, only in the C++ one
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -590,6 +662,7 @@ pub struct URem {
     pub operand0: Operand,
     pub operand1: Operand,
     pub dest: Name,
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -603,6 +676,7 @@ pub struct SRem {
     pub operand0: Operand,
     pub operand1: Operand,
     pub dest: Name,
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -617,6 +691,7 @@ pub struct And {
     pub operand0: Operand,
     pub operand1: Operand,
     pub dest: Name,
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -631,6 +706,7 @@ pub struct Or {
     pub operand0: Operand,
     pub operand1: Operand,
     pub dest: Name,
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -645,6 +721,7 @@ pub struct Xor {
     pub operand0: Operand,
     pub operand1: Operand,
     pub dest: Name,
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -661,6 +738,7 @@ pub struct Shl {
     pub dest: Name,
     // pub nsw: bool,  // getters for these seem to not be exposed in the LLVM C API, only in the C++ one
     // pub nuw: bool,  // getters for these seem to not be exposed in the LLVM C API, only in the C++ one
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -676,6 +754,7 @@ pub struct LShr {
     pub operand1: Operand,
     pub dest: Name,
     // pub exact: bool,  // getters for these seem to not be exposed in the LLVM C API, only in the C++ one
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -691,6 +770,7 @@ pub struct AShr {
     pub operand1: Operand,
     pub dest: Name,
     // pub exact: bool,  // getters for these seem to not be exposed in the LLVM C API, only in the C++ one
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -706,6 +786,7 @@ pub struct FAdd {
     pub operand1: Operand,
     pub dest: Name,
     // pub fast_math_flags: FastMathFlags,  // getters for these seem to not be exposed in the LLVM C API, only in the C++ one
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -721,6 +802,7 @@ pub struct FSub {
     pub operand1: Operand,
     pub dest: Name,
     // pub fast_math_flags: FastMathFlags,  // getters for these seem to not be exposed in the LLVM C API, only in the C++ one
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -736,6 +818,7 @@ pub struct FMul {
     pub operand1: Operand,
     pub dest: Name,
     // pub fast_math_flags: FastMathFlags,  // getters for these seem to not be exposed in the LLVM C API, only in the C++ one
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -751,6 +834,7 @@ pub struct FDiv {
     pub operand1: Operand,
     pub dest: Name,
     // pub fast_math_flags: FastMathFlags,  // getters for these seem to not be exposed in the LLVM C API, only in the C++ one
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -766,6 +850,7 @@ pub struct FRem {
     pub operand1: Operand,
     pub dest: Name,
     // pub fast_math_flags: FastMathFlags,  // getters for these seem to not be exposed in the LLVM C API, only in the C++ one
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -780,6 +865,7 @@ pub struct FNeg {
     pub operand: Operand,
     pub dest: Name,
     // pub fast_math_flags: FastMathFlags,  // getters for these seem to not be exposed in the LLVM C API, only in the C++ one
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -794,6 +880,7 @@ pub struct ExtractElement {
     pub vector: Operand,
     pub index: Operand,
     pub dest: Name,
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -817,6 +904,7 @@ pub struct InsertElement {
     pub element: Operand,
     pub index: Operand,
     pub dest: Name,
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -836,6 +924,7 @@ pub struct ShuffleVector {
     pub operand1: Operand,
     pub dest: Name,
     pub mask: Constant,
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -863,6 +952,7 @@ pub struct ExtractValue {
     pub aggregate: Operand,
     pub indices: Vec<u32>,
     pub dest: Name,
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -900,6 +990,7 @@ pub struct InsertValue {
     pub element: Operand,
     pub indices: Vec<u32>,
     pub dest: Name,
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -920,6 +1011,7 @@ pub struct Alloca {
     pub num_elements: Operand, // llvm-hs-pure has Option<Operand>
     pub dest: Name,
     pub alignment: u32,
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -941,6 +1033,7 @@ pub struct Load {
     pub volatile: bool,
     pub atomicity: Option<Atomicity>,
     pub alignment: u32,
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -965,6 +1058,7 @@ pub struct Store {
     pub volatile: bool,
     pub atomicity: Option<Atomicity>,
     pub alignment: u32,
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -975,6 +1069,7 @@ void_typed!(Store);
 #[derive(PartialEq, Clone, Debug)]
 pub struct Fence {
     pub atomicity: Atomicity,
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -994,6 +1089,7 @@ pub struct CmpXchg {
     pub atomicity: Atomicity,
     /// This is the "failure" `MemoryOrdering`
     pub failure_memory_ordering: MemoryOrdering,
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -1020,6 +1116,7 @@ pub struct AtomicRMW {
     pub dest: Name,
     pub volatile: bool,
     pub atomicity: Atomicity,
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -1044,6 +1141,7 @@ pub struct GetElementPtr {
     pub indices: Vec<Operand>,
     pub dest: Name,
     pub in_bounds: bool,
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -1098,6 +1196,7 @@ pub struct Trunc {
     pub operand: Operand,
     pub to_type: Type,
     pub dest: Name,
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -1112,6 +1211,7 @@ pub struct ZExt {
     pub operand: Operand,
     pub to_type: Type,
     pub dest: Name,
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -1126,6 +1226,7 @@ pub struct SExt {
     pub operand: Operand,
     pub to_type: Type,
     pub dest: Name,
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -1140,6 +1241,7 @@ pub struct FPTrunc {
     pub operand: Operand,
     pub to_type: Type,
     pub dest: Name,
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -1154,6 +1256,7 @@ pub struct FPExt {
     pub operand: Operand,
     pub to_type: Type,
     pub dest: Name,
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -1168,6 +1271,7 @@ pub struct FPToUI {
     pub operand: Operand,
     pub to_type: Type,
     pub dest: Name,
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -1182,6 +1286,7 @@ pub struct FPToSI {
     pub operand: Operand,
     pub to_type: Type,
     pub dest: Name,
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -1196,6 +1301,7 @@ pub struct UIToFP {
     pub operand: Operand,
     pub to_type: Type,
     pub dest: Name,
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -1210,6 +1316,7 @@ pub struct SIToFP {
     pub operand: Operand,
     pub to_type: Type,
     pub dest: Name,
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -1224,6 +1331,7 @@ pub struct PtrToInt {
     pub operand: Operand,
     pub to_type: Type,
     pub dest: Name,
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -1238,6 +1346,7 @@ pub struct IntToPtr {
     pub operand: Operand,
     pub to_type: Type,
     pub dest: Name,
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -1252,6 +1361,7 @@ pub struct BitCast {
     pub operand: Operand,
     pub to_type: Type,
     pub dest: Name,
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -1265,6 +1375,7 @@ pub struct AddrSpaceCast {
     pub operand: Operand,
     pub to_type: Type,
     pub dest: Name,
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -1280,6 +1391,7 @@ pub struct ICmp {
     pub operand0: Operand,
     pub operand1: Operand,
     pub dest: Name,
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -1308,6 +1420,7 @@ pub struct FCmp {
     pub operand0: Operand,
     pub operand1: Operand,
     pub dest: Name,
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -1334,6 +1447,7 @@ pub struct Phi {
     pub incoming_values: Vec<(Operand, Name)>,
     pub dest: Name,
     pub to_type: Type,
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -1348,6 +1462,7 @@ pub struct Select {
     pub true_value: Operand,
     pub false_value: Operand,
     pub dest: Name,
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -1373,6 +1488,7 @@ pub struct Call {
     pub function_attributes: Vec<FunctionAttribute>, // llvm-hs has the equivalent of Vec<Either<GroupID, FunctionAttribute>>, but I'm not sure how the GroupID option comes up
     pub is_tail_call: bool, // llvm-hs has the more sophisticated structure Option<TailCallKind>, but the LLVM C API just gives us true/false
     pub calling_convention: CallingConvention,
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -1396,6 +1512,7 @@ pub struct VAArg {
     pub arg_list: Operand,
     pub cur_type: Type,
     pub dest: Name,
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -1416,6 +1533,7 @@ pub struct LandingPad {
     pub clauses: Vec<LandingPadClause>,
     pub dest: Name,
     pub cleanup: bool,
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -1435,6 +1553,7 @@ pub struct CatchPad {
     pub catch_switch: Operand,
     pub args: Vec<Operand>,
     pub dest: Name,
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -1454,6 +1573,7 @@ pub struct CleanupPad {
     pub parent_pad: Operand,
     pub args: Vec<Operand>,
     pub dest: Name,
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -1679,6 +1799,7 @@ macro_rules! unop_from_llvm {
                         tnmap,
                     ),
                     dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
+                    debugloc: DebugLoc::from_llvm_with_col(inst),
                     // metadata: InstructionMetadata::from_llvm_inst(inst),
                 }
             }
@@ -1711,6 +1832,7 @@ macro_rules! binop_from_llvm {
                         tnmap,
                     ),
                     dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
+                    debugloc: DebugLoc::from_llvm_with_col(inst),
                     // metadata: InstructionMetadata::from_llvm_inst(inst),
                 }
             }
@@ -1751,6 +1873,7 @@ impl ExtractElement {
             vector: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 0) }, vnmap, gnmap, tnmap),
             index: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 1) }, vnmap, gnmap, tnmap),
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
+            debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
@@ -1775,6 +1898,7 @@ impl InsertElement {
             ),
             index: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 2) }, vnmap, gnmap, tnmap),
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
+            debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
@@ -1804,6 +1928,7 @@ impl ShuffleVector {
             ),
             mask: Constant::from_llvm_ref(unsafe { LLVMGetOperand(inst, 2) }, gnmap, tnmap),
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
+            debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
@@ -1831,6 +1956,7 @@ impl ExtractValue {
                 std::slice::from_raw_parts(ptr, num_indices as usize).to_vec()
             },
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
+            debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
@@ -1864,6 +1990,7 @@ impl InsertValue {
                 std::slice::from_raw_parts(ptr, num_indices as usize).to_vec()
             },
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
+            debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
@@ -1888,6 +2015,7 @@ impl Alloca {
             ),
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
             alignment: unsafe { LLVMGetAlignment(inst) },
+            debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
@@ -1923,6 +2051,7 @@ impl Load {
                 }
             },
             alignment: unsafe { LLVMGetAlignment(inst) },
+            debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
@@ -1957,6 +2086,7 @@ impl Store {
                 }
             },
             alignment: unsafe { LLVMGetAlignment(inst) },
+            debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
@@ -1970,6 +2100,7 @@ impl Fence {
                 synch_scope: SynchronizationScope::from_llvm_ref(inst),
                 mem_ordering: MemoryOrdering::from_llvm(unsafe { LLVMGetOrdering(inst) }),
             },
+            debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
@@ -2014,6 +2145,7 @@ impl CmpXchg {
             failure_memory_ordering: MemoryOrdering::from_llvm(unsafe {
                 LLVMGetCmpXchgFailureOrdering(inst)
             }),
+            debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
@@ -2042,6 +2174,7 @@ impl AtomicRMW {
                 synch_scope: SynchronizationScope::from_llvm_ref(inst),
                 mem_ordering: MemoryOrdering::from_llvm(unsafe { LLVMGetOrdering(inst) }),
             },
+            debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
@@ -2077,6 +2210,7 @@ impl GetElementPtr {
             },
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
             in_bounds: unsafe { LLVMIsInBounds(inst) } != 0,
+            debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
@@ -2104,6 +2238,7 @@ macro_rules! typed_unop_from_llvm {
                     ),
                     to_type: Type::from_llvm_ref(unsafe { LLVMTypeOf(inst) }, tnmap),
                     dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
+                    debugloc: DebugLoc::from_llvm_with_col(inst),
                     // metadata: InstructionMetadata::from_llvm_inst(inst),
                 }
             }
@@ -2149,6 +2284,7 @@ impl ICmp {
                 tnmap,
             ),
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
+            debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
@@ -2178,6 +2314,7 @@ impl FCmp {
                 tnmap,
             ),
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
+            debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
@@ -2213,6 +2350,7 @@ impl Phi {
             },
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
             to_type: Type::from_llvm_ref(unsafe { LLVMTypeOf(inst) }, tnmap),
+            debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
@@ -2247,6 +2385,7 @@ impl Select {
                 tnmap,
             ),
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
+            debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
@@ -2365,6 +2504,7 @@ impl Call {
             function_attributes: callinfo.function_attributes,
             is_tail_call: unsafe { LLVMIsTailCall(inst) } != 0,
             calling_convention: callinfo.calling_convention,
+            debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
@@ -2388,6 +2528,7 @@ impl VAArg {
             ),
             cur_type: Type::from_llvm_ref(unsafe { LLVMTypeOf(inst) }, tnmap),
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
+            debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
@@ -2409,6 +2550,7 @@ impl LandingPad {
             },
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
             cleanup: unsafe { LLVMIsCleanup(inst) } != 0,
+            debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
@@ -2443,6 +2585,7 @@ impl CatchPad {
                     .collect()
             },
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
+            debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
@@ -2477,6 +2620,7 @@ impl CleanupPad {
                     .collect()
             },
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
+            debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }

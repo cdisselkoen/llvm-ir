@@ -6,6 +6,8 @@ pub mod basicblock;
 pub use basicblock::BasicBlock;
 pub mod constant;
 pub use constant::Constant;
+pub mod debugloc;
+pub use debugloc::{DebugLoc, HasDebugLoc};
 pub mod function;
 pub use function::Function;
 pub mod instruction;

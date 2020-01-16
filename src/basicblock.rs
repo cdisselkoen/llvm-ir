@@ -19,7 +19,9 @@ impl BasicBlock {
         Self {
             name,
             instrs: vec![],
-            term: Terminator::Unreachable(Unreachable {}),
+            term: Terminator::Unreachable(Unreachable {
+                debugloc: None,
+            }),
         }
     }
 }

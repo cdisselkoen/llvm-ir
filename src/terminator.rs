@@ -1,4 +1,5 @@
 use crate::constant::Constant;
+use crate::debugloc::{DebugLoc, HasDebugLoc};
 use crate::function::{CallingConvention, FunctionAttribute, ParameterAttribute};
 use crate::instruction::{HasResult, InlineAssembly};
 use crate::name::Name;
@@ -50,6 +51,25 @@ impl Typed for Terminator {
     }
 }
 
+impl HasDebugLoc for Terminator {
+    fn get_debug_loc(&self) -> &Option<DebugLoc> {
+        match self {
+            Terminator::Ret(t) => t.get_debug_loc(),
+            Terminator::Br(t) => t.get_debug_loc(),
+            Terminator::CondBr(t) => t.get_debug_loc(),
+            Terminator::Switch(t) => t.get_debug_loc(),
+            Terminator::IndirectBr(t) => t.get_debug_loc(),
+            Terminator::Invoke(t) => t.get_debug_loc(),
+            Terminator::Resume(t) => t.get_debug_loc(),
+            Terminator::Unreachable(t) => t.get_debug_loc(),
+            Terminator::CleanupRet(t) => t.get_debug_loc(),
+            Terminator::CatchRet(t) => t.get_debug_loc(),
+            Terminator::CatchSwitch(t) => t.get_debug_loc(),
+            Terminator::CallBr(t) => t.get_debug_loc(),
+        }
+    }
+}
+
 /* --TODO not yet implemented: metadata
 impl Terminator {
     pub fn get_metadata(&self) -> &InstructionMetadata {
@@ -89,6 +109,12 @@ macro_rules! impl_term {
             }
         }
 
+        impl HasDebugLoc for $term {
+            fn get_debug_loc(&self) -> &Option<DebugLoc> {
+                &self.debugloc
+            }
+        }
+
         /* --TODO not yet implemented: metadata
         impl HasMetadata for $term {
             fn get_metadata(&self) -> &InstructionMetadata {
@@ -124,6 +150,7 @@ macro_rules! void_typed {
 pub struct Ret {
     /// The value being returned, or `None` if returning void.
     pub return_operand: Option<Operand>,
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -137,6 +164,7 @@ void_typed!(Ret); // technically the instruction has void type, even though the 
 pub struct Br {
     /// The [`Name`](../enum.Name.html) of the [`BasicBlock`](../struct.BasicBlock.html) destination.
     pub dest: Name,
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -154,6 +182,7 @@ pub struct CondBr {
     pub true_dest: Name,
     /// The [`Name`](../enum.Name.html) of the [`BasicBlock`](../struct.BasicBlock.html) destination if the `condition` is false.
     pub false_dest: Name,
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -166,6 +195,7 @@ pub struct Switch {
     pub operand: Operand,
     pub dests: Vec<(Constant, Name)>,
     pub default_dest: Name,
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -182,6 +212,7 @@ pub struct IndirectBr {
     /// [`BasicBlock`](../struct.BasicBlock.html)s in the current function;
     /// `IndirectBr` cannot be used to jump between functions.
     pub possible_dests: Vec<Name>,
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -199,6 +230,7 @@ pub struct Invoke {
     pub exception_label: Name, // Should be the name of a basic block. If the callee returns with 'resume' or another exception-handling mechanism, control flow resumes here.
     pub function_attributes: Vec<FunctionAttribute>, // llvm-hs has the equivalent of Vec<Either<GroupID, FunctionAttribute>>, but I'm not sure how the GroupID option comes up
     pub calling_convention: CallingConvention,
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -218,6 +250,7 @@ impl Typed for Invoke {
 #[derive(PartialEq, Clone, Debug)]
 pub struct Resume {
     pub operand: Operand,
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -227,6 +260,7 @@ void_typed!(Resume);
 /// See [LLVM 9 docs on the 'unreachable' instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#unreachable-instruction)
 #[derive(PartialEq, Clone, Debug)]
 pub struct Unreachable {
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -239,6 +273,7 @@ pub struct CleanupRet {
     pub cleanup_pad: Operand,
     /// `None` here indicates 'unwind to caller'
     pub unwind_dest: Option<Name>,
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -250,6 +285,7 @@ void_typed!(CleanupRet);
 pub struct CatchRet {
     pub catch_pad: Operand,
     pub successor: Name,
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -265,6 +301,7 @@ pub struct CatchSwitch {
     /// `None` here indicates 'unwind to caller'
     pub default_unwind_dest: Option<Name>,
     pub result: Name,
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -290,6 +327,7 @@ pub struct CallBr {
     pub other_labels: (),  //Vec<Name>, // Should be names of basic blocks. The callee may use an inline-asm 'goto' to resume control flow at one of these places.
     pub function_attributes: Vec<FunctionAttribute>,
     pub calling_convention: CallingConvention,
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -368,6 +406,7 @@ impl Ret {
                 )),
                 n => panic!("Ret instruction with {} operands", n),
             },
+            debugloc: DebugLoc::from_llvm_with_col(term),
             // metadata: InstructionMetadata::from_llvm_inst(term),
         }
     }
@@ -381,6 +420,7 @@ impl Br {
                 .get(unsafe { &op_to_bb(LLVMGetOperand(term, 0)) })
                 .expect("Failed to find destination bb in map")
                 .clone(),
+            debugloc: DebugLoc::from_llvm_with_col(term),
             // metadata: InstructionMetadata::from_llvm_inst(term),
         }
     }
@@ -410,6 +450,7 @@ impl CondBr {
                 .get(unsafe { &op_to_bb(LLVMGetOperand(term, 1)) })
                 .expect("Failed to find false-destination in bb map")
                 .clone(),
+            debugloc: DebugLoc::from_llvm_with_col(term),
             // metadata: InstructionMetadata::from_llvm_inst(term),
         }
     }
@@ -448,6 +489,7 @@ impl Switch {
                 .get(unsafe { &LLVMGetSwitchDefaultDest(term) })
                 .expect("Failed to find switch default destination in map")
                 .clone(),
+            debugloc: DebugLoc::from_llvm_with_col(term),
             // metadata: InstructionMetadata::from_llvm_inst(term),
         }
     }
@@ -479,6 +521,7 @@ impl IndirectBr {
                     })
                     .collect()
             },
+            debugloc: DebugLoc::from_llvm_with_col(term),
             // metadata: InstructionMetadata::from_llvm_inst(term),
         }
     }
@@ -510,6 +553,7 @@ impl Invoke {
                 .clone(),
             function_attributes: callinfo.function_attributes,
             calling_convention: callinfo.calling_convention,
+            debugloc: DebugLoc::from_llvm_with_col(term),
             // metadata: InstructionMetadata::from_llvm_inst(term),
         }
     }
@@ -530,6 +574,7 @@ impl Resume {
                 gnmap,
                 tnmap,
             ),
+            debugloc: DebugLoc::from_llvm_with_col(term),
             // metadata: InstructionMetadata::from_llvm_inst(term),
         }
     }
@@ -539,6 +584,7 @@ impl Unreachable {
     pub(crate) fn from_llvm_ref(term: LLVMValueRef) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(term) }, 0);
         Self {
+            debugloc: DebugLoc::from_llvm_with_col(term),
             // metadata: InstructionMetadata::from_llvm_inst(term),
         }
     }
@@ -579,6 +625,7 @@ impl CleanupRet {
                     )
                 }
             },
+            debugloc: DebugLoc::from_llvm_with_col(term),
             // metadata: InstructionMetadata::from_llvm_inst(term),
         }
     }
@@ -603,6 +650,7 @@ impl CatchRet {
                 .get(unsafe { &LLVMGetSuccessor(term, 0) })
                 .expect("Failed to find CatchRet successor in map")
                 .clone(),
+            debugloc: DebugLoc::from_llvm_with_col(term),
             // metadata: InstructionMetadata::from_llvm_inst(term),
         }
     }
@@ -654,6 +702,7 @@ impl CatchSwitch {
                 }
             },
             result: Name::name_or_num(unsafe { get_value_name(term) }, ctr),
+            debugloc: DebugLoc::from_llvm_with_col(term),
             // metadata: InstructionMetadata::from_llvm_inst(term),
         }
     }
@@ -682,6 +731,7 @@ impl CallBr {
             other_labels: (),
             function_attributes: callinfo.function_attributes,
             calling_convention: callinfo.calling_convention,
+            debugloc: DebugLoc::from_llvm_with_col(term),
             // metadata: InstructionMetadata::from_llvm_inst(term),
         }
     }

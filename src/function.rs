@@ -1,5 +1,6 @@
 use crate::basicblock::BasicBlock;
 use crate::constant::Constant;
+use crate::debugloc::{DebugLoc, HasDebugLoc};
 use crate::module::{Comdat, DLLStorageClass, Linkage, Visibility};
 use crate::name::Name;
 use crate::types::{Type, Typed};
@@ -27,6 +28,7 @@ pub struct Function {
     // pub prefix: Option<Constant>,  // appears to not be exposed in the LLVM C API, only the C++ API
     /// Personalities are used for exception handling. See [LLVM 9 docs on Personality Function](https://releases.llvm.org/9.0.0/docs/LangRef.html#personalityfn)
     pub personality_function: Option<Constant>,
+    pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: Vec<(String, MetadataRef<MetadataNode>)>,
 }
 
@@ -37,6 +39,12 @@ impl Typed for Function {
             param_types: self.parameters.iter().map(|p| p.get_type()).collect(),
             is_var_arg: self.is_var_arg,
         }
+    }
+}
+
+impl HasDebugLoc for Function {
+    fn get_debug_loc(&self) -> &Option<DebugLoc> {
+        &self.debugloc
     }
 }
 
@@ -70,6 +78,7 @@ impl Function {
             alignment: 4,
             garbage_collector_name: None,
             personality_function: None,
+            debugloc: None,
         }
     }
 }
@@ -384,6 +393,7 @@ impl Function {
                     None
                 }
             },
+            debugloc: DebugLoc::from_llvm_no_col(func),
             // metadata: unimplemented!("Function.metadata"),
         }
     }
