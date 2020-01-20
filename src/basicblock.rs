@@ -36,7 +36,6 @@ use crate::operand::ValToNameMap;
 use crate::types::TyNameMap;
 use llvm_sys::LLVMOpcode;
 use llvm_sys::LLVMTypeKind::LLVMVoidTypeKind;
-use log::debug;
 use std::collections::HashMap;
 
 pub(crate) type BBMap = HashMap<LLVMBasicBlockRef, Name>;

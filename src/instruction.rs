@@ -1707,7 +1707,6 @@ use crate::types::TyNameMap;
 use llvm_sys::LLVMAtomicOrdering;
 use llvm_sys::LLVMOpcode;
 use llvm_sys::LLVMTypeKind::LLVMVoidTypeKind;
-use log::debug;
 
 impl Instruction {
     pub(crate) fn from_llvm_ref(

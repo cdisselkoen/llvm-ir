@@ -3,7 +3,6 @@ use crate::debugloc::*;
 use crate::function::{Function, FunctionAttribute, GroupID};
 use crate::name::Name;
 use crate::types::{Type, Typed};
-use log::debug;
 use std::collections::HashMap;
 use std::path::Path;
 use std::sync::{Arc, RwLock};

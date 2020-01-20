@@ -353,7 +353,6 @@ use crate::from_llvm::*;
 use crate::operand::ValToNameMap;
 use crate::types::TyNameMap;
 use llvm_sys::LLVMOpcode;
-use log::debug;
 
 impl Terminator {
     pub(crate) fn from_llvm_ref(

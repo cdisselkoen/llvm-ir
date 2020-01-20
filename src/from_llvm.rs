@@ -80,6 +80,14 @@ pub unsafe fn op_to_bb(op: LLVMValueRef) -> LLVMBasicBlockRef {
     LLVMValueAsBasicBlock(op)
 }
 
+macro_rules! debug {
+    ($($arg:expr),+) => {
+        if cfg!(feature = "debug-logging") {
+            log::debug!($($arg),+)
+        }
+    };
+}
+
 /// LLVM Context wrapper that frees the underlying context when the wrapper is dropped
 pub struct Context {
     pub ctx: LLVMContextRef,

@@ -249,7 +249,6 @@ use crate::operand::ValToNameMap;
 use crate::types::TyNameMap;
 use llvm_sys::comdat::*;
 use llvm_sys::{LLVMAttributeFunctionIndex, LLVMAttributeReturnIndex};
-use log::debug;
 
 impl Function {
     pub(crate) fn from_llvm_ref(
