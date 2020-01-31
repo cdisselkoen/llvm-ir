@@ -483,7 +483,7 @@ impl_constexpr!(ExtractElement, ExtractElement);
 impl Typed for ExtractElement {
     fn get_type(&self) -> Type {
         match self.vector.get_type() {
-            Type::VectorType { element_type, .. } => *element_type.clone(),
+            Type::VectorType { element_type, .. } => *element_type,
             ty => panic!("Expected an ExtractElement vector to be VectorType, got {:?}", ty),
         }
     }
