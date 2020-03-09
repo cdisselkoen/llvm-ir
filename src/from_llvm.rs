@@ -82,7 +82,7 @@ pub unsafe fn op_to_bb(op: LLVMValueRef) -> LLVMBasicBlockRef {
 
 macro_rules! debug {
     ($($arg:expr),+) => {
-        if cfg!(feature = "debug-logging") {
+        if log::log_enabled!(log::Level::Debug) {
             log::debug!($($arg),+)
         }
     };
