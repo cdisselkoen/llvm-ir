@@ -1,6 +1,6 @@
 [package]
 name = "llvm-ir"
-version = "0.5.1"
+version = "0.5.2"
 authors = ["Craig Disselkoen <craigdissel@gmail.com>"]
 edition = "2018"
 description = "LLVM IR in natural Rust data structures"
