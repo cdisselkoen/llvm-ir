@@ -1,4 +1,5 @@
 use std::cmp::{PartialOrd, Ordering};
+use std::fmt;
 
 /// Describes a "debug location" (source location)
 #[derive(PartialEq, Eq, Clone, Debug, Hash)]
@@ -32,6 +33,37 @@ impl Ord for DebugLoc {
         // compare in the order (directory, filename, line, col)
         (&self.directory, &self.filename, &self.line, &self.col)
             .cmp(&(&other.directory, &other.filename, &other.line, &other.col))
+    }
+}
+
+impl fmt::Display for DebugLoc {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let pretty_directory = match &self.directory {
+            Some(dir) => dir,
+            None => "",
+        };
+        let need_slash = match &self.directory {
+            Some(dir) => !dir.is_empty() && !dir.ends_with('/') && !self.filename.starts_with('/'),
+            None => false,
+        };
+        let pretty_filename = match &self.filename as &str {
+            "" => "<no filename available>",
+            filename if !pretty_directory.is_empty() => {
+                filename.trim_start_matches(pretty_directory)
+            },
+            filename => &filename,
+        };
+        let pretty_column = match self.col {
+            Some(col) => format!(", col {}", col),
+            None => String::new(),
+        };
+        write!(f, "{}{}{}, line {}{}",
+            pretty_directory,
+            if need_slash { "/" } else { "" },
+            pretty_filename,
+            self.line,
+            pretty_column,
+        )
     }
 }
 
