@@ -1094,6 +1094,7 @@ pub struct CmpXchg {
 }
 
 impl_inst!(CmpXchg, CmpXchg);
+impl_hasresult!(CmpXchg);
 
 impl Typed for CmpXchg {
     fn get_type(&self) -> Type {
