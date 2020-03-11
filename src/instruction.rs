@@ -884,6 +884,9 @@ pub struct ExtractElement {
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
+impl_inst!(ExtractElement, ExtractElement);
+impl_hasresult!(ExtractElement);
+
 impl Typed for ExtractElement {
     fn get_type(&self) -> Type {
         match self.vector.get_type() {
@@ -892,9 +895,6 @@ impl Typed for ExtractElement {
         }
     }
 }
-
-impl_inst!(ExtractElement, ExtractElement);
-impl_hasresult!(ExtractElement);
 
 /// Insert an element into a vector at a specified index.
 /// See [LLVM 9 docs on the 'insertelement' instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#insertelement-instruction)
