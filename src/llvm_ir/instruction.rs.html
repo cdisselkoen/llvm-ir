@@ -2669,6 +2669,7 @@
 <span id="2669">2669</span>
 <span id="2670">2670</span>
 <span id="2671">2671</span>
+<span id="2672">2672</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">constant</span>::<span class="ident">Constant</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">debugloc</span>::{<span class="ident">DebugLoc</span>, <span class="ident">HasDebugLoc</span>};
@@ -3556,6 +3557,9 @@ impl HasMetadata for Instruction {
     <span class="comment">// --TODO not yet implemented-- pub metadata: InstructionMetadata,</span>
 }
 
+<span class="macro">impl_inst</span><span class="macro">!</span>(<span class="ident">ExtractElement</span>, <span class="ident">ExtractElement</span>);
+<span class="macro">impl_hasresult</span><span class="macro">!</span>(<span class="ident">ExtractElement</span>);
+
 <span class="kw">impl</span> <span class="ident">Typed</span> <span class="kw">for</span> <span class="ident">ExtractElement</span> {
     <span class="kw">fn</span> <span class="ident">get_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Type</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">vector</span>.<span class="ident">get_type</span>() {
@@ -3564,9 +3568,6 @@ impl HasMetadata for Instruction {
         }
     }
 }
-
-<span class="macro">impl_inst</span><span class="macro">!</span>(<span class="ident">ExtractElement</span>, <span class="ident">ExtractElement</span>);
-<span class="macro">impl_hasresult</span><span class="macro">!</span>(<span class="ident">ExtractElement</span>);
 
 <span class="doccomment">/// Insert an element into a vector at a specified index.</span>
 <span class="doccomment">/// See [LLVM 9 docs on the &#39;insertelement&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#insertelement-instruction)</span>
@@ -3766,6 +3767,7 @@ impl HasMetadata for Instruction {
 }
 
 <span class="macro">impl_inst</span><span class="macro">!</span>(<span class="ident">CmpXchg</span>, <span class="ident">CmpXchg</span>);
+<span class="macro">impl_hasresult</span><span class="macro">!</span>(<span class="ident">CmpXchg</span>);
 
 <span class="kw">impl</span> <span class="ident">Typed</span> <span class="kw">for</span> <span class="ident">CmpXchg</span> {
     <span class="kw">fn</span> <span class="ident">get_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Type</span> {

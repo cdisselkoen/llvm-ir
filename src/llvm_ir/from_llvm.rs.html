@@ -193,7 +193,7 @@
 
 <span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">debug</span> {
     ($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">arg</span>:<span class="ident">expr</span>),<span class="op">+</span>) <span class="op">=</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="macro">cfg</span><span class="macro">!</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;debug-logging&quot;</span>) {
+        <span class="kw">if</span> <span class="ident">log</span>::<span class="macro">log_enabled</span><span class="macro">!</span>(<span class="ident">log</span>::<span class="ident">Level</span>::<span class="ident">Debug</span>) {
             <span class="ident">log</span>::<span class="macro">debug</span><span class="macro">!</span>($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">arg</span>),<span class="op">+</span>)
         }
     };
