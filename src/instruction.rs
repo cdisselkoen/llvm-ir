@@ -433,6 +433,29 @@ impl Instruction {
             _ => false,
         }
     }
+
+    /// Determine if the `Instruction` is one of the ones in
+    /// [`groups::UnaryOp`](groups/enum.UnaryOp.html), without actually using
+    /// `try_into()` (which would consume it)
+    pub fn is_unary_op(&self) -> bool {
+        match self {
+            Instruction::AddrSpaceCast(_) => true,
+            Instruction::BitCast(_) => true,
+            Instruction::FNeg(_) => true,
+            Instruction::FPExt(_) => true,
+            Instruction::FPToSI(_) => true,
+            Instruction::FPToUI(_) => true,
+            Instruction::FPTrunc(_) => true,
+            Instruction::IntToPtr(_) => true,
+            Instruction::PtrToInt(_) => true,
+            Instruction::SExt(_) => true,
+            Instruction::SIToFP(_) => true,
+            Instruction::Trunc(_) => true,
+            Instruction::UIToFP(_) => true,
+            Instruction::ZExt(_) => true,
+            _ => false,
+        }
+    }
 }
 
 macro_rules! impl_inst {
