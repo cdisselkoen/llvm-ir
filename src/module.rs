@@ -65,9 +65,9 @@ impl Module {
 
         let memory_buffer = unsafe {
             let mut memory_buffer = std::ptr::null_mut();
-            let mut err_string: *mut i8 = std::mem::zeroed();
+            let mut err_string = std::mem::zeroed();
             let return_code = LLVMCreateMemoryBufferWithContentsOfFile(
-                path.as_ptr() as *const i8,
+                path.as_ptr() as *const _,
                 &mut memory_buffer,
                 &mut err_string,
             );
