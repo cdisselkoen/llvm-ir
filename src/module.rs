@@ -88,6 +88,7 @@ impl Module {
             let mut module: mem::MaybeUninit<LLVMModuleRef> = mem::MaybeUninit::uninit();
             let return_code =
                 LLVMParseBitcodeInContext2(context.ctx, memory_buffer, module.as_mut_ptr());
+            LLVMDisposeMemoryBuffer(memory_buffer);
             if return_code != 0 {
                 return Err("Failed to parse bitcode".to_string());
             }
