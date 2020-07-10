@@ -1,1 +1,1 @@
-initSidebarItems({"enum":[["BinaryOp","Just the BinaryOps.  This ends up being better than a `&dyn ``BinaryOp` for various reasons."]]});
+initSidebarItems({"enum":[["BinaryOp","Just the BinaryOps.  This ends up being better than a `&dyn ``BinaryOp` for various reasons."],["UnaryOp","Just the UnaryOps.  This ends up being better than a `&dyn ``UnaryOp` for various reasons."]]});
