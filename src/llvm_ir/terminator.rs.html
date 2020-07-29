@@ -747,7 +747,7 @@
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">convert</span>::<span class="ident">TryFrom</span>;
 
 <span class="doccomment">/// Terminator instructions end a basic block.</span>
-<span class="doccomment">/// See [LLVM 9 docs on Terminator Instructions](https://releases.llvm.org/9.0.0/docs/LangRef.html#terminator-instructions)</span>
+<span class="doccomment">/// See [LLVM 10 docs on Terminator Instructions](https://releases.llvm.org/10.0.0/docs/LangRef.html#terminator-instructions)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Terminator</span> {
     <span class="ident">Ret</span>(<span class="ident">Ret</span>),
@@ -769,7 +769,7 @@
 <span class="doccomment">/// For instance, a [`Ret`](struct.Ret.html) instruction has void type even if</span>
 <span class="doccomment">/// the function returns a non-void value; we do not store the result of a `Ret`</span>
 <span class="doccomment">/// instruction using something like `%3 = ret i32 %2`.</span>
-<span class="doccomment">/// See [LLVM 9 docs on Terminator Instructions](https://releases.llvm.org/9.0.0/docs/LangRef.html#terminator-instructions)</span>
+<span class="doccomment">/// See [LLVM 10 docs on Terminator Instructions](https://releases.llvm.org/10.0.0/docs/LangRef.html#terminator-instructions)</span>
 <span class="kw">impl</span> <span class="ident">Typed</span> <span class="kw">for</span> <span class="ident">Terminator</span> {
     <span class="kw">fn</span> <span class="ident">get_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Type</span> {
         <span class="kw">match</span> <span class="self">self</span> {
@@ -883,7 +883,7 @@ impl Terminator {
     };
 }
 
-<span class="doccomment">/// See [LLVM 9 docs on the &#39;ret&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#ret-instruction)</span>
+<span class="doccomment">/// See [LLVM 10 docs on the &#39;ret&#39; instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#ret-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Ret</span> {
     <span class="doccomment">/// The value being returned, or `None` if returning void.</span>
@@ -895,7 +895,7 @@ impl Terminator {
 <span class="macro">impl_term</span><span class="macro">!</span>(<span class="ident">Ret</span>, <span class="ident">Ret</span>);
 <span class="macro">void_typed</span><span class="macro">!</span>(<span class="ident">Ret</span>); <span class="comment">// technically the instruction has void type, even though the function may not</span>
 
-<span class="doccomment">/// See [LLVM 9 docs on the &#39;br&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#br-instruction).</span>
+<span class="doccomment">/// See [LLVM 10 docs on the &#39;br&#39; instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#br-instruction).</span>
 <span class="doccomment">/// The LLVM &#39;br&#39; instruction has both conditional and unconditional variants, which we separate -- this is</span>
 <span class="doccomment">/// the unconditional variant, while the conditional variant is [`CondBr`](struct.CondBr.html).</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
@@ -909,7 +909,7 @@ impl Terminator {
 <span class="macro">impl_term</span><span class="macro">!</span>(<span class="ident">Br</span>, <span class="ident">Br</span>);
 <span class="macro">void_typed</span><span class="macro">!</span>(<span class="ident">Br</span>);
 
-<span class="doccomment">/// See [LLVM 9 docs on the &#39;br&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#br-instruction).</span>
+<span class="doccomment">/// See [LLVM 10 docs on the &#39;br&#39; instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#br-instruction).</span>
 <span class="doccomment">/// The LLVM &#39;br&#39; instruction has both conditional and unconditional variants, which we separate -- this is</span>
 <span class="doccomment">/// the conditional variant, while the unconditional variant is [`Br`](struct.Br.html).</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
@@ -927,7 +927,7 @@ impl Terminator {
 <span class="macro">impl_term</span><span class="macro">!</span>(<span class="ident">CondBr</span>, <span class="ident">CondBr</span>);
 <span class="macro">void_typed</span><span class="macro">!</span>(<span class="ident">CondBr</span>);
 
-<span class="doccomment">/// See [LLVM 9 docs on the &#39;switch&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#switch-instruction)</span>
+<span class="doccomment">/// See [LLVM 10 docs on the &#39;switch&#39; instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#switch-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Switch</span> {
     <span class="kw">pub</span> <span class="ident">operand</span>: <span class="ident">Operand</span>,
@@ -940,7 +940,7 @@ impl Terminator {
 <span class="macro">impl_term</span><span class="macro">!</span>(<span class="ident">Switch</span>, <span class="ident">Switch</span>);
 <span class="macro">void_typed</span><span class="macro">!</span>(<span class="ident">Switch</span>);
 
-<span class="doccomment">/// See [LLVM 9 docs on the &#39;indirectbr&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#indirectbr-instruction)</span>
+<span class="doccomment">/// See [LLVM 10 docs on the &#39;indirectbr&#39; instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#indirectbr-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">IndirectBr</span> {
     <span class="doccomment">/// Address to jump to (must be derived from a [`Constant::BlockAddress`](../enum.Constant.html))</span>
@@ -957,7 +957,7 @@ impl Terminator {
 <span class="macro">impl_term</span><span class="macro">!</span>(<span class="ident">IndirectBr</span>, <span class="ident">IndirectBr</span>);
 <span class="macro">void_typed</span><span class="macro">!</span>(<span class="ident">IndirectBr</span>);
 
-<span class="doccomment">/// See [LLVM 9 docs on the &#39;invoke&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#invoke-instruction)</span>
+<span class="doccomment">/// See [LLVM 10 docs on the &#39;invoke&#39; instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#invoke-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Invoke</span> {
     <span class="kw">pub</span> <span class="ident">function</span>: <span class="ident">Either</span><span class="op">&lt;</span><span class="ident">InlineAssembly</span>, <span class="ident">Operand</span><span class="op">&gt;</span>,
@@ -984,7 +984,7 @@ impl Terminator {
     }
 }
 
-<span class="doccomment">/// See [LLVM 9 docs on the &#39;resume&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#resume-instruction)</span>
+<span class="doccomment">/// See [LLVM 10 docs on the &#39;resume&#39; instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#resume-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Resume</span> {
     <span class="kw">pub</span> <span class="ident">operand</span>: <span class="ident">Operand</span>,
@@ -995,7 +995,7 @@ impl Terminator {
 <span class="macro">impl_term</span><span class="macro">!</span>(<span class="ident">Resume</span>, <span class="ident">Resume</span>);
 <span class="macro">void_typed</span><span class="macro">!</span>(<span class="ident">Resume</span>);
 
-<span class="doccomment">/// See [LLVM 9 docs on the &#39;unreachable&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#unreachable-instruction)</span>
+<span class="doccomment">/// See [LLVM 10 docs on the &#39;unreachable&#39; instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#unreachable-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Unreachable</span> {
     <span class="kw">pub</span> <span class="ident">debugloc</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DebugLoc</span><span class="op">&gt;</span>,
@@ -1005,7 +1005,7 @@ impl Terminator {
 <span class="macro">impl_term</span><span class="macro">!</span>(<span class="ident">Unreachable</span>, <span class="ident">Unreachable</span>);
 <span class="macro">void_typed</span><span class="macro">!</span>(<span class="ident">Unreachable</span>);
 
-<span class="doccomment">/// See [LLVM 9 docs on the &#39;cleanupret&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#cleanupret-instruction)</span>
+<span class="doccomment">/// See [LLVM 10 docs on the &#39;cleanupret&#39; instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#cleanupret-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CleanupRet</span> {
     <span class="kw">pub</span> <span class="ident">cleanup_pad</span>: <span class="ident">Operand</span>,
@@ -1018,7 +1018,7 @@ impl Terminator {
 <span class="macro">impl_term</span><span class="macro">!</span>(<span class="ident">CleanupRet</span>, <span class="ident">CleanupRet</span>);
 <span class="macro">void_typed</span><span class="macro">!</span>(<span class="ident">CleanupRet</span>);
 
-<span class="doccomment">/// See [LLVM 9 docs on the &#39;catchret&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#catchret-instruction)</span>
+<span class="doccomment">/// See [LLVM 10 docs on the &#39;catchret&#39; instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#catchret-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CatchRet</span> {
     <span class="kw">pub</span> <span class="ident">catch_pad</span>: <span class="ident">Operand</span>,
@@ -1030,7 +1030,7 @@ impl Terminator {
 <span class="macro">impl_term</span><span class="macro">!</span>(<span class="ident">CatchRet</span>, <span class="ident">CatchRet</span>);
 <span class="macro">void_typed</span><span class="macro">!</span>(<span class="ident">CatchRet</span>);
 
-<span class="doccomment">/// See [LLVM 9 docs on the &#39;catchswitch&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#catchswitch-instruction)</span>
+<span class="doccomment">/// See [LLVM 10 docs on the &#39;catchswitch&#39; instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#catchswitch-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CatchSwitch</span> {
     <span class="kw">pub</span> <span class="ident">parent_pad</span>: <span class="ident">Operand</span>,
@@ -1053,7 +1053,7 @@ impl Terminator {
     }
 }
 
-<span class="doccomment">/// See [LLVM 9 docs on the &#39;callbr&#39; instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#callbr-instruction)</span>
+<span class="doccomment">/// See [LLVM 10 docs on the &#39;callbr&#39; instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#callbr-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CallBr</span> {
     <span class="kw">pub</span> <span class="ident">function</span>: <span class="ident">Either</span><span class="op">&lt;</span><span class="ident">InlineAssembly</span>, <span class="ident">Operand</span><span class="op">&gt;</span>,

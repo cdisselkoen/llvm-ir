@@ -479,7 +479,7 @@
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::{<span class="ident">Type</span>, <span class="ident">Typed</span>};
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">num</span>;
 
-<span class="doccomment">/// See [LLVM 9 docs on Functions](https://releases.llvm.org/9.0.0/docs/LangRef.html#functions)</span>
+<span class="doccomment">/// See [LLVM 10 docs on Functions](https://releases.llvm.org/10.0.0/docs/LangRef.html#functions)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Function</span> {
     <span class="kw">pub</span> <span class="ident">name</span>: <span class="ident">String</span>,
@@ -496,10 +496,10 @@
     <span class="kw">pub</span> <span class="ident">section</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">comdat</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Comdat</span><span class="op">&gt;</span>, <span class="comment">// llvm-hs-pure has Option&lt;String&gt;, I&#39;m not sure why</span>
     <span class="kw">pub</span> <span class="ident">alignment</span>: <span class="ident">u32</span>,
-    <span class="doccomment">/// See [LLVM 9 docs on Garbage Collector Strategy Names](https://releases.llvm.org/9.0.0/docs/LangRef.html#gc)</span>
+    <span class="doccomment">/// See [LLVM 10 docs on Garbage Collector Strategy Names](https://releases.llvm.org/10.0.0/docs/LangRef.html#gc)</span>
     <span class="kw">pub</span> <span class="ident">garbage_collector_name</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
     <span class="comment">// pub prefix: Option&lt;Constant&gt;,  // appears to not be exposed in the LLVM C API, only the C++ API</span>
-    <span class="doccomment">/// Personalities are used for exception handling. See [LLVM 9 docs on Personality Function](https://releases.llvm.org/9.0.0/docs/LangRef.html#personalityfn)</span>
+    <span class="doccomment">/// Personalities are used for exception handling. See [LLVM 10 docs on Personality Function](https://releases.llvm.org/10.0.0/docs/LangRef.html#personalityfn)</span>
     <span class="kw">pub</span> <span class="ident">personality_function</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Constant</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">debugloc</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DebugLoc</span><span class="op">&gt;</span>,
     <span class="comment">// --TODO not yet implemented-- pub metadata: Vec&lt;(String, MetadataRef&lt;MetadataNode&gt;)&gt;,</span>
@@ -569,7 +569,7 @@
     }
 }
 
-<span class="doccomment">/// See [LLVM 9 docs on Calling Conventions](https://releases.llvm.org/9.0.0/docs/LangRef.html#callingconv)</span>
+<span class="doccomment">/// See [LLVM 10 docs on Calling Conventions](https://releases.llvm.org/10.0.0/docs/LangRef.html#callingconv)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>)]</span>
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">non_camel_case_types</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">CallingConvention</span> {
@@ -632,7 +632,7 @@
     },
 }
 
-<span class="doccomment">/// See [LLVM 9 docs on Function Attributes](https://releases.llvm.org/9.0.0/docs/LangRef.html#fnattrs)</span>
+<span class="doccomment">/// See [LLVM 10 docs on Function Attributes](https://releases.llvm.org/10.0.0/docs/LangRef.html#fnattrs)</span>
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">FunctionAttribute</span> <span class="op">=</span> <span class="ident">Attribute</span>;
 <span class="comment">/* llvm-hs-pure has the following enum here, but the LLVM C API just uses an unsigned for enum attributes
 #[derive(PartialEq, Eq, Clone, Debug)]
@@ -681,7 +681,7 @@ pub enum FunctionAttribute {
 */</span>
 
 <span class="doccomment">/// `ParameterAttribute`s can apply to function parameters as well as function return types.</span>
-<span class="doccomment">/// See [LLVM 9 docs on Parameter Attributes](https://releases.llvm.org/9.0.0/docs/LangRef.html#paramattrs)</span>
+<span class="doccomment">/// See [LLVM 10 docs on Parameter Attributes](https://releases.llvm.org/10.0.0/docs/LangRef.html#paramattrs)</span>
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">ParameterAttribute</span> <span class="op">=</span> <span class="ident">Attribute</span>;
 <span class="comment">/* llvm-hs-pure has the following enum here, but the LLVM C API just uses an unsigned for enum attributes
 #[derive(PartialEq, Eq, Clone, Debug)]

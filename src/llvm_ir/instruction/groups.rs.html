@@ -353,6 +353,13 @@
 <span id="353">353</span>
 <span id="354">354</span>
 <span id="355">355</span>
+<span id="356">356</span>
+<span id="357">357</span>
+<span id="358">358</span>
+<span id="359">359</span>
+<span id="360">360</span>
+<span id="361">361</span>
+<span id="362">362</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">HasResult</span>, <span class="ident">Instruction</span>, <span class="ident">Name</span>, <span class="ident">Operand</span>, <span class="ident">Type</span>, <span class="ident">Typed</span>};
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">convert</span>::<span class="ident">TryFrom</span>;
@@ -396,6 +403,7 @@
     <span class="ident">FPToSI</span>(<span class="kw">super</span>::<span class="ident">FPToSI</span>),
     <span class="ident">FPToUI</span>(<span class="kw">super</span>::<span class="ident">FPToUI</span>),
     <span class="ident">FPTrunc</span>(<span class="kw">super</span>::<span class="ident">FPTrunc</span>),
+    <span class="ident">Freeze</span>(<span class="kw">super</span>::<span class="ident">Freeze</span>),
     <span class="ident">IntToPtr</span>(<span class="kw">super</span>::<span class="ident">IntToPtr</span>),
     <span class="ident">PtrToInt</span>(<span class="kw">super</span>::<span class="ident">PtrToInt</span>),
     <span class="ident">SExt</span>(<span class="kw">super</span>::<span class="ident">SExt</span>),
@@ -440,6 +448,7 @@
             <span class="ident">UnaryOp</span>::<span class="ident">FPToSI</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">into</span>(),
             <span class="ident">UnaryOp</span>::<span class="ident">FPToUI</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">into</span>(),
             <span class="ident">UnaryOp</span>::<span class="ident">FPTrunc</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">into</span>(),
+            <span class="ident">UnaryOp</span>::<span class="ident">Freeze</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">into</span>(),
             <span class="ident">UnaryOp</span>::<span class="ident">IntToPtr</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">into</span>(),
             <span class="ident">UnaryOp</span>::<span class="ident">PtrToInt</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">into</span>(),
             <span class="ident">UnaryOp</span>::<span class="ident">SExt</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">into</span>(),
@@ -489,6 +498,7 @@
             <span class="ident">Instruction</span>::<span class="ident">FPToSI</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">UnaryOp</span>::<span class="ident">FPToSI</span>(<span class="ident">i</span>)),
             <span class="ident">Instruction</span>::<span class="ident">FPToUI</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">UnaryOp</span>::<span class="ident">FPToUI</span>(<span class="ident">i</span>)),
             <span class="ident">Instruction</span>::<span class="ident">FPTrunc</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">UnaryOp</span>::<span class="ident">FPTrunc</span>(<span class="ident">i</span>)),
+            <span class="ident">Instruction</span>::<span class="ident">Freeze</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">UnaryOp</span>::<span class="ident">Freeze</span>(<span class="ident">i</span>)),
             <span class="ident">Instruction</span>::<span class="ident">IntToPtr</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">UnaryOp</span>::<span class="ident">IntToPtr</span>(<span class="ident">i</span>)),
             <span class="ident">Instruction</span>::<span class="ident">PtrToInt</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">UnaryOp</span>::<span class="ident">PtrToInt</span>(<span class="ident">i</span>)),
             <span class="ident">Instruction</span>::<span class="ident">SExt</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">UnaryOp</span>::<span class="ident">SExt</span>(<span class="ident">i</span>)),
@@ -536,6 +546,7 @@
             <span class="ident">UnaryOp</span>::<span class="ident">FPToSI</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_type</span>(),
             <span class="ident">UnaryOp</span>::<span class="ident">FPToUI</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_type</span>(),
             <span class="ident">UnaryOp</span>::<span class="ident">FPTrunc</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_type</span>(),
+            <span class="ident">UnaryOp</span>::<span class="ident">Freeze</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_type</span>(),
             <span class="ident">UnaryOp</span>::<span class="ident">IntToPtr</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_type</span>(),
             <span class="ident">UnaryOp</span>::<span class="ident">PtrToInt</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_type</span>(),
             <span class="ident">UnaryOp</span>::<span class="ident">SExt</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_type</span>(),
@@ -583,6 +594,7 @@ impl HasMetadata for UnaryOp {
             UnaryOp::FPToSI(i) =&gt; i.get_metadata(),
             UnaryOp::FPToUI(i) =&gt; i.get_metadata(),
             UnaryOp::FPTrunc(i) =&gt; i.get_metadata(),
+            UnaryOp::Freeze(i) =&gt; i.get_metadata(),
             UnaryOp::IntToPtr(i) =&gt; i.get_metadata(),
             UnaryOp::PtrToInt(i) =&gt; i.get_metadata(),
             UnaryOp::SExt(i) =&gt; i.get_metadata(),
@@ -630,6 +642,7 @@ impl HasMetadata for UnaryOp {
             <span class="ident">UnaryOp</span>::<span class="ident">FPToSI</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_result</span>(),
             <span class="ident">UnaryOp</span>::<span class="ident">FPToUI</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_result</span>(),
             <span class="ident">UnaryOp</span>::<span class="ident">FPTrunc</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_result</span>(),
+            <span class="ident">UnaryOp</span>::<span class="ident">Freeze</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_result</span>(),
             <span class="ident">UnaryOp</span>::<span class="ident">IntToPtr</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_result</span>(),
             <span class="ident">UnaryOp</span>::<span class="ident">PtrToInt</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_result</span>(),
             <span class="ident">UnaryOp</span>::<span class="ident">SExt</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_result</span>(),
@@ -699,6 +712,7 @@ impl HasMetadata for UnaryOp {
             <span class="ident">UnaryOp</span>::<span class="ident">FPToSI</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_operand</span>(),
             <span class="ident">UnaryOp</span>::<span class="ident">FPToUI</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_operand</span>(),
             <span class="ident">UnaryOp</span>::<span class="ident">FPTrunc</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_operand</span>(),
+            <span class="ident">UnaryOp</span>::<span class="ident">Freeze</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_operand</span>(),
             <span class="ident">UnaryOp</span>::<span class="ident">IntToPtr</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_operand</span>(),
             <span class="ident">UnaryOp</span>::<span class="ident">PtrToInt</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_operand</span>(),
             <span class="ident">UnaryOp</span>::<span class="ident">SExt</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_operand</span>(),

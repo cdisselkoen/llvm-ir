@@ -1248,8 +1248,8 @@
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">ops</span>::<span class="ident">Deref</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::{<span class="ident">Arc</span>, <span class="ident">RwLock</span>};
 
-<span class="doccomment">/// See [LLVM 9 docs on Constants](https://releases.llvm.org/9.0.0/docs/LangRef.html#constants).</span>
-<span class="doccomment">/// Constants can be either values, or expressions involving other constants (see [LLVM 9 docs on Constant Expressions](https://releases.llvm.org/9.0.0/docs/LangRef.html#constant-expressions)).</span>
+<span class="doccomment">/// See [LLVM 10 docs on Constants](https://releases.llvm.org/10.0.0/docs/LangRef.html#constants).</span>
+<span class="doccomment">/// Constants can be either values, or expressions involving other constants (see [LLVM 10 docs on Constant Expressions](https://releases.llvm.org/10.0.0/docs/LangRef.html#constant-expressions)).</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Constant</span> {
     <span class="ident">Int</span> {
@@ -1257,7 +1257,7 @@
         <span class="ident">value</span>: <span class="ident">u64</span>, <span class="comment">// If the Int is less than 64 bits, the value will be zero-extended to create the Rust `u64` `value` (so if `bits` is 8, the lowest 8 bits of `value` are the relevant bits, and the others are all zeroes). Note that LLVM integers aren&#39;t signed or unsigned; each individual instruction indicates whether it&#39;s treating the integer as signed or unsigned if necessary (e.g., UDiv vs SDiv).</span>
     },
     <span class="ident">Float</span>(<span class="ident">Float</span>),
-    <span class="doccomment">/// The `Type` here must be a `PointerType`. See [LLVM 9 docs on Simple Constants](https://releases.llvm.org/9.0.0/docs/LangRef.html#constants)</span>
+    <span class="doccomment">/// The `Type` here must be a `PointerType`. See [LLVM 10 docs on Simple Constants](https://releases.llvm.org/10.0.0/docs/LangRef.html#simple-constants)</span>
     <span class="ident">Null</span>(<span class="ident">Type</span>),
     <span class="doccomment">/// A zero-initialized array or struct (or scalar).</span>
     <span class="ident">AggregateZero</span>(<span class="ident">Type</span>),
@@ -1271,9 +1271,9 @@
         <span class="ident">elements</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Constant</span><span class="op">&gt;</span>,
     },
     <span class="ident">Vector</span>(<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Constant</span><span class="op">&gt;</span>),
-    <span class="doccomment">/// `Undef` can be used anywhere a constant is expected. See [LLVM 9 docs on Undefined Values](https://releases.llvm.org/9.0.0/docs/LangRef.html#undefined-values)</span>
+    <span class="doccomment">/// `Undef` can be used anywhere a constant is expected. See [LLVM 10 docs on Undefined Values](https://releases.llvm.org/10.0.0/docs/LangRef.html#undefined-values)</span>
     <span class="ident">Undef</span>(<span class="ident">Type</span>),
-    <span class="doccomment">/// The address of the given (non-entry) [`BasicBlock`](../struct.BasicBlock.html). See [LLVM 9 docs on Addresses of Basic Blocks](https://releases.llvm.org/9.0.0/docs/LangRef.html#addresses-of-basic-blocks).</span>
+    <span class="doccomment">/// The address of the given (non-entry) [`BasicBlock`](../struct.BasicBlock.html). See [LLVM 10 docs on Addresses of Basic Blocks](https://releases.llvm.org/10.0.0/docs/LangRef.html#addresses-of-basic-blocks).</span>
     <span class="doccomment">/// `BlockAddress` needs more fields, but the necessary getter functions are apparently not exposed in the LLVM C API (only the C++ API)</span>
     <span class="ident">BlockAddress</span>, <span class="comment">// --TODO ideally we want BlockAddress { function: Name, block: Name },</span>
     <span class="ident">GlobalReference</span> {

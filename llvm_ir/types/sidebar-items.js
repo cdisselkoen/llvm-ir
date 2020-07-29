@@ -1,1 +1,1 @@
-initSidebarItems({"enum":[["FPType","See LLVM 9 docs on Floating-Point Types"],["Type","See LLVM 9 docs on Type System"]],"trait":[["Typed","The `Typed` trait is used for anything that has a `Type`."]]});
+initSidebarItems({"enum":[["FPType","See LLVM 10 docs on Floating-Point Types"],["Type","See LLVM 10 docs on Type System"]],"trait":[["Typed","The `Typed` trait is used for anything that has a `Type`."]]});
