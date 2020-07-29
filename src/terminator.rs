@@ -9,7 +9,7 @@ use either::Either;
 use std::convert::TryFrom;
 
 /// Terminator instructions end a basic block.
-/// See [LLVM 9 docs on Terminator Instructions](https://releases.llvm.org/9.0.0/docs/LangRef.html#terminator-instructions)
+/// See [LLVM 10 docs on Terminator Instructions](https://releases.llvm.org/10.0.0/docs/LangRef.html#terminator-instructions)
 #[derive(PartialEq, Clone, Debug)]
 pub enum Terminator {
     Ret(Ret),
@@ -31,7 +31,7 @@ pub enum Terminator {
 /// For instance, a [`Ret`](struct.Ret.html) instruction has void type even if
 /// the function returns a non-void value; we do not store the result of a `Ret`
 /// instruction using something like `%3 = ret i32 %2`.
-/// See [LLVM 9 docs on Terminator Instructions](https://releases.llvm.org/9.0.0/docs/LangRef.html#terminator-instructions)
+/// See [LLVM 10 docs on Terminator Instructions](https://releases.llvm.org/10.0.0/docs/LangRef.html#terminator-instructions)
 impl Typed for Terminator {
     fn get_type(&self) -> Type {
         match self {
@@ -145,7 +145,7 @@ macro_rules! void_typed {
     };
 }
 
-/// See [LLVM 9 docs on the 'ret' instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#ret-instruction)
+/// See [LLVM 10 docs on the 'ret' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#ret-instruction)
 #[derive(PartialEq, Clone, Debug)]
 pub struct Ret {
     /// The value being returned, or `None` if returning void.
@@ -157,7 +157,7 @@ pub struct Ret {
 impl_term!(Ret, Ret);
 void_typed!(Ret); // technically the instruction has void type, even though the function may not
 
-/// See [LLVM 9 docs on the 'br' instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#br-instruction).
+/// See [LLVM 10 docs on the 'br' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#br-instruction).
 /// The LLVM 'br' instruction has both conditional and unconditional variants, which we separate -- this is
 /// the unconditional variant, while the conditional variant is [`CondBr`](struct.CondBr.html).
 #[derive(PartialEq, Clone, Debug)]
@@ -171,7 +171,7 @@ pub struct Br {
 impl_term!(Br, Br);
 void_typed!(Br);
 
-/// See [LLVM 9 docs on the 'br' instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#br-instruction).
+/// See [LLVM 10 docs on the 'br' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#br-instruction).
 /// The LLVM 'br' instruction has both conditional and unconditional variants, which we separate -- this is
 /// the conditional variant, while the unconditional variant is [`Br`](struct.Br.html).
 #[derive(PartialEq, Clone, Debug)]
@@ -189,7 +189,7 @@ pub struct CondBr {
 impl_term!(CondBr, CondBr);
 void_typed!(CondBr);
 
-/// See [LLVM 9 docs on the 'switch' instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#switch-instruction)
+/// See [LLVM 10 docs on the 'switch' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#switch-instruction)
 #[derive(PartialEq, Clone, Debug)]
 pub struct Switch {
     pub operand: Operand,
@@ -202,7 +202,7 @@ pub struct Switch {
 impl_term!(Switch, Switch);
 void_typed!(Switch);
 
-/// See [LLVM 9 docs on the 'indirectbr' instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#indirectbr-instruction)
+/// See [LLVM 10 docs on the 'indirectbr' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#indirectbr-instruction)
 #[derive(PartialEq, Clone, Debug)]
 pub struct IndirectBr {
     /// Address to jump to (must be derived from a [`Constant::BlockAddress`](../enum.Constant.html))
@@ -219,7 +219,7 @@ pub struct IndirectBr {
 impl_term!(IndirectBr, IndirectBr);
 void_typed!(IndirectBr);
 
-/// See [LLVM 9 docs on the 'invoke' instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#invoke-instruction)
+/// See [LLVM 10 docs on the 'invoke' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#invoke-instruction)
 #[derive(PartialEq, Clone, Debug)]
 pub struct Invoke {
     pub function: Either<InlineAssembly, Operand>,
@@ -246,7 +246,7 @@ impl Typed for Invoke {
     }
 }
 
-/// See [LLVM 9 docs on the 'resume' instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#resume-instruction)
+/// See [LLVM 10 docs on the 'resume' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#resume-instruction)
 #[derive(PartialEq, Clone, Debug)]
 pub struct Resume {
     pub operand: Operand,
@@ -257,7 +257,7 @@ pub struct Resume {
 impl_term!(Resume, Resume);
 void_typed!(Resume);
 
-/// See [LLVM 9 docs on the 'unreachable' instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#unreachable-instruction)
+/// See [LLVM 10 docs on the 'unreachable' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#unreachable-instruction)
 #[derive(PartialEq, Clone, Debug)]
 pub struct Unreachable {
     pub debugloc: Option<DebugLoc>,
@@ -267,7 +267,7 @@ pub struct Unreachable {
 impl_term!(Unreachable, Unreachable);
 void_typed!(Unreachable);
 
-/// See [LLVM 9 docs on the 'cleanupret' instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#cleanupret-instruction)
+/// See [LLVM 10 docs on the 'cleanupret' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#cleanupret-instruction)
 #[derive(PartialEq, Clone, Debug)]
 pub struct CleanupRet {
     pub cleanup_pad: Operand,
@@ -280,7 +280,7 @@ pub struct CleanupRet {
 impl_term!(CleanupRet, CleanupRet);
 void_typed!(CleanupRet);
 
-/// See [LLVM 9 docs on the 'catchret' instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#catchret-instruction)
+/// See [LLVM 10 docs on the 'catchret' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#catchret-instruction)
 #[derive(PartialEq, Clone, Debug)]
 pub struct CatchRet {
     pub catch_pad: Operand,
@@ -292,7 +292,7 @@ pub struct CatchRet {
 impl_term!(CatchRet, CatchRet);
 void_typed!(CatchRet);
 
-/// See [LLVM 9 docs on the 'catchswitch' instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#catchswitch-instruction)
+/// See [LLVM 10 docs on the 'catchswitch' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#catchswitch-instruction)
 #[derive(PartialEq, Clone, Debug)]
 pub struct CatchSwitch {
     pub parent_pad: Operand,
@@ -315,7 +315,7 @@ impl Typed for CatchSwitch {
     }
 }
 
-/// See [LLVM 9 docs on the 'callbr' instruction](https://releases.llvm.org/9.0.0/docs/LangRef.html#callbr-instruction)
+/// See [LLVM 10 docs on the 'callbr' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#callbr-instruction)
 #[derive(PartialEq, Clone, Debug)]
 pub struct CallBr {
     pub function: Either<InlineAssembly, Operand>,

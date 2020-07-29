@@ -6,7 +6,7 @@ use crate::name::Name;
 use crate::types::{Type, Typed};
 use std::num;
 
-/// See [LLVM 9 docs on Functions](https://releases.llvm.org/9.0.0/docs/LangRef.html#functions)
+/// See [LLVM 10 docs on Functions](https://releases.llvm.org/10.0.0/docs/LangRef.html#functions)
 #[derive(PartialEq, Clone, Debug)]
 pub struct Function {
     pub name: String,
@@ -23,10 +23,10 @@ pub struct Function {
     pub section: Option<String>,
     pub comdat: Option<Comdat>, // llvm-hs-pure has Option<String>, I'm not sure why
     pub alignment: u32,
-    /// See [LLVM 9 docs on Garbage Collector Strategy Names](https://releases.llvm.org/9.0.0/docs/LangRef.html#gc)
+    /// See [LLVM 10 docs on Garbage Collector Strategy Names](https://releases.llvm.org/10.0.0/docs/LangRef.html#gc)
     pub garbage_collector_name: Option<String>,
     // pub prefix: Option<Constant>,  // appears to not be exposed in the LLVM C API, only the C++ API
-    /// Personalities are used for exception handling. See [LLVM 9 docs on Personality Function](https://releases.llvm.org/9.0.0/docs/LangRef.html#personalityfn)
+    /// Personalities are used for exception handling. See [LLVM 10 docs on Personality Function](https://releases.llvm.org/10.0.0/docs/LangRef.html#personalityfn)
     pub personality_function: Option<Constant>,
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: Vec<(String, MetadataRef<MetadataNode>)>,
@@ -96,7 +96,7 @@ impl Typed for Parameter {
     }
 }
 
-/// See [LLVM 9 docs on Calling Conventions](https://releases.llvm.org/9.0.0/docs/LangRef.html#callingconv)
+/// See [LLVM 10 docs on Calling Conventions](https://releases.llvm.org/10.0.0/docs/LangRef.html#callingconv)
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
 #[allow(non_camel_case_types)]
 pub enum CallingConvention {
@@ -159,7 +159,7 @@ pub enum Attribute {
     },
 }
 
-/// See [LLVM 9 docs on Function Attributes](https://releases.llvm.org/9.0.0/docs/LangRef.html#fnattrs)
+/// See [LLVM 10 docs on Function Attributes](https://releases.llvm.org/10.0.0/docs/LangRef.html#fnattrs)
 pub type FunctionAttribute = Attribute;
 /* llvm-hs-pure has the following enum here, but the LLVM C API just uses an unsigned for enum attributes
 #[derive(PartialEq, Eq, Clone, Debug)]
@@ -208,7 +208,7 @@ pub enum FunctionAttribute {
 */
 
 /// `ParameterAttribute`s can apply to function parameters as well as function return types.
-/// See [LLVM 9 docs on Parameter Attributes](https://releases.llvm.org/9.0.0/docs/LangRef.html#paramattrs)
+/// See [LLVM 10 docs on Parameter Attributes](https://releases.llvm.org/10.0.0/docs/LangRef.html#paramattrs)
 pub type ParameterAttribute = Attribute;
 /* llvm-hs-pure has the following enum here, but the LLVM C API just uses an unsigned for enum attributes
 #[derive(PartialEq, Eq, Clone, Debug)]

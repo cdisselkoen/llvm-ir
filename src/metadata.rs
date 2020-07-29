@@ -1,4 +1,4 @@
-//! See [LLVM 9 docs on Metadata](https://releases.llvm.org/9.0.0/docs/LangRef.html#metadata)
+//! See [LLVM 10 docs on Metadata](https://releases.llvm.org/10.0.0/docs/LangRef.html#metadata)
 
 use either::Either;
 use std::fmt::Debug;
@@ -14,7 +14,7 @@ pub enum MetadataRef<T> where T: PartialEq + Clone + Debug {
 
 pub type MetadataNodeID = usize;
 
-/// See [LLVM 9 docs on Metadata Nodes and Metadata Strings](https://releases.llvm.org/9.0.0/docs/LangRef.html#metadata-nodes-and-metadata-strings)
+/// See [LLVM 10 docs on Metadata Nodes and Metadata Strings](https://releases.llvm.org/10.0.0/docs/LangRef.html#metadata-nodes-and-metadata-strings)
 #[derive(PartialEq, Clone, Debug)]
 pub enum Metadata {
     String(String),
@@ -28,7 +28,7 @@ impl Typed for Metadata {
     }
 }
 
-/// See [LLVM 9 docs on Metadata Nodes and Metadata Strings](https://releases.llvm.org/9.0.0/docs/LangRef.html#metadata-nodes-and-metadata-strings)
+/// See [LLVM 10 docs on Metadata Nodes and Metadata Strings](https://releases.llvm.org/10.0.0/docs/LangRef.html#metadata-nodes-and-metadata-strings)
 #[derive(PartialEq, Clone, Debug)]
 pub enum MetadataNode {
     Tuple(Vec<Option<Metadata>>),  // None represents null
@@ -57,7 +57,7 @@ pub struct DIArrayType {
     pub flags: Vec<DIFlag>,
 }
 
-/// See [LLVM 9 docs on DIBasicType](https://releases.llvm.org/9.0.0/docs/LangRef.html#dibasictype)
+/// See [LLVM 10 docs on DIBasicType](https://releases.llvm.org/10.0.0/docs/LangRef.html#dibasictype)
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct DIBasicType {
     pub name: String,
@@ -102,7 +102,7 @@ pub struct DIClassType {
     pub flags: Vec<DIFlag>,
 }
 
-/// See [LLVM 9 docs on DICompileUnit](https://releases.llvm.org/9.0.0/docs/LangRef.html#dicompileunit)
+/// See [LLVM 10 docs on DICompileUnit](https://releases.llvm.org/10.0.0/docs/LangRef.html#dicompileunit)
 #[derive(PartialEq, Clone, Debug)]
 pub struct DICompileUnit {
     pub language: u32,
@@ -125,7 +125,7 @@ pub struct DICompileUnit {
     pub debug_base_address: bool,
 }
 
-/// See [LLVM 9 docs on DICompositeType](https://releases.llvm.org/9.0.0/docs/LangRef.html#dicompositetype)
+/// See [LLVM 10 docs on DICompositeType](https://releases.llvm.org/10.0.0/docs/LangRef.html#dicompositetype)
 #[derive(PartialEq, Clone, Debug)]
 pub enum DICompositeType {
     Array(DIArrayType),
@@ -155,7 +155,7 @@ pub enum DIDebugNameTableKind {
     None,
 }
 
-/// See [LLVM 9 docs on DIDerivedType](https://releases.llvm.org/9.0.0/docs/LangRef.html#diderivedtype)
+/// See [LLVM 10 docs on DIDerivedType](https://releases.llvm.org/10.0.0/docs/LangRef.html#diderivedtype)
 #[derive(PartialEq, Clone, Debug)]
 pub struct DIDerivedType {
     pub tag: DIDerivedTypeTag,
@@ -200,7 +200,7 @@ pub struct DIEnumerationType {
     pub align_in_bits: u32,
 }
 
-/// See [LLVM 9 docs on DIEnumerator](https://releases.llvm.org/9.0.0/docs/LangRef.html#dienumerator)
+/// See [LLVM 10 docs on DIEnumerator](https://releases.llvm.org/10.0.0/docs/LangRef.html#dienumerator)
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct DIEnumerator {
     pub name: String,
@@ -208,10 +208,10 @@ pub struct DIEnumerator {
     pub is_unsigned: bool,
 }
 
-/// See [LLVM 9 docs on DIExpression](https://releases.llvm.org/9.0.0/docs/LangRef.html#diexpression)
+/// See [LLVM 10 docs on DIExpression](https://releases.llvm.org/10.0.0/docs/LangRef.html#diexpression)
 pub type DIExpression = Vec<DWOp>;
 
-/// See [LLVM 9 docs on DIFile](https://releases.llvm.org/9.0.0/docs/LangRef.html#difile)
+/// See [LLVM 10 docs on DIFile](https://releases.llvm.org/10.0.0/docs/LangRef.html#difile)
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct DIFile {
     pub filename: String,
@@ -242,7 +242,7 @@ pub enum DIFlag {
     MainSubprogram,
 }
 
-/// See [LLVM 9 docs on DIGlobalVariable](https://releases.llvm.org/9.0.0/docs/LangRef.html#diglobalvariable)
+/// See [LLVM 10 docs on DIGlobalVariable](https://releases.llvm.org/10.0.0/docs/LangRef.html#diglobalvariable)
 #[derive(PartialEq, Clone, Debug)]
 pub struct DIGlobalVariable {
     pub name: String,
@@ -264,7 +264,7 @@ pub struct DIGlobalVariableExpression {
     pub expr: MetadataRef<DIExpression>,
 }
 
-/// See [LLVM 9 docs on DIImportedEntity](https://releases.llvm.org/9.0.0/docs/LangRef.html#diimportedentity)
+/// See [LLVM 10 docs on DIImportedEntity](https://releases.llvm.org/10.0.0/docs/LangRef.html#diimportedentity)
 #[derive(PartialEq, Clone, Debug)]
 pub struct DIImportedEntity {
     pub tag: DIImportedEntityTag,
@@ -294,7 +294,7 @@ pub enum DILexicalBlockBase {
     LexicalBlockFile(DILexicalBlockFile),
 }
 
-/// See [LLVM 9 docs on DILexicalBlock](https://releases.llvm.org/9.0.0/docs/LangRef.html#dilexicalblock)
+/// See [LLVM 10 docs on DILexicalBlock](https://releases.llvm.org/10.0.0/docs/LangRef.html#dilexicalblock)
 #[derive(PartialEq, Clone, Debug)]
 pub struct DILexicalBlock {
     pub scope: MetadataRef<DILocalScope>,
@@ -303,7 +303,7 @@ pub struct DILexicalBlock {
     pub column: u32,
 }
 
-/// See [LLVM 9 docs on DILexicalBlockFile](https://releases.llvm.org/9.0.0/docs/LangRef.html#dilexicalblockfile)
+/// See [LLVM 10 docs on DILexicalBlockFile](https://releases.llvm.org/10.0.0/docs/LangRef.html#dilexicalblockfile)
 #[derive(PartialEq, Clone, Debug)]
 pub struct DILexicalBlockFile {
     pub scope: MetadataRef<DILocalScope>,
@@ -317,7 +317,7 @@ pub enum DILocalScope {
     Subprogram(DISubprogram),
 }
 
-/// See [LLVM 9 docs on DILocalVariable](https://releases.llvm.org/9.0.0/docs/LangRef.html#dilocalvariable)
+/// See [LLVM 10 docs on DILocalVariable](https://releases.llvm.org/10.0.0/docs/LangRef.html#dilocalvariable)
 #[derive(PartialEq, Clone, Debug)]
 pub struct DILocalVariable {
     pub name: String,
@@ -330,7 +330,7 @@ pub struct DILocalVariable {
     pub align_in_bits: u32,
 }
 
-/// See [LLVM 9 docs on DILocation](https://releases.llvm.org/9.0.0/docs/LangRef.html#dilocation)
+/// See [LLVM 10 docs on DILocation](https://releases.llvm.org/10.0.0/docs/LangRef.html#dilocation)
 #[derive(PartialEq, Clone, Debug)]
 pub struct DILocation {
     pub line: u32,
@@ -338,8 +338,8 @@ pub struct DILocation {
     pub scope: MetadataRef<DILocalScope>,
 }
 
-/// See LLVM 9 docs on [DIMacro](https://releases.llvm.org/9.0.0/docs/LangRef.html#dimacro) and
-/// [DIMacroFile](https://releases.llvm.org/9.0.0/docs/LangRef.html#dimacrofile)
+/// See LLVM 10 docs on [DIMacro](https://releases.llvm.org/10.0.0/docs/LangRef.html#dimacro) and
+/// [DIMacroFile](https://releases.llvm.org/10.0.0/docs/LangRef.html#dimacrofile)
 #[derive(PartialEq, Clone, Debug)]
 pub enum DIMacroNode {
     Macro { name: String, value: String, info: DIMacroInfo, line: u32 },
@@ -361,7 +361,7 @@ pub struct DIModule {
     pub isys_root: String,
 }
 
-/// See [LLVM 9 docs on DINamespace](https://releases.llvm.org/9.0.0/docs/LangRef.html#dinamespace)
+/// See [LLVM 10 docs on DINamespace](https://releases.llvm.org/10.0.0/docs/LangRef.html#dinamespace)
 #[derive(PartialEq, Clone, Debug)]
 pub struct DINamespace {
     pub name: String,
@@ -380,7 +380,7 @@ pub enum DINode {
     Variable(DIVariable),
 }
 
-/// See [LLVM 9 docs on DIObjCProperty](https://releases.llvm.org/9.0.0/docs/LangRef.html#diobjcproperty)
+/// See [LLVM 10 docs on DIObjCProperty](https://releases.llvm.org/10.0.0/docs/LangRef.html#diobjcproperty)
 #[derive(PartialEq, Clone, Debug)]
 pub struct DIObjCProperty {
     pub name: String,
@@ -418,7 +418,7 @@ pub struct DIStructureType {
     pub align_in_bits: u32,
 }
 
-/// See [LLVM 9 docs on DISubprogram](https://releases.llvm.org/9.0.0/docs/LangRef.html#disubprogram)
+/// See [LLVM 10 docs on DISubprogram](https://releases.llvm.org/10.0.0/docs/LangRef.html#disubprogram)
 #[derive(PartialEq, Clone, Debug)]
 pub struct DISubprogram {
     pub name: String,
@@ -443,14 +443,14 @@ pub struct DISubprogram {
     pub thrown_types: Vec<MetadataRef<DIType>>,
 }
 
-/// See [LLVM 9 docs on DISubrange](https://releases.llvm.org/9.0.0/docs/LangRef.html#disubrange)
+/// See [LLVM 10 docs on DISubrange](https://releases.llvm.org/10.0.0/docs/LangRef.html#disubrange)
 #[derive(PartialEq, Clone, Debug)]
 pub struct DISubrange {
     pub count: DICount,
     pub lower_bound: i64,
 }
 
-/// See [LLVM 9 docs on DISubroutineType](https://releases.llvm.org/9.0.0/docs/LangRef.html#disubroutinetype)
+/// See [LLVM 10 docs on DISubroutineType](https://releases.llvm.org/10.0.0/docs/LangRef.html#disubroutinetype)
 #[derive(PartialEq, Clone, Debug)]
 pub struct DISubroutineType {
     /// First the return type, then the operand types. `None` means `void`.
@@ -459,8 +459,8 @@ pub struct DISubroutineType {
     pub flags: Vec<DIFlag>,
 }
 
-/// See LLVM 9 docs on [DITemplateTypeParameter](https://releases.llvm.org/9.0.0/docs/LangRef.html#ditemplatetypeparameter)
-/// and [DITemplateValueParameter](https://releases.llvm.org/9.0.0/docs/LangRef.html#ditemplatevalueparameter)
+/// See LLVM 10 docs on [DITemplateTypeParameter](https://releases.llvm.org/10.0.0/docs/LangRef.html#ditemplatetypeparameter)
+/// and [DITemplateValueParameter](https://releases.llvm.org/10.0.0/docs/LangRef.html#ditemplatevalueparameter)
 #[derive(PartialEq, Clone, Debug)]
 pub enum DITemplateParameter {
     TypeParameter { name: String, ty: Option<MetadataRef<DIType>> },

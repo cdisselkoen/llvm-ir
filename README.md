@@ -36,7 +36,7 @@ This crate is on [crates.io](https://crates.io/crates/llvm-ir), so you can simpl
 add it as a dependency in your `Cargo.toml`:
 ```toml
 [dependencies]
-llvm-ir = "0.5.4"
+llvm-ir = "0.6.0"
 ```
 
 Then, the easiest way to get started is to parse some existing LLVM IR into
@@ -68,17 +68,17 @@ The documentation includes links to relevant parts of the LLVM documentation
 when appropriate.
 
 ## Compatibility
-Currently, `llvm-ir` only supports LLVM 9. However, it should probably "just
-work" with LLVM 8 if you simply open the `llvm-ir` `Cargo.toml` and change
-the line
-```toml
-llvm-sys = "90.0"
-```
-to
-```toml
-llvm-sys = "80.1"
-```
-then `cargo clean` and rebuild. LLVMs older than 8 are not supported.
+Depending on your LLVM version, you may need to use a different version of `llvm-ir`.
+
+- LLVM 10: Supported by current crates.io releases (versions `0.6.x`) and the
+`master` branch.
+- LLVM 9: Supported by `0.5.x` crates.io releases and the `0.5.x` branch.
+This branch will receive bugfixes if necessary, but no new features or
+breaking API changes.
+- LLVM 8: Unofficially supported - it may work if you start from the `0.5.x`
+branch of `llvm-ir`, open the `llvm-ir` `Cargo.toml`, and change the
+`llvm-sys` dependency version from `90.0` to `80.1`.
+- LLVM 7 and earlier: Not supported.
 
 `llvm-ir` works on stable Rust, and requires Rust 1.36+.
 
@@ -127,22 +127,18 @@ functionality to set these flags and/or create new instructions specifying
 values of these flags, but not to query the values of these flags on existing
 instructions.
 - the "fast-math flags" on various floating-point operations
-- the specific opcode for the `AtomicRMW` instruction, i.e., `Xchg`, `Add`,
-`Max`, `Min`, and the like. Again, the C API allows creating `AtomicRMW`
-instructions with any of these opcodes, but has no way to get the opcode for
-an existing `AtomicRMW` instruction.
 - contents of inline assembly functions
 - information about the clauses in the variadic `LandingPad` instruction
 - information about the operands of a `BlockAddress` constant expression
 - the "other labels" reachable from a `CallBr` terminator
-- the ["prefix data"](https://releases.llvm.org/9.0.0/docs/LangRef.html#prefix-data)
+- the ["prefix data"](https://releases.llvm.org/10.0.0/docs/LangRef.html#prefix-data)
 associated with a function
 
 These issues with the LLVM C API have also been reported as
 [LLVM bug #42692](https://bugs.llvm.org/show_bug.cgi?id=42692).
-As discussed there, the `AtomicRMW` opcode getters have been added in trunk
-(and should be available in the LLVM 10 release), but the others remain open
-problems.
+As discussed there, the `AtomicRMW` opcode getters (which were previously
+missing) were added and are available starting with LLVM 10; but the others
+remain open problems.
 Any contributions to filling these gaps in the C API are greatly appreciated!
 
 ## Acknowledgments

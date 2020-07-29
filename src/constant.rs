@@ -5,8 +5,8 @@ use std::convert::TryFrom;
 use std::ops::Deref;
 use std::sync::{Arc, RwLock};
 
-/// See [LLVM 9 docs on Constants](https://releases.llvm.org/9.0.0/docs/LangRef.html#constants).
-/// Constants can be either values, or expressions involving other constants (see [LLVM 9 docs on Constant Expressions](https://releases.llvm.org/9.0.0/docs/LangRef.html#constant-expressions)).
+/// See [LLVM 10 docs on Constants](https://releases.llvm.org/10.0.0/docs/LangRef.html#constants).
+/// Constants can be either values, or expressions involving other constants (see [LLVM 10 docs on Constant Expressions](https://releases.llvm.org/10.0.0/docs/LangRef.html#constant-expressions)).
 #[derive(PartialEq, Clone, Debug)]
 pub enum Constant {
     Int {
@@ -14,7 +14,7 @@ pub enum Constant {
         value: u64, // If the Int is less than 64 bits, the value will be zero-extended to create the Rust `u64` `value` (so if `bits` is 8, the lowest 8 bits of `value` are the relevant bits, and the others are all zeroes). Note that LLVM integers aren't signed or unsigned; each individual instruction indicates whether it's treating the integer as signed or unsigned if necessary (e.g., UDiv vs SDiv).
     },
     Float(Float),
-    /// The `Type` here must be a `PointerType`. See [LLVM 9 docs on Simple Constants](https://releases.llvm.org/9.0.0/docs/LangRef.html#constants)
+    /// The `Type` here must be a `PointerType`. See [LLVM 10 docs on Simple Constants](https://releases.llvm.org/10.0.0/docs/LangRef.html#simple-constants)
     Null(Type),
     /// A zero-initialized array or struct (or scalar).
     AggregateZero(Type),
@@ -28,9 +28,9 @@ pub enum Constant {
         elements: Vec<Constant>,
     },
     Vector(Vec<Constant>),
-    /// `Undef` can be used anywhere a constant is expected. See [LLVM 9 docs on Undefined Values](https://releases.llvm.org/9.0.0/docs/LangRef.html#undefined-values)
+    /// `Undef` can be used anywhere a constant is expected. See [LLVM 10 docs on Undefined Values](https://releases.llvm.org/10.0.0/docs/LangRef.html#undefined-values)
     Undef(Type),
-    /// The address of the given (non-entry) [`BasicBlock`](../struct.BasicBlock.html). See [LLVM 9 docs on Addresses of Basic Blocks](https://releases.llvm.org/9.0.0/docs/LangRef.html#addresses-of-basic-blocks).
+    /// The address of the given (non-entry) [`BasicBlock`](../struct.BasicBlock.html). See [LLVM 10 docs on Addresses of Basic Blocks](https://releases.llvm.org/10.0.0/docs/LangRef.html#addresses-of-basic-blocks).
     /// `BlockAddress` needs more fields, but the necessary getter functions are apparently not exposed in the LLVM C API (only the C++ API)
     BlockAddress, // --TODO ideally we want BlockAddress { function: Name, block: Name },
     GlobalReference {
