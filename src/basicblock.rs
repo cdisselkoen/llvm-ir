@@ -19,9 +19,7 @@ impl BasicBlock {
         Self {
             name,
             instrs: vec![],
-            term: Terminator::Unreachable(Unreachable {
-                debugloc: None,
-            }),
+            term: Terminator::Unreachable(Unreachable { debugloc: None }),
         }
     }
 }
@@ -105,7 +103,7 @@ fn needs_name(inst: LLVMValueRef) -> bool {
             let kind =
                 unsafe { LLVMGetTypeKind(LLVMGetReturnType(LLVMGetCalledFunctionType(inst))) };
             kind != LLVMVoidTypeKind
-        }
+        },
         _ => true, // all other instructions have results (destinations) and thus will need names
     }
 }

@@ -28,8 +28,8 @@ llvm_test!("tests/llvm_bc/upgrade-mrr-runtime-calls.bc", upgrade_mrr_runtime_cal
 // also ensure that new-to-llvm-10 constructs -- specifically, freeze
 // instructions, AtomicRMWBinOps, and the `weak` field on CmpXchg -- were parsed
 // correctly
-use llvm_ir::{instruction, Constant, Name, Operand, Type};
 use llvm_ir::instruction::RMWBinOp;
+use llvm_ir::{instruction, Constant, Name, Operand, Type};
 use std::convert::TryInto;
 
 /// LLVM 10 added the Freeze instruction; ensure that that was parsed correctly

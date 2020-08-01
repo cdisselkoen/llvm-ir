@@ -269,10 +269,10 @@ impl Type {
                             name: s.clone(),
                             ty: actual_type.map(|arc| Arc::downgrade(&arc)),
                         }
-                    }
+                    },
                     _ => Type::struct_type_from_llvm_ref(ty, tynamemap),
                 }
-            }
+            },
             LLVMTypeKind::LLVMFunctionTypeKind => Type::FuncType {
                 result_type: Box::new(Type::from_llvm_ref(
                     unsafe { LLVMGetReturnType(ty) },
@@ -325,28 +325,44 @@ impl Type {
                     name: name.clone(),
                     ty: Some(Arc::downgrade(replacement)),
                 }
-            }
+            },
             // confused on the proper syntax here; neither `{ ref name, ref ty: Some(weak) }` nor
             // `{ ref name, ty: ref Some(weak) }` parse as valid, and just `ty: Some(weak)` errors due to
             // attempting to move the value. For now we have this hack instead.
-            Type::NamedStructType { ref name, ref ty } if ty.is_some() && !seen_names.contains(name) => {
+            Type::NamedStructType { ref name, ref ty }
+                if ty.is_some() && !seen_names.contains(name) =>
+            {
                 seen_names.insert(name.clone());
                 let weak = ty
                     .as_ref()
                     .expect("we checked that ty.is_some() in the pattern guard");
-                let arc: Arc<RwLock<Type>> = weak.upgrade().expect("Failed to upgrade weak reference");
+                let arc: Arc<RwLock<Type>> =
+                    weak.upgrade().expect("Failed to upgrade weak reference");
                 let inner_ty = arc.read().unwrap().clone();
-                *arc.write().unwrap() = Type::_replace_in_type(inner_ty, target_name, replacement, seen_names);
+                *arc.write().unwrap() =
+                    Type::_replace_in_type(inner_ty, target_name, replacement, seen_names);
                 Type::NamedStructType {
                     name: name.clone(),
                     ty: Some(Arc::downgrade(&arc)),
                 }
             }
-            Type::PointerType { pointee_type, addr_space } => Type::PointerType {
-                pointee_type: Box::new(Type::_replace_in_type(*pointee_type, target_name, replacement, seen_names)),
+            Type::PointerType {
+                pointee_type,
+                addr_space,
+            } => Type::PointerType {
+                pointee_type: Box::new(Type::_replace_in_type(
+                    *pointee_type,
+                    target_name,
+                    replacement,
+                    seen_names,
+                )),
                 addr_space,
             },
-            Type::FuncType { result_type, param_types, is_var_arg } => Type::FuncType {
+            Type::FuncType {
+                result_type,
+                param_types,
+                is_var_arg,
+            } => Type::FuncType {
                 // we don't mind that one recursive call here might add things
                 // to `seen_names` that will affect the processing of other
                 // recursive calls.
@@ -362,13 +378,14 @@ impl Type {
                 )),
                 param_types: param_types
                     .into_iter()
-                    .map(|t| {
-                        Type::_replace_in_type(t, target_name, replacement, seen_names)
-                    })
+                    .map(|t| Type::_replace_in_type(t, target_name, replacement, seen_names))
                     .collect(),
                 is_var_arg,
             },
-            Type::VectorType { element_type, num_elements } => Type::VectorType {
+            Type::VectorType {
+                element_type,
+                num_elements,
+            } => Type::VectorType {
                 element_type: Box::new(Type::_replace_in_type(
                     *element_type,
                     target_name,
@@ -377,7 +394,10 @@ impl Type {
                 )),
                 num_elements,
             },
-            Type::ArrayType { element_type, num_elements } => Type::ArrayType {
+            Type::ArrayType {
+                element_type,
+                num_elements,
+            } => Type::ArrayType {
                 element_type: Box::new(Type::_replace_in_type(
                     *element_type,
                     target_name,
@@ -386,7 +406,10 @@ impl Type {
                 )),
                 num_elements,
             },
-            Type::StructType { element_types, is_packed } => Type::StructType {
+            Type::StructType {
+                element_types,
+                is_packed,
+            } => Type::StructType {
                 // we don't mind that one recursive call here might add things
                 // to `seen_names` that will affect the processing of other
                 // recursive calls.
@@ -396,9 +419,7 @@ impl Type {
                 // another "branch" of the recursion
                 element_types: element_types
                     .into_iter()
-                    .map(|t| {
-                        Type::_replace_in_type(t, target_name, replacement, seen_names)
-                    })
+                    .map(|t| Type::_replace_in_type(t, target_name, replacement, seen_names))
                     .collect(),
                 is_packed,
             },

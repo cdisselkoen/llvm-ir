@@ -289,8 +289,14 @@ pub enum AlignType {
 use crate::constant::GlobalNameMap;
 use crate::from_llvm::*;
 use crate::types::TyNameMap;
-use llvm_sys::{LLVMDLLStorageClass, LLVMLinkage, LLVMThreadLocalMode, LLVMUnnamedAddr, LLVMVisibility};
 use llvm_sys::comdat::*;
+use llvm_sys::{
+    LLVMDLLStorageClass,
+    LLVMLinkage,
+    LLVMThreadLocalMode,
+    LLVMUnnamedAddr,
+    LLVMVisibility,
+};
 
 impl Module {
     pub(crate) fn from_llvm_ref(module: LLVMModuleRef) -> Self {
@@ -362,8 +368,12 @@ impl GlobalVariable {
                 Type::PointerType { addr_space, .. } => addr_space,
                 _ => panic!("GlobalVariable has a non-pointer type, {:?}", ty),
             },
-            dll_storage_class: DLLStorageClass::from_llvm(unsafe { LLVMGetDLLStorageClass(global) }),
-            thread_local_mode: ThreadLocalMode::from_llvm(unsafe { LLVMGetThreadLocalMode(global) }),
+            dll_storage_class: DLLStorageClass::from_llvm(unsafe {
+                LLVMGetDLLStorageClass(global)
+            }),
+            thread_local_mode: ThreadLocalMode::from_llvm(unsafe {
+                LLVMGetThreadLocalMode(global)
+            }),
             unnamed_addr: UnnamedAddr::from_llvm(unsafe { LLVMGetUnnamedAddress(global) }),
             initializer: {
                 let it = unsafe { LLVMGetInitializer(global) };
@@ -424,66 +434,71 @@ impl NamedMetadata {
 
 impl UnnamedAddr {
     pub(crate) fn from_llvm(ua: LLVMUnnamedAddr) -> Option<Self> {
+        use LLVMUnnamedAddr::*;
         match ua {
-            LLVMUnnamedAddr::LLVMNoUnnamedAddr => None,
-            LLVMUnnamedAddr::LLVMLocalUnnamedAddr => Some(UnnamedAddr::Local),
-            LLVMUnnamedAddr::LLVMGlobalUnnamedAddr => Some(UnnamedAddr::Global),
+            LLVMNoUnnamedAddr => None,
+            LLVMLocalUnnamedAddr => Some(UnnamedAddr::Local),
+            LLVMGlobalUnnamedAddr => Some(UnnamedAddr::Global),
         }
     }
 }
 
 impl Linkage {
     pub(crate) fn from_llvm(linkage: LLVMLinkage) -> Self {
+        use LLVMLinkage::*;
         match linkage {
-            LLVMLinkage::LLVMExternalLinkage => Linkage::External,
-            LLVMLinkage::LLVMAvailableExternallyLinkage => Linkage::AvailableExternally,
-            LLVMLinkage::LLVMLinkOnceAnyLinkage => Linkage::LinkOnceAny,
-            LLVMLinkage::LLVMLinkOnceODRLinkage => Linkage::LinkOnceODR,
-            LLVMLinkage::LLVMLinkOnceODRAutoHideLinkage => Linkage::LinkOnceODRAutoHide,
-            LLVMLinkage::LLVMWeakAnyLinkage => Linkage::WeakAny,
-            LLVMLinkage::LLVMWeakODRLinkage => Linkage::WeakODR,
-            LLVMLinkage::LLVMAppendingLinkage => Linkage::Appending,
-            LLVMLinkage::LLVMInternalLinkage => Linkage::Internal,
-            LLVMLinkage::LLVMPrivateLinkage => Linkage::Private,
-            LLVMLinkage::LLVMDLLImportLinkage => Linkage::DLLImport,
-            LLVMLinkage::LLVMDLLExportLinkage => Linkage::DLLExport,
-            LLVMLinkage::LLVMExternalWeakLinkage => Linkage::ExternalWeak,
-            LLVMLinkage::LLVMGhostLinkage => Linkage::Ghost,
-            LLVMLinkage::LLVMCommonLinkage => Linkage::Common,
-            LLVMLinkage::LLVMLinkerPrivateLinkage => Linkage::LinkerPrivate,
-            LLVMLinkage::LLVMLinkerPrivateWeakLinkage => Linkage::LinkerPrivateWeak,
+            LLVMExternalLinkage => Linkage::External,
+            LLVMAvailableExternallyLinkage => Linkage::AvailableExternally,
+            LLVMLinkOnceAnyLinkage => Linkage::LinkOnceAny,
+            LLVMLinkOnceODRLinkage => Linkage::LinkOnceODR,
+            LLVMLinkOnceODRAutoHideLinkage => Linkage::LinkOnceODRAutoHide,
+            LLVMWeakAnyLinkage => Linkage::WeakAny,
+            LLVMWeakODRLinkage => Linkage::WeakODR,
+            LLVMAppendingLinkage => Linkage::Appending,
+            LLVMInternalLinkage => Linkage::Internal,
+            LLVMPrivateLinkage => Linkage::Private,
+            LLVMDLLImportLinkage => Linkage::DLLImport,
+            LLVMDLLExportLinkage => Linkage::DLLExport,
+            LLVMExternalWeakLinkage => Linkage::ExternalWeak,
+            LLVMGhostLinkage => Linkage::Ghost,
+            LLVMCommonLinkage => Linkage::Common,
+            LLVMLinkerPrivateLinkage => Linkage::LinkerPrivate,
+            LLVMLinkerPrivateWeakLinkage => Linkage::LinkerPrivateWeak,
         }
     }
 }
 
 impl Visibility {
     pub(crate) fn from_llvm(visibility: LLVMVisibility) -> Self {
+        use LLVMVisibility::*;
         match visibility {
-            LLVMVisibility::LLVMDefaultVisibility => Visibility::Default,
-            LLVMVisibility::LLVMHiddenVisibility => Visibility::Hidden,
-            LLVMVisibility::LLVMProtectedVisibility => Visibility::Protected,
+            LLVMDefaultVisibility => Visibility::Default,
+            LLVMHiddenVisibility => Visibility::Hidden,
+            LLVMProtectedVisibility => Visibility::Protected,
         }
     }
 }
 
 impl DLLStorageClass {
     pub(crate) fn from_llvm(dllsc: LLVMDLLStorageClass) -> Self {
+        use LLVMDLLStorageClass::*;
         match dllsc {
-            LLVMDLLStorageClass::LLVMDefaultStorageClass => DLLStorageClass::Default,
-            LLVMDLLStorageClass::LLVMDLLImportStorageClass => DLLStorageClass::Import,
-            LLVMDLLStorageClass::LLVMDLLExportStorageClass => DLLStorageClass::Export,
+            LLVMDefaultStorageClass => DLLStorageClass::Default,
+            LLVMDLLImportStorageClass => DLLStorageClass::Import,
+            LLVMDLLExportStorageClass => DLLStorageClass::Export,
         }
     }
 }
 
 impl ThreadLocalMode {
     pub(crate) fn from_llvm(tlm: LLVMThreadLocalMode) -> Self {
+        use LLVMThreadLocalMode::*;
         match tlm {
-            LLVMThreadLocalMode::LLVMNotThreadLocal => ThreadLocalMode::NotThreadLocal,
-            LLVMThreadLocalMode::LLVMGeneralDynamicTLSModel => ThreadLocalMode::GeneralDynamic,
-            LLVMThreadLocalMode::LLVMLocalDynamicTLSModel => ThreadLocalMode::LocalDynamic,
-            LLVMThreadLocalMode::LLVMInitialExecTLSModel => ThreadLocalMode::InitialExec,
-            LLVMThreadLocalMode::LLVMLocalExecTLSModel => ThreadLocalMode::LocalExec,
+            LLVMNotThreadLocal => ThreadLocalMode::NotThreadLocal,
+            LLVMGeneralDynamicTLSModel => ThreadLocalMode::GeneralDynamic,
+            LLVMLocalDynamicTLSModel => ThreadLocalMode::LocalDynamic,
+            LLVMInitialExecTLSModel => ThreadLocalMode::InitialExec,
+            LLVMLocalExecTLSModel => ThreadLocalMode::LocalExec,
         }
     }
 }
@@ -499,12 +514,13 @@ impl Comdat {
 
 impl SelectionKind {
     pub(crate) fn from_llvm(sk: LLVMComdatSelectionKind) -> Self {
+        use LLVMComdatSelectionKind::*;
         match sk {
-            LLVMComdatSelectionKind::LLVMAnyComdatSelectionKind => SelectionKind::Any,
-            LLVMComdatSelectionKind::LLVMExactMatchComdatSelectionKind => SelectionKind::ExactMatch,
-            LLVMComdatSelectionKind::LLVMLargestComdatSelectionKind => SelectionKind::Largest,
-            LLVMComdatSelectionKind::LLVMNoDuplicatesComdatSelectionKind => SelectionKind::NoDuplicates,
-            LLVMComdatSelectionKind::LLVMSameSizeComdatSelectionKind => SelectionKind::SameSize,
+            LLVMAnyComdatSelectionKind => SelectionKind::Any,
+            LLVMExactMatchComdatSelectionKind => SelectionKind::ExactMatch,
+            LLVMLargestComdatSelectionKind => SelectionKind::Largest,
+            LLVMNoDuplicatesComdatSelectionKind => SelectionKind::NoDuplicates,
+            LLVMSameSizeComdatSelectionKind => SelectionKind::SameSize,
         }
     }
 }

@@ -117,13 +117,13 @@ struct AllButLastIterator<I: Iterator> {
     p: Peekable<I>,
 }
 
-impl<I> AllButLastIterator<I> where I: Iterator {
+impl<I: Iterator> AllButLastIterator<I> {
     fn new(i: I) -> Self {
         Self { p: i.peekable() }
     }
 }
 
-impl<I> Iterator for AllButLastIterator<I> where I: Iterator {
+impl<I: Iterator> Iterator for AllButLastIterator<I> {
     type Item = I::Item;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -135,7 +135,7 @@ impl<I> Iterator for AllButLastIterator<I> where I: Iterator {
                 } else {
                     None
                 }
-            }
+            },
         }
     }
 }

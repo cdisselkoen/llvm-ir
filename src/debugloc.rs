@@ -1,4 +1,4 @@
-use std::cmp::{PartialOrd, Ordering};
+use std::cmp::{Ordering, PartialOrd};
 use std::fmt;
 
 /// Describes a "debug location" (source location)
@@ -19,6 +19,7 @@ pub struct DebugLoc {
 }
 
 impl PartialOrd for DebugLoc {
+    #[rustfmt::skip] // self on one line, other on the next
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         // compare in the order (directory, filename, line, col)
         Some(
@@ -29,6 +30,7 @@ impl PartialOrd for DebugLoc {
 }
 
 impl Ord for DebugLoc {
+    #[rustfmt::skip] // self on one line, other on the next
     fn cmp(&self, other: &Self) -> Ordering {
         // compare in the order (directory, filename, line, col)
         (&self.directory, &self.filename, &self.line, &self.col)
@@ -92,7 +94,7 @@ impl DebugLoc {
     /// Returns `None` if the object does not have a `DebugLoc`
     pub(crate) fn from_llvm_no_col(value: LLVMValueRef) -> Option<Self> {
         match unsafe { get_debugloc_filename(value) } {
-            None => None,  // if no filename, assume no debugloc. To my knowledge, everything with a debugloc has a filename.
+            None => None, // if no filename, assume no debugloc. To my knowledge, everything with a debugloc has a filename.
             Some(filename) => Some(Self {
                 line: unsafe { LLVMGetDebugLocLine(value) },
                 col: None,
