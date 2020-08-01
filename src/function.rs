@@ -400,6 +400,7 @@ impl Function {
 
 impl CallingConvention {
     #[allow(clippy::cognitive_complexity)]
+    #[rustfmt::skip] // each calling convention on one line, even if lines get a little long
     pub(crate) fn from_u32(u: u32) -> Self {
         use llvm_sys::LLVMCallConv;
         match u {

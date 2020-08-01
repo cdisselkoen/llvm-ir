@@ -88,8 +88,8 @@ llvm_test!("tests/llvm_bc/weak-cmpxchg-upgrade.ll.bc", weak_cmpxchg_upgrade);
 llvm_test!("tests/llvm_bc/weak-macho-3.5.ll.bc", weak_macho);
 
 use either::Either;
-use llvm_ir::*;
 use llvm_ir::instruction::{Atomicity, MemoryOrdering, SynchronizationScope};
+use llvm_ir::*;
 use std::convert::TryInto;
 use std::ops::Deref;
 use std::sync::{Arc, RwLock};

@@ -914,7 +914,10 @@ impl Typed for ExtractElement {
     fn get_type(&self) -> Type {
         match self.vector.get_type() {
             Type::VectorType { element_type, .. } => *element_type,
-            ty => panic!("Expected an ExtractElement vector to be VectorType, got {:?}", ty),
+            ty => panic!(
+                "Expected an ExtractElement vector to be VectorType, got {:?}",
+                ty
+            ),
         }
     }
 }
@@ -960,10 +963,19 @@ impl Typed for ShuffleVector {
         assert_eq!(ty, self.operand1.get_type());
         match ty {
             Type::VectorType { element_type, .. } => match self.mask.get_type() {
-                Type::VectorType { num_elements, .. } => Type::VectorType { element_type, num_elements },
-                ty => panic!("Expected a ShuffleVector mask to be VectorType, got {:?}", ty),
+                Type::VectorType { num_elements, .. } => Type::VectorType {
+                    element_type,
+                    num_elements,
+                },
+                ty => panic!(
+                    "Expected a ShuffleVector mask to be VectorType, got {:?}",
+                    ty
+                ),
             },
-            _ => panic!("Expected a ShuffleVector operand to be VectorType, got {:?}", ty),
+            _ => panic!(
+                "Expected a ShuffleVector operand to be VectorType, got {:?}",
+                ty
+            ),
         }
     }
 }
@@ -1000,7 +1012,10 @@ fn ev_type(cur_type: Type, mut indices: impl Iterator<Item = u32>) -> Type {
                     .clone(),
                 indices,
             ),
-            _ => panic!("ExtractValue from something that's not ArrayType or StructType; its type is {:?}", cur_type),
+            _ => panic!(
+                "ExtractValue from something that's not ArrayType or StructType; its type is {:?}",
+                cur_type
+            ),
         },
     }
 }
@@ -1151,7 +1166,10 @@ impl Typed for AtomicRMW {
     fn get_type(&self) -> Type {
         match self.address.get_type() {
             Type::PointerType { pointee_type, .. } => *pointee_type,
-            ty => panic!("Expected an AtomicRMW address to be PointerType, got {:?}", ty),
+            ty => panic!(
+                "Expected an AtomicRMW address to be PointerType, got {:?}",
+                ty
+            ),
         }
     }
 }
@@ -1745,60 +1763,169 @@ impl Instruction {
             print_to_string(inst)
         });
         match unsafe { LLVMGetInstructionOpcode(inst) } {
-            LLVMOpcode::LLVMAdd => Instruction::Add(Add::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMSub => Instruction::Sub(Sub::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMMul => Instruction::Mul(Mul::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMUDiv => Instruction::UDiv(UDiv::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMSDiv => Instruction::SDiv(SDiv::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMURem => Instruction::URem(URem::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMSRem => Instruction::SRem(SRem::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMAnd => Instruction::And(And::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMOr => Instruction::Or(Or::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMXor => Instruction::Xor(Xor::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMShl => Instruction::Shl(Shl::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMLShr => Instruction::LShr(LShr::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMAShr => Instruction::AShr(AShr::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMFAdd => Instruction::FAdd(FAdd::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMFSub => Instruction::FSub(FSub::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMFMul => Instruction::FMul(FMul::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMFDiv => Instruction::FDiv(FDiv::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMFRem => Instruction::FRem(FRem::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMFNeg => Instruction::FNeg(FNeg::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMExtractElement => Instruction::ExtractElement(ExtractElement::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMInsertElement => Instruction::InsertElement(InsertElement::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMShuffleVector => Instruction::ShuffleVector(ShuffleVector::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMExtractValue => Instruction::ExtractValue(ExtractValue::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMInsertValue => Instruction::InsertValue(InsertValue::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMAlloca => Instruction::Alloca(Alloca::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMLoad => Instruction::Load(Load::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMStore => Instruction::Store(Store::from_llvm_ref(inst, vnmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMFence => Instruction::Fence(Fence::from_llvm_ref(inst)),
-            LLVMOpcode::LLVMAtomicCmpXchg => Instruction::CmpXchg(CmpXchg::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMAtomicRMW => Instruction::AtomicRMW(AtomicRMW::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMGetElementPtr => Instruction::GetElementPtr(GetElementPtr::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMTrunc => Instruction::Trunc(Trunc::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMZExt => Instruction::ZExt(ZExt::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMSExt => Instruction::SExt(SExt::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMFPTrunc => Instruction::FPTrunc(FPTrunc::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMFPExt => Instruction::FPExt(FPExt::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMFPToUI => Instruction::FPToUI(FPToUI::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMFPToSI => Instruction::FPToSI(FPToSI::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMUIToFP => Instruction::UIToFP(UIToFP::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMSIToFP => Instruction::SIToFP(SIToFP::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMPtrToInt => Instruction::PtrToInt(PtrToInt::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMIntToPtr => Instruction::IntToPtr(IntToPtr::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMBitCast => Instruction::BitCast(BitCast::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMAddrSpaceCast => Instruction::AddrSpaceCast(AddrSpaceCast::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMICmp => Instruction::ICmp(ICmp::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMFCmp => Instruction::FCmp(FCmp::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMPHI => Instruction::Phi(Phi::from_llvm_ref(inst, ctr, vnmap, bbmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMSelect => Instruction::Select(Select::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMCall => Instruction::Call(Call::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMVAArg => Instruction::VAArg(VAArg::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMLandingPad => Instruction::LandingPad(LandingPad::from_llvm_ref(inst, ctr, tnmap)),
-            LLVMOpcode::LLVMCatchPad => Instruction::CatchPad(CatchPad::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMCleanupPad => Instruction::CleanupPad(CleanupPad::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap)),
-            opcode => panic!("Instruction::from_llvm_ref called with a terminator instruction (opcode {:?})", opcode),
+            LLVMOpcode::LLVMAdd => {
+                Instruction::Add(Add::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+            },
+            LLVMOpcode::LLVMSub => {
+                Instruction::Sub(Sub::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+            },
+            LLVMOpcode::LLVMMul => {
+                Instruction::Mul(Mul::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+            },
+            LLVMOpcode::LLVMUDiv => {
+                Instruction::UDiv(UDiv::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+            },
+            LLVMOpcode::LLVMSDiv => {
+                Instruction::SDiv(SDiv::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+            },
+            LLVMOpcode::LLVMURem => {
+                Instruction::URem(URem::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+            },
+            LLVMOpcode::LLVMSRem => {
+                Instruction::SRem(SRem::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+            },
+            LLVMOpcode::LLVMAnd => {
+                Instruction::And(And::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+            },
+            LLVMOpcode::LLVMOr => {
+                Instruction::Or(Or::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+            },
+            LLVMOpcode::LLVMXor => {
+                Instruction::Xor(Xor::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+            },
+            LLVMOpcode::LLVMShl => {
+                Instruction::Shl(Shl::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+            },
+            LLVMOpcode::LLVMLShr => {
+                Instruction::LShr(LShr::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+            },
+            LLVMOpcode::LLVMAShr => {
+                Instruction::AShr(AShr::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+            },
+            LLVMOpcode::LLVMFAdd => {
+                Instruction::FAdd(FAdd::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+            },
+            LLVMOpcode::LLVMFSub => {
+                Instruction::FSub(FSub::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+            },
+            LLVMOpcode::LLVMFMul => {
+                Instruction::FMul(FMul::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+            },
+            LLVMOpcode::LLVMFDiv => {
+                Instruction::FDiv(FDiv::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+            },
+            LLVMOpcode::LLVMFRem => {
+                Instruction::FRem(FRem::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+            },
+            LLVMOpcode::LLVMFNeg => {
+                Instruction::FNeg(FNeg::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+            },
+            LLVMOpcode::LLVMExtractElement => Instruction::ExtractElement(
+                ExtractElement::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap),
+            ),
+            LLVMOpcode::LLVMInsertElement => Instruction::InsertElement(
+                InsertElement::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap),
+            ),
+            LLVMOpcode::LLVMShuffleVector => Instruction::ShuffleVector(
+                ShuffleVector::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap),
+            ),
+            LLVMOpcode::LLVMExtractValue => {
+                Instruction::ExtractValue(ExtractValue::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+            },
+            LLVMOpcode::LLVMInsertValue => {
+                Instruction::InsertValue(InsertValue::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+            },
+            LLVMOpcode::LLVMAlloca => {
+                Instruction::Alloca(Alloca::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+            },
+            LLVMOpcode::LLVMLoad => {
+                Instruction::Load(Load::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+            },
+            LLVMOpcode::LLVMStore => {
+                Instruction::Store(Store::from_llvm_ref(inst, vnmap, gnmap, tnmap))
+            },
+            LLVMOpcode::LLVMFence => {
+                Instruction::Fence(Fence::from_llvm_ref(inst))
+            },
+            LLVMOpcode::LLVMAtomicCmpXchg => {
+                Instruction::CmpXchg(CmpXchg::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+            },
+            LLVMOpcode::LLVMAtomicRMW => {
+                Instruction::AtomicRMW(AtomicRMW::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+            },
+            LLVMOpcode::LLVMGetElementPtr => Instruction::GetElementPtr(
+                GetElementPtr::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap),
+            ),
+            LLVMOpcode::LLVMTrunc => {
+                Instruction::Trunc(Trunc::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+            },
+            LLVMOpcode::LLVMZExt => {
+                Instruction::ZExt(ZExt::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+            },
+            LLVMOpcode::LLVMSExt => {
+                Instruction::SExt(SExt::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+            },
+            LLVMOpcode::LLVMFPTrunc => {
+                Instruction::FPTrunc(FPTrunc::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+            },
+            LLVMOpcode::LLVMFPExt => {
+                Instruction::FPExt(FPExt::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+            },
+            LLVMOpcode::LLVMFPToUI => {
+                Instruction::FPToUI(FPToUI::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+            },
+            LLVMOpcode::LLVMFPToSI => {
+                Instruction::FPToSI(FPToSI::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+            },
+            LLVMOpcode::LLVMUIToFP => {
+                Instruction::UIToFP(UIToFP::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+            },
+            LLVMOpcode::LLVMSIToFP => {
+                Instruction::SIToFP(SIToFP::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+            },
+            LLVMOpcode::LLVMPtrToInt => {
+                Instruction::PtrToInt(PtrToInt::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+            },
+            LLVMOpcode::LLVMIntToPtr => {
+                Instruction::IntToPtr(IntToPtr::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+            },
+            LLVMOpcode::LLVMBitCast => {
+                Instruction::BitCast(BitCast::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+            },
+            LLVMOpcode::LLVMAddrSpaceCast => Instruction::AddrSpaceCast(
+                AddrSpaceCast::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap),
+            ),
+            LLVMOpcode::LLVMICmp => {
+                Instruction::ICmp(ICmp::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+            },
+            LLVMOpcode::LLVMFCmp => {
+                Instruction::FCmp(FCmp::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+            },
+            LLVMOpcode::LLVMPHI => {
+                Instruction::Phi(Phi::from_llvm_ref(inst, ctr, vnmap, bbmap, gnmap, tnmap))
+            },
+            LLVMOpcode::LLVMSelect => {
+                Instruction::Select(Select::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+            },
+            LLVMOpcode::LLVMCall => {
+                Instruction::Call(Call::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+            },
+            LLVMOpcode::LLVMVAArg => {
+                Instruction::VAArg(VAArg::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+            },
+            LLVMOpcode::LLVMLandingPad => {
+                Instruction::LandingPad(LandingPad::from_llvm_ref(inst, ctr, tnmap))
+            },
+            LLVMOpcode::LLVMCatchPad => {
+                Instruction::CatchPad(CatchPad::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+            },
+            LLVMOpcode::LLVMCleanupPad => {
+                Instruction::CleanupPad(CleanupPad::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+            },
+            opcode => panic!(
+                "Instruction::from_llvm_ref called with a terminator instruction (opcode {:?})",
+                opcode
+            ),
         }
     }
 }
@@ -2220,7 +2347,7 @@ impl GetElementPtr {
             ),
             indices: {
                 let num_indices = unsafe { LLVMGetNumIndices(inst) };
-                (1..=num_indices)
+                (1 ..= num_indices)
                     .map(|i| {
                         Operand::from_llvm_ref(
                             unsafe { LLVMGetOperand(inst, i) },
@@ -2355,7 +2482,7 @@ impl Phi {
         Self {
             incoming_values: {
                 let num_incoming = unsafe { LLVMCountIncoming(inst) };
-                (0..num_incoming)
+                (0 .. num_incoming)
                     .map(|i| {
                         let operand = Operand::from_llvm_ref(
                             unsafe { LLVMGetIncomingValue(inst, i) },
@@ -2444,7 +2571,7 @@ impl CallInfo {
             },
             arguments: {
                 let num_args: u32 = unsafe { LLVMGetNumArgOperands(inst) } as u32;
-                (0..num_args) // arguments are (0 .. num_args); other operands (such as the called function) are after that
+                (0 .. num_args) // arguments are (0 .. num_args); other operands (such as the called function) are after that
                     .map(|i| {
                         let operand = Operand::from_llvm_ref(
                             unsafe { LLVMGetOperand(inst, i) },
@@ -2567,7 +2694,7 @@ impl LandingPad {
             result_type: Type::from_llvm_ref(unsafe { LLVMTypeOf(inst) }, tnmap),
             clauses: {
                 let num_clauses = unsafe { LLVMGetNumClauses(inst) };
-                (0..num_clauses)
+                (0 .. num_clauses)
                     .map(|i| LandingPadClause::from_llvm_ref(unsafe { LLVMGetClause(inst, i) }))
                     .collect()
             },
@@ -2596,7 +2723,7 @@ impl CatchPad {
             ),
             args: {
                 let num_args = unsafe { LLVMGetNumArgOperands(inst) };
-                (0..num_args)
+                (0 .. num_args)
                     .map(|i| {
                         Operand::from_llvm_ref(
                             unsafe { LLVMGetArgOperand(inst, i) },
@@ -2631,7 +2758,7 @@ impl CleanupPad {
             ),
             args: {
                 let num_args = unsafe { LLVMGetNumArgOperands(inst) };
-                (0..num_args)
+                (0 .. num_args)
                     .map(|i| {
                         Operand::from_llvm_ref(
                             unsafe { LLVMGetArgOperand(inst, i) },
@@ -2660,6 +2787,7 @@ impl SynchronizationScope {
 }
 
 impl MemoryOrdering {
+    #[rustfmt::skip] // each one on one line, even if lines get a little long
     pub(crate) fn from_llvm(ao: LLVMAtomicOrdering) -> Self {
         match ao {
             LLVMAtomicOrdering::LLVMAtomicOrderingUnordered => MemoryOrdering::Unordered,

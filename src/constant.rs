@@ -127,6 +127,7 @@ impl Typed for Float {
 }
 
 impl Typed for Constant {
+    #[rustfmt::skip] // to keep all the branches more consistent with each other
     fn get_type(&self) -> Type {
         match self {
             Constant::Int { bits, .. } => Type::IntegerType { bits: *bits },
@@ -484,7 +485,10 @@ impl Typed for ExtractElement {
     fn get_type(&self) -> Type {
         match self.vector.get_type() {
             Type::VectorType { element_type, .. } => *element_type,
-            ty => panic!("Expected an ExtractElement vector to be VectorType, got {:?}", ty),
+            ty => panic!(
+                "Expected an ExtractElement vector to be VectorType, got {:?}",
+                ty
+            ),
         }
     }
 }
@@ -520,10 +524,19 @@ impl Typed for ShuffleVector {
         assert_eq!(ty, self.operand1.get_type());
         match ty {
             Type::VectorType { element_type, .. } => match self.mask.get_type() {
-                Type::VectorType { num_elements, .. } => Type::VectorType { element_type, num_elements },
-                ty => panic!("Expected a ShuffleVector mask to be VectorType, got {:?}", ty),
+                Type::VectorType { num_elements, .. } => Type::VectorType {
+                    element_type,
+                    num_elements,
+                },
+                ty => panic!(
+                    "Expected a ShuffleVector mask to be VectorType, got {:?}",
+                    ty
+                ),
             },
-            _ => panic!("Expected a ShuffleVector operand to be VectorType, got {:?}", ty),
+            _ => panic!(
+                "Expected a ShuffleVector operand to be VectorType, got {:?}",
+                ty
+            ),
         }
     }
 }
@@ -554,7 +567,10 @@ fn ev_type(cur_type: Type, mut indices: impl Iterator<Item = u32>) -> Type {
                     .clone(),
                 indices,
             ),
-            _ => panic!("ExtractValue from something that's not ArrayType or StructType; its type is {:?}", cur_type),
+            _ => panic!(
+                "ExtractValue from something that's not ArrayType or StructType; its type is {:?}",
+                cur_type
+            ),
         },
     }
 }
@@ -1147,7 +1163,7 @@ impl GetElementPtr {
             address: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, gnmap, tnmap),
             indices: {
                 let num_indices = unsafe { LLVMGetNumOperands(expr) as u32 } - 1; // LLVMGetNumIndices(), which we use for instruction::GetElementPtr, appears empirically to not work for constant::GetElementPtr
-                (1..=num_indices)
+                (1 ..= num_indices)
                     .map(|i| {
                         Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, i) }, gnmap, tnmap)
                     })

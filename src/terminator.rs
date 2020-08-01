@@ -241,7 +241,10 @@ impl Typed for Invoke {
     fn get_type(&self) -> Type {
         match self.function.get_type() {
             Type::FuncType { result_type, .. } => *result_type,
-            ty => panic!("Expected the function argument of an Invoke to have type FuncType; got {:?}", ty),
+            ty => panic!(
+                "Expected the function argument of an Invoke to have type FuncType; got {:?}",
+                ty
+            ),
         }
     }
 }
@@ -324,7 +327,7 @@ pub struct CallBr {
     pub result: Name, // The name of the variable that will get the result of the call (if the callee returns with 'ret')
     pub return_label: Name, // Should be the name of a basic block. If the callee returns normally (i.e., with 'ret'), control flow resumes here.
     /// `other_labels` should be `Vec<Name>`, but it appears there is no way to get this information with the LLVM C API (as opposed to the C++ API)
-    pub other_labels: (),  //Vec<Name>, // Should be names of basic blocks. The callee may use an inline-asm 'goto' to resume control flow at one of these places.
+    pub other_labels: (), //Vec<Name>, // Should be names of basic blocks. The callee may use an inline-asm 'goto' to resume control flow at one of these places.
     pub function_attributes: Vec<FunctionAttribute>,
     pub calling_convention: CallingConvention,
     pub debugloc: Option<DebugLoc>,
@@ -338,7 +341,10 @@ impl Typed for CallBr {
     fn get_type(&self) -> Type {
         match self.function.get_type() {
             Type::FuncType { result_type, .. } => *result_type,
-            ty => panic!("Expected the function argument of a CallBr to have type FuncType; got {:?}", ty),
+            ty => panic!(
+                "Expected the function argument of a CallBr to have type FuncType; got {:?}",
+                ty
+            ),
         }
     }
 }
@@ -367,22 +373,45 @@ impl Terminator {
             print_to_string(term)
         });
         match unsafe { LLVMGetInstructionOpcode(term) } {
-            LLVMOpcode::LLVMRet => Terminator::Ret(Ret::from_llvm_ref(term, vnmap, gnmap, tnmap)),
+            LLVMOpcode::LLVMRet => {
+                Terminator::Ret(Ret::from_llvm_ref(term, vnmap, gnmap, tnmap))
+            },
             LLVMOpcode::LLVMBr => match unsafe { LLVMGetNumOperands(term) } {
                 1 => Terminator::Br(Br::from_llvm_ref(term, bbmap)),
                 3 => Terminator::CondBr(CondBr::from_llvm_ref(term, vnmap, bbmap, gnmap, tnmap)),
                 n => panic!("LLVMBr with {} operands, expected 1 or 3", n),
             },
-            LLVMOpcode::LLVMSwitch => Terminator::Switch(Switch::from_llvm_ref(term, vnmap, bbmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMIndirectBr => Terminator::IndirectBr(IndirectBr::from_llvm_ref(term, vnmap, bbmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMInvoke => Terminator::Invoke(Invoke::from_llvm_ref(term, ctr, vnmap, bbmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMResume => Terminator::Resume(Resume::from_llvm_ref(term, vnmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMUnreachable => Terminator::Unreachable(Unreachable::from_llvm_ref(term)),
-            LLVMOpcode::LLVMCleanupRet => Terminator::CleanupRet(CleanupRet::from_llvm_ref(term, vnmap, bbmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMCatchRet => Terminator::CatchRet(CatchRet::from_llvm_ref(term, vnmap, bbmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMCatchSwitch => Terminator::CatchSwitch(CatchSwitch::from_llvm_ref(term, ctr, vnmap, bbmap, gnmap, tnmap)),
-            LLVMOpcode::LLVMCallBr => Terminator::CallBr(CallBr::from_llvm_ref(term, ctr, vnmap, bbmap, gnmap, tnmap)),
-            opcode => panic!("Terminator::from_llvm_ref called with a non-terminator instruction (opcode {:?})", opcode),
+            LLVMOpcode::LLVMSwitch => {
+                Terminator::Switch(Switch::from_llvm_ref(term, vnmap, bbmap, gnmap, tnmap))
+            },
+            LLVMOpcode::LLVMIndirectBr => {
+                Terminator::IndirectBr(IndirectBr::from_llvm_ref(term, vnmap, bbmap, gnmap, tnmap))
+            },
+            LLVMOpcode::LLVMInvoke => {
+                Terminator::Invoke(Invoke::from_llvm_ref(term, ctr, vnmap, bbmap, gnmap, tnmap))
+            },
+            LLVMOpcode::LLVMResume => {
+                Terminator::Resume(Resume::from_llvm_ref(term, vnmap, gnmap, tnmap))
+            },
+            LLVMOpcode::LLVMUnreachable => {
+                Terminator::Unreachable(Unreachable::from_llvm_ref(term))
+            },
+            LLVMOpcode::LLVMCleanupRet => {
+                Terminator::CleanupRet(CleanupRet::from_llvm_ref(term, vnmap, bbmap, gnmap, tnmap))
+            },
+            LLVMOpcode::LLVMCatchRet => {
+                Terminator::CatchRet(CatchRet::from_llvm_ref(term, vnmap, bbmap, gnmap, tnmap))
+            },
+            LLVMOpcode::LLVMCatchSwitch => Terminator::CatchSwitch(CatchSwitch::from_llvm_ref(
+                term, ctr, vnmap, bbmap, gnmap, tnmap,
+            )),
+            LLVMOpcode::LLVMCallBr => {
+                Terminator::CallBr(CallBr::from_llvm_ref(term, ctr, vnmap, bbmap, gnmap, tnmap))
+            },
+            opcode => panic!(
+                "Terminator::from_llvm_ref called with a non-terminator instruction (opcode {:?})",
+                opcode
+            ),
         }
     }
 }
@@ -472,15 +501,16 @@ impl Switch {
             ),
             dests: {
                 let num_dests = unsafe { LLVMGetNumSuccessors(term) };
-                let dest_bbs = (1..=num_dests) // LLVMGetSuccessor(0) apparently gives the default dest
+                let dest_bbs = (1 ..= num_dests) // LLVMGetSuccessor(0) apparently gives the default dest
                     .map(|i| {
                         bbmap
                             .get(unsafe { &LLVMGetSuccessor(term, i) })
                             .expect("Failed to find switch destination in map")
                             .clone()
                     });
-                let dest_vals = (1..num_dests).map(|i| {
-                    Constant::from_llvm_ref(unsafe { LLVMGetOperand(term, 2 * i) }, gnmap, tnmap) // 2*i because empirically, operand 1 is the default dest, and operands 3/5/7/etc are the successor blocks
+                let dest_vals = (1 .. num_dests).map(|i| {
+                    Constant::from_llvm_ref(unsafe { LLVMGetOperand(term, 2 * i) }, gnmap, tnmap)
+                    // 2*i because empirically, operand 1 is the default dest, and operands 3/5/7/etc are the successor blocks
                 });
                 Iterator::zip(dest_vals, dest_bbs).collect()
             },
@@ -511,7 +541,7 @@ impl IndirectBr {
             ),
             possible_dests: {
                 let num_dests = unsafe { LLVMGetNumSuccessors(term) };
-                (0..num_dests)
+                (0 .. num_dests)
                     .map(|i| {
                         bbmap
                             .get(unsafe { &LLVMGetSuccessor(term, i) })
