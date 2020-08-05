@@ -31,7 +31,7 @@ impl BasicBlock {
 use crate::constant::GlobalNameMap;
 use crate::from_llvm::*;
 use crate::operand::ValToNameMap;
-use crate::types::TyNameMap;
+use crate::types::TypesBuilder;
 use llvm_sys::LLVMOpcode;
 use llvm_sys::LLVMTypeKind::LLVMVoidTypeKind;
 use std::collections::HashMap;
@@ -45,7 +45,7 @@ impl BasicBlock {
         vnmap: &ValToNameMap,
         bbmap: &BBMap,
         gnmap: &GlobalNameMap,
-        tnmap: &mut TyNameMap,
+        types: &mut TypesBuilder,
     ) -> Self {
         let name = Name::name_or_num(unsafe { get_bb_name(bb) }, ctr);
         assert_eq!(&name, bbmap.get(&bb).expect("Expected to find bb in bbmap"));
@@ -53,7 +53,7 @@ impl BasicBlock {
         Self {
             name,
             instrs: all_but_last(get_instructions(bb))
-                .map(|i| Instruction::from_llvm_ref(i, ctr, vnmap, bbmap, gnmap, tnmap))
+                .map(|i| Instruction::from_llvm_ref(i, ctr, vnmap, bbmap, gnmap, types))
                 .collect(),
             term: Terminator::from_llvm_ref(
                 unsafe { LLVMGetBasicBlockTerminator(bb) },
@@ -61,7 +61,7 @@ impl BasicBlock {
                 vnmap,
                 bbmap,
                 gnmap,
-                tnmap,
+                types,
             ),
         }
     }

@@ -8,11 +8,9 @@ use llvm_ir::Module;
 use llvm_ir::Name;
 use llvm_ir::Operand;
 use llvm_ir::Type;
-use llvm_ir::Typed;
+use llvm_ir::types::NamedStructDef;
 use std::convert::TryInto;
-use std::ops::Deref;
 use std::path::Path;
-use std::sync::{Arc, RwLock};
 
 fn init_logging() {
     // capture log messages with test harness
@@ -32,7 +30,7 @@ fn hellobc() {
     assert_eq!(func.name, "main");
     assert_eq!(func.parameters.len(), 0);
     assert_eq!(func.is_var_arg, false);
-    assert_eq!(func.return_type, Type::IntegerType { bits: 32 });
+    assert_eq!(func.return_type, module.types.int(32));
     assert_eq!(func.basic_blocks.len(), 1);
     let bb = &func.basic_blocks[0];
     assert_eq!(bb.name, Name::Number(0));
@@ -96,14 +94,14 @@ fn loopbc() {
     assert_eq!(func.name, "loop");
     assert_eq!(func.parameters.len(), 2);
     assert_eq!(func.is_var_arg, false);
-    assert_eq!(func.return_type, Type::VoidType);
+    assert_eq!(func.return_type, module.types.void());
     assert_eq!(
-        func.get_type(),
-        Type::FuncType {
-            result_type: Box::new(Type::VoidType),
-            param_types: vec![Type::i32(), Type::i32()],
-            is_var_arg: false,
-        }
+        module.type_of(func),
+        module.types.func_type(
+            module.types.void(),
+            vec![module.types.i32(), module.types.i32()],
+            false,
+        )
     );
     assert_eq!(module.get_func_by_name("loop"), Some(func));
 
@@ -112,10 +110,10 @@ fn loopbc() {
     let param1 = &func.parameters[1];
     assert_eq!(param0.name, Name::Number(0));
     assert_eq!(param1.name, Name::Number(1));
-    assert_eq!(param0.ty, Type::i32());
-    assert_eq!(param1.ty, Type::i32());
-    assert_eq!(param0.get_type(), Type::i32());
-    assert_eq!(param1.get_type(), Type::i32());
+    assert_eq!(param0.ty, module.types.i32());
+    assert_eq!(param1.ty, module.types.i32());
+    assert_eq!(module.type_of(param0), module.types.i32());
+    assert_eq!(module.type_of(param1), module.types.i32());
 
     // get basic blocks and check their names
     assert_eq!(func.basic_blocks.len(), 6);
@@ -140,41 +138,41 @@ fn loopbc() {
         .try_into()
         .expect("Should be an alloca");
     assert_eq!(alloca.dest, Name::Number(3));
-    let allocated_type = Type::ArrayType {
-        element_type: Box::new(Type::i32()),
-        num_elements: 10,
-    };
+    let allocated_type = module.types.array_of(
+        module.types.i32(),
+        10,
+    );
     assert_eq!(alloca.allocated_type, allocated_type);
     assert_eq!(
         alloca.num_elements,
         Operand::ConstantOperand(Constant::Int { bits: 32, value: 1 }) // One element, which is an array of 10 elements. Not 10 elements, each of which are i32.
     );
     assert_eq!(alloca.alignment, 16);
-    assert_eq!(alloca.get_type(), Type::pointer_to(allocated_type.clone()));
-    assert_eq!(alloca.num_elements.get_type(), Type::i32());
+    assert_eq!(module.type_of(alloca), module.types.pointer_to(allocated_type.clone()));
+    assert_eq!(module.type_of(&alloca.num_elements), module.types.i32());
     let bitcast: &instruction::BitCast = &bb2.instrs[1]
         .clone()
         .try_into()
         .expect("Should be a bitcast");
     assert_eq!(bitcast.dest, Name::Number(4));
-    assert_eq!(bitcast.to_type, Type::pointer_to(Type::i8()));
+    assert_eq!(bitcast.to_type, module.types.pointer_to(module.types.i8()));
     assert_eq!(
         bitcast.operand,
         Operand::LocalOperand {
             name: Name::Number(3),
-            ty: Type::pointer_to(allocated_type.clone())
+            ty: module.types.pointer_to(allocated_type.clone())
         }
     );
-    assert_eq!(bitcast.get_type(), Type::pointer_to(Type::i8()));
-    assert_eq!(bitcast.operand.get_type(), Type::pointer_to(allocated_type.clone()));
+    assert_eq!(module.type_of(bitcast), module.types.pointer_to(module.types.i8()));
+    assert_eq!(module.type_of(&bitcast.operand), module.types.pointer_to(allocated_type.clone()));
     let lifetimestart: &instruction::Call =
         &bb2.instrs[2].clone().try_into().expect("Should be a call");
     if let Either::Right(Operand::ConstantOperand(Constant::GlobalReference { ref name, ref ty } )) = lifetimestart.function {
-        assert_eq!(lifetimestart.function.get_type(), Type::pointer_to(ty.clone()));  // lifetimestart.function should be a constant function pointer
+        assert_eq!(module.type_of(&lifetimestart.function), module.types.pointer_to(ty.clone()));  // lifetimestart.function should be a constant function pointer
         assert_eq!(*name, Name::Name("llvm.lifetime.start.p0i8".to_owned()));
-        if let Type::FuncType { ref result_type, ref param_types, ref is_var_arg } = *ty {
-            assert_eq!(**result_type, Type::VoidType);
-            assert_eq!(*param_types, vec![Type::i64(), Type::pointer_to(Type::i8())]);
+        if let Type::FuncType { result_type, param_types, is_var_arg } = ty.as_ref() {
+            assert_eq!(result_type, &module.types.void());
+            assert_eq!(param_types, &vec![module.types.i64(), module.types.pointer_to(module.types.i8())]);
             assert_eq!(*is_var_arg, false);
         } else {
             panic!("lifetimestart.function has unexpected type {:?}", ty);
@@ -188,16 +186,16 @@ fn loopbc() {
     let arg0 = &lifetimestart.arguments.get(0).expect("Expected an argument 0");
     let arg1 = &lifetimestart.arguments.get(1).expect("Expected an argument 1");
     assert_eq!(arg0.0, Operand::ConstantOperand(Constant::Int { bits: 64, value: 40 } ));
-    assert_eq!(arg1.0, Operand::LocalOperand { name: Name::Number(4), ty: Type::pointer_to(Type::i8()) } );
+    assert_eq!(arg1.0, Operand::LocalOperand { name: Name::Number(4), ty: module.types.pointer_to(module.types.i8()) } );
     assert_eq!(arg0.1, vec![]);  // should have no parameter attributes
     assert_eq!(arg1.1.len(), 1);  // should have one parameter attribute
     assert_eq!(lifetimestart.dest, None);
     let memset: &instruction::Call = &bb2.instrs[3].clone().try_into().expect("Should be a call");
     if let Either::Right(Operand::ConstantOperand(Constant::GlobalReference { ref name, ref ty })) = memset.function {
         assert_eq!(*name, Name::Name("llvm.memset.p0i8.i64".to_owned()));
-        if let Type::FuncType { ref result_type, ref param_types, ref is_var_arg } = *ty {
-            assert_eq!(**result_type, Type::VoidType);
-            assert_eq!(*param_types, vec![Type::pointer_to(Type::i8()), Type::i8(), Type::i64(), Type::bool()]);
+        if let Type::FuncType { result_type, param_types, is_var_arg } = ty.as_ref() {
+            assert_eq!(result_type, &module.types.void());
+            assert_eq!(param_types, &vec![module.types.pointer_to(module.types.i8()), module.types.i8(), module.types.i64(), module.types.bool()]);
             assert_eq!(*is_var_arg, false);
         } else {
             panic!("memset.function has unexpected type {:?}", ty);
@@ -209,40 +207,40 @@ fn loopbc() {
         );
     }
     assert_eq!(memset.arguments.len(), 4);
-    assert_eq!(memset.arguments[0].0, Operand::LocalOperand { name: Name::Number(4), ty: Type::pointer_to(Type::i8()) } );
+    assert_eq!(memset.arguments[0].0, Operand::LocalOperand { name: Name::Number(4), ty: module.types.pointer_to(module.types.i8()) } );
     assert_eq!(memset.arguments[1].0, Operand::ConstantOperand(Constant::Int { bits: 8, value: 0 } ));
     assert_eq!(memset.arguments[2].0, Operand::ConstantOperand(Constant::Int { bits: 64, value: 40 } ));
     assert_eq!(memset.arguments[3].0, Operand::ConstantOperand(Constant::Int { bits: 1, value: 1 } ));
     assert_eq!(memset.arguments[0].1.len(), 2); // should have two parameter attributes
     let add: &instruction::Add = &bb2.instrs[4].clone().try_into().expect("Should be an add");
-    assert_eq!(add.operand0, Operand::LocalOperand { name: Name::Number(1), ty: Type::i32() } );
+    assert_eq!(add.operand0, Operand::LocalOperand { name: Name::Number(1), ty: module.types.i32() } );
     assert_eq!(add.operand1, Operand::ConstantOperand(Constant::Int { bits: 32, value: 0x0000_0000_FFFF_FFFF }));
     assert_eq!(add.dest, Name::Number(5));
-    assert_eq!(add.get_type(), Type::i32());
+    assert_eq!(module.type_of(add), module.types.i32());
     let icmp: &instruction::ICmp = &bb2.instrs[5].clone().try_into().expect("Should be an icmp");
     assert_eq!(icmp.predicate, IntPredicate::ULT);
-    assert_eq!(icmp.operand0, Operand::LocalOperand { name: Name::Number(5), ty: Type::i32() } );
+    assert_eq!(icmp.operand0, Operand::LocalOperand { name: Name::Number(5), ty: module.types.i32() } );
     assert_eq!(icmp.operand1, Operand::ConstantOperand(Constant::Int { bits: 32, value: 10 }));
-    assert_eq!(icmp.get_type(), Type::bool());
+    assert_eq!(module.type_of(icmp), module.types.bool());
     let condbr: &terminator::CondBr = &bb2.term.clone().try_into().expect("Should be a condbr");
-    assert_eq!(condbr.condition, Operand::LocalOperand { name: Name::Number(6), ty: Type::bool() } );
+    assert_eq!(condbr.condition, Operand::LocalOperand { name: Name::Number(6), ty: module.types.bool() } );
     assert_eq!(condbr.true_dest, Name::Number(7));
     assert_eq!(condbr.false_dest, Name::Number(22));
-    assert_eq!(condbr.get_type(), Type::VoidType);
+    assert_eq!(module.type_of(condbr), module.types.void());
 
     // check details about certain instructions in basic block %7
     let sext: &instruction::SExt = &bb7.instrs[1].clone().try_into().expect("Should be a SExt");
-    assert_eq!(sext.operand, Operand::LocalOperand { name: Name::Number(1), ty: Type::i32() } );
-    assert_eq!(sext.to_type, Type::i64());
+    assert_eq!(sext.operand, Operand::LocalOperand { name: Name::Number(1), ty: module.types.i32() } );
+    assert_eq!(sext.to_type, module.types.i64());
     assert_eq!(sext.dest, Name::Number(9));
-    assert_eq!(sext.get_type(), Type::i64());
+    assert_eq!(module.type_of(sext), module.types.i64());
     let br: &terminator::Br = &bb7.term.clone().try_into().expect("Should be a Br");
     assert_eq!(br.dest, Name::Number(10));
 
     // check details about certain instructions in basic block %10
     let phi: &instruction::Phi = &bb10.instrs[0].clone().try_into().expect("Should be a Phi");
     assert_eq!(phi.dest, Name::Number(11));
-    assert_eq!(phi.to_type, Type::i64());
+    assert_eq!(phi.to_type, module.types.i64());
     assert_eq!(
         phi.incoming_values,
         vec![
@@ -251,7 +249,7 @@ fn loopbc() {
                 Name::Number(7)
             ),
             (
-                Operand::LocalOperand { name: Name::Number(20), ty: Type::i64() },
+                Operand::LocalOperand { name: Name::Number(20), ty: module.types.i64() },
                 Name::Number(19)
             ),
         ]
@@ -262,7 +260,7 @@ fn loopbc() {
         gep.address,
         Operand::LocalOperand {
             name: Name::Number(3),
-            ty: Type::pointer_to(allocated_type.clone())
+            ty: module.types.pointer_to(allocated_type.clone())
         }
     );
     assert_eq!(gep.dest, Name::Number(12));
@@ -273,33 +271,33 @@ fn loopbc() {
             Operand::ConstantOperand(Constant::Int { bits: 64, value: 0 }),
             Operand::LocalOperand {
                 name: Name::Number(11),
-                ty: Type::i64()
+                ty: module.types.i64()
             },
         ]
     );
-    assert_eq!(gep.get_type(), Type::pointer_to(Type::i32()));
+    assert_eq!(module.type_of(gep), module.types.pointer_to(module.types.i32()));
     let store: &instruction::Store = &bb10.instrs[2]
         .clone()
         .try_into()
         .expect("Should be a store");
-    assert_eq!(store.address, Operand::LocalOperand { name: Name::Number(12), ty: Type::pointer_to(Type::i32()) });
-    assert_eq!(store.value, Operand::LocalOperand { name: Name::Number(8), ty: Type::i32() });
+    assert_eq!(store.address, Operand::LocalOperand { name: Name::Number(12), ty: module.types.pointer_to(module.types.i32()) });
+    assert_eq!(store.value, Operand::LocalOperand { name: Name::Number(8), ty: module.types.i32() });
     assert_eq!(store.volatile, true);
     assert_eq!(store.alignment, 4);
-    assert_eq!(store.get_type(), Type::VoidType);
+    assert_eq!(module.type_of(store), module.types.void());
     assert_eq!(bb10.instrs[2].is_atomic(), false);
 
     // and finally other instructions of types we haven't seen yet
     let load: &instruction::Load = &bb14.instrs[2].clone().try_into().expect("Should be a load");
-    assert_eq!(load.address, Operand::LocalOperand { name: Name::Number(16), ty: Type::pointer_to(Type::i32()) });
+    assert_eq!(load.address, Operand::LocalOperand { name: Name::Number(16), ty: module.types.pointer_to(module.types.i32()) });
     assert_eq!(load.dest, Name::Number(17));
     assert_eq!(load.volatile, true);
     assert_eq!(load.alignment, 4);
-    assert_eq!(load.get_type(), Type::i32());
+    assert_eq!(module.type_of(load), module.types.i32());
     assert_eq!(bb14.instrs[2].is_atomic(), false);
     let ret: &terminator::Ret = &bb22.term.clone().try_into().expect("Should be a ret");
     assert_eq!(ret.return_operand, None);
-    assert_eq!(ret.get_type(), Type::VoidType);
+    assert_eq!(module.type_of(ret), module.types.void());
 }
 
 #[test]
@@ -312,7 +310,7 @@ fn switchbc() {
     assert_eq!(func.name, "has_a_switch");
     let bb = &func.basic_blocks[0];
     let switch: &terminator::Switch = &bb.term.clone().try_into().expect("Should be a switch");
-    assert_eq!(switch.operand, Operand::LocalOperand { name: Name::Number(0), ty: Type::i32() });
+    assert_eq!(switch.operand, Operand::LocalOperand { name: Name::Number(0), ty: module.types.i32() });
     assert_eq!(switch.dests.len(), 9);
     assert_eq!(switch.dests[0], (Constant::Int { bits: 32, value: 0 }, Name::Number(12)));
     assert_eq!(switch.dests[1], (Constant::Int { bits: 32, value: 1 }, Name::Number(2)));
@@ -341,7 +339,7 @@ fn variablesbc() {
     let var = &module.global_vars[0];
     assert_eq!(var.name, Name::Name("global".to_owned()));
     assert_eq!(var.is_constant, false);
-    assert_eq!(var.ty, Type::pointer_to(Type::i32()));
+    assert_eq!(var.ty, module.types.pointer_to(module.types.i32()));
     assert_eq!(var.initializer, Some(Constant::Int { bits: 32, value: 5 }));
     assert_eq!(var.alignment, 4);
     assert!(var.get_debug_loc().is_none());  // this file was compiled without debuginfo
@@ -351,17 +349,17 @@ fn variablesbc() {
     assert_eq!(func.name, "variables");
     let bb = &func.basic_blocks[0];
     let store: &instruction::Store = &bb.instrs[2].clone().try_into().expect("Should be a store");
-    assert_eq!(store.address, Operand::LocalOperand { name: Name::Number(3), ty: Type::pointer_to(Type::i32()) });
-    assert_eq!(store.get_type(), Type::VoidType);
+    assert_eq!(store.address, Operand::LocalOperand { name: Name::Number(3), ty: module.types.pointer_to(module.types.i32()) });
+    assert_eq!(module.type_of(store), module.types.void());
     let load: &instruction::Load = &bb.instrs[8].clone().try_into().expect("Should be a load");
-    assert_eq!(load.address, Operand::LocalOperand { name: Name::Number(4), ty: Type::pointer_to(Type::i32()) });
-    assert_eq!(load.get_type(), Type::i32());
+    assert_eq!(load.address, Operand::LocalOperand { name: Name::Number(4), ty: module.types.pointer_to(module.types.i32()) });
+    assert_eq!(module.type_of(load), module.types.i32());
     let global_load: &instruction::Load = &bb.instrs[14].clone().try_into().expect("Should be a load");
-    assert_eq!(global_load.address, Operand::ConstantOperand(Constant::GlobalReference { name: Name::Name("global".to_owned()), ty: Type::i32() }));
-    assert_eq!(global_load.get_type(), Type::i32());
+    assert_eq!(global_load.address, Operand::ConstantOperand(Constant::GlobalReference { name: Name::Name("global".to_owned()), ty: module.types.i32() }));
+    assert_eq!(module.type_of(global_load), module.types.i32());
     let global_store: &instruction::Store = &bb.instrs[16].clone().try_into().expect("Should be a store");
-    assert_eq!(global_store.address, Operand::ConstantOperand(Constant::GlobalReference { name: Name::Name("global".to_owned()), ty: Type::i32() }));
-    assert_eq!(global_store.get_type(), Type::VoidType);
+    assert_eq!(global_store.address, Operand::ConstantOperand(Constant::GlobalReference { name: Name::Name("global".to_owned()), ty: module.types.i32() }));
+    assert_eq!(module.type_of(global_store), module.types.void());
 }
 
 // this test relates to the version of the file compiled with debuginfo
@@ -397,9 +395,9 @@ fn rustbc() {
     assert_eq!(func.parameters[0].name, Name::from("a"));
     assert_eq!(func.parameters[1].name, Name::from("b"));
     assert_eq!(func.parameters[2].name, Name::from("v"));
-    assert_eq!(func.parameters[0].ty, Type::i64());
-    assert_eq!(func.parameters[1].ty, Type::i64());
-    assert_eq!(func.parameters[2].ty, Type::pointer_to(Type::NamedStructType { name: "alloc::vec::Vec<isize>".to_owned(), ty: None }));  // we don't actually expect ty to be `None`, but named structs should compare equal as long as their names are the same
+    assert_eq!(func.parameters[0].ty, module.types.i64());
+    assert_eq!(func.parameters[1].ty, module.types.i64());
+    assert_eq!(func.parameters[2].ty, module.types.pointer_to(module.types.named_struct("alloc::vec::Vec<isize>").unwrap()));
 
     let startbb = func.get_bb_by_name(&Name::from("start")).expect("Failed to find bb 'start'");
     let alloca_iter: &instruction::Alloca = &startbb.instrs[5].clone().try_into().expect("Should be an alloca");
@@ -407,24 +405,24 @@ fn rustbc() {
     let alloca_sum: &instruction::Alloca = &startbb.instrs[6].clone().try_into().expect("Should be an alloca");
     assert_eq!(alloca_sum.dest, Name::from("sum"));
     let store: &instruction::Store = &startbb.instrs[7].clone().try_into().expect("Should be a store");
-    assert_eq!(store.address, Operand::LocalOperand { name: Name::from("sum"), ty: Type::pointer_to(Type::i64()) });
+    assert_eq!(store.address, Operand::LocalOperand { name: Name::from("sum"), ty: module.types.pointer_to(module.types.i64()) });
     let call: &instruction::Call = &startbb.instrs[8].clone().try_into().expect("Should be a call");
-    let param_type = Type::pointer_to(Type::NamedStructType { name: "alloc::vec::Vec<isize>".to_owned(), ty: None });  // we don't actually expect ty to be `None`, but named structs should compare equal as long as their names are the same
-    let ret_type = Type::StructType { is_packed: false, element_types: vec![
-        Type::pointer_to(Type::ArrayType { element_type: Box::new(Type::i64()), num_elements: 0 }),
-        Type::i64(),
-    ]};
+    let param_type = module.types.pointer_to(module.types.named_struct("alloc::vec::Vec<isize>").unwrap());
+    let ret_type = module.types.struct_of(vec![
+        module.types.pointer_to(module.types.array_of(module.types.i64(), 0)),
+        module.types.i64(),
+    ], false);
     if let Either::Right(Operand::ConstantOperand(Constant::GlobalReference { ref name, ref ty })) = call.function {
         assert_eq!(name, &Name::from("_ZN68_$LT$alloc..vec..Vec$LT$T$GT$$u20$as$u20$core..ops..deref..Deref$GT$5deref17h378128d7d9378466E"));
-        match ty {
+        match ty.as_ref() {
             Type::FuncType { result_type, param_types, is_var_arg } => {
-                assert_eq!(**result_type, ret_type);
-                assert_eq!(param_types[0], param_type);
+                assert_eq!(result_type, &ret_type);
+                assert_eq!(&param_types[0], &param_type);
                 assert_eq!(*is_var_arg, false);
             },
             _ => panic!("Expected called global to have FuncType, but got {:?}", ty),
         }
-        assert_eq!(call.get_type(), ret_type);
+        assert_eq!(module.type_of(call), ret_type);
     } else {
         panic!(
             "call.function not a GlobalReference as expected; it is actually {:?}",
@@ -487,31 +485,33 @@ fn simple_linked_list() {
     let path = Path::new("tests/basic_bc/linkedlist.bc");
     let module = Module::from_bc_path(&path).expect("Failed to parse module");
 
-    let structty: Arc<RwLock<Type>> = module
-        .named_struct_types
-        .get("struct.SimpleLinkedList")
+    let struct_name: String = "struct.SimpleLinkedList".into();
+    let structty = module
+        .types
+        .named_struct(&struct_name)
         .unwrap_or_else(|| {
-            let names: Vec<_> = module.named_struct_types.keys().collect();
             panic!(
-                "Failed to find struct.SimpleLinkedList in named_struct_types; have names {:?}",
-                names
+                "Failed to find {} in module.types; have names {:?}",
+                struct_name, module.types.all_struct_names().collect::<Vec<_>>()
             )
-        })
-        .as_ref()
-        .expect("SimpleLinkedList should not be an opaque type")
-        .clone();
-    if let Type::StructType { element_types, .. } = structty.read().unwrap().deref() {
+        });
+    match structty.as_ref() {
+        Type::NamedStructType { name } => {
+            assert_eq!(name, &struct_name);
+        }
+        ty => panic!("Expected {} to be NamedStructType, but got {:?}", struct_name, ty),
+    }
+    let structty_inner = match module.types.named_struct_def(&struct_name) {
+        None => panic!("Failed to find {} with module.types.named_struct_def()", struct_name),
+        Some(NamedStructDef::Opaque) => panic!("{} should not be an opaque type", struct_name),
+        Some(NamedStructDef::Defined(ty)) => ty,
+    };
+    if let Type::StructType { element_types, .. } = structty_inner.as_ref() {
         assert_eq!(element_types.len(), 2);
-        assert_eq!(element_types[0], Type::i32());
-        if let Type::PointerType { pointee_type, .. } = &element_types[1] {
-            if let Type::NamedStructType { ref name, ref ty } = **pointee_type {
-                assert_eq!(name, "struct.SimpleLinkedList");
-                let ty: Arc<RwLock<Type>> = ty
-                    .as_ref()
-                    .expect("Inner type should not be opaque")
-                    .upgrade()
-                    .expect("Failed to upgrade weak ref");
-                assert_eq!(ty.read().unwrap().deref(), structty.read().unwrap().deref()); // the type should be truly recursive, in that the pointed-to type should be the same as the original type
+        assert_eq!(element_types[0], module.types.i32());
+        if let Type::PointerType { pointee_type, .. } = element_types[1].as_ref() {
+            if let Type::NamedStructType { name } = pointee_type.as_ref() {
+                assert_eq!(name, &struct_name);
             } else {
                 panic!(
                     "Expected pointee type to be a NamedStructType, got {:?}",
@@ -526,8 +526,8 @@ fn simple_linked_list() {
         }
     } else {
         panic!(
-            "Expected SimpleLinkedList to be a StructType, got {:?}",
-            structty
+            "Expected {} to be a StructType, got {:?}",
+            struct_name, structty
         );
     }
 
@@ -538,14 +538,8 @@ fn simple_linked_list() {
         .clone()
         .try_into()
         .expect("Should be an alloca");
-    if let Type::NamedStructType { ref name, ref ty } = alloca.allocated_type {
-        assert_eq!(name, "struct.SimpleLinkedList");
-        let inner_ty: Arc<RwLock<Type>> = ty
-            .as_ref()
-            .expect("Allocated type should not be opaque")
-            .upgrade()
-            .expect("Failed to upgrade weak ref");
-        assert_eq!(inner_ty.read().unwrap().deref(), structty.read().unwrap().deref()); // this should be exactly the same struct type as when we accessed it through the module above
+    if let Type::NamedStructType { name } = alloca.allocated_type.as_ref() {
+        assert_eq!(name, &struct_name);
     } else {
         panic!(
             "Expected alloca.allocated_type to be a NamedStructType, got {:?}",
@@ -553,26 +547,35 @@ fn simple_linked_list() {
         );
     }
 
-    let structty: &Option<Arc<RwLock<Type>>> = &module
-        .named_struct_types
-        .get("struct.SomeOpaqueStruct")
+    let struct_name: String = "struct.SomeOpaqueStruct".into();
+    let structty = module
+        .types
+        .named_struct(&struct_name)
         .unwrap_or_else(|| {
-            let names: Vec<_> = module.named_struct_types.keys().collect();
             panic!(
-                "Failed to find struct.SomeOpaqueStruct in named_struct_types; have names {:?}",
-                names
+                "Failed to find {} in module.types; have names {:?}",
+                struct_name, module.types.all_struct_names().collect::<Vec<_>>()
             )
         });
-    assert!(structty.is_none(), "SomeOpaqueStruct should be an opaque type");
+    match structty.as_ref() {
+        Type::NamedStructType { name } => {
+            assert_eq!(name, &struct_name);
+        }
+        ty => panic!("Expected {} to be a NamedStructType, but got {:?}", struct_name, ty),
+    }
+    match module.types.named_struct_def(&struct_name) {
+        None => panic!("Failed to find {} with module.types.named_struct_def()", struct_name),
+        Some(NamedStructDef::Opaque) => (),
+        Some(NamedStructDef::Defined(def)) => panic!("{} should be an opaque type; got def {:?}", struct_name, def),
+    }
     let func = module
         .get_func_by_name("takes_opaque_struct")
         .expect("Failed to find function");
     let paramty = &func.parameters[0].ty;
-    match paramty {
-        Type::PointerType { pointee_type, .. } => match &**pointee_type {
-            Type::NamedStructType { ref name, ref ty } => {
-                assert_eq!(name, "struct.SomeOpaqueStruct");
-                assert!(ty.is_none(), "SomeOpaqueStruct should be an opaque type");
+    match paramty.as_ref() {
+        Type::PointerType { pointee_type, .. } => match pointee_type.as_ref() {
+            Type::NamedStructType { name } => {
+                assert_eq!(name, &struct_name);
             },
             ty => panic!("Expected parameter type to be pointer to named struct, but got pointer to {:?}", ty),
         },
@@ -622,75 +625,58 @@ fn indirectly_recursive_type() {
     let path = Path::new("tests/basic_bc/linkedlist.bc");
     let module = Module::from_bc_path(&path).expect("Failed to parse module");
 
-    let aty: Arc<RwLock<Type>> = module
-        .named_struct_types
-        .get("struct.NodeA")
+    let struct_name_a: String = "struct.NodeA".into();
+    let aty = module
+        .types
+        .named_struct(&struct_name_a)
         .unwrap_or_else(|| {
-            let names: Vec<_> = module.named_struct_types.keys().collect();
             panic!(
-                "Failed to find struct.NodeA in named_struct_types; have names {:?}",
-                names
+                "Failed to find {} in module.types; have names {:?}",
+                struct_name_a, module.types.all_struct_names().collect::<Vec<_>>()
             )
-        })
-        .as_ref()
-        .expect("NodeA should not be an opaque type")
-        .clone();
-    let bty: Arc<RwLock<Type>> = module
-        .named_struct_types
-        .get("struct.NodeB")
-        .unwrap_or_else(|| {
-            let names: Vec<_> = module.named_struct_types.keys().collect();
-            panic!(
-                "Failed to find struct.NodeB in named_struct_types; have names {:?}",
-                names
-            )
-        })
-        .as_ref()
-        .expect("NodeB should not be an opaque type")
-        .clone();
-    if let Type::StructType { element_types, .. } = aty.read().unwrap().deref() {
-        assert_eq!(element_types.len(), 2);
-        assert_eq!(element_types[0], Type::i32());
-        if let Type::PointerType { pointee_type, .. } = &element_types[1] {
-            if let Type::NamedStructType { ref name, ref ty } = **pointee_type {
-                assert_eq!(name, "struct.NodeB");
-                let ty: Arc<RwLock<Type>> = ty
-                    .as_ref()
-                    .expect("Inner type should not be opaque")
-                    .upgrade()
-                    .expect("Failed to upgrade weak ref");
-                assert_eq!(ty.read().unwrap().deref(), bty.read().unwrap().deref());
-            } else {
-                panic!(
-                    "Expected pointee type to be a NamedStructType, got {:?}",
-                    **pointee_type
-                );
-            }
-        } else {
-            panic!(
-                "Expected inner type to be a PointerType, got {:?}",
-                element_types[1]
-            );
+        });
+    match aty.as_ref() {
+        Type::NamedStructType { name } => {
+            assert_eq!(name, &struct_name_a);
         }
-    } else {
-        panic!("Expected NodeA to be a StructType, got {:?}", aty);
+        ty => panic!("Expected {} to be a NamedStructType, but got {:?}", struct_name_a, ty),
     }
-    if let Type::StructType { element_types, .. } = bty.read().unwrap().deref() {
+    let aty_inner = match module.types.named_struct_def(&struct_name_a) {
+        None => panic!("Failed to find {} with module.types.named_struct_def()", &struct_name_a),
+        Some(NamedStructDef::Opaque) => panic!("{} should not be an opaque type", &struct_name_a),
+        Some(NamedStructDef::Defined(ty)) => ty,
+    };
+    let struct_name_b: String = "struct.NodeB".into();
+    let bty = module
+        .types
+        .named_struct(&struct_name_b)
+        .unwrap_or_else(|| {
+            panic!(
+                "Failed to find {} in module.types; have names {:?}",
+                struct_name_b, module.types.all_struct_names().collect::<Vec<_>>()
+            )
+        });
+    match bty.as_ref() {
+        Type::NamedStructType { name } => {
+            assert_eq!(name, &struct_name_b);
+        }
+        ty => panic!("Expected {} to be a NamedStructType, but got {:?}", struct_name_b, ty),
+    }
+    let bty_inner = match module.types.named_struct_def(&struct_name_b) {
+        None => panic!("Failed to find {} with module.types.named_struct_def()", &struct_name_b),
+        Some(NamedStructDef::Opaque) => panic!("{} should not be an opaque type", &struct_name_b),
+        Some(NamedStructDef::Defined(ty)) => ty,
+    };
+    if let Type::StructType { element_types, .. } = aty_inner.as_ref() {
         assert_eq!(element_types.len(), 2);
-        assert_eq!(element_types[0], Type::i32());
-        if let Type::PointerType { pointee_type, .. } = &element_types[1] {
-            if let Type::NamedStructType { ref name, ref ty } = **pointee_type {
-                assert_eq!(name, "struct.NodeA");
-                let ty: Arc<RwLock<Type>> = ty
-                    .as_ref()
-                    .expect("Inner type should not be opaque")
-                    .upgrade()
-                    .expect("Failed to upgrade weak ref");
-                assert_eq!(ty.read().unwrap().deref(), aty.read().unwrap().deref());
+        assert_eq!(element_types[0], module.types.i32());
+        if let Type::PointerType { pointee_type, .. } = element_types[1].as_ref() {
+            if let Type::NamedStructType { name } = pointee_type.as_ref() {
+                assert_eq!(name, &struct_name_b);
             } else {
                 panic!(
                     "Expected pointee type to be a NamedStructType, got {:?}",
-                    **pointee_type
+                    pointee_type.as_ref()
                 );
             }
         } else {
@@ -700,7 +686,28 @@ fn indirectly_recursive_type() {
             );
         }
     } else {
-        panic!("Expected NodeB to be a StructType, got {:?}", bty);
+        panic!("Expected NodeA inner type to be a StructType, got {:?}", aty);
+    }
+    if let Type::StructType { element_types, .. } = bty_inner.as_ref() {
+        assert_eq!(element_types.len(), 2);
+        assert_eq!(element_types[0], module.types.i32());
+        if let Type::PointerType { pointee_type, .. } = element_types[1].as_ref() {
+            if let Type::NamedStructType { name } = pointee_type.as_ref() {
+                assert_eq!(name, &struct_name_a);
+            } else {
+                panic!(
+                    "Expected pointee type to be a NamedStructType, got {:?}",
+                    pointee_type.as_ref()
+                );
+            }
+        } else {
+            panic!(
+                "Expected inner type to be a PointerType, got {:?}",
+                element_types[1]
+            );
+        }
+    } else {
+        panic!("Expected NodeB inner type to be a StructType, got {:?}", bty);
     }
 
     let func = module
@@ -714,28 +721,16 @@ fn indirectly_recursive_type() {
         .clone()
         .try_into()
         .expect("Should be an alloca");
-    if let Type::NamedStructType { ref name, ref ty } = alloca_a.allocated_type {
-        assert_eq!(name, "struct.NodeA");
-        let inner_ty: Arc<RwLock<Type>> = ty
-            .as_ref()
-            .expect("Allocated type should not be opaque")
-            .upgrade()
-            .expect("Failed to upgrade weak ref");
-        assert_eq!(inner_ty.read().unwrap().deref(), aty.read().unwrap().deref()); // this should be exactly the same struct type as when we accessed it through the module above
+    if let Type::NamedStructType { name } = alloca_a.allocated_type.as_ref() {
+        assert_eq!(name, &struct_name_a);
     } else {
         panic!(
             "Expected alloca_a.allocated_type to be a NamedStructType, got {:?}",
             alloca_a.allocated_type
         );
     }
-    if let Type::NamedStructType { ref name, ref ty } = alloca_b.allocated_type {
-        assert_eq!(name, "struct.NodeB");
-        let inner_ty: Arc<RwLock<Type>> = ty
-            .as_ref()
-            .expect("Allocated type should not be opaque")
-            .upgrade()
-            .expect("Failed to upgrade weak ref");
-        assert_eq!(inner_ty.read().unwrap().deref(), bty.read().unwrap().deref());
+    if let Type::NamedStructType { name } = alloca_b.allocated_type.as_ref() {
+        assert_eq!(name, &struct_name_b);
     } else {
         panic!(
             "Expected alloca_b.allocated_type to be a NamedStructType, got {:?}",

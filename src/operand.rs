@@ -1,6 +1,5 @@
-use crate::constant::Constant;
-use crate::name::Name;
-use crate::types::{Type, Typed};
+use crate::types::{TypeRef, Typed, Types};
+use crate::{Constant, Name};
 use std::collections::HashMap;
 
 #[derive(PartialEq, Clone, Debug)]
@@ -8,7 +7,7 @@ pub enum Operand {
     /// e.g., `i32 %foo`
     LocalOperand {
         name: Name,
-        ty: Type,
+        ty: TypeRef,
     },
     /// includes [`GlobalReference`](../constant/enum.Constant.html#variant.GlobalReference) for things like `@foo`
     ConstantOperand(Constant),
@@ -16,11 +15,11 @@ pub enum Operand {
 }
 
 impl Typed for Operand {
-    fn get_type(&self) -> Type {
+    fn get_type(&self, types: &Types) -> TypeRef {
         match self {
             Operand::LocalOperand { ty, .. } => ty.clone(),
-            Operand::ConstantOperand(c) => c.get_type(),
-            Operand::MetadataOperand => Type::MetadataType,
+            Operand::ConstantOperand(c) => types.type_of(c),
+            Operand::MetadataOperand => types.metadata_type(),
         }
     }
 }
@@ -31,7 +30,7 @@ impl Typed for Operand {
 
 use crate::constant::GlobalNameMap;
 use crate::from_llvm::*;
-use crate::types::TyNameMap;
+use crate::types::TypesBuilder;
 use llvm_sys::LLVMValueKind;
 
 pub(crate) type ValToNameMap = HashMap<LLVMValueRef, Name>;
@@ -41,11 +40,11 @@ impl Operand {
         operand: LLVMValueRef,
         vnmap: &ValToNameMap,
         gnmap: &GlobalNameMap,
-        tnmap: &mut TyNameMap,
+        types: &mut TypesBuilder,
     ) -> Self {
         let constant = unsafe { LLVMIsAConstant(operand) };
         if !constant.is_null() {
-            Operand::ConstantOperand(Constant::from_llvm_ref(constant, gnmap, tnmap))
+            Operand::ConstantOperand(Constant::from_llvm_ref(constant, gnmap, types))
         } else if unsafe {
             LLVMGetValueKind(operand) == LLVMValueKind::LLVMMetadataAsValueValueKind
         } {
@@ -63,7 +62,7 @@ impl Operand {
                         )
                     })
                     .clone(),
-                ty: Type::from_llvm_ref(unsafe { LLVMTypeOf(operand) }, tnmap),
+                ty: types.type_from_llvm_ref(unsafe { LLVMTypeOf(operand) }),
             }
         }
     }

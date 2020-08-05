@@ -1,10 +1,13 @@
 use crate::module::AddrSpace;
-//use crate::name::Name;
 use either::Either;
-use std::sync::{Arc, RwLock, Weak};
+use std::borrow::Borrow;
+use std::collections::HashMap;
+use std::hash::Hash;
+use std::ops::Deref;
+use std::sync::Arc;
 
 /// See [LLVM 10 docs on Type System](https://releases.llvm.org/10.0.0/docs/LangRef.html#type-system)
-#[derive(Clone, Debug)]
+#[derive(PartialEq, Eq, Clone, Debug, Hash)]
 #[allow(non_camel_case_types)]
 pub enum Type {
     /// See [LLVM 10 docs on Void Type](https://releases.llvm.org/10.0.0/docs/LangRef.html#void-type)
@@ -13,46 +16,43 @@ pub enum Type {
     IntegerType { bits: u32 },
     /// See [LLVM 10 docs on Pointer Type](https://releases.llvm.org/10.0.0/docs/LangRef.html#pointer-type)
     PointerType {
-        pointee_type: Box<Type>,
+        pointee_type: TypeRef,
         addr_space: AddrSpace,
     },
     /// See [LLVM 10 docs on Floating-Point Types](https://releases.llvm.org/10.0.0/docs/LangRef.html#floating-point-types)
     FPType(FPType),
     /// See [LLVM 10 docs on Function Type](https://releases.llvm.org/10.0.0/docs/LangRef.html#function-type)
     FuncType {
-        result_type: Box<Type>,
-        param_types: Vec<Type>,
+        result_type: TypeRef,
+        param_types: Vec<TypeRef>,
         is_var_arg: bool,
     },
     /// Vector types (along with integer, FP, pointer, and X86_MMX types) are "first class types",
     /// which means they can be produced by instructions (see [LLVM 10 docs on First Class Types](https://releases.llvm.org/10.0.0/docs/LangRef.html#first-class-types)).
     /// See [LLVM 10 docs on Vector Type](https://releases.llvm.org/10.0.0/docs/LangRef.html#vector-type)
     VectorType {
-        element_type: Box<Type>,
+        element_type: TypeRef,
         num_elements: usize,
     },
     /// Struct and Array types (but not vector types) are "aggregate types" and cannot be produced by
     /// a single instruction (see [LLVM 10 docs on Aggregate Types](https://releases.llvm.org/10.0.0/docs/LangRef.html#aggregate-types)).
     /// See [LLVM 10 docs on Array Type](https://releases.llvm.org/10.0.0/docs/LangRef.html#array-type)
     ArrayType {
-        element_type: Box<Type>,
+        element_type: TypeRef,
         num_elements: usize,
     },
     /// The `StructType` variant is used for a "literal" (i.e., anonymous) structure type.
     /// See [LLVM 10 docs on Structure Type](https://releases.llvm.org/10.0.0/docs/LangRef.html#structure-type)
     StructType {
-        element_types: Vec<Type>,
+        element_types: Vec<TypeRef>,
         is_packed: bool,
     },
     /// Named structure types. Note that these may be self-referential (i.e., recursive).
     /// See [LLVM 10 docs on Structure Type](https://releases.llvm.org/10.0.0/docs/LangRef.html#structure-type)
+    /// To get the actual definition of a named structure type, use `module.types.named_struct_def()`.
     NamedStructType {
         /// Name of the struct type
         name: String, // llvm-hs-pure has Name rather than String
-        /// The actual struct type, which will be a `StructType` variant.
-        /// A `None` here indicates an opaque type; see [LLVM 10 docs on Opaque Structure Types](https://releases.llvm.org/10.0.0/docs/LangRef.html#t-opaque).
-        /// The weak reference should remain valid for at least the lifetime of the `Module` in which the named struct type is defined.
-        ty: Option<Weak<RwLock<Type>>>,
     },
     /// See [LLVM 10 docs on X86_MMX Type](https://releases.llvm.org/10.0.0/docs/LangRef.html#x86-mmx-type)
     X86_MMXType, // llvm-hs-pure doesn't have this, not sure what they do with LLVM's http://llvm.org/docs/LangRef.html#x86-mmx-type
@@ -63,90 +63,6 @@ pub enum Type {
     LabelType,
     /// See [LLVM 10 docs on Token Type](https://releases.llvm.org/10.0.0/docs/LangRef.html#token-type)
     TokenType,
-}
-
-// `PartialEq` cannot be automatically derived for `Type` because of the `Weak` in `NamedStructType`
-impl PartialEq for Type {
-    fn eq(&self, other: &Type) -> bool {
-        match (self, other) {
-            (Type::VoidType, Type::VoidType) => true,
-            (Type::IntegerType { bits: bits_a },
-             Type::IntegerType { bits: bits_b })
-            => bits_a == bits_b,
-            (Type::PointerType { pointee_type: pt_a, addr_space: as_a },
-             Type::PointerType { pointee_type: pt_b, addr_space: as_b })
-            => pt_a == pt_b && as_a == as_b,
-            (Type::FPType(fp_a),
-             Type::FPType(fp_b))
-            => fp_a == fp_b,
-            (Type::FuncType { result_type: rt_a, param_types: pt_a, is_var_arg: iva_a },
-             Type::FuncType { result_type: rt_b, param_types: pt_b, is_var_arg: iva_b })
-            => rt_a == rt_b && pt_a == pt_b && iva_a == iva_b,
-            (Type::VectorType { element_type: et_a, num_elements: num_a },
-             Type::VectorType { element_type: et_b, num_elements: num_b })
-            => et_a == et_b && num_a == num_b,
-            (Type::ArrayType { element_type: et_a, num_elements: num_a },
-             Type::ArrayType { element_type: et_b, num_elements: num_b })
-            => et_a == et_b && num_a == num_b,
-            (Type::StructType { element_types: et_a, is_packed: ip_a },
-             Type::StructType { element_types: et_b, is_packed: ip_b })
-            => et_a == et_b && ip_a == ip_b,
-            // Named structs are equal if their names are equal, disregarding their weak refs.
-            // This means even an opaque definition is considered equal to a
-            //   non-opaque definition (they still refer to the same type).
-            (Type::NamedStructType { name: name_a, .. },
-             Type::NamedStructType { name: name_b, .. })
-            => name_a == name_b,
-            (Type::X86_MMXType, Type::X86_MMXType) => true,
-            (Type::MetadataType, Type::MetadataType) => true,
-            (Type::LabelType, Type::LabelType) => true,
-            (Type::TokenType, Type::TokenType) => true,
-            _ => false,
-        }
-    }
-}
-// Our `PartialEq` still satisfies the required properties of `Eq`
-impl Eq for Type {}
-
-impl Type {
-    pub fn bool() -> Type {
-        Type::IntegerType { bits: 1 }
-    }
-
-    pub fn i8() -> Type {
-        Type::IntegerType { bits: 8 }
-    }
-
-    pub fn i16() -> Type {
-        Type::IntegerType { bits: 16 }
-    }
-
-    pub fn i32() -> Type {
-        Type::IntegerType { bits: 32 }
-    }
-
-    pub fn i64() -> Type {
-        Type::IntegerType { bits: 64 }
-    }
-
-    pub fn half() -> Type {
-        Type::FPType(FPType::Half)
-    }
-
-    pub fn single() -> Type {
-        Type::FPType(FPType::Single)
-    }
-
-    pub fn double() -> Type {
-        Type::FPType(FPType::Double)
-    }
-
-    pub fn pointer_to(ty: Type) -> Type {
-        Type::PointerType {
-            pointee_type: Box::new(ty),
-            addr_space: 0, // default to addr_space 0
-        }
-    }
 }
 
 /// See [LLVM 10 docs on Floating-Point Types](https://releases.llvm.org/10.0.0/docs/LangRef.html#floating-point-types)
@@ -167,20 +83,59 @@ impl From<FPType> for Type {
     }
 }
 
-/// The `Typed` trait is used for anything that has a [`Type`](../enum.Type.html).
-pub trait Typed {
-    fn get_type(&self) -> Type;
+/// A `TypeRef` is a reference to a [`Type`](../enum.Type.html).
+/// Most importantly, it implements `AsRef<Type>` and `Deref<Target = Type>`.
+/// It also has a cheap `Clone` -- only the reference is cloned, not the
+/// underlying `Type`.
+//
+// `Arc` is used rather than `Rc` so that `Module` can remain `Sync`.
+// This is important because it allows multiple threads to simultaneously access
+// a single (immutable) `Module`.
+#[derive(PartialEq, Eq, Clone, Debug, Hash)]
+pub struct TypeRef(Arc<Type>);
+
+impl AsRef<Type> for TypeRef {
+    fn as_ref(&self) -> &Type {
+        self.0.as_ref()
+    }
 }
 
-impl Typed for Type {
-    fn get_type(&self) -> Type {
+impl Deref for TypeRef {
+    type Target = Type;
+
+    fn deref(&self) -> &Type {
+        self.0.deref()
+    }
+}
+
+impl TypeRef {
+    /// For use only in this module: construct a `TypeRef` by consuming the given owned `Type`.
+    /// External users should get `TypeRefs` only from the `Types` or `TypesBuilder` objects.
+    fn new(ty: Type) -> Self {
+        Self(Arc::new(ty))
+    }
+}
+
+/// The `Typed` trait is used for anything that has a [`Type`](../enum.Type.html).
+pub trait Typed {
+    fn get_type(&self, types: &Types) -> TypeRef;
+}
+
+impl Typed for TypeRef {
+    fn get_type(&self, _types: &Types) -> TypeRef {
         self.clone()
     }
 }
 
+impl Typed for Type {
+    fn get_type(&self, types: &Types) -> TypeRef {
+        types.get_for_type(&self)
+    }
+}
+
 impl Typed for FPType {
-    fn get_type(&self) -> Type {
-        self.clone().into()
+    fn get_type(&self, types: &Types) -> TypeRef {
+        types.fp(*self)
     }
 }
 
@@ -189,11 +144,571 @@ where
     A: Typed,
     B: Typed,
 {
-    fn get_type(&self) -> Type {
+    fn get_type(&self, types: &Types) -> TypeRef {
         match self {
-            Either::Left(x) => x.get_type(),
-            Either::Right(y) => y.get_type(),
+            Either::Left(x) => types.type_of(x),
+            Either::Right(y) => types.type_of(y),
         }
+    }
+}
+
+/// Holds a reference to all of the `Type`s used in the `Module`, and facilitates
+/// lookups so you can get a `TypeRef` to the `Type` you want.
+#[derive(Clone)]
+pub(crate) struct TypesBuilder {
+    /// `TypeRef` to `Type::VoidType`
+    void_type: TypeRef,
+    /// Map of integer size to `Type::IntegerType` of that size
+    int_types: TypeCache<u32>,
+    /// Map of (pointee type, address space) to the corresponding `Type::PointerType`
+    pointer_types: TypeCache<(TypeRef, AddrSpace)>,
+    /// Map of `FPType` to the corresponding `Type::FPType`
+    fp_types: TypeCache<FPType>,
+    /// Map of `(result_type, param_types, is_var_arg)` to the corresponding `Type::FunctionType`
+    func_types: TypeCache<(TypeRef, Vec<TypeRef>, bool)>,
+    /// Map of (element type, #elements) to the corresponding `Type::VectorType`
+    vec_types: TypeCache<(TypeRef, usize)>,
+    /// Map of (element type, #elements) to the corresponding `Type::ArrayType`
+    arr_types: TypeCache<(TypeRef, usize)>,
+    /// Map of `(element_types, is_packed)` to the corresponding `Type::StructType`
+    struct_types: TypeCache<(Vec<TypeRef>, bool)>,
+    /// Map of struct name to the corresponding `Type::NamedStructType`
+    named_struct_types: TypeCache<String>,
+    /// Map of struct name to the corresponding `NamedStructDef`
+    named_struct_defs: HashMap<String, NamedStructDef>,
+    /// `TypeRef` to `Type::X86_MMXType`
+    x86_mmx_type: TypeRef,
+    /// `TypeRef` to `Type::MetadataType`
+    metadata_type: TypeRef,
+    /// `TypeRef` to `Type::LabelType`
+    label_type: TypeRef,
+    /// `TypeRef` to `Type::TokenType`
+    token_type: TypeRef,
+    /// internal cache of already-seen `LLVMTypeRef`s so we can quickly produce
+    /// the corresponding `TypeRef` without re-parsing the type
+    llvm_type_map: HashMap<LLVMTypeRef, TypeRef>,
+}
+
+impl TypesBuilder {
+    pub fn new() -> Self {
+        Self {
+            void_type: TypeRef::new(Type::VoidType),
+            int_types: TypeCache::new(),
+            pointer_types: TypeCache::new(),
+            fp_types: TypeCache::new(),
+            func_types: TypeCache::new(),
+            vec_types: TypeCache::new(),
+            arr_types: TypeCache::new(),
+            struct_types: TypeCache::new(),
+            named_struct_types: TypeCache::new(),
+            named_struct_defs: HashMap::new(),
+            x86_mmx_type: TypeRef::new(Type::X86_MMXType),
+            metadata_type: TypeRef::new(Type::MetadataType),
+            label_type: TypeRef::new(Type::LabelType),
+            token_type: TypeRef::new(Type::TokenType),
+            llvm_type_map: HashMap::new(),
+        }
+    }
+
+    /// Consumes the `TypesBuilder`, producing a `Types`.
+    /// This should be done when no new types are expected to be added;
+    /// and it allows type lookups without &mut self.
+    pub fn build(self) -> Types {
+        Types {
+            void_type: self.void_type,
+            int_types: self.int_types,
+            pointer_types: self.pointer_types,
+            fp_types: self.fp_types,
+            func_types: self.func_types,
+            vec_types: self.vec_types,
+            arr_types: self.arr_types,
+            struct_types: self.struct_types,
+            named_struct_types: self.named_struct_types,
+            named_struct_defs: self.named_struct_defs,
+            x86_mmx_type: self.x86_mmx_type,
+            metadata_type: self.metadata_type,
+            label_type: self.label_type,
+            token_type: self.token_type,
+        }
+    }
+}
+
+// some of these methods might not currently be used, that's fine
+#[allow(dead_code)]
+impl TypesBuilder {
+    /// Get the void type
+    pub fn void(&self) -> TypeRef {
+        self.void_type.clone()
+    }
+
+    /// Get the integer type of the specified size (in bits)
+    pub fn int(&mut self, bits: u32) -> TypeRef {
+        self.int_types
+            .lookup_or_insert(bits, || Type::IntegerType { bits })
+    }
+
+    /// Get the boolean type (`i1`)
+    pub fn bool(&mut self) -> TypeRef {
+        self.int(1)
+    }
+
+    /// Get the 8-bit integer type
+    pub fn i8(&mut self) -> TypeRef {
+        self.int(8)
+    }
+
+    /// Get the 16-bit integer type
+    pub fn i16(&mut self) -> TypeRef {
+        self.int(16)
+    }
+
+    /// Get the 32-bit integer type
+    pub fn i32(&mut self) -> TypeRef {
+        self.int(32)
+    }
+
+    /// Get the 64-bit integer type
+    pub fn i64(&mut self) -> TypeRef {
+        self.int(64)
+    }
+
+    /// Get a pointer type in the default address space (`0`)
+    pub fn pointer_to(&mut self, pointee_type: TypeRef) -> TypeRef {
+        self.pointer_in_addr_space(pointee_type, 0) // default to address space 0
+    }
+
+    /// Get a pointer in the specified address space
+    pub fn pointer_in_addr_space(
+        &mut self,
+        pointee_type: TypeRef,
+        addr_space: AddrSpace,
+    ) -> TypeRef {
+        self.pointer_types
+            .lookup_or_insert((pointee_type.clone(), addr_space), || Type::PointerType {
+                pointee_type,
+                addr_space,
+            })
+    }
+
+    /// Get a floating-point type
+    pub fn fp(&mut self, fpt: FPType) -> TypeRef {
+        self.fp_types.lookup_or_insert(fpt, || Type::FPType(fpt))
+    }
+
+    /// Get the single-precision floating-point type
+    pub fn single(&mut self) -> TypeRef {
+        self.fp(FPType::Single)
+    }
+
+    /// Get the double-precision floating-point type
+    pub fn double(&mut self) -> TypeRef {
+        self.fp(FPType::Double)
+    }
+
+    /// Get a function type
+    pub fn func_type(
+        &mut self,
+        result_type: TypeRef,
+        param_types: Vec<TypeRef>,
+        is_var_arg: bool,
+    ) -> TypeRef {
+        self.func_types.lookup_or_insert(
+            (result_type.clone(), param_types.clone(), is_var_arg),
+            || Type::FuncType {
+                result_type,
+                param_types,
+                is_var_arg,
+            },
+        )
+    }
+
+    /// Get a vector type
+    pub fn vector_of(&mut self, element_type: TypeRef, num_elements: usize) -> TypeRef {
+        self.vec_types
+            .lookup_or_insert((element_type.clone(), num_elements), || Type::VectorType {
+                element_type,
+                num_elements,
+            })
+    }
+
+    /// Get an array type
+    pub fn array_of(&mut self, element_type: TypeRef, num_elements: usize) -> TypeRef {
+        self.arr_types
+            .lookup_or_insert((element_type.clone(), num_elements), || Type::ArrayType {
+                element_type,
+                num_elements,
+            })
+    }
+
+    /// Get a struct type
+    pub fn struct_of(&mut self, element_types: Vec<TypeRef>, is_packed: bool) -> TypeRef {
+        self.struct_types
+            .lookup_or_insert((element_types.clone(), is_packed), || Type::StructType {
+                element_types,
+                is_packed,
+            })
+    }
+
+    /// Get the `TypeRef` for the struct with the given name.
+    ///
+    /// Note that this gives a `NamedStructType`.
+    /// To get the actual _definition_ of a named struct (the `NamedStructDef`),
+    /// use `named_struct_def()`.
+    pub fn named_struct(&mut self, name: String) -> TypeRef {
+        self.named_struct_types
+            .lookup_or_insert(name.clone(), || Type::NamedStructType { name })
+    }
+
+    /// Get the `NamedStructDef` for the struct with the given `name`.
+    ///
+    /// Panics if no definition has been added for that struct name.
+    ///
+    /// Note that this gives a `NamedStructDef`.
+    /// To get the `NamedStructType` for a `name`, use `named_struct()`.
+    pub fn named_struct_def(&self, name: &str) -> &NamedStructDef {
+        self.named_struct_defs
+            .get(name)
+            .expect("Named struct has not been defined")
+    }
+
+    /// Add the given `NamedStructDef` as the definition of the struct with the given `name`.
+    ///
+    /// Panics if that name already had a definition.
+    pub fn add_named_struct_def(&mut self, name: String, def: NamedStructDef) {
+        match self.named_struct_defs.entry(name) {
+            Entry::Occupied(_) => {
+                panic!("Trying to redefine named struct");
+            },
+            Entry::Vacant(ventry) => {
+                ventry.insert(def);
+            },
+        }
+    }
+
+    /// Get the X86_MMX type
+    pub fn x86_mmx(&self) -> TypeRef {
+        self.x86_mmx_type.clone()
+    }
+
+    /// Get the metadata type
+    pub fn metadata_type(&self) -> TypeRef {
+        self.metadata_type.clone()
+    }
+
+    /// Get the label type
+    pub fn label_type(&self) -> TypeRef {
+        self.label_type.clone()
+    }
+
+    /// Get the token type
+    pub fn token_type(&self) -> TypeRef {
+        self.token_type.clone()
+    }
+}
+
+#[derive(Clone, Debug, Hash)]
+pub enum NamedStructDef {
+    /// An opaque struct type; see [LLVM 10 docs on Opaque Structure Types](https://releases.llvm.org/10.0.0/docs/LangRef.html#t-opaque).
+    Opaque,
+    /// A struct type with a definition. The `TypeRef` here is guaranteed to be to a `StructType` variant.
+    Defined(TypeRef),
+}
+
+/// Holds a reference to all of the `Type`s used in the `Module`, and facilitates
+/// lookups so you can get a `TypeRef` to the `Type` you want.
+//
+// Unlike `TypesBuilder`, this is intended to be immutable, and performs type
+// lookups without &mut self.
+// It should be created from `TypesBuilder::build()`, and once it is built,
+// it should contain all types ever used in the `Module`.
+//
+// That said, if you happen to want a type which wasn't encountered when parsing
+// the `Module` (e.g., a pointer to some type in the `Module`, even if the
+// `Module` doesn't itself create pointers to that type), it will still
+// construct that `Type` and give you a `TypeRef`; you'll just be the sole owner
+// of that `Type` object.
+#[derive(Clone)]
+pub struct Types {
+    /// `TypeRef` to `Type::VoidType`
+    void_type: TypeRef,
+    /// Map of integer size to `Type::IntegerType` of that size
+    int_types: TypeCache<u32>,
+    /// Map of (pointee type, address space) to the corresponding `Type::PointerType`
+    pointer_types: TypeCache<(TypeRef, AddrSpace)>,
+    /// Map of `FPType` to the corresponding `Type::FPType`
+    fp_types: TypeCache<FPType>,
+    /// Map of `(result_type, param_types, is_var_arg)` to the corresponding `Type::FunctionType`
+    func_types: TypeCache<(TypeRef, Vec<TypeRef>, bool)>,
+    /// Map of (element type, #elements) to the corresponding `Type::VectorType`
+    vec_types: TypeCache<(TypeRef, usize)>,
+    /// Map of (element type, #elements) to the corresponding `Type::ArrayType`
+    arr_types: TypeCache<(TypeRef, usize)>,
+    /// Map of `(element_types, is_packed)` to the corresponding `Type::StructType`
+    struct_types: TypeCache<(Vec<TypeRef>, bool)>,
+    /// Map of struct name to the corresponding `Type::NamedStructType`
+    named_struct_types: TypeCache<String>,
+    /// Map of struct name to the corresponding `NamedStructDef`
+    named_struct_defs: HashMap<String, NamedStructDef>,
+    /// `TypeRef` to `Type::X86_MMXType`
+    x86_mmx_type: TypeRef,
+    /// `TypeRef` to `Type::MetadataType`
+    metadata_type: TypeRef,
+    /// `TypeRef` to `Type::LabelType`
+    label_type: TypeRef,
+    /// `TypeRef` to `Type::TokenType`
+    token_type: TypeRef,
+}
+
+impl Types {
+    /// Get the type of anything that is `Typed`
+    pub fn type_of<T: Typed + ?Sized>(&self, t: &T) -> TypeRef {
+        t.get_type(&self)
+    }
+
+    /// Get the void type
+    pub fn void(&self) -> TypeRef {
+        self.void_type.clone()
+    }
+
+    /// Get the integer type of the specified size (in bits)
+    pub fn int(&self, bits: u32) -> TypeRef {
+        self.int_types
+            .lookup(&bits)
+            .unwrap_or_else(|| TypeRef::new(Type::IntegerType { bits }))
+    }
+
+    /// Get the boolean type (`i1`)
+    pub fn bool(&self) -> TypeRef {
+        self.int(1)
+    }
+
+    /// Get the 8-bit integer type
+    pub fn i8(&self) -> TypeRef {
+        self.int(8)
+    }
+
+    /// Get the 16-bit integer type
+    pub fn i16(&self) -> TypeRef {
+        self.int(16)
+    }
+
+    /// Get the 32-bit integer type
+    pub fn i32(&self) -> TypeRef {
+        self.int(32)
+    }
+
+    /// Get the 64-bit integer type
+    pub fn i64(&self) -> TypeRef {
+        self.int(64)
+    }
+
+    /// Get a pointer type in the default address space (`0`)
+    pub fn pointer_to(&self, pointee_type: TypeRef) -> TypeRef {
+        self.pointer_in_addr_space(pointee_type, 0)
+    }
+
+    /// Get a pointer type in the specified address space
+    pub fn pointer_in_addr_space(&self, pointee_type: TypeRef, addr_space: AddrSpace) -> TypeRef {
+        self.pointer_types
+            .lookup(&(pointee_type.clone(), addr_space))
+            .unwrap_or_else(|| {
+                TypeRef::new(Type::PointerType {
+                    pointee_type,
+                    addr_space,
+                })
+            })
+    }
+
+    /// Get a floating-point type
+    pub fn fp(&self, fpt: FPType) -> TypeRef {
+        self.fp_types
+            .lookup(&fpt)
+            .unwrap_or_else(|| TypeRef::new(Type::FPType(fpt)))
+    }
+
+    /// Get the single-precision floating-point type
+    pub fn single(&self) -> TypeRef {
+        self.fp(FPType::Single)
+    }
+
+    /// Get the double-precision floating-point type
+    pub fn double(&self) -> TypeRef {
+        self.fp(FPType::Double)
+    }
+
+    /// Get a function type
+    pub fn func_type(
+        &self,
+        result_type: TypeRef,
+        param_types: Vec<TypeRef>,
+        is_var_arg: bool,
+    ) -> TypeRef {
+        self.func_types
+            .lookup(&(result_type.clone(), param_types.clone(), is_var_arg))
+            .unwrap_or_else(|| {
+                TypeRef::new(Type::FuncType {
+                    result_type,
+                    param_types,
+                    is_var_arg,
+                })
+            })
+    }
+
+    /// Get a vector type
+    pub fn vector_of(&self, element_type: TypeRef, num_elements: usize) -> TypeRef {
+        self.vec_types
+            .lookup(&(element_type.clone(), num_elements))
+            .unwrap_or_else(|| {
+                TypeRef::new(Type::VectorType {
+                    element_type,
+                    num_elements,
+                })
+            })
+    }
+
+    /// Get an array type
+    pub fn array_of(&self, element_type: TypeRef, num_elements: usize) -> TypeRef {
+        self.arr_types
+            .lookup(&(element_type.clone(), num_elements))
+            .unwrap_or_else(|| {
+                TypeRef::new(Type::ArrayType {
+                    element_type,
+                    num_elements,
+                })
+            })
+    }
+
+    /// Get a struct type
+    pub fn struct_of(&self, element_types: Vec<TypeRef>, is_packed: bool) -> TypeRef {
+        self.struct_types
+            .lookup(&(element_types.clone(), is_packed))
+            .unwrap_or_else(|| {
+                TypeRef::new(Type::StructType {
+                    element_types,
+                    is_packed,
+                })
+            })
+    }
+
+    /// Get the `TypeRef` for the struct with the given `name`, or
+    /// `None` if there is no struct by that name.
+    ///
+    /// Note that this gives a `NamedStructType`.
+    /// To get the actual _definition_ of a named struct (the `NamedStructDef`),
+    /// use `named_struct_def()`.
+    pub fn named_struct(&self, name: &str) -> Option<TypeRef> {
+        self.named_struct_types.lookup(name)
+    }
+
+    /// Get the `NamedStructDef` for the struct with the given `name`, or
+    /// `None` if there is no struct by that name.
+    ///
+    /// Note that this gives a `NamedStructDef`.
+    /// To get the `NamedStructType` for a `name`, use `named_struct()`.
+    pub fn named_struct_def(&self, name: &str) -> Option<&NamedStructDef> {
+        self.named_struct_defs.get(name)
+    }
+
+    /// Get the names of all the named structs
+    pub fn all_struct_names(&self) -> impl Iterator<Item = &String> {
+        self.named_struct_defs.keys()
+    }
+
+    /// Get the X86_MMX type
+    pub fn x86_mmx(&self) -> TypeRef {
+        self.x86_mmx_type.clone()
+    }
+
+    /// Get the metadata type
+    pub fn metadata_type(&self) -> TypeRef {
+        self.metadata_type.clone()
+    }
+
+    /// Get the label type
+    pub fn label_type(&self) -> TypeRef {
+        self.label_type.clone()
+    }
+
+    /// Get the token type
+    pub fn token_type(&self) -> TypeRef {
+        self.token_type.clone()
+    }
+
+    /// Get a `TypeRef` for the given `Type`
+    pub fn get_for_type(&self, ty: &Type) -> TypeRef {
+        match ty {
+            Type::VoidType => self.void(),
+            Type::IntegerType{ bits } => self.int(*bits),
+            Type::PointerType { pointee_type, addr_space } => {
+                self.pointer_in_addr_space(pointee_type.clone(), *addr_space)
+            },
+            Type::FPType(fpt) => self.fp(*fpt),
+            Type::FuncType { result_type, param_types, is_var_arg } => {
+                self.func_type(result_type.clone(), param_types.clone(), *is_var_arg)
+            },
+            Type::VectorType { element_type, num_elements } => {
+                self.vector_of(element_type.clone(), *num_elements)
+            },
+            Type::ArrayType { element_type, num_elements } => {
+                self.array_of(element_type.clone(), *num_elements)
+            },
+            Type::StructType { element_types, is_packed } => {
+                self.struct_of(element_types.clone(), *is_packed)
+            },
+            Type::NamedStructType { name  } => {
+                self.named_struct(name).unwrap_or_else(|| TypeRef::new(Type::NamedStructType { name: name.clone() }))
+            },
+            Type::X86_MMXType => self.x86_mmx(),
+            Type::MetadataType => self.metadata_type(),
+            Type::LabelType => self.label_type(),
+            Type::TokenType => self.token_type(),
+        }
+    }
+}
+
+impl Types {
+    /// Get a blank `Types` containing essentially no types.
+    /// This function is intended only for use in testing;
+    /// it's probably not useful otherwise.
+    pub fn blank_for_testing() -> Self {
+        TypesBuilder::new().build()
+    }
+}
+
+#[derive(Clone, Debug)]
+struct TypeCache<K: Eq + Hash + Clone> {
+    map: HashMap<K, TypeRef>,
+}
+
+#[allow(dead_code)]
+impl<K: Eq + Hash + Clone> TypeCache<K> {
+    fn new() -> Self {
+        Self {
+            map: HashMap::new(),
+        }
+    }
+
+    /// Get a `TypeRef` to the `Type` with the given key,
+    /// or `None` if the `Type` is not present.
+    fn lookup<Q: ?Sized>(&self, key: &Q) -> Option<TypeRef>
+        where K: Borrow<Q>, Q: Hash + Eq
+    {
+        self.map.get(key).cloned()
+    }
+
+    /// Get a `TypeRef` to the `Type` with the given key.
+    /// The `if_missing` function or closure will be called to create that `Type`
+    /// if it hasn't been created yet.
+    fn lookup_or_insert(&mut self, key: K, if_missing: impl FnOnce() -> Type) -> TypeRef {
+        self.map
+            .entry(key)
+            .or_insert_with(|| TypeRef::new(if_missing()))
+            .clone()
+    }
+
+    /// Is a `Type` for the given key currently in the cache?
+    fn contains_key(&self, key: &K) -> bool {
+        self.map.contains_key(key)
     }
 }
 
@@ -203,38 +718,34 @@ where
 
 use crate::from_llvm::*;
 use llvm_sys::LLVMTypeKind;
-use std::collections::{HashMap, HashSet};
+use std::collections::hash_map::Entry;
 
-pub(crate) type TyNameMap = HashMap<String, Option<Arc<RwLock<Type>>>>;
+impl TypesBuilder {
+    pub(crate) fn type_from_llvm_ref(&mut self, ty: LLVMTypeRef) -> TypeRef {
+        if let Some(typeref) = self.llvm_type_map.get(&ty) {
+            return typeref.clone();
+        }
+        let typeref = self.parse_type_from_llvm_ref(ty);
+        self.llvm_type_map.insert(ty, typeref.clone());
+        typeref
+    }
 
-impl Type {
-    pub(crate) fn from_llvm_ref(ty: LLVMTypeRef, tynamemap: &mut TyNameMap) -> Self {
+    fn parse_type_from_llvm_ref(&mut self, ty: LLVMTypeRef) -> TypeRef {
         let kind = unsafe { LLVMGetTypeKind(ty) };
         match kind {
-            LLVMTypeKind::LLVMVoidTypeKind => Type::VoidType,
-            LLVMTypeKind::LLVMIntegerTypeKind => Type::IntegerType {
-                bits: unsafe { LLVMGetIntTypeWidth(ty) },
+            LLVMTypeKind::LLVMVoidTypeKind => self.void(),
+            LLVMTypeKind::LLVMIntegerTypeKind => self.int(unsafe { LLVMGetIntTypeWidth(ty) }),
+            LLVMTypeKind::LLVMPointerTypeKind => {
+                let pointee_type = self.type_from_llvm_ref(unsafe { LLVMGetElementType(ty) });
+                self.pointer_in_addr_space(pointee_type, unsafe { LLVMGetPointerAddressSpace(ty) })
             },
-            LLVMTypeKind::LLVMPointerTypeKind => Type::PointerType {
-                pointee_type: Box::new(Type::from_llvm_ref(
-                    unsafe { LLVMGetElementType(ty) },
-                    tynamemap,
-                )),
-                addr_space: unsafe { LLVMGetPointerAddressSpace(ty) },
+            LLVMTypeKind::LLVMArrayTypeKind => {
+                let element_type = self.type_from_llvm_ref(unsafe { LLVMGetElementType(ty) });
+                self.array_of(element_type, unsafe { LLVMGetArrayLength(ty) as usize })
             },
-            LLVMTypeKind::LLVMArrayTypeKind => Type::ArrayType {
-                element_type: Box::new(Type::from_llvm_ref(
-                    unsafe { LLVMGetElementType(ty) },
-                    tynamemap,
-                )),
-                num_elements: unsafe { LLVMGetArrayLength(ty) as usize },
-            },
-            LLVMTypeKind::LLVMVectorTypeKind => Type::VectorType {
-                element_type: Box::new(Type::from_llvm_ref(
-                    unsafe { LLVMGetElementType(ty) },
-                    tynamemap,
-                )),
-                num_elements: unsafe { LLVMGetVectorSize(ty) as usize },
+            LLVMTypeKind::LLVMVectorTypeKind => {
+                let element_type = self.type_from_llvm_ref(unsafe { LLVMGetElementType(ty) });
+                self.vector_of(element_type, unsafe { LLVMGetVectorSize(ty) as usize })
             },
             LLVMTypeKind::LLVMStructTypeKind => {
                 let name = if unsafe { LLVMIsLiteralStruct(ty) } != 0 {
@@ -244,41 +755,35 @@ impl Type {
                 };
 
                 match name {
-                    Some(ref s) if !s.is_empty() => {
-                        let actual_type: Option<Arc<RwLock<Type>>> = if tynamemap.contains_key(s) {
-                            tynamemap.get(s).unwrap().clone()
+                    Some(s) if !s.is_empty() => {
+                        if self.named_struct_types.contains_key(&s) {
+                            // already defined: return the NamedStructType and don't change the definition
+                            self.named_struct(s)
                         } else if unsafe { LLVMIsOpaqueStruct(ty) } != 0 {
-                            tynamemap.insert(s.clone(), None);
-                            None
+                            // add the definition as opaque
+                            self.add_named_struct_def(s.clone(), NamedStructDef::Opaque);
+                            // return the NamedStructType
+                            self.named_struct(s)
                         } else {
-                            // first fill in the entry as opaque for now, so that the call to struct_type_from_llvm_ref will terminate
-                            tynamemap.insert(s.clone(), None);
-                            // now compute the actual correct type. Any self-references will be opaqued
-                            let type_with_opaqued_self_refs =
-                                Type::struct_type_from_llvm_ref(ty, tynamemap);
-                            // recursively replace any opaqued self-references with weak refs to self
-                            let arc = Arc::new(RwLock::new(type_with_opaqued_self_refs.clone()));
-                            let actual_type =
-                                Type::replace_in_type(type_with_opaqued_self_refs, s, &arc);
-                            *arc.write().unwrap() = actual_type;
-                            // and finally, put the completed type in the map
-                            tynamemap.insert(s.clone(), Some(arc.clone()));
-                            Some(arc)
-                        };
-                        Type::NamedStructType {
-                            name: s.clone(),
-                            ty: actual_type.map(|arc| Arc::downgrade(&arc)),
+                            // add the NamedStructType first, so that the call to struct_type_from_llvm_ref will terminate
+                            let named_struct_typeref = self.named_struct(s.clone());
+                            // now compute the actual struct type. Any self-references will point to the NamedStructType we just created
+                            let actual_struct_type = self.struct_type_from_llvm_ref(ty);
+                            // add this definition for the named struct
+                            self.add_named_struct_def(
+                                s,
+                                NamedStructDef::Defined(actual_struct_type),
+                            );
+                            // And now we return the NamedStructType
+                            named_struct_typeref
                         }
                     },
-                    _ => Type::struct_type_from_llvm_ref(ty, tynamemap),
+                    _ => self.struct_type_from_llvm_ref(ty),
                 }
             },
-            LLVMTypeKind::LLVMFunctionTypeKind => Type::FuncType {
-                result_type: Box::new(Type::from_llvm_ref(
-                    unsafe { LLVMGetReturnType(ty) },
-                    tynamemap,
-                )),
-                param_types: {
+            LLVMTypeKind::LLVMFunctionTypeKind => {
+                let result_type = self.type_from_llvm_ref(unsafe { LLVMGetReturnType(ty) });
+                let param_types = {
                     let num_types = unsafe { LLVMCountParamTypes(ty) };
                     let mut types: Vec<LLVMTypeRef> = Vec::with_capacity(num_types as usize);
                     unsafe {
@@ -287,167 +792,49 @@ impl Type {
                     };
                     types
                         .into_iter()
-                        .map(|t| Type::from_llvm_ref(t, tynamemap))
+                        .map(|t| self.type_from_llvm_ref(t))
                         .collect()
-                },
-                is_var_arg: unsafe { LLVMIsFunctionVarArg(ty) } != 0,
+                };
+                self.func_type(
+                    result_type,
+                    param_types,
+                    unsafe { LLVMIsFunctionVarArg(ty) } != 0,
+                )
             },
-            LLVMTypeKind::LLVMHalfTypeKind => Type::FPType(FPType::Half),
-            LLVMTypeKind::LLVMFloatTypeKind => Type::FPType(FPType::Single),
-            LLVMTypeKind::LLVMDoubleTypeKind => Type::FPType(FPType::Double),
-            LLVMTypeKind::LLVMFP128TypeKind => Type::FPType(FPType::FP128),
-            LLVMTypeKind::LLVMX86_FP80TypeKind => Type::FPType(FPType::X86_FP80),
-            LLVMTypeKind::LLVMPPC_FP128TypeKind => Type::FPType(FPType::PPC_FP128),
-            LLVMTypeKind::LLVMX86_MMXTypeKind => Type::X86_MMXType,
-            LLVMTypeKind::LLVMMetadataTypeKind => Type::MetadataType,
-            LLVMTypeKind::LLVMLabelTypeKind => Type::LabelType,
-            LLVMTypeKind::LLVMTokenTypeKind => Type::TokenType,
-        }
-    }
-
-    /// Replace any opaqued named structs with the given `name`, with weak references to the given `Arc<RwLock<Type>>`
-    fn replace_in_type(ty: Type, target_name: &str, replacement: &Arc<RwLock<Type>>) -> Type {
-        Type::_replace_in_type(ty, target_name, replacement, &mut HashSet::new())
-    }
-
-    // `seen_names` is here to prevent infinite recursion on self-referential
-    // struct types; we don't need to continue into any recursive reference (as
-    // we've been there already and done any necessary replacements)
-    fn _replace_in_type(
-        ty: Type,
-        target_name: &str,
-        replacement: &Arc<RwLock<Type>>,
-        seen_names: &mut HashSet<String>,
-    ) -> Type {
-        match ty {
-            Type::NamedStructType { ref name, ty: None } if name == target_name => {
-                Type::NamedStructType {
-                    name: name.clone(),
-                    ty: Some(Arc::downgrade(replacement)),
-                }
-            },
-            // confused on the proper syntax here; neither `{ ref name, ref ty: Some(weak) }` nor
-            // `{ ref name, ty: ref Some(weak) }` parse as valid, and just `ty: Some(weak)` errors due to
-            // attempting to move the value. For now we have this hack instead.
-            Type::NamedStructType { ref name, ref ty }
-                if ty.is_some() && !seen_names.contains(name) =>
-            {
-                seen_names.insert(name.clone());
-                let weak = ty
-                    .as_ref()
-                    .expect("we checked that ty.is_some() in the pattern guard");
-                let arc: Arc<RwLock<Type>> =
-                    weak.upgrade().expect("Failed to upgrade weak reference");
-                let inner_ty = arc.read().unwrap().clone();
-                *arc.write().unwrap() =
-                    Type::_replace_in_type(inner_ty, target_name, replacement, seen_names);
-                Type::NamedStructType {
-                    name: name.clone(),
-                    ty: Some(Arc::downgrade(&arc)),
-                }
-            }
-            Type::PointerType {
-                pointee_type,
-                addr_space,
-            } => Type::PointerType {
-                pointee_type: Box::new(Type::_replace_in_type(
-                    *pointee_type,
-                    target_name,
-                    replacement,
-                    seen_names,
-                )),
-                addr_space,
-            },
-            Type::FuncType {
-                result_type,
-                param_types,
-                is_var_arg,
-            } => Type::FuncType {
-                // we don't mind that one recursive call here might add things
-                // to `seen_names` that will affect the processing of other
-                // recursive calls.
-                // All `NamedStructType`s with the same name should be refs to
-                // the same `StructType`, so once we've done the replacement in
-                // that `StructType` once, we don't need to do it again, even on
-                // another "branch" of the recursion
-                result_type: Box::new(Type::_replace_in_type(
-                    *result_type,
-                    target_name,
-                    replacement,
-                    seen_names,
-                )),
-                param_types: param_types
-                    .into_iter()
-                    .map(|t| Type::_replace_in_type(t, target_name, replacement, seen_names))
-                    .collect(),
-                is_var_arg,
-            },
-            Type::VectorType {
-                element_type,
-                num_elements,
-            } => Type::VectorType {
-                element_type: Box::new(Type::_replace_in_type(
-                    *element_type,
-                    target_name,
-                    replacement,
-                    seen_names,
-                )),
-                num_elements,
-            },
-            Type::ArrayType {
-                element_type,
-                num_elements,
-            } => Type::ArrayType {
-                element_type: Box::new(Type::_replace_in_type(
-                    *element_type,
-                    target_name,
-                    replacement,
-                    seen_names,
-                )),
-                num_elements,
-            },
-            Type::StructType {
-                element_types,
-                is_packed,
-            } => Type::StructType {
-                // we don't mind that one recursive call here might add things
-                // to `seen_names` that will affect the processing of other
-                // recursive calls.
-                // All `NamedStructType`s with the same name should be refs to
-                // the same `StructType`, so once we've done the replacement in
-                // that `StructType` once, we don't need to do it again, even on
-                // another "branch" of the recursion
-                element_types: element_types
-                    .into_iter()
-                    .map(|t| Type::_replace_in_type(t, target_name, replacement, seen_names))
-                    .collect(),
-                is_packed,
-            },
-            _ => ty, // nothing to replace. In particular we don't need to replace anything in opaque named structs when name != target_name.
+            LLVMTypeKind::LLVMHalfTypeKind => self.fp(FPType::Half),
+            LLVMTypeKind::LLVMFloatTypeKind => self.fp(FPType::Single),
+            LLVMTypeKind::LLVMDoubleTypeKind => self.fp(FPType::Double),
+            LLVMTypeKind::LLVMFP128TypeKind => self.fp(FPType::FP128),
+            LLVMTypeKind::LLVMX86_FP80TypeKind => self.fp(FPType::X86_FP80),
+            LLVMTypeKind::LLVMPPC_FP128TypeKind => self.fp(FPType::PPC_FP128),
+            LLVMTypeKind::LLVMX86_MMXTypeKind => self.x86_mmx(),
+            LLVMTypeKind::LLVMMetadataTypeKind => self.metadata_type(),
+            LLVMTypeKind::LLVMLabelTypeKind => self.label_type(),
+            LLVMTypeKind::LLVMTokenTypeKind => self.token_type(),
         }
     }
 
     /// creates an actual `StructType`, regardless of whether the struct is named or not
     ///
     /// Caller is responsible for ensuring that `ty` is not an opaque struct type
-    fn struct_type_from_llvm_ref(ty: LLVMTypeRef, tynamemap: &mut TyNameMap) -> Self {
+    fn struct_type_from_llvm_ref(&mut self, ty: LLVMTypeRef) -> TypeRef {
         if unsafe { LLVMIsOpaqueStruct(ty) } != 0 {
-            panic!("struct_type_from_llvm_ref: shouldn't pass an opaque struct type to this function");
+            panic!(
+                "struct_type_from_llvm_ref: shouldn't pass an opaque struct type to this function"
+            );
         }
-        Type::StructType {
-            element_types: {
-                let num_types = unsafe { LLVMCountStructElementTypes(ty) };
-                let mut types: Vec<LLVMTypeRef> = Vec::with_capacity(num_types as usize);
-                unsafe {
-                    LLVMGetStructElementTypes(ty, types.as_mut_ptr());
-                    types.set_len(num_types as usize);
-                };
-                types
-                    .into_iter()
-                    .map(|t| Type::from_llvm_ref(t, tynamemap))
-                    .collect()
-            },
-            is_packed: unsafe { LLVMIsPackedStruct(ty) } != 0,
-        }
+        let element_types = {
+            let num_types = unsafe { LLVMCountStructElementTypes(ty) };
+            let mut types: Vec<LLVMTypeRef> = Vec::with_capacity(num_types as usize);
+            unsafe {
+                LLVMGetStructElementTypes(ty, types.as_mut_ptr());
+                types.set_len(num_types as usize);
+            };
+            types
+                .into_iter()
+                .map(|t| self.type_from_llvm_ref(t))
+                .collect()
+        };
+        self.struct_of(element_types, unsafe { LLVMIsPackedStruct(ty) } != 0)
     }
 }

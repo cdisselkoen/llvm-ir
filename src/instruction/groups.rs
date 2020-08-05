@@ -1,4 +1,5 @@
-use super::{HasResult, Instruction, Name, Operand, Type, Typed};
+use super::{HasResult, Instruction, Name, Operand, TypeRef, Typed};
+use crate::types::Types;
 use std::convert::TryFrom;
 
 /// Just the BinaryOps.  This ends up being better than a `&dyn `[`BinaryOp`](../trait.BinaryOp.html) for various reasons.
@@ -149,48 +150,48 @@ impl TryFrom<Instruction> for UnaryOp {
 }
 
 impl Typed for BinaryOp {
-    fn get_type(&self) -> Type {
+    fn get_type(&self, types: &Types) -> TypeRef {
         match self {
-            BinaryOp::Add(i) => i.get_type(),
-            BinaryOp::Sub(i) => i.get_type(),
-            BinaryOp::Mul(i) => i.get_type(),
-            BinaryOp::UDiv(i) => i.get_type(),
-            BinaryOp::SDiv(i) => i.get_type(),
-            BinaryOp::URem(i) => i.get_type(),
-            BinaryOp::SRem(i) => i.get_type(),
-            BinaryOp::And(i) => i.get_type(),
-            BinaryOp::Or(i) => i.get_type(),
-            BinaryOp::Xor(i) => i.get_type(),
-            BinaryOp::Shl(i) => i.get_type(),
-            BinaryOp::LShr(i) => i.get_type(),
-            BinaryOp::AShr(i) => i.get_type(),
-            BinaryOp::FAdd(i) => i.get_type(),
-            BinaryOp::FSub(i) => i.get_type(),
-            BinaryOp::FMul(i) => i.get_type(),
-            BinaryOp::FDiv(i) => i.get_type(),
-            BinaryOp::FRem(i) => i.get_type(),
+            BinaryOp::Add(i) => types.type_of(i),
+            BinaryOp::Sub(i) => types.type_of(i),
+            BinaryOp::Mul(i) => types.type_of(i),
+            BinaryOp::UDiv(i) => types.type_of(i),
+            BinaryOp::SDiv(i) => types.type_of(i),
+            BinaryOp::URem(i) => types.type_of(i),
+            BinaryOp::SRem(i) => types.type_of(i),
+            BinaryOp::And(i) => types.type_of(i),
+            BinaryOp::Or(i) => types.type_of(i),
+            BinaryOp::Xor(i) => types.type_of(i),
+            BinaryOp::Shl(i) => types.type_of(i),
+            BinaryOp::LShr(i) => types.type_of(i),
+            BinaryOp::AShr(i) => types.type_of(i),
+            BinaryOp::FAdd(i) => types.type_of(i),
+            BinaryOp::FSub(i) => types.type_of(i),
+            BinaryOp::FMul(i) => types.type_of(i),
+            BinaryOp::FDiv(i) => types.type_of(i),
+            BinaryOp::FRem(i) => types.type_of(i),
         }
     }
 }
 
 impl Typed for UnaryOp {
-    fn get_type(&self) -> Type {
+    fn get_type(&self, types: &Types) -> TypeRef {
         match self {
-            UnaryOp::AddrSpaceCast(i) => i.get_type(),
-            UnaryOp::BitCast(i) => i.get_type(),
-            UnaryOp::FNeg(i) => i.get_type(),
-            UnaryOp::FPExt(i) => i.get_type(),
-            UnaryOp::FPToSI(i) => i.get_type(),
-            UnaryOp::FPToUI(i) => i.get_type(),
-            UnaryOp::FPTrunc(i) => i.get_type(),
-            UnaryOp::Freeze(i) => i.get_type(),
-            UnaryOp::IntToPtr(i) => i.get_type(),
-            UnaryOp::PtrToInt(i) => i.get_type(),
-            UnaryOp::SExt(i) => i.get_type(),
-            UnaryOp::SIToFP(i) => i.get_type(),
-            UnaryOp::Trunc(i) => i.get_type(),
-            UnaryOp::UIToFP(i) => i.get_type(),
-            UnaryOp::ZExt(i) => i.get_type(),
+            UnaryOp::AddrSpaceCast(i) => types.type_of(i),
+            UnaryOp::BitCast(i) => types.type_of(i),
+            UnaryOp::FNeg(i) => types.type_of(i),
+            UnaryOp::FPExt(i) => types.type_of(i),
+            UnaryOp::FPToSI(i) => types.type_of(i),
+            UnaryOp::FPToUI(i) => types.type_of(i),
+            UnaryOp::FPTrunc(i) => types.type_of(i),
+            UnaryOp::Freeze(i) => types.type_of(i),
+            UnaryOp::IntToPtr(i) => types.type_of(i),
+            UnaryOp::PtrToInt(i) => types.type_of(i),
+            UnaryOp::SExt(i) => types.type_of(i),
+            UnaryOp::SIToFP(i) => types.type_of(i),
+            UnaryOp::Trunc(i) => types.type_of(i),
+            UnaryOp::UIToFP(i) => types.type_of(i),
+            UnaryOp::ZExt(i) => types.type_of(i),
         }
     }
 }

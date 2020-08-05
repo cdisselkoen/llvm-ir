@@ -88,11 +88,10 @@ llvm_test!("tests/llvm_bc/weak-cmpxchg-upgrade.ll.bc", weak_cmpxchg_upgrade);
 llvm_test!("tests/llvm_bc/weak-macho-3.5.ll.bc", weak_macho);
 
 use either::Either;
-use llvm_ir::instruction::{Atomicity, MemoryOrdering, SynchronizationScope};
 use llvm_ir::*;
+use llvm_ir::instruction::{Atomicity, MemoryOrdering, SynchronizationScope};
+use llvm_ir::types::NamedStructDef;
 use std::convert::TryInto;
-use std::ops::Deref;
-use std::sync::{Arc, RwLock};
 
 /// Additionally ensure that certain constructs were parsed correctly
 /// (these constructs don't currently appear in any of the basic_tests)
@@ -124,28 +123,25 @@ fn DILocation_implicit_code_extra_checks() {
         );
     }
     assert_eq!(invoke.arguments.len(), 2);
-    if let Operand::LocalOperand { name, ty: Type::PointerType { pointee_type, .. } } = &invoke.arguments[0].0 {
+    if let Operand::LocalOperand { name, ty} = &invoke.arguments[0].0 {
         assert_eq!(name, &Name::Name("a".to_owned()));
-        if let Type::NamedStructType { ref ty, .. } = **pointee_type {
-            let struct_type: Arc<RwLock<Type>> = ty
-                .as_ref()
-                .unwrap_or_else(|| {
-                    panic!("Didn't expect {:?} to be an opaque type", **pointee_type)
-                })
-                .upgrade()
-                .expect("Failed to upgrade weak ref");
-            assert_eq!(
-                *struct_type.read().unwrap().deref(),
-                Type::StructType {
-                    element_types: vec![Type::i8()],
-                    is_packed: false
+        if let Type::PointerType { pointee_type, .. } = ty.as_ref() {
+            if let Type::NamedStructType { name } = pointee_type.as_ref() {
+                match module.types.named_struct_def(name) {
+                    None => panic!("Failed to find {} in module.types", name),
+                    Some(NamedStructDef::Opaque) => panic!("Didn't expect {} to be an opaque struct type", name),
+                    Some(NamedStructDef::Defined(ty)) => {
+                        assert_eq!(ty, &module.types.struct_of(vec![module.types.i8()], false));
+                    }
                 }
-            );
+            } else {
+                panic!("Expected invoke.arguments[0].0 to be a pointer to a Type::NamedStructType; instead it was a pointer to a {:?}", **pointee_type);
+            }
         } else {
-            panic!("Expected invoke.arguments[0].0 to be a pointer to a Type::NamedStructTypeReference; instead it was a pointer to a {:?}", **pointee_type);
+            panic!("Exected invoke.arguments[0].0 to be of PointerType; instead it was {:?}", ty.as_ref());
         }
     } else {
-        panic!("Expected invoke.arguments[0].0 to be a local operand of PointerType; instead it was {:?}", &invoke.arguments[0].0);
+        panic!("Expected invoke.arguments[0].0 to be a local operand; instead it was {:?}", &invoke.arguments[0].0);
     }
     assert_eq!(invoke.arguments[1].0, Operand::ConstantOperand(Constant::Int { bits: 32, value: 0 }));
     assert_eq!(invoke.return_label, Name::Name("invoke.cont".to_owned()));
@@ -167,10 +163,10 @@ fn DILocation_implicit_code_extra_checks() {
         .clone()
         .try_into()
         .unwrap_or_else(|_| panic!("Expected a landingpad, got {:?}", &lpad.instrs[0]));
-    let expected_landingpad_resultty = Type::StructType {
-        element_types: vec![Type::pointer_to(Type::i8()), Type::i32()],
-        is_packed: false,
-    };
+    let expected_landingpad_resultty = module.types.struct_of(
+        vec![module.types.pointer_to(module.types.i8()), module.types.i32()],
+        false,
+    );
     assert_eq!(landingpad.result_type, expected_landingpad_resultty);
     assert_eq!(landingpad.clauses.len(), 1);
     assert_eq!(landingpad.cleanup, false);
@@ -243,7 +239,7 @@ fn DILocation_implicit_code_extra_checks() {
         ival.element,
         Operand::LocalOperand {
             name: Name::Name("exn4".to_owned()),
-            ty: Type::pointer_to(Type::i8())
+            ty: module.types.pointer_to(module.types.i8())
         }
     );
     assert_eq!(ival.indices.len(), 1);
@@ -264,7 +260,7 @@ fn DILocation_implicit_code_extra_checks() {
         ival2.element,
         Operand::LocalOperand {
             name: Name::Name("sel5".to_owned()),
-            ty: Type::i32()
+            ty: module.types.i32()
         }
     );
     assert_eq!(ival2.indices.len(), 1);
@@ -294,7 +290,7 @@ fn atomics() {
         .expect("Failed to find function");
     let bb = &func.basic_blocks[0];
     let cmpxchg: &instruction::CmpXchg = &bb.instrs[0].clone().try_into().unwrap_or_else(|_| panic!("Expected a cmpxchg, got {:?}", &bb.instrs[0]));
-    assert_eq!(cmpxchg.address, Operand::LocalOperand { name: Name::from("word"), ty: Type::pointer_to(Type::i32()) });
+    assert_eq!(cmpxchg.address, Operand::LocalOperand { name: Name::from("word"), ty: module.types.pointer_to(module.types.i32()) });
     assert_eq!(cmpxchg.expected, Operand::ConstantOperand(Constant::Int { bits: 32, value: 0 }));
     assert_eq!(cmpxchg.replacement, Operand::ConstantOperand(Constant::Int { bits: 32, value: 4 }));
     assert_eq!(cmpxchg.dest, Name::from("cmpxchg.0"));
@@ -302,8 +298,8 @@ fn atomics() {
     assert_eq!(cmpxchg.atomicity, Atomicity { synch_scope: SynchronizationScope::System, mem_ordering: MemoryOrdering::Monotonic });
     assert_eq!(cmpxchg.failure_memory_ordering, MemoryOrdering::Monotonic);
     let atomicrmw: &instruction::AtomicRMW = &bb.instrs[8].clone().try_into().unwrap_or_else(|_| panic!("Expected an atomicrmw, got {:?}", &bb.instrs[8]));
-    assert_eq!(atomicrmw.address, Operand::LocalOperand { name: Name::from("word"), ty: Type::pointer_to(Type::i32()) });
+    assert_eq!(atomicrmw.address, Operand::LocalOperand { name: Name::from("word"), ty: module.types.pointer_to(module.types.i32()) });
     assert_eq!(atomicrmw.value, Operand::ConstantOperand(Constant::Int { bits: 32, value: 12 }));
     assert_eq!(atomicrmw.dest, Name::from("atomicrmw.xchg"));
-    assert_eq!(atomicrmw.get_type(), Type::i32());
+    assert_eq!(module.type_of(atomicrmw), module.types.i32());
 }

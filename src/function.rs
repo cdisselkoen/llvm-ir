@@ -1,9 +1,7 @@
-use crate::basicblock::BasicBlock;
-use crate::constant::Constant;
 use crate::debugloc::{DebugLoc, HasDebugLoc};
 use crate::module::{Comdat, DLLStorageClass, Linkage, Visibility};
-use crate::name::Name;
-use crate::types::{Type, Typed};
+use crate::types::{TypeRef, Typed, Types};
+use crate::{BasicBlock, Constant, Name};
 use std::num;
 
 /// See [LLVM 10 docs on Functions](https://releases.llvm.org/10.0.0/docs/LangRef.html#functions)
@@ -12,7 +10,7 @@ pub struct Function {
     pub name: String,
     pub parameters: Vec<Parameter>,
     pub is_var_arg: bool,
-    pub return_type: Type,
+    pub return_type: TypeRef,
     pub basic_blocks: Vec<BasicBlock>,
     pub function_attributes: Vec<FunctionAttribute>, // llvm-hs-pure has Vec<Either<GroupID, FunctionAttribute>>, but I'm not sure how the GroupID ones come about
     pub return_attributes: Vec<ParameterAttribute>,
@@ -33,12 +31,12 @@ pub struct Function {
 }
 
 impl Typed for Function {
-    fn get_type(&self) -> Type {
-        Type::FuncType {
-            result_type: Box::new(self.return_type.clone()),
-            param_types: self.parameters.iter().map(|p| p.get_type()).collect(),
-            is_var_arg: self.is_var_arg,
-        }
+    fn get_type(&self, types: &Types) -> TypeRef {
+        types.func_type(
+            self.return_type.clone(),
+            self.parameters.iter().map(|p| types.type_of(p)).collect(),
+            self.is_var_arg,
+        )
     }
 }
 
@@ -65,7 +63,7 @@ impl Function {
             name: name.into(),
             parameters: vec![],
             is_var_arg: false,
-            return_type: Type::VoidType,
+            return_type: Types::blank_for_testing().void(),
             basic_blocks: vec![],
             function_attributes: vec![],
             return_attributes: vec![],
@@ -86,12 +84,12 @@ impl Function {
 #[derive(PartialEq, Clone, Debug)]
 pub struct Parameter {
     pub name: Name,
-    pub ty: Type,
+    pub ty: TypeRef,
     pub attributes: Vec<ParameterAttribute>,
 }
 
 impl Typed for Parameter {
-    fn get_type(&self) -> Type {
+    fn get_type(&self, _types: &Types) -> TypeRef {
         self.ty.clone()
     }
 }
@@ -246,7 +244,7 @@ use crate::basicblock::BBMap;
 use crate::constant::GlobalNameMap;
 use crate::from_llvm::*;
 use crate::operand::ValToNameMap;
-use crate::types::TyNameMap;
+use crate::types::TypesBuilder;
 use llvm_sys::comdat::*;
 use llvm_sys::{LLVMAttributeFunctionIndex, LLVMAttributeReturnIndex};
 
@@ -254,7 +252,7 @@ impl Function {
     pub(crate) fn from_llvm_ref(
         func: LLVMValueRef,
         gnmap: &GlobalNameMap,
-        tnmap: &mut TyNameMap,
+        types: &mut TypesBuilder,
     ) -> Self {
         let func = unsafe { LLVMIsAFunction(func) };
         assert!(!func.is_null());
@@ -266,7 +264,7 @@ impl Function {
                 .enumerate()
                 .map(|(i, p)| Parameter {
                     name: Name::name_or_num(unsafe { get_value_name(p) }, &mut local_ctr),
-                    ty: Type::from_llvm_ref(unsafe { LLVMTypeOf(p) }, tnmap),
+                    ty: types.type_from_llvm_ref(unsafe { LLVMTypeOf(p) }),
                     attributes: {
                         let num_attrs = unsafe { LLVMGetAttributeCountAtIndex(func, i as u32) };
                         let mut attrs: Vec<LLVMAttributeRef> =
@@ -314,11 +312,11 @@ impl Function {
             name: unsafe { get_value_name(func) },
             parameters,
             is_var_arg: unsafe { LLVMIsFunctionVarArg(functy) } != 0,
-            return_type: Type::from_llvm_ref(unsafe { LLVMGetReturnType(functy) }, tnmap),
+            return_type: types.type_from_llvm_ref(unsafe { LLVMGetReturnType(functy) }),
             basic_blocks: {
                 get_basic_blocks(func)
                     .map(|bb| {
-                        BasicBlock::from_llvm_ref(bb, &mut local_ctr, &vnmap, &bbmap, gnmap, tnmap)
+                        BasicBlock::from_llvm_ref(bb, &mut local_ctr, &vnmap, &bbmap, gnmap, types)
                     })
                     .collect()
             },
@@ -386,7 +384,7 @@ impl Function {
                     Some(Constant::from_llvm_ref(
                         unsafe { LLVMGetPersonalityFn(func) },
                         gnmap,
-                        tnmap,
+                        types,
                     ))
                 } else {
                     None

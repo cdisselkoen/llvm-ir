@@ -4,11 +4,10 @@ use crate::function::{CallingConvention, FunctionAttribute, ParameterAttribute};
 use crate::name::Name;
 use crate::operand::Operand;
 use crate::predicates::*;
-use crate::types::{Type, Typed};
+use crate::types::{NamedStructDef, Type, TypeRef, Typed, Types};
 use either::Either;
 use std::convert::TryFrom;
 use std::fmt::Debug;
-use std::ops::Deref;
 
 /// Non-terminator instructions.
 #[derive(PartialEq, Clone, Debug)]
@@ -86,62 +85,62 @@ pub enum Instruction {
 
 /// The [`Type`](../enum.Type.html) of an `Instruction` (or any subtype of `Instruction`) is its result type.
 impl Typed for Instruction {
-    fn get_type(&self) -> Type {
+    fn get_type(&self, types: &Types) -> TypeRef {
         match self {
-            Instruction::Add(i) => i.get_type(),
-            Instruction::Sub(i) => i.get_type(),
-            Instruction::Mul(i) => i.get_type(),
-            Instruction::UDiv(i) => i.get_type(),
-            Instruction::SDiv(i) => i.get_type(),
-            Instruction::URem(i) => i.get_type(),
-            Instruction::SRem(i) => i.get_type(),
-            Instruction::And(i) => i.get_type(),
-            Instruction::Or(i) => i.get_type(),
-            Instruction::Xor(i) => i.get_type(),
-            Instruction::Shl(i) => i.get_type(),
-            Instruction::LShr(i) => i.get_type(),
-            Instruction::AShr(i) => i.get_type(),
-            Instruction::FAdd(i) => i.get_type(),
-            Instruction::FSub(i) => i.get_type(),
-            Instruction::FMul(i) => i.get_type(),
-            Instruction::FDiv(i) => i.get_type(),
-            Instruction::FRem(i) => i.get_type(),
-            Instruction::FNeg(i) => i.get_type(),
-            Instruction::ExtractElement(i) => i.get_type(),
-            Instruction::InsertElement(i) => i.get_type(),
-            Instruction::ShuffleVector(i) => i.get_type(),
-            Instruction::ExtractValue(i) => i.get_type(),
-            Instruction::InsertValue(i) => i.get_type(),
-            Instruction::Alloca(i) => i.get_type(),
-            Instruction::Load(i) => i.get_type(),
-            Instruction::Store(i) => i.get_type(),
-            Instruction::Fence(i) => i.get_type(),
-            Instruction::CmpXchg(i) => i.get_type(),
-            Instruction::AtomicRMW(i) => i.get_type(),
-            Instruction::GetElementPtr(i) => i.get_type(),
-            Instruction::Trunc(i) => i.get_type(),
-            Instruction::ZExt(i) => i.get_type(),
-            Instruction::SExt(i) => i.get_type(),
-            Instruction::FPTrunc(i) => i.get_type(),
-            Instruction::FPExt(i) => i.get_type(),
-            Instruction::FPToUI(i) => i.get_type(),
-            Instruction::FPToSI(i) => i.get_type(),
-            Instruction::UIToFP(i) => i.get_type(),
-            Instruction::SIToFP(i) => i.get_type(),
-            Instruction::PtrToInt(i) => i.get_type(),
-            Instruction::IntToPtr(i) => i.get_type(),
-            Instruction::BitCast(i) => i.get_type(),
-            Instruction::AddrSpaceCast(i) => i.get_type(),
-            Instruction::ICmp(i) => i.get_type(),
-            Instruction::FCmp(i) => i.get_type(),
-            Instruction::Phi(i) => i.get_type(),
-            Instruction::Select(i) => i.get_type(),
-            Instruction::Freeze(i) => i.get_type(),
-            Instruction::Call(i) => i.get_type(),
-            Instruction::VAArg(i) => i.get_type(),
-            Instruction::LandingPad(i) => i.get_type(),
-            Instruction::CatchPad(i) => i.get_type(),
-            Instruction::CleanupPad(i) => i.get_type(),
+            Instruction::Add(i) => types.type_of(i),
+            Instruction::Sub(i) => types.type_of(i),
+            Instruction::Mul(i) => types.type_of(i),
+            Instruction::UDiv(i) => types.type_of(i),
+            Instruction::SDiv(i) => types.type_of(i),
+            Instruction::URem(i) => types.type_of(i),
+            Instruction::SRem(i) => types.type_of(i),
+            Instruction::And(i) => types.type_of(i),
+            Instruction::Or(i) => types.type_of(i),
+            Instruction::Xor(i) => types.type_of(i),
+            Instruction::Shl(i) => types.type_of(i),
+            Instruction::LShr(i) => types.type_of(i),
+            Instruction::AShr(i) => types.type_of(i),
+            Instruction::FAdd(i) => types.type_of(i),
+            Instruction::FSub(i) => types.type_of(i),
+            Instruction::FMul(i) => types.type_of(i),
+            Instruction::FDiv(i) => types.type_of(i),
+            Instruction::FRem(i) => types.type_of(i),
+            Instruction::FNeg(i) => types.type_of(i),
+            Instruction::ExtractElement(i) => types.type_of(i),
+            Instruction::InsertElement(i) => types.type_of(i),
+            Instruction::ShuffleVector(i) => types.type_of(i),
+            Instruction::ExtractValue(i) => types.type_of(i),
+            Instruction::InsertValue(i) => types.type_of(i),
+            Instruction::Alloca(i) => types.type_of(i),
+            Instruction::Load(i) => types.type_of(i),
+            Instruction::Store(i) => types.type_of(i),
+            Instruction::Fence(i) => types.type_of(i),
+            Instruction::CmpXchg(i) => types.type_of(i),
+            Instruction::AtomicRMW(i) => types.type_of(i),
+            Instruction::GetElementPtr(i) => types.type_of(i),
+            Instruction::Trunc(i) => types.type_of(i),
+            Instruction::ZExt(i) => types.type_of(i),
+            Instruction::SExt(i) => types.type_of(i),
+            Instruction::FPTrunc(i) => types.type_of(i),
+            Instruction::FPExt(i) => types.type_of(i),
+            Instruction::FPToUI(i) => types.type_of(i),
+            Instruction::FPToSI(i) => types.type_of(i),
+            Instruction::UIToFP(i) => types.type_of(i),
+            Instruction::SIToFP(i) => types.type_of(i),
+            Instruction::PtrToInt(i) => types.type_of(i),
+            Instruction::IntToPtr(i) => types.type_of(i),
+            Instruction::BitCast(i) => types.type_of(i),
+            Instruction::AddrSpaceCast(i) => types.type_of(i),
+            Instruction::ICmp(i) => types.type_of(i),
+            Instruction::FCmp(i) => types.type_of(i),
+            Instruction::Phi(i) => types.type_of(i),
+            Instruction::Select(i) => types.type_of(i),
+            Instruction::Freeze(i) => types.type_of(i),
+            Instruction::Call(i) => types.type_of(i),
+            Instruction::VAArg(i) => types.type_of(i),
+            Instruction::LandingPad(i) => types.type_of(i),
+            Instruction::CatchPad(i) => types.type_of(i),
+            Instruction::CleanupPad(i) => types.type_of(i),
         }
     }
 }
@@ -556,8 +555,8 @@ macro_rules! impl_binop {
 macro_rules! unop_same_type {
     ($inst:ty) => {
         impl Typed for $inst {
-            fn get_type(&self) -> Type {
-                self.get_operand().get_type()
+            fn get_type(&self, types: &Types) -> TypeRef {
+                types.type_of(self.get_operand())
             }
         }
     };
@@ -567,10 +566,10 @@ macro_rules! unop_same_type {
 macro_rules! binop_same_type {
     ($inst:ty) => {
         impl Typed for $inst {
-            fn get_type(&self) -> Type {
-                let t = self.get_operand0().get_type();
-                assert_eq!(t, self.get_operand1().get_type());
-                t
+            fn get_type(&self, types: &Types) -> TypeRef {
+                let ty = types.type_of(self.get_operand0());
+                assert_eq!(ty, types.type_of(self.get_operand1()));
+                ty
             }
         }
     };
@@ -580,8 +579,8 @@ macro_rules! binop_same_type {
 macro_rules! binop_left_type {
     ($inst:ty) => {
         impl Typed for $inst {
-            fn get_type(&self) -> Type {
-                self.get_operand0().get_type()
+            fn get_type(&self, types: &Types) -> TypeRef {
+                types.type_of(self.get_operand0())
             }
         }
     };
@@ -591,7 +590,7 @@ macro_rules! binop_left_type {
 macro_rules! explicitly_typed {
     ($inst:ty) => {
         impl Typed for $inst {
-            fn get_type(&self) -> Type {
+            fn get_type(&self, _types: &Types) -> TypeRef {
                 self.to_type.clone()
             }
         }
@@ -601,8 +600,8 @@ macro_rules! explicitly_typed {
 macro_rules! void_typed {
     ($inst:ty) => {
         impl Typed for $inst {
-            fn get_type(&self) -> Type {
-                Type::VoidType
+            fn get_type(&self, types: &Types) -> TypeRef {
+                types.void()
             }
         }
     };
@@ -918,9 +917,9 @@ impl_inst!(ExtractElement, ExtractElement);
 impl_hasresult!(ExtractElement);
 
 impl Typed for ExtractElement {
-    fn get_type(&self) -> Type {
-        match self.vector.get_type() {
-            Type::VectorType { element_type, .. } => *element_type,
+    fn get_type(&self, types: &Types) -> TypeRef {
+        match types.type_of(&self.vector).as_ref() {
+            Type::VectorType { element_type, .. } => element_type.clone(),
             ty => panic!(
                 "Expected an ExtractElement vector to be VectorType, got {:?}",
                 ty
@@ -945,8 +944,8 @@ impl_inst!(InsertElement, InsertElement);
 impl_hasresult!(InsertElement);
 
 impl Typed for InsertElement {
-    fn get_type(&self) -> Type {
-        self.vector.get_type()
+    fn get_type(&self, types: &Types) -> TypeRef {
+        types.type_of(&self.vector)
     }
 }
 
@@ -965,14 +964,13 @@ impl_inst!(ShuffleVector, ShuffleVector);
 impl_hasresult!(ShuffleVector);
 
 impl Typed for ShuffleVector {
-    fn get_type(&self) -> Type {
-        let ty = self.operand0.get_type();
-        assert_eq!(ty, self.operand1.get_type());
-        match ty {
-            Type::VectorType { element_type, .. } => match self.mask.get_type() {
-                Type::VectorType { num_elements, .. } => Type::VectorType {
-                    element_type,
-                    num_elements,
+    fn get_type(&self, types: &Types) -> TypeRef {
+        let ty = types.type_of(&self.operand0);
+        assert_eq!(ty, types.type_of(&self.operand1));
+        match ty.as_ref() {
+            Type::VectorType { element_type, .. } => match types.type_of(&self.mask).as_ref() {
+                Type::VectorType { num_elements, .. } => {
+                    types.vector_of(element_type.clone(), *num_elements)
                 },
                 ty => panic!(
                     "Expected a ShuffleVector mask to be VectorType, got {:?}",
@@ -1002,16 +1000,16 @@ impl_inst!(ExtractValue, ExtractValue);
 impl_hasresult!(ExtractValue);
 
 impl Typed for ExtractValue {
-    fn get_type(&self) -> Type {
-        ev_type(self.aggregate.get_type(), self.indices.iter().copied())
+    fn get_type(&self, types: &Types) -> TypeRef {
+        ev_type(types.type_of(&self.aggregate), self.indices.iter().copied())
     }
 }
 
-fn ev_type(cur_type: Type, mut indices: impl Iterator<Item = u32>) -> Type {
+fn ev_type(cur_type: TypeRef, mut indices: impl Iterator<Item = u32>) -> TypeRef {
     match indices.next() {
         None => cur_type,
-        Some(index) => match cur_type {
-            Type::ArrayType { element_type, .. } => ev_type(*element_type, indices),
+        Some(index) => match cur_type.as_ref() {
+            Type::ArrayType { element_type, .. } => ev_type(element_type.clone(), indices),
             Type::StructType { element_types, .. } => ev_type(
                 element_types
                     .get(index as usize)
@@ -1043,8 +1041,8 @@ impl_inst!(InsertValue, InsertValue);
 impl_hasresult!(InsertValue);
 
 impl Typed for InsertValue {
-    fn get_type(&self) -> Type {
-        self.aggregate.get_type()
+    fn get_type(&self, types: &Types) -> TypeRef {
+        types.type_of(&self.aggregate)
     }
 }
 
@@ -1052,7 +1050,7 @@ impl Typed for InsertValue {
 /// See [LLVM 10 docs on the 'alloca' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#alloca-instruction)
 #[derive(PartialEq, Clone, Debug)]
 pub struct Alloca {
-    pub allocated_type: Type,
+    pub allocated_type: TypeRef,
     pub num_elements: Operand, // llvm-hs-pure has Option<Operand>
     pub dest: Name,
     pub alignment: u32,
@@ -1064,8 +1062,8 @@ impl_inst!(Alloca, Alloca);
 impl_hasresult!(Alloca);
 
 impl Typed for Alloca {
-    fn get_type(&self) -> Type {
-        Type::pointer_to(self.allocated_type.clone())
+    fn get_type(&self, types: &Types) -> TypeRef {
+        types.pointer_to(self.allocated_type.clone())
     }
 }
 
@@ -1086,9 +1084,9 @@ impl_inst!(Load, Load);
 impl_hasresult!(Load);
 
 impl Typed for Load {
-    fn get_type(&self) -> Type {
-        match self.address.get_type() {
-            Type::PointerType { pointee_type, .. } => *pointee_type,
+    fn get_type(&self, types: &Types) -> TypeRef {
+        match types.type_of(&self.address).as_ref() {
+            Type::PointerType { pointee_type, .. } => pointee_type.clone(),
             ty => panic!("Expected a load address to be PointerType, got {:?}", ty),
         }
     }
@@ -1143,13 +1141,10 @@ impl_inst!(CmpXchg, CmpXchg);
 impl_hasresult!(CmpXchg);
 
 impl Typed for CmpXchg {
-    fn get_type(&self) -> Type {
-        let ty = self.expected.get_type();
-        assert_eq!(ty, self.replacement.get_type());
-        Type::StructType {
-            element_types: vec![ty, Type::bool()],
-            is_packed: false,
-        }
+    fn get_type(&self, types: &Types) -> TypeRef {
+        let ty = types.type_of(&self.expected);
+        assert_eq!(ty, types.type_of(&self.replacement));
+        types.struct_of(vec![ty, types.bool()], false)
     }
 }
 
@@ -1171,9 +1166,9 @@ impl_inst!(AtomicRMW, AtomicRMW);
 impl_hasresult!(AtomicRMW);
 
 impl Typed for AtomicRMW {
-    fn get_type(&self) -> Type {
-        match self.address.get_type() {
-            Type::PointerType { pointee_type, .. } => *pointee_type,
+    fn get_type(&self, types: &Types) -> TypeRef {
+        match types.type_of(&self.address).as_ref() {
+            Type::PointerType { pointee_type, .. } => pointee_type.clone(),
             ty => panic!(
                 "Expected an AtomicRMW address to be PointerType, got {:?}",
                 ty
@@ -1199,34 +1194,40 @@ impl_inst!(GetElementPtr, GetElementPtr);
 impl_hasresult!(GetElementPtr);
 
 impl Typed for GetElementPtr {
-    fn get_type(&self) -> Type {
-        gep_type(&self.address.get_type(), self.indices.iter())
+    fn get_type(&self, types: &Types) -> TypeRef {
+        gep_type(types.type_of(&self.address), self.indices.iter(), types)
     }
 }
 
-fn gep_type<'a, 'b>(cur_type: &'a Type, mut indices: impl Iterator<Item = &'b Operand>) -> Type {
+fn gep_type<'o>(
+    cur_type: TypeRef,
+    mut indices: impl Iterator<Item = &'o Operand>,
+    types: &Types,
+) -> TypeRef {
     match indices.next() {
-        None => Type::pointer_to(cur_type.clone()),  // iterator is done
-        Some(index) => match cur_type {
-            Type::PointerType { pointee_type, .. } => gep_type(pointee_type, indices),
-            Type::VectorType { element_type, .. } => gep_type(element_type, indices),
-            Type::ArrayType { element_type, .. } => gep_type(element_type, indices),
+        None => types.pointer_to(cur_type),  // iterator is done
+        Some(index) => match cur_type.as_ref() {
+            Type::PointerType { pointee_type, .. } => gep_type(pointee_type.clone(), indices, types),
+            Type::VectorType { element_type, .. } => gep_type(element_type.clone(), indices, types),
+            Type::ArrayType { element_type, .. } => gep_type(element_type.clone(), indices, types),
             Type::StructType { element_types, .. } => {
                 if let Operand::ConstantOperand(Constant::Int { value, .. }) = index {
                     gep_type(
-                        element_types.get(*value as usize).expect("GEP index out of range"),
+                        element_types.get(*value as usize).cloned().expect("GEP index out of range"),
                         indices,
+                        types,
                     )
                 } else {
                     panic!("Expected GEP index on a struct to be a Operand::ConstantOperand(Constant::Int); got {:?}", index)
                 }
             },
-            Type::NamedStructType { ty, .. } => match ty {
-                None => panic!("GEP on an opaque struct type"),
-                Some(weak) => match weak.upgrade().expect("Weak reference disappeared").read().unwrap().deref() {
+            Type::NamedStructType { name } => match types.named_struct_def(name) {
+                None => panic!("Named struct without a definition (name {:?})", name),
+                Some(NamedStructDef::Opaque) => panic!("GEP on an opaque struct type (name {:?})", name),
+                Some(NamedStructDef::Defined(ty)) => match ty.as_ref() {
                     Type::StructType { element_types, .. } => {
                         if let Operand::ConstantOperand(Constant::Int { value, .. }) = index {
-                            gep_type(element_types.get(*value as usize).expect("GEP index out of range"), indices)
+                            gep_type(element_types.get(*value as usize).cloned().expect("GEP index out of range"), indices, types)
                         } else {
                             panic!("Expected GEP index on a struct to be a Operand::ConstantOperand(Constant::Int); got {:?}", index)
                         }
@@ -1244,7 +1245,7 @@ fn gep_type<'a, 'b>(cur_type: &'a Type, mut indices: impl Iterator<Item = &'b Op
 #[derive(PartialEq, Clone, Debug)]
 pub struct Trunc {
     pub operand: Operand,
-    pub to_type: Type,
+    pub to_type: TypeRef,
     pub dest: Name,
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
@@ -1259,7 +1260,7 @@ explicitly_typed!(Trunc);
 #[derive(PartialEq, Clone, Debug)]
 pub struct ZExt {
     pub operand: Operand,
-    pub to_type: Type,
+    pub to_type: TypeRef,
     pub dest: Name,
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
@@ -1274,7 +1275,7 @@ explicitly_typed!(ZExt);
 #[derive(PartialEq, Clone, Debug)]
 pub struct SExt {
     pub operand: Operand,
-    pub to_type: Type,
+    pub to_type: TypeRef,
     pub dest: Name,
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
@@ -1289,7 +1290,7 @@ explicitly_typed!(SExt);
 #[derive(PartialEq, Clone, Debug)]
 pub struct FPTrunc {
     pub operand: Operand,
-    pub to_type: Type,
+    pub to_type: TypeRef,
     pub dest: Name,
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
@@ -1304,7 +1305,7 @@ explicitly_typed!(FPTrunc);
 #[derive(PartialEq, Clone, Debug)]
 pub struct FPExt {
     pub operand: Operand,
-    pub to_type: Type,
+    pub to_type: TypeRef,
     pub dest: Name,
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
@@ -1319,7 +1320,7 @@ explicitly_typed!(FPExt);
 #[derive(PartialEq, Clone, Debug)]
 pub struct FPToUI {
     pub operand: Operand,
-    pub to_type: Type,
+    pub to_type: TypeRef,
     pub dest: Name,
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
@@ -1334,7 +1335,7 @@ explicitly_typed!(FPToUI);
 #[derive(PartialEq, Clone, Debug)]
 pub struct FPToSI {
     pub operand: Operand,
-    pub to_type: Type,
+    pub to_type: TypeRef,
     pub dest: Name,
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
@@ -1349,7 +1350,7 @@ explicitly_typed!(FPToSI);
 #[derive(PartialEq, Clone, Debug)]
 pub struct UIToFP {
     pub operand: Operand,
-    pub to_type: Type,
+    pub to_type: TypeRef,
     pub dest: Name,
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
@@ -1364,7 +1365,7 @@ explicitly_typed!(UIToFP);
 #[derive(PartialEq, Clone, Debug)]
 pub struct SIToFP {
     pub operand: Operand,
-    pub to_type: Type,
+    pub to_type: TypeRef,
     pub dest: Name,
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
@@ -1379,7 +1380,7 @@ explicitly_typed!(SIToFP);
 #[derive(PartialEq, Clone, Debug)]
 pub struct PtrToInt {
     pub operand: Operand,
-    pub to_type: Type,
+    pub to_type: TypeRef,
     pub dest: Name,
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
@@ -1394,7 +1395,7 @@ explicitly_typed!(PtrToInt);
 #[derive(PartialEq, Clone, Debug)]
 pub struct IntToPtr {
     pub operand: Operand,
-    pub to_type: Type,
+    pub to_type: TypeRef,
     pub dest: Name,
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
@@ -1409,7 +1410,7 @@ explicitly_typed!(IntToPtr);
 #[derive(PartialEq, Clone, Debug)]
 pub struct BitCast {
     pub operand: Operand,
-    pub to_type: Type,
+    pub to_type: TypeRef,
     pub dest: Name,
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
@@ -1423,7 +1424,7 @@ explicitly_typed!(BitCast);
 #[derive(PartialEq, Clone, Debug)]
 pub struct AddrSpaceCast {
     pub operand: Operand,
-    pub to_type: Type,
+    pub to_type: TypeRef,
     pub dest: Name,
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
@@ -1449,15 +1450,12 @@ impl_inst!(ICmp, ICmp);
 impl_hasresult!(ICmp);
 
 impl Typed for ICmp {
-    fn get_type(&self) -> Type {
-        let t = self.operand0.get_type();
-        assert_eq!(t, self.operand1.get_type());
-        match t {
-            Type::VectorType { num_elements, .. } => Type::VectorType {
-                element_type: Box::new(Type::bool()),
-                num_elements,
-            },
-            _ => Type::bool(),
+    fn get_type(&self, types: &Types) -> TypeRef {
+        let ty = types.type_of(&self.operand0);
+        assert_eq!(ty, types.type_of(&self.operand1));
+        match ty.as_ref() {
+            Type::VectorType { num_elements, .. } => types.vector_of(types.bool(), *num_elements),
+            _ => types.bool(),
         }
     }
 }
@@ -1478,15 +1476,12 @@ impl_inst!(FCmp, FCmp);
 impl_hasresult!(FCmp);
 
 impl Typed for FCmp {
-    fn get_type(&self) -> Type {
-        let t = self.operand0.get_type();
-        assert_eq!(t, self.operand1.get_type());
-        match t {
-            Type::VectorType { num_elements, .. } => Type::VectorType {
-                element_type: Box::new(Type::bool()),
-                num_elements,
-            },
-            _ => Type::bool(),
+    fn get_type(&self, types: &Types) -> TypeRef {
+        let ty = types.type_of(&self.operand0);
+        assert_eq!(ty, types.type_of(&self.operand1));
+        match ty.as_ref() {
+            Type::VectorType { num_elements, .. } => types.vector_of(types.bool(), *num_elements),
+            _ => types.bool(),
         }
     }
 }
@@ -1496,7 +1491,7 @@ impl Typed for FCmp {
 pub struct Phi {
     pub incoming_values: Vec<(Operand, Name)>,
     pub dest: Name,
-    pub to_type: Type,
+    pub to_type: TypeRef,
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -1520,9 +1515,9 @@ impl_inst!(Select, Select);
 impl_hasresult!(Select);
 
 impl Typed for Select {
-    fn get_type(&self) -> Type {
-        let t = self.true_value.get_type();
-        assert_eq!(t, self.false_value.get_type());
+    fn get_type(&self, types: &Types) -> TypeRef {
+        let t = types.type_of(&self.true_value);
+        assert_eq!(t, types.type_of(&self.false_value));
         t
     }
 }
@@ -1558,10 +1553,10 @@ pub struct Call {
 impl_inst!(Call, Call);
 
 impl Typed for Call {
-    fn get_type(&self) -> Type {
-        match self.function.get_type() {
-            Type::PointerType { pointee_type, .. } => match *pointee_type {
-                Type::FuncType { result_type, .. } => *result_type,
+    fn get_type(&self, types: &Types) -> TypeRef {
+        match types.type_of(&self.function).as_ref() {
+            Type::PointerType { pointee_type, .. } => match pointee_type.as_ref() {
+                Type::FuncType { result_type, .. } => result_type.clone(),
                 ty => panic!("Expected Call's function argument to be of type pointer-to-function, got pointer-to-{:?}", ty),
             },
             ty => panic!("Expected Call's function argument to be of type pointer-to-function, got {:?}", ty),
@@ -1573,7 +1568,7 @@ impl Typed for Call {
 #[derive(PartialEq, Clone, Debug)]
 pub struct VAArg {
     pub arg_list: Operand,
-    pub cur_type: Type,
+    pub cur_type: TypeRef,
     pub dest: Name,
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
@@ -1583,7 +1578,7 @@ impl_inst!(VAArg, VAArg);
 impl_hasresult!(VAArg);
 
 impl Typed for VAArg {
-    fn get_type(&self) -> Type {
+    fn get_type(&self, _types: &Types) -> TypeRef {
         self.cur_type.clone()
     }
 }
@@ -1592,7 +1587,7 @@ impl Typed for VAArg {
 /// See [LLVM 10 docs on the 'landingpad' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#landingpad-instruction)
 #[derive(PartialEq, Clone, Debug)]
 pub struct LandingPad {
-    pub result_type: Type,
+    pub result_type: TypeRef,
     pub clauses: Vec<LandingPadClause>,
     pub dest: Name,
     pub cleanup: bool,
@@ -1604,7 +1599,7 @@ impl_inst!(LandingPad, LandingPad);
 impl_hasresult!(LandingPad);
 
 impl Typed for LandingPad {
-    fn get_type(&self) -> Type {
+    fn get_type(&self, _types: &Types) -> TypeRef {
         self.result_type.clone()
     }
 }
@@ -1624,8 +1619,8 @@ impl_inst!(CatchPad, CatchPad);
 impl_hasresult!(CatchPad);
 
 impl Typed for CatchPad {
-    fn get_type(&self) -> Type {
-        Type::TokenType
+    fn get_type(&self, types: &Types) -> TypeRef {
+        types.token_type()
     }
 }
 
@@ -1644,8 +1639,8 @@ impl_inst!(CleanupPad, CleanupPad);
 impl_hasresult!(CleanupPad);
 
 impl Typed for CleanupPad {
-    fn get_type(&self) -> Type {
-        Type::TokenType
+    fn get_type(&self, types: &Types) -> TypeRef {
+        types.token_type()
     }
 }
 
@@ -1702,7 +1697,7 @@ pub enum MemoryOrdering {
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct InlineAssembly {
     pub assembly: String,
-    pub ty: Type,
+    pub ty: TypeRef,
     pub constraints: String,
     pub has_side_effects: bool,
     pub align_stack: bool,
@@ -1719,11 +1714,11 @@ pub enum AssemblyDialect {
 /// `InlineAssembly` needs more fields, but the necessary getter functions are apparently not exposed in the LLVM C API (only the C++ API)
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct InlineAssembly {
-    pub ty: Type,
+    pub ty: TypeRef,
 }
 
 impl Typed for InlineAssembly {
-    fn get_type(&self) -> Type {
+    fn get_type(&self, _types: &Types) -> TypeRef {
         self.ty.clone()
     }
 }
@@ -1768,7 +1763,7 @@ use crate::basicblock::BBMap;
 use crate::constant::GlobalNameMap;
 use crate::from_llvm::*;
 use crate::operand::ValToNameMap;
-use crate::types::TyNameMap;
+use crate::types::TypesBuilder;
 use llvm_sys::LLVMAtomicOrdering;
 use llvm_sys::LLVMAtomicRMWBinOp;
 use llvm_sys::LLVMOpcode;
@@ -1781,173 +1776,173 @@ impl Instruction {
         vnmap: &ValToNameMap,
         bbmap: &BBMap,
         gnmap: &GlobalNameMap,
-        tnmap: &mut TyNameMap,
+        types: &mut TypesBuilder,
     ) -> Self {
         debug!("Processing instruction {:?}", unsafe {
             print_to_string(inst)
         });
         match unsafe { LLVMGetInstructionOpcode(inst) } {
             LLVMOpcode::LLVMAdd => {
-                Instruction::Add(Add::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+                Instruction::Add(Add::from_llvm_ref(inst, ctr, vnmap, gnmap, types))
             },
             LLVMOpcode::LLVMSub => {
-                Instruction::Sub(Sub::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+                Instruction::Sub(Sub::from_llvm_ref(inst, ctr, vnmap, gnmap, types))
             },
             LLVMOpcode::LLVMMul => {
-                Instruction::Mul(Mul::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+                Instruction::Mul(Mul::from_llvm_ref(inst, ctr, vnmap, gnmap, types))
             },
             LLVMOpcode::LLVMUDiv => {
-                Instruction::UDiv(UDiv::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+                Instruction::UDiv(UDiv::from_llvm_ref(inst, ctr, vnmap, gnmap, types))
             },
             LLVMOpcode::LLVMSDiv => {
-                Instruction::SDiv(SDiv::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+                Instruction::SDiv(SDiv::from_llvm_ref(inst, ctr, vnmap, gnmap, types))
             },
             LLVMOpcode::LLVMURem => {
-                Instruction::URem(URem::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+                Instruction::URem(URem::from_llvm_ref(inst, ctr, vnmap, gnmap, types))
             },
             LLVMOpcode::LLVMSRem => {
-                Instruction::SRem(SRem::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+                Instruction::SRem(SRem::from_llvm_ref(inst, ctr, vnmap, gnmap, types))
             },
             LLVMOpcode::LLVMAnd => {
-                Instruction::And(And::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+                Instruction::And(And::from_llvm_ref(inst, ctr, vnmap, gnmap, types))
             },
             LLVMOpcode::LLVMOr => {
-                Instruction::Or(Or::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+                Instruction::Or(Or::from_llvm_ref(inst, ctr, vnmap, gnmap, types))
             },
             LLVMOpcode::LLVMXor => {
-                Instruction::Xor(Xor::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+                Instruction::Xor(Xor::from_llvm_ref(inst, ctr, vnmap, gnmap, types))
             },
             LLVMOpcode::LLVMShl => {
-                Instruction::Shl(Shl::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+                Instruction::Shl(Shl::from_llvm_ref(inst, ctr, vnmap, gnmap, types))
             },
             LLVMOpcode::LLVMLShr => {
-                Instruction::LShr(LShr::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+                Instruction::LShr(LShr::from_llvm_ref(inst, ctr, vnmap, gnmap, types))
             },
             LLVMOpcode::LLVMAShr => {
-                Instruction::AShr(AShr::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+                Instruction::AShr(AShr::from_llvm_ref(inst, ctr, vnmap, gnmap, types))
             },
             LLVMOpcode::LLVMFAdd => {
-                Instruction::FAdd(FAdd::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+                Instruction::FAdd(FAdd::from_llvm_ref(inst, ctr, vnmap, gnmap, types))
             },
             LLVMOpcode::LLVMFSub => {
-                Instruction::FSub(FSub::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+                Instruction::FSub(FSub::from_llvm_ref(inst, ctr, vnmap, gnmap, types))
             },
             LLVMOpcode::LLVMFMul => {
-                Instruction::FMul(FMul::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+                Instruction::FMul(FMul::from_llvm_ref(inst, ctr, vnmap, gnmap, types))
             },
             LLVMOpcode::LLVMFDiv => {
-                Instruction::FDiv(FDiv::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+                Instruction::FDiv(FDiv::from_llvm_ref(inst, ctr, vnmap, gnmap, types))
             },
             LLVMOpcode::LLVMFRem => {
-                Instruction::FRem(FRem::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+                Instruction::FRem(FRem::from_llvm_ref(inst, ctr, vnmap, gnmap, types))
             },
             LLVMOpcode::LLVMFNeg => {
-                Instruction::FNeg(FNeg::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+                Instruction::FNeg(FNeg::from_llvm_ref(inst, ctr, vnmap, gnmap, types))
             },
             LLVMOpcode::LLVMExtractElement => Instruction::ExtractElement(
-                ExtractElement::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap),
+                ExtractElement::from_llvm_ref(inst, ctr, vnmap, gnmap, types),
             ),
             LLVMOpcode::LLVMInsertElement => Instruction::InsertElement(
-                InsertElement::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap),
+                InsertElement::from_llvm_ref(inst, ctr, vnmap, gnmap, types),
             ),
             LLVMOpcode::LLVMShuffleVector => Instruction::ShuffleVector(
-                ShuffleVector::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap),
+                ShuffleVector::from_llvm_ref(inst, ctr, vnmap, gnmap, types),
             ),
             LLVMOpcode::LLVMExtractValue => {
-                Instruction::ExtractValue(ExtractValue::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+                Instruction::ExtractValue(ExtractValue::from_llvm_ref(inst, ctr, vnmap, gnmap, types))
             },
             LLVMOpcode::LLVMInsertValue => {
-                Instruction::InsertValue(InsertValue::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+                Instruction::InsertValue(InsertValue::from_llvm_ref(inst, ctr, vnmap, gnmap, types))
             },
             LLVMOpcode::LLVMAlloca => {
-                Instruction::Alloca(Alloca::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+                Instruction::Alloca(Alloca::from_llvm_ref(inst, ctr, vnmap, gnmap, types))
             },
             LLVMOpcode::LLVMLoad => {
-                Instruction::Load(Load::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+                Instruction::Load(Load::from_llvm_ref(inst, ctr, vnmap, gnmap, types))
             },
             LLVMOpcode::LLVMStore => {
-                Instruction::Store(Store::from_llvm_ref(inst, vnmap, gnmap, tnmap))
+                Instruction::Store(Store::from_llvm_ref(inst, vnmap, gnmap, types))
             },
             LLVMOpcode::LLVMFence => {
                 Instruction::Fence(Fence::from_llvm_ref(inst))
             },
             LLVMOpcode::LLVMAtomicCmpXchg => {
-                Instruction::CmpXchg(CmpXchg::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+                Instruction::CmpXchg(CmpXchg::from_llvm_ref(inst, ctr, vnmap, gnmap, types))
             },
             LLVMOpcode::LLVMAtomicRMW => {
-                Instruction::AtomicRMW(AtomicRMW::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+                Instruction::AtomicRMW(AtomicRMW::from_llvm_ref(inst, ctr, vnmap, gnmap, types))
             },
             LLVMOpcode::LLVMGetElementPtr => Instruction::GetElementPtr(
-                GetElementPtr::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap),
+                GetElementPtr::from_llvm_ref(inst, ctr, vnmap, gnmap, types),
             ),
             LLVMOpcode::LLVMTrunc => {
-                Instruction::Trunc(Trunc::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+                Instruction::Trunc(Trunc::from_llvm_ref(inst, ctr, vnmap, gnmap, types))
             },
             LLVMOpcode::LLVMZExt => {
-                Instruction::ZExt(ZExt::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+                Instruction::ZExt(ZExt::from_llvm_ref(inst, ctr, vnmap, gnmap, types))
             },
             LLVMOpcode::LLVMSExt => {
-                Instruction::SExt(SExt::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+                Instruction::SExt(SExt::from_llvm_ref(inst, ctr, vnmap, gnmap, types))
             },
             LLVMOpcode::LLVMFPTrunc => {
-                Instruction::FPTrunc(FPTrunc::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+                Instruction::FPTrunc(FPTrunc::from_llvm_ref(inst, ctr, vnmap, gnmap, types))
             },
             LLVMOpcode::LLVMFPExt => {
-                Instruction::FPExt(FPExt::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+                Instruction::FPExt(FPExt::from_llvm_ref(inst, ctr, vnmap, gnmap, types))
             },
             LLVMOpcode::LLVMFPToUI => {
-                Instruction::FPToUI(FPToUI::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+                Instruction::FPToUI(FPToUI::from_llvm_ref(inst, ctr, vnmap, gnmap, types))
             },
             LLVMOpcode::LLVMFPToSI => {
-                Instruction::FPToSI(FPToSI::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+                Instruction::FPToSI(FPToSI::from_llvm_ref(inst, ctr, vnmap, gnmap, types))
             },
             LLVMOpcode::LLVMUIToFP => {
-                Instruction::UIToFP(UIToFP::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+                Instruction::UIToFP(UIToFP::from_llvm_ref(inst, ctr, vnmap, gnmap, types))
             },
             LLVMOpcode::LLVMSIToFP => {
-                Instruction::SIToFP(SIToFP::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+                Instruction::SIToFP(SIToFP::from_llvm_ref(inst, ctr, vnmap, gnmap, types))
             },
             LLVMOpcode::LLVMPtrToInt => {
-                Instruction::PtrToInt(PtrToInt::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+                Instruction::PtrToInt(PtrToInt::from_llvm_ref(inst, ctr, vnmap, gnmap, types))
             },
             LLVMOpcode::LLVMIntToPtr => {
-                Instruction::IntToPtr(IntToPtr::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+                Instruction::IntToPtr(IntToPtr::from_llvm_ref(inst, ctr, vnmap, gnmap, types))
             },
             LLVMOpcode::LLVMBitCast => {
-                Instruction::BitCast(BitCast::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+                Instruction::BitCast(BitCast::from_llvm_ref(inst, ctr, vnmap, gnmap, types))
             },
             LLVMOpcode::LLVMAddrSpaceCast => Instruction::AddrSpaceCast(
-                AddrSpaceCast::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap),
+                AddrSpaceCast::from_llvm_ref(inst, ctr, vnmap, gnmap, types),
             ),
             LLVMOpcode::LLVMICmp => {
-                Instruction::ICmp(ICmp::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+                Instruction::ICmp(ICmp::from_llvm_ref(inst, ctr, vnmap, gnmap, types))
             },
             LLVMOpcode::LLVMFCmp => {
-                Instruction::FCmp(FCmp::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+                Instruction::FCmp(FCmp::from_llvm_ref(inst, ctr, vnmap, gnmap, types))
             },
             LLVMOpcode::LLVMPHI => {
-                Instruction::Phi(Phi::from_llvm_ref(inst, ctr, vnmap, bbmap, gnmap, tnmap))
+                Instruction::Phi(Phi::from_llvm_ref(inst, ctr, vnmap, bbmap, gnmap, types))
             },
             LLVMOpcode::LLVMSelect => {
-                Instruction::Select(Select::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+                Instruction::Select(Select::from_llvm_ref(inst, ctr, vnmap, gnmap, types))
             },
             LLVMOpcode::LLVMFreeze => {
-                Instruction::Freeze(Freeze::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+                Instruction::Freeze(Freeze::from_llvm_ref(inst, ctr, vnmap, gnmap, types))
             },
             LLVMOpcode::LLVMCall => {
-                Instruction::Call(Call::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+                Instruction::Call(Call::from_llvm_ref(inst, ctr, vnmap, gnmap, types))
             },
             LLVMOpcode::LLVMVAArg => {
-                Instruction::VAArg(VAArg::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+                Instruction::VAArg(VAArg::from_llvm_ref(inst, ctr, vnmap, gnmap, types))
             },
             LLVMOpcode::LLVMLandingPad => {
-                Instruction::LandingPad(LandingPad::from_llvm_ref(inst, ctr, tnmap))
+                Instruction::LandingPad(LandingPad::from_llvm_ref(inst, ctr, types))
             },
             LLVMOpcode::LLVMCatchPad => {
-                Instruction::CatchPad(CatchPad::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+                Instruction::CatchPad(CatchPad::from_llvm_ref(inst, ctr, vnmap, gnmap, types))
             },
             LLVMOpcode::LLVMCleanupPad => {
-                Instruction::CleanupPad(CleanupPad::from_llvm_ref(inst, ctr, vnmap, gnmap, tnmap))
+                Instruction::CleanupPad(CleanupPad::from_llvm_ref(inst, ctr, vnmap, gnmap, types))
             },
             opcode => panic!(
                 "Instruction::from_llvm_ref called with a terminator instruction (opcode {:?})",
@@ -1965,7 +1960,7 @@ macro_rules! unop_from_llvm {
                 ctr: &mut usize,
                 vnmap: &ValToNameMap,
                 gnmap: &GlobalNameMap,
-                tnmap: &mut TyNameMap,
+                types: &mut TypesBuilder,
             ) -> Self {
                 assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 1);
                 Self {
@@ -1973,7 +1968,7 @@ macro_rules! unop_from_llvm {
                         unsafe { LLVMGetOperand(inst, 0) },
                         vnmap,
                         gnmap,
-                        tnmap,
+                        types,
                     ),
                     dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
                     debugloc: DebugLoc::from_llvm_with_col(inst),
@@ -1992,7 +1987,7 @@ macro_rules! binop_from_llvm {
                 ctr: &mut usize,
                 vnmap: &ValToNameMap,
                 gnmap: &GlobalNameMap,
-                tnmap: &mut TyNameMap,
+                types: &mut TypesBuilder,
             ) -> Self {
                 assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 2);
                 Self {
@@ -2000,13 +1995,13 @@ macro_rules! binop_from_llvm {
                         unsafe { LLVMGetOperand(inst, 0) },
                         vnmap,
                         gnmap,
-                        tnmap,
+                        types,
                     ),
                     operand1: Operand::from_llvm_ref(
                         unsafe { LLVMGetOperand(inst, 1) },
                         vnmap,
                         gnmap,
-                        tnmap,
+                        types,
                     ),
                     dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
                     debugloc: DebugLoc::from_llvm_with_col(inst),
@@ -2044,12 +2039,12 @@ impl ExtractElement {
         ctr: &mut usize,
         vnmap: &ValToNameMap,
         gnmap: &GlobalNameMap,
-        tnmap: &mut TyNameMap,
+        types: &mut TypesBuilder,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 2);
         Self {
-            vector: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 0) }, vnmap, gnmap, tnmap),
-            index: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 1) }, vnmap, gnmap, tnmap),
+            vector: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 0) }, vnmap, gnmap, types),
+            index: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 1) }, vnmap, gnmap, types),
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
             debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
@@ -2063,18 +2058,18 @@ impl InsertElement {
         ctr: &mut usize,
         vnmap: &ValToNameMap,
         gnmap: &GlobalNameMap,
-        tnmap: &mut TyNameMap,
+        types: &mut TypesBuilder,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 3);
         Self {
-            vector: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 0) }, vnmap, gnmap, tnmap),
+            vector: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 0) }, vnmap, gnmap, types),
             element: Operand::from_llvm_ref(
                 unsafe { LLVMGetOperand(inst, 1) },
                 vnmap,
                 gnmap,
-                tnmap,
+                types,
             ),
-            index: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 2) }, vnmap, gnmap, tnmap),
+            index: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 2) }, vnmap, gnmap, types),
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
             debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
@@ -2088,7 +2083,7 @@ impl ShuffleVector {
         ctr: &mut usize,
         vnmap: &ValToNameMap,
         gnmap: &GlobalNameMap,
-        tnmap: &mut TyNameMap,
+        types: &mut TypesBuilder,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 3);
         Self {
@@ -2096,15 +2091,15 @@ impl ShuffleVector {
                 unsafe { LLVMGetOperand(inst, 0) },
                 vnmap,
                 gnmap,
-                tnmap,
+                types,
             ),
             operand1: Operand::from_llvm_ref(
                 unsafe { LLVMGetOperand(inst, 1) },
                 vnmap,
                 gnmap,
-                tnmap,
+                types,
             ),
-            mask: Constant::from_llvm_ref(unsafe { LLVMGetOperand(inst, 2) }, gnmap, tnmap),
+            mask: Constant::from_llvm_ref(unsafe { LLVMGetOperand(inst, 2) }, gnmap, types),
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
             debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
@@ -2118,7 +2113,7 @@ impl ExtractValue {
         ctr: &mut usize,
         vnmap: &ValToNameMap,
         gnmap: &GlobalNameMap,
-        tnmap: &mut TyNameMap,
+        types: &mut TypesBuilder,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 1);
         Self {
@@ -2126,7 +2121,7 @@ impl ExtractValue {
                 unsafe { LLVMGetOperand(inst, 0) },
                 vnmap,
                 gnmap,
-                tnmap,
+                types,
             ),
             indices: unsafe {
                 let num_indices = LLVMGetNumIndices(inst);
@@ -2146,7 +2141,7 @@ impl InsertValue {
         ctr: &mut usize,
         vnmap: &ValToNameMap,
         gnmap: &GlobalNameMap,
-        tnmap: &mut TyNameMap,
+        types: &mut TypesBuilder,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 2);
         Self {
@@ -2154,13 +2149,13 @@ impl InsertValue {
                 unsafe { LLVMGetOperand(inst, 0) },
                 vnmap,
                 gnmap,
-                tnmap,
+                types,
             ),
             element: Operand::from_llvm_ref(
                 unsafe { LLVMGetOperand(inst, 1) },
                 vnmap,
                 gnmap,
-                tnmap,
+                types,
             ),
             indices: unsafe {
                 let num_indices = LLVMGetNumIndices(inst);
@@ -2180,16 +2175,16 @@ impl Alloca {
         ctr: &mut usize,
         vnmap: &ValToNameMap,
         gnmap: &GlobalNameMap,
-        tnmap: &mut TyNameMap,
+        types: &mut TypesBuilder,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 1);
         Self {
-            allocated_type: Type::from_llvm_ref(unsafe { LLVMGetAllocatedType(inst) }, tnmap),
+            allocated_type: types.type_from_llvm_ref(unsafe { LLVMGetAllocatedType(inst) }),
             num_elements: Operand::from_llvm_ref(
                 unsafe { LLVMGetOperand(inst, 0) }, // This is a guess. or maybe num_elements is included in allocated_type?
                 vnmap,
                 gnmap,
-                tnmap,
+                types,
             ),
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
             alignment: unsafe { LLVMGetAlignment(inst) },
@@ -2205,7 +2200,7 @@ impl Load {
         ctr: &mut usize,
         vnmap: &ValToNameMap,
         gnmap: &GlobalNameMap,
-        tnmap: &mut TyNameMap,
+        types: &mut TypesBuilder,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 1);
         Self {
@@ -2213,7 +2208,7 @@ impl Load {
                 unsafe { LLVMGetOperand(inst, 0) },
                 vnmap,
                 gnmap,
-                tnmap,
+                types,
             ),
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
             volatile: unsafe { LLVMGetVolatile(inst) } != 0,
@@ -2240,7 +2235,7 @@ impl Store {
         inst: LLVMValueRef,
         vnmap: &ValToNameMap,
         gnmap: &GlobalNameMap,
-        tnmap: &mut TyNameMap,
+        types: &mut TypesBuilder,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 2);
         Self {
@@ -2248,9 +2243,9 @@ impl Store {
                 unsafe { LLVMGetOperand(inst, 1) },
                 vnmap,
                 gnmap,
-                tnmap,
+                types,
             ),
-            value: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 0) }, vnmap, gnmap, tnmap),
+            value: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 0) }, vnmap, gnmap, types),
             volatile: unsafe { LLVMGetVolatile(inst) } != 0,
             atomicity: {
                 let ordering = unsafe { LLVMGetOrdering(inst) };
@@ -2290,7 +2285,7 @@ impl CmpXchg {
         ctr: &mut usize,
         vnmap: &ValToNameMap,
         gnmap: &GlobalNameMap,
-        tnmap: &mut TyNameMap,
+        types: &mut TypesBuilder,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 3);
         Self {
@@ -2298,19 +2293,19 @@ impl CmpXchg {
                 unsafe { LLVMGetOperand(inst, 0) },
                 vnmap,
                 gnmap,
-                tnmap,
+                types,
             ),
             expected: Operand::from_llvm_ref(
                 unsafe { LLVMGetOperand(inst, 1) },
                 vnmap,
                 gnmap,
-                tnmap,
+                types,
             ),
             replacement: Operand::from_llvm_ref(
                 unsafe { LLVMGetOperand(inst, 2) },
                 vnmap,
                 gnmap,
-                tnmap,
+                types,
             ),
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
             volatile: unsafe { LLVMGetVolatile(inst) } != 0,
@@ -2336,7 +2331,7 @@ impl AtomicRMW {
         ctr: &mut usize,
         vnmap: &ValToNameMap,
         gnmap: &GlobalNameMap,
-        tnmap: &mut TyNameMap,
+        types: &mut TypesBuilder,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 2);
         Self {
@@ -2345,9 +2340,9 @@ impl AtomicRMW {
                 unsafe { LLVMGetOperand(inst, 0) },
                 vnmap,
                 gnmap,
-                tnmap,
+                types,
             ),
-            value: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 1) }, vnmap, gnmap, tnmap),
+            value: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 1) }, vnmap, gnmap, types),
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
             volatile: unsafe { LLVMGetVolatile(inst) } != 0,
             atomicity: Atomicity {
@@ -2366,14 +2361,14 @@ impl GetElementPtr {
         ctr: &mut usize,
         vnmap: &ValToNameMap,
         gnmap: &GlobalNameMap,
-        tnmap: &mut TyNameMap,
+        types: &mut TypesBuilder,
     ) -> Self {
         Self {
             address: Operand::from_llvm_ref(
                 unsafe { LLVMGetOperand(inst, 0) },
                 vnmap,
                 gnmap,
-                tnmap,
+                types,
             ),
             indices: {
                 let num_indices = unsafe { LLVMGetNumIndices(inst) };
@@ -2383,7 +2378,7 @@ impl GetElementPtr {
                             unsafe { LLVMGetOperand(inst, i) },
                             vnmap,
                             gnmap,
-                            tnmap,
+                            types,
                         )
                     })
                     .collect()
@@ -2406,7 +2401,7 @@ macro_rules! typed_unop_from_llvm {
                 ctr: &mut usize,
                 vnmap: &ValToNameMap,
                 gnmap: &GlobalNameMap,
-                tnmap: &mut TyNameMap,
+                types: &mut TypesBuilder,
             ) -> Self {
                 assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 1);
                 Self {
@@ -2414,9 +2409,9 @@ macro_rules! typed_unop_from_llvm {
                         unsafe { LLVMGetOperand(inst, 0) },
                         vnmap,
                         gnmap,
-                        tnmap,
+                        types,
                     ),
-                    to_type: Type::from_llvm_ref(unsafe { LLVMTypeOf(inst) }, tnmap),
+                    to_type: types.type_from_llvm_ref(unsafe { LLVMTypeOf(inst) }),
                     dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
                     debugloc: DebugLoc::from_llvm_with_col(inst),
                     // metadata: InstructionMetadata::from_llvm_inst(inst),
@@ -2446,7 +2441,7 @@ impl ICmp {
         ctr: &mut usize,
         vnmap: &ValToNameMap,
         gnmap: &GlobalNameMap,
-        tnmap: &mut TyNameMap,
+        types: &mut TypesBuilder,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 2);
         Self {
@@ -2455,13 +2450,13 @@ impl ICmp {
                 unsafe { LLVMGetOperand(inst, 0) },
                 vnmap,
                 gnmap,
-                tnmap,
+                types,
             ),
             operand1: Operand::from_llvm_ref(
                 unsafe { LLVMGetOperand(inst, 1) },
                 vnmap,
                 gnmap,
-                tnmap,
+                types,
             ),
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
             debugloc: DebugLoc::from_llvm_with_col(inst),
@@ -2476,7 +2471,7 @@ impl FCmp {
         ctr: &mut usize,
         vnmap: &ValToNameMap,
         gnmap: &GlobalNameMap,
-        tnmap: &mut TyNameMap,
+        types: &mut TypesBuilder,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 2);
         Self {
@@ -2485,13 +2480,13 @@ impl FCmp {
                 unsafe { LLVMGetOperand(inst, 0) },
                 vnmap,
                 gnmap,
-                tnmap,
+                types,
             ),
             operand1: Operand::from_llvm_ref(
                 unsafe { LLVMGetOperand(inst, 1) },
                 vnmap,
                 gnmap,
-                tnmap,
+                types,
             ),
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
             debugloc: DebugLoc::from_llvm_with_col(inst),
@@ -2507,7 +2502,7 @@ impl Phi {
         vnmap: &ValToNameMap,
         bbmap: &BBMap,
         gnmap: &GlobalNameMap,
-        tnmap: &mut TyNameMap,
+        types: &mut TypesBuilder,
     ) -> Self {
         Self {
             incoming_values: {
@@ -2518,7 +2513,7 @@ impl Phi {
                             unsafe { LLVMGetIncomingValue(inst, i) },
                             vnmap,
                             gnmap,
-                            tnmap,
+                            types,
                         );
                         let name = bbmap
                             .get(unsafe { &LLVMGetIncomingBlock(inst, i) })
@@ -2529,7 +2524,7 @@ impl Phi {
                     .collect()
             },
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
-            to_type: Type::from_llvm_ref(unsafe { LLVMTypeOf(inst) }, tnmap),
+            to_type: types.type_from_llvm_ref(unsafe { LLVMTypeOf(inst) }),
             debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
@@ -2542,7 +2537,7 @@ impl Select {
         ctr: &mut usize,
         vnmap: &ValToNameMap,
         gnmap: &GlobalNameMap,
-        tnmap: &mut TyNameMap,
+        types: &mut TypesBuilder,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 3);
         Self {
@@ -2550,19 +2545,19 @@ impl Select {
                 unsafe { LLVMGetOperand(inst, 0) },
                 vnmap,
                 gnmap,
-                tnmap,
+                types,
             ),
             true_value: Operand::from_llvm_ref(
                 unsafe { LLVMGetOperand(inst, 1) },
                 vnmap,
                 gnmap,
-                tnmap,
+                types,
             ),
             false_value: Operand::from_llvm_ref(
                 unsafe { LLVMGetOperand(inst, 2) },
                 vnmap,
                 gnmap,
-                tnmap,
+                types,
             ),
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
             debugloc: DebugLoc::from_llvm_with_col(inst),
@@ -2586,7 +2581,7 @@ impl CallInfo {
         inst: LLVMValueRef,
         vnmap: &ValToNameMap,
         gnmap: &GlobalNameMap,
-        tnmap: &mut TyNameMap,
+        types: &mut TypesBuilder,
     ) -> Self {
         use llvm_sys::{LLVMAttributeFunctionIndex, LLVMAttributeReturnIndex};
         Self {
@@ -2594,9 +2589,9 @@ impl CallInfo {
                 let called_val = unsafe { LLVMGetCalledValue(inst) };
                 let asm = unsafe { LLVMIsAInlineAsm(called_val) };
                 if !asm.is_null() {
-                    Either::Left(InlineAssembly::from_llvm_ref(asm, tnmap))
+                    Either::Left(InlineAssembly::from_llvm_ref(asm, types))
                 } else {
-                    Either::Right(Operand::from_llvm_ref(called_val, vnmap, gnmap, tnmap))
+                    Either::Right(Operand::from_llvm_ref(called_val, vnmap, gnmap, types))
                 }
             },
             arguments: {
@@ -2607,7 +2602,7 @@ impl CallInfo {
                             unsafe { LLVMGetOperand(inst, i) },
                             vnmap,
                             gnmap,
-                            tnmap,
+                            types,
                         );
                         let attrs = {
                             let num_attrs =
@@ -2666,9 +2661,9 @@ impl Call {
         ctr: &mut usize,
         vnmap: &ValToNameMap,
         gnmap: &GlobalNameMap,
-        tnmap: &mut TyNameMap,
+        types: &mut TypesBuilder,
     ) -> Self {
-        let callinfo = CallInfo::from_llvm_ref(inst, vnmap, gnmap, tnmap);
+        let callinfo = CallInfo::from_llvm_ref(inst, vnmap, gnmap, types);
         Self {
             function: callinfo.function,
             arguments: callinfo.arguments,
@@ -2696,7 +2691,7 @@ impl VAArg {
         ctr: &mut usize,
         vnmap: &ValToNameMap,
         gnmap: &GlobalNameMap,
-        tnmap: &mut TyNameMap,
+        types: &mut TypesBuilder,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 1);
         Self {
@@ -2704,9 +2699,9 @@ impl VAArg {
                 unsafe { LLVMGetOperand(inst, 0) },
                 vnmap,
                 gnmap,
-                tnmap,
+                types,
             ),
-            cur_type: Type::from_llvm_ref(unsafe { LLVMTypeOf(inst) }, tnmap),
+            cur_type: types.type_from_llvm_ref(unsafe { LLVMTypeOf(inst) }),
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
             debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
@@ -2718,10 +2713,10 @@ impl LandingPad {
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
         ctr: &mut usize,
-        tnmap: &mut TyNameMap,
+        types: &mut TypesBuilder,
     ) -> Self {
         Self {
-            result_type: Type::from_llvm_ref(unsafe { LLVMTypeOf(inst) }, tnmap),
+            result_type: types.type_from_llvm_ref(unsafe { LLVMTypeOf(inst) }),
             clauses: {
                 let num_clauses = unsafe { LLVMGetNumClauses(inst) };
                 (0 .. num_clauses)
@@ -2742,14 +2737,14 @@ impl CatchPad {
         ctr: &mut usize,
         vnmap: &ValToNameMap,
         gnmap: &GlobalNameMap,
-        tnmap: &mut TyNameMap,
+        types: &mut TypesBuilder,
     ) -> Self {
         Self {
             catch_switch: Operand::from_llvm_ref(
                 unsafe { LLVMGetParentCatchSwitch(inst) },
                 vnmap,
                 gnmap,
-                tnmap,
+                types,
             ),
             args: {
                 let num_args = unsafe { LLVMGetNumArgOperands(inst) };
@@ -2759,7 +2754,7 @@ impl CatchPad {
                             unsafe { LLVMGetArgOperand(inst, i) },
                             vnmap,
                             gnmap,
-                            tnmap,
+                            types,
                         )
                     })
                     .collect()
@@ -2777,14 +2772,14 @@ impl CleanupPad {
         ctr: &mut usize,
         vnmap: &ValToNameMap,
         gnmap: &GlobalNameMap,
-        tnmap: &mut TyNameMap,
+        types: &mut TypesBuilder,
     ) -> Self {
         Self {
             parent_pad: Operand::from_llvm_ref(
                 unsafe { LLVMGetOperand(inst, 0) },
                 vnmap,
                 gnmap,
-                tnmap,
+                types,
             ),
             args: {
                 let num_args = unsafe { LLVMGetNumArgOperands(inst) };
@@ -2794,7 +2789,7 @@ impl CleanupPad {
                             unsafe { LLVMGetArgOperand(inst, i) },
                             vnmap,
                             gnmap,
-                            tnmap,
+                            types,
                         )
                     })
                     .collect()
@@ -2852,13 +2847,13 @@ impl RMWBinOp {
 }
 
 impl InlineAssembly {
-    pub(crate) fn from_llvm_ref(asm: LLVMValueRef, tnmap: &mut TyNameMap) -> Self {
+    pub(crate) fn from_llvm_ref(asm: LLVMValueRef, types: &mut TypesBuilder) -> Self {
         // The LLVM C API appears to have no way to get any information about an
         // `InlineAssembly`? You can tell whether an `LLVMValueRef` is an
         // `InlineAssembly`, but once you know it is one, there seem to be no
         // other related methods
         Self {
-            ty: Type::from_llvm_ref(unsafe { LLVMTypeOf(asm) }, tnmap),
+            ty: types.type_from_llvm_ref(unsafe { LLVMTypeOf(asm) }),
         }
     }
 }

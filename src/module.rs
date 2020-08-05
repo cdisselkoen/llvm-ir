@@ -2,13 +2,11 @@ use crate::constant::Constant;
 use crate::debugloc::*;
 use crate::function::{Function, FunctionAttribute, GroupID};
 use crate::name::Name;
-use crate::types::{Type, Typed};
-use std::collections::HashMap;
+use crate::types::{Type, TypeRef, Typed, Types, TypesBuilder};
 use std::path::Path;
-use std::sync::{Arc, RwLock};
 
 /// See [LLVM 10 docs on Module Structure](https://releases.llvm.org/10.0.0/docs/LangRef.html#module-structure)
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct Module {
     /// The name of the module
     pub name: String,
@@ -25,24 +23,24 @@ pub struct Module {
     pub global_vars: Vec<GlobalVariable>,
     /// See [LLVM 10 docs on Global Aliases](https://releases.llvm.org/10.0.0/docs/LangRef.html#aliases)
     pub global_aliases: Vec<GlobalAlias>,
-    /// Structure types can be "identified", meaning named. This map holds the named structure types in this `Module`.
-    /// See [LLVM 10 docs on Structure Type](https://releases.llvm.org/10.0.0/docs/LangRef.html#structure-type).
-    /// A `None` value indicates an opaque type; see [LLVM 10 docs on Opaque Structure Types](https://releases.llvm.org/10.0.0/docs/LangRef.html#t-opaque).
-    /// Note that this map is from struct name to `Type::StructType` variant, not to `Type::NamedStructType` variant (which would be redundant).
-    ///
-    /// `Arc<RwLock<_>>` is used rather than `Rc<RefCell<_>>` so that `Module` can remain `Sync`.
-    /// This is important because it allows multiple threads to simultaneously access a
-    /// single (immutable) `Module`.
-    pub named_struct_types: HashMap<String, Option<Arc<RwLock<Type>>>>,
     // --TODO not yet implemented-- pub function_attribute_groups: Vec<FunctionAttributeGroup>,
     /// See [LLVM 10 docs on Module-Level Inline Assembly](https://releases.llvm.org/10.0.0/docs/LangRef.html#moduleasm)
     pub inline_assembly: String,
     // --TODO not yet implemented-- pub metadata_nodes: Vec<(MetadataNodeID, MetadataNode)>,
     // --TODO not yet implemented-- pub named_metadatas: Vec<NamedMetadata>,
     // --TODO not yet implemented-- pub comdats: Vec<Comdat>,
+
+    /// Holds a reference to all of the `Type`s used in the `Module`, and
+    /// facilitates lookups so you can get a `TypeRef` to the `Type` you want.
+    pub types: Types,
 }
 
 impl Module {
+    /// Get the type of anything that is `Typed`.
+    pub fn type_of<T: Typed + ?Sized>(&self, t: &T) -> TypeRef {
+        self.types.type_of(t)
+    }
+
     /// Get the `Function` having the given `Name` (if any).
     /// Note that `Function`s are named with `String`s and not `Name`s.
     pub fn get_func_by_name(&self, name: &str) -> Option<&Function> {
@@ -106,7 +104,7 @@ pub struct GlobalVariable {
     pub linkage: Linkage,
     pub visibility: Visibility,
     pub is_constant: bool,
-    pub ty: Type,
+    pub ty: TypeRef,
     pub addr_space: AddrSpace,
     pub dll_storage_class: DLLStorageClass,
     pub thread_local_mode: ThreadLocalMode,
@@ -120,7 +118,7 @@ pub struct GlobalVariable {
 }
 
 impl Typed for GlobalVariable {
-    fn get_type(&self) -> Type {
+    fn get_type(&self, _types: &Types) -> TypeRef {
         self.ty.clone()
     }
 }
@@ -138,7 +136,7 @@ pub struct GlobalAlias {
     pub aliasee: Constant,
     pub linkage: Linkage,
     pub visibility: Visibility,
-    pub ty: Type,
+    pub ty: TypeRef,
     pub addr_space: AddrSpace,
     pub dll_storage_class: DLLStorageClass,
     pub thread_local_mode: ThreadLocalMode,
@@ -146,7 +144,7 @@ pub struct GlobalAlias {
 }
 
 impl Typed for GlobalAlias {
-    fn get_type(&self) -> Type {
+    fn get_type(&self, _types: &Types) -> TypeRef {
         self.ty.clone()
     }
 }
@@ -288,7 +286,6 @@ pub enum AlignType {
 
 use crate::constant::GlobalNameMap;
 use crate::from_llvm::*;
-use crate::types::TyNameMap;
 use llvm_sys::comdat::*;
 use llvm_sys::{
     LLVMDLLStorageClass,
@@ -323,7 +320,7 @@ impl Module {
             .collect();
         global_ctr = 0; // reset the global_ctr; the second pass should number everything exactly the same though
 
-        let mut tynamemap = TyNameMap::new();
+        let mut types = TypesBuilder::new();
 
         Self {
             name: unsafe { get_module_identifier(module) },
@@ -331,20 +328,20 @@ impl Module {
             data_layout: unsafe { get_data_layout_str(module) },
             target_triple: unsafe { get_target(module) },
             functions: get_defined_functions(module)
-                .map(|f| Function::from_llvm_ref(f, &gnmap, &mut tynamemap))
+                .map(|f| Function::from_llvm_ref(f, &gnmap, &mut types))
                 .collect(),
             global_vars: get_globals(module)
-                .map(|g| GlobalVariable::from_llvm_ref(g, &mut global_ctr, &gnmap, &mut tynamemap))
+                .map(|g| GlobalVariable::from_llvm_ref(g, &mut global_ctr, &gnmap, &mut types))
                 .collect(),
             global_aliases: get_global_aliases(module)
-                .map(|g| GlobalAlias::from_llvm_ref(g, &mut global_ctr, &gnmap, &mut tynamemap))
+                .map(|g| GlobalAlias::from_llvm_ref(g, &mut global_ctr, &gnmap, &mut types))
                 .collect(),
             // function_attribute_groups: unimplemented!("function_attribute_groups"),  // llvm-hs collects these in the decoder monad or something
-            named_struct_types: tynamemap,
             inline_assembly: unsafe { get_module_inline_asm(module) },
             // metadata_nodes: unimplemented!("metadata_nodes"),
             // named_metadatas: unimplemented!("named_metadatas"),
             // comdats: unimplemented!("comdats"),  // I think llvm-hs also collects these along the way
+            types: types.build(),
         }
     }
 }
@@ -354,20 +351,21 @@ impl GlobalVariable {
         global: LLVMValueRef,
         ctr: &mut usize,
         gnmap: &GlobalNameMap,
-        tnmap: &mut TyNameMap,
+        types: &mut TypesBuilder,
     ) -> Self {
-        let ty = Type::from_llvm_ref(unsafe { LLVMTypeOf(global) }, tnmap);
+        let ty = types.type_from_llvm_ref(unsafe { LLVMTypeOf(global) });
+        let addr_space = match ty.as_ref() {
+            Type::PointerType { addr_space, .. } => *addr_space,
+            _ => panic!("GlobalVariable has a non-pointer type, {:?}", ty),
+        };
         debug!("Processing a GlobalVariable with type {:?}", ty);
         Self {
             name: Name::name_or_num(unsafe { get_value_name(global) }, ctr),
             linkage: Linkage::from_llvm(unsafe { LLVMGetLinkage(global) }),
             visibility: Visibility::from_llvm(unsafe { LLVMGetVisibility(global) }),
             is_constant: unsafe { LLVMIsGlobalConstant(global) } != 0,
-            ty: ty.clone(),
-            addr_space: match ty {
-                Type::PointerType { addr_space, .. } => addr_space,
-                _ => panic!("GlobalVariable has a non-pointer type, {:?}", ty),
-            },
+            ty,
+            addr_space,
             dll_storage_class: DLLStorageClass::from_llvm(unsafe {
                 LLVMGetDLLStorageClass(global)
             }),
@@ -380,7 +378,7 @@ impl GlobalVariable {
                 if it.is_null() {
                     None
                 } else {
-                    Some(Constant::from_llvm_ref(it, gnmap, tnmap))
+                    Some(Constant::from_llvm_ref(it, gnmap, types))
                 }
             },
             section: unsafe { get_section(global) },
@@ -404,19 +402,20 @@ impl GlobalAlias {
         alias: LLVMValueRef,
         ctr: &mut usize,
         gnmap: &GlobalNameMap,
-        tnmap: &mut TyNameMap,
+        types: &mut TypesBuilder,
     ) -> Self {
-        let ty = Type::from_llvm_ref(unsafe { LLVMTypeOf(alias) }, tnmap);
+        let ty = types.type_from_llvm_ref(unsafe { LLVMTypeOf(alias) });
+        let addr_space = match ty.as_ref() {
+            Type::PointerType { addr_space, .. } => *addr_space,
+            _ => panic!("GlobalAlias has a non-pointer type, {:?}", ty),
+        };
         Self {
             name: Name::name_or_num(unsafe { get_value_name(alias) }, ctr),
-            aliasee: Constant::from_llvm_ref(unsafe { LLVMAliasGetAliasee(alias) }, gnmap, tnmap),
+            aliasee: Constant::from_llvm_ref(unsafe { LLVMAliasGetAliasee(alias) }, gnmap, types),
             linkage: Linkage::from_llvm(unsafe { LLVMGetLinkage(alias) }),
             visibility: Visibility::from_llvm(unsafe { LLVMGetVisibility(alias) }),
-            ty: ty.clone(),
-            addr_space: match ty {
-                Type::PointerType { addr_space, .. } => addr_space,
-                _ => panic!("GlobalAlias has a non-pointer type, {:?}", ty),
-            },
+            ty,
+            addr_space,
             dll_storage_class: DLLStorageClass::from_llvm(unsafe { LLVMGetDLLStorageClass(alias) }),
             thread_local_mode: ThreadLocalMode::from_llvm(unsafe { LLVMGetThreadLocalMode(alias) }),
             unnamed_addr: UnnamedAddr::from_llvm(unsafe { LLVMGetUnnamedAddress(alias) }),
