@@ -59,7 +59,9 @@ impl fmt::Display for DebugLoc {
             Some(col) => format!(", col {}", col),
             None => String::new(),
         };
-        write!(f, "{}{}{}, line {}{}",
+        write!(
+            f,
+            "{}{}{}, line {}{}",
             pretty_directory,
             if need_slash { "/" } else { "" },
             pretty_filename,

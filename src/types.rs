@@ -635,6 +635,7 @@ impl Types {
     }
 
     /// Get a `TypeRef` for the given `Type`
+    #[rustfmt::skip] // so we can keep each of the match arms more consistent with each other
     pub fn get_for_type(&self, ty: &Type) -> TypeRef {
         match ty {
             Type::VoidType => self.void(),
@@ -691,7 +692,9 @@ impl<K: Eq + Hash + Clone> TypeCache<K> {
     /// Get a `TypeRef` to the `Type` with the given key,
     /// or `None` if the `Type` is not present.
     fn lookup<Q: ?Sized>(&self, key: &Q) -> Option<TypeRef>
-        where K: Borrow<Q>, Q: Hash + Eq
+    where
+        K: Borrow<Q>,
+        Q: Hash + Eq,
     {
         self.map.get(key).cloned()
     }
