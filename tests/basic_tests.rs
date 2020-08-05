@@ -2,7 +2,7 @@ use either::Either;
 use llvm_ir::instruction;
 use llvm_ir::terminator;
 use llvm_ir::types::NamedStructDef;
-use llvm_ir::Constant;
+use llvm_ir::{Constant, ConstantRef};
 use llvm_ir::HasDebugLoc;
 use llvm_ir::IntPredicate;
 use llvm_ir::Module;
@@ -42,10 +42,10 @@ fn hellobc() {
         .unwrap_or_else(|_| panic!("Terminator should be a Ret but is {:?}", &bb.term));
     assert_eq!(
         ret.return_operand,
-        Some(Operand::ConstantOperand(Constant::Int {
+        Some(Operand::ConstantOperand(ConstantRef::new(Constant::Int {
             bits: 32,
             value: 0
-        }))
+        })))
     );
 
     // this file was compiled without debuginfo, so nothing should have a debugloc
@@ -145,7 +145,7 @@ fn loopbc() {
     assert_eq!(alloca.allocated_type, allocated_type);
     assert_eq!(
         alloca.num_elements,
-        Operand::ConstantOperand(Constant::Int { bits: 32, value: 1 }) // One element, which is an array of 10 elements. Not 10 elements, each of which are i32.
+        Operand::ConstantOperand(ConstantRef::new(Constant::Int { bits: 32, value: 1 })) // One element, which is an array of 10 elements. Not 10 elements, each of which are i32.
     );
     assert_eq!(alloca.alignment, 16);
     assert_eq!(module.type_of(alloca), module.types.pointer_to(allocated_type.clone()));
@@ -167,15 +167,22 @@ fn loopbc() {
     assert_eq!(module.type_of(&bitcast.operand), module.types.pointer_to(allocated_type.clone()));
     let lifetimestart: &instruction::Call =
         &bb2.instrs[2].clone().try_into().expect("Should be a call");
-    if let Either::Right(Operand::ConstantOperand(Constant::GlobalReference { ref name, ref ty } )) = lifetimestart.function {
-        assert_eq!(module.type_of(&lifetimestart.function), module.types.pointer_to(ty.clone()));  // lifetimestart.function should be a constant function pointer
-        assert_eq!(*name, Name::Name("llvm.lifetime.start.p0i8".to_owned()));
-        if let Type::FuncType { result_type, param_types, is_var_arg } = ty.as_ref() {
-            assert_eq!(result_type, &module.types.void());
-            assert_eq!(param_types, &vec![module.types.i64(), module.types.pointer_to(module.types.i8())]);
-            assert_eq!(*is_var_arg, false);
+    if let Either::Right(Operand::ConstantOperand(cref)) = &lifetimestart.function {
+        if let Constant::GlobalReference { ref name, ref ty } = cref.as_ref() {
+            assert_eq!(module.type_of(&lifetimestart.function), module.types.pointer_to(ty.clone()));  // lifetimestart.function should be a constant function pointer
+            assert_eq!(*name, Name::Name("llvm.lifetime.start.p0i8".to_owned()));
+            if let Type::FuncType { result_type, param_types, is_var_arg } = ty.as_ref() {
+                assert_eq!(result_type, &module.types.void());
+                assert_eq!(param_types, &vec![module.types.i64(), module.types.pointer_to(module.types.i8())]);
+                assert_eq!(*is_var_arg, false);
+            } else {
+                panic!("lifetimestart.function has unexpected type {:?}", ty);
+            }
         } else {
-            panic!("lifetimestart.function has unexpected type {:?}", ty);
+            panic!(
+                "lifetimestart.function not a GlobalReference as expected; it is actually another kind of Constant: {:?}",
+                cref
+            );
         }
     } else {
         panic!(
@@ -185,20 +192,27 @@ fn loopbc() {
     }
     let arg0 = &lifetimestart.arguments.get(0).expect("Expected an argument 0");
     let arg1 = &lifetimestart.arguments.get(1).expect("Expected an argument 1");
-    assert_eq!(arg0.0, Operand::ConstantOperand(Constant::Int { bits: 64, value: 40 } ));
+    assert_eq!(arg0.0, Operand::ConstantOperand(ConstantRef::new(Constant::Int { bits: 64, value: 40 } )));
     assert_eq!(arg1.0, Operand::LocalOperand { name: Name::Number(4), ty: module.types.pointer_to(module.types.i8()) } );
     assert_eq!(arg0.1, vec![]);  // should have no parameter attributes
     assert_eq!(arg1.1.len(), 1);  // should have one parameter attribute
     assert_eq!(lifetimestart.dest, None);
     let memset: &instruction::Call = &bb2.instrs[3].clone().try_into().expect("Should be a call");
-    if let Either::Right(Operand::ConstantOperand(Constant::GlobalReference { ref name, ref ty })) = memset.function {
-        assert_eq!(*name, Name::Name("llvm.memset.p0i8.i64".to_owned()));
-        if let Type::FuncType { result_type, param_types, is_var_arg } = ty.as_ref() {
-            assert_eq!(result_type, &module.types.void());
-            assert_eq!(param_types, &vec![module.types.pointer_to(module.types.i8()), module.types.i8(), module.types.i64(), module.types.bool()]);
-            assert_eq!(*is_var_arg, false);
+    if let Either::Right(Operand::ConstantOperand(cref)) = &memset.function {
+        if let Constant::GlobalReference { ref name, ref ty } = cref.as_ref() {
+            assert_eq!(*name, Name::Name("llvm.memset.p0i8.i64".to_owned()));
+            if let Type::FuncType { result_type, param_types, is_var_arg } = ty.as_ref() {
+                assert_eq!(result_type, &module.types.void());
+                assert_eq!(param_types, &vec![module.types.pointer_to(module.types.i8()), module.types.i8(), module.types.i64(), module.types.bool()]);
+                assert_eq!(*is_var_arg, false);
+            } else {
+                panic!("memset.function has unexpected type {:?}", ty);
+            }
         } else {
-            panic!("memset.function has unexpected type {:?}", ty);
+            panic!(
+                "memset.function not a GlobalReference as expected; it is actually another kind of Constant: {:?}",
+                cref
+            );
         }
     } else {
         panic!(
@@ -208,19 +222,19 @@ fn loopbc() {
     }
     assert_eq!(memset.arguments.len(), 4);
     assert_eq!(memset.arguments[0].0, Operand::LocalOperand { name: Name::Number(4), ty: module.types.pointer_to(module.types.i8()) } );
-    assert_eq!(memset.arguments[1].0, Operand::ConstantOperand(Constant::Int { bits: 8, value: 0 } ));
-    assert_eq!(memset.arguments[2].0, Operand::ConstantOperand(Constant::Int { bits: 64, value: 40 } ));
-    assert_eq!(memset.arguments[3].0, Operand::ConstantOperand(Constant::Int { bits: 1, value: 1 } ));
+    assert_eq!(memset.arguments[1].0, Operand::ConstantOperand(ConstantRef::new(Constant::Int { bits: 8, value: 0 })));
+    assert_eq!(memset.arguments[2].0, Operand::ConstantOperand(ConstantRef::new(Constant::Int { bits: 64, value: 40 })));
+    assert_eq!(memset.arguments[3].0, Operand::ConstantOperand(ConstantRef::new(Constant::Int { bits: 1, value: 1 })));
     assert_eq!(memset.arguments[0].1.len(), 2); // should have two parameter attributes
     let add: &instruction::Add = &bb2.instrs[4].clone().try_into().expect("Should be an add");
     assert_eq!(add.operand0, Operand::LocalOperand { name: Name::Number(1), ty: module.types.i32() } );
-    assert_eq!(add.operand1, Operand::ConstantOperand(Constant::Int { bits: 32, value: 0x0000_0000_FFFF_FFFF }));
+    assert_eq!(add.operand1, Operand::ConstantOperand(ConstantRef::new(Constant::Int { bits: 32, value: 0x0000_0000_FFFF_FFFF })));
     assert_eq!(add.dest, Name::Number(5));
     assert_eq!(module.type_of(add), module.types.i32());
     let icmp: &instruction::ICmp = &bb2.instrs[5].clone().try_into().expect("Should be an icmp");
     assert_eq!(icmp.predicate, IntPredicate::ULT);
     assert_eq!(icmp.operand0, Operand::LocalOperand { name: Name::Number(5), ty: module.types.i32() } );
-    assert_eq!(icmp.operand1, Operand::ConstantOperand(Constant::Int { bits: 32, value: 10 }));
+    assert_eq!(icmp.operand1, Operand::ConstantOperand(ConstantRef::new(Constant::Int { bits: 32, value: 10 })));
     assert_eq!(module.type_of(icmp), module.types.bool());
     let condbr: &terminator::CondBr = &bb2.term.clone().try_into().expect("Should be a condbr");
     assert_eq!(condbr.condition, Operand::LocalOperand { name: Name::Number(6), ty: module.types.bool() } );
@@ -245,7 +259,7 @@ fn loopbc() {
         phi.incoming_values,
         vec![
             (
-                Operand::ConstantOperand(Constant::Int { bits: 64, value: 0 }),
+                Operand::ConstantOperand(ConstantRef::new(Constant::Int { bits: 64, value: 0 })),
                 Name::Number(7)
             ),
             (
@@ -268,7 +282,7 @@ fn loopbc() {
     assert_eq!(
         gep.indices,
         vec![
-            Operand::ConstantOperand(Constant::Int { bits: 64, value: 0 }),
+            Operand::ConstantOperand(ConstantRef::new(Constant::Int { bits: 64, value: 0 })),
             Operand::LocalOperand {
                 name: Name::Number(11),
                 ty: module.types.i64()
@@ -312,15 +326,15 @@ fn switchbc() {
     let switch: &terminator::Switch = &bb.term.clone().try_into().expect("Should be a switch");
     assert_eq!(switch.operand, Operand::LocalOperand { name: Name::Number(0), ty: module.types.i32() });
     assert_eq!(switch.dests.len(), 9);
-    assert_eq!(switch.dests[0], (Constant::Int { bits: 32, value: 0 }, Name::Number(12)));
-    assert_eq!(switch.dests[1], (Constant::Int { bits: 32, value: 1 }, Name::Number(2)));
-    assert_eq!(switch.dests[2], (Constant::Int { bits: 32, value: 13 }, Name::Number(3)));
-    assert_eq!(switch.dests[3], (Constant::Int { bits: 32, value: 26 }, Name::Number(4)));
-    assert_eq!(switch.dests[4], (Constant::Int { bits: 32, value: 33 }, Name::Number(5)));
-    assert_eq!(switch.dests[5], (Constant::Int { bits: 32, value: 142 }, Name::Number(6)));
-    assert_eq!(switch.dests[6], (Constant::Int { bits: 32, value: 1678 }, Name::Number(7)));
-    assert_eq!(switch.dests[7], (Constant::Int { bits: 32, value: 88 }, Name::Number(8)));
-    assert_eq!(switch.dests[8], (Constant::Int { bits: 32, value: 101 }, Name::Number(9)));
+    assert_eq!(switch.dests[0], (ConstantRef::new(Constant::Int { bits: 32, value: 0 }), Name::Number(12)));
+    assert_eq!(switch.dests[1], (ConstantRef::new(Constant::Int { bits: 32, value: 1 }), Name::Number(2)));
+    assert_eq!(switch.dests[2], (ConstantRef::new(Constant::Int { bits: 32, value: 13 }), Name::Number(3)));
+    assert_eq!(switch.dests[3], (ConstantRef::new(Constant::Int { bits: 32, value: 26 }), Name::Number(4)));
+    assert_eq!(switch.dests[4], (ConstantRef::new(Constant::Int { bits: 32, value: 33 }), Name::Number(5)));
+    assert_eq!(switch.dests[5], (ConstantRef::new(Constant::Int { bits: 32, value: 142 }), Name::Number(6)));
+    assert_eq!(switch.dests[6], (ConstantRef::new(Constant::Int { bits: 32, value: 1678 }), Name::Number(7)));
+    assert_eq!(switch.dests[7], (ConstantRef::new(Constant::Int { bits: 32, value: 88 }), Name::Number(8)));
+    assert_eq!(switch.dests[8], (ConstantRef::new(Constant::Int { bits: 32, value: 101 }), Name::Number(9)));
     assert_eq!(switch.default_dest, Name::Number(10));
 
     let phibb = &func
@@ -340,7 +354,7 @@ fn variablesbc() {
     assert_eq!(var.name, Name::Name("global".to_owned()));
     assert_eq!(var.is_constant, false);
     assert_eq!(var.ty, module.types.pointer_to(module.types.i32()));
-    assert_eq!(var.initializer, Some(Constant::Int { bits: 32, value: 5 }));
+    assert_eq!(var.initializer, Some(ConstantRef::new(Constant::Int { bits: 32, value: 5 })));
     assert_eq!(var.alignment, 4);
     assert!(var.get_debug_loc().is_none());  // this file was compiled without debuginfo
 
@@ -355,10 +369,10 @@ fn variablesbc() {
     assert_eq!(load.address, Operand::LocalOperand { name: Name::Number(4), ty: module.types.pointer_to(module.types.i32()) });
     assert_eq!(module.type_of(load), module.types.i32());
     let global_load: &instruction::Load = &bb.instrs[14].clone().try_into().expect("Should be a load");
-    assert_eq!(global_load.address, Operand::ConstantOperand(Constant::GlobalReference { name: Name::Name("global".to_owned()), ty: module.types.i32() }));
+    assert_eq!(global_load.address, Operand::ConstantOperand(ConstantRef::new(Constant::GlobalReference { name: Name::Name("global".to_owned()), ty: module.types.i32() })));
     assert_eq!(module.type_of(global_load), module.types.i32());
     let global_store: &instruction::Store = &bb.instrs[16].clone().try_into().expect("Should be a store");
-    assert_eq!(global_store.address, Operand::ConstantOperand(Constant::GlobalReference { name: Name::Name("global".to_owned()), ty: module.types.i32() }));
+    assert_eq!(global_store.address, Operand::ConstantOperand(ConstantRef::new(Constant::GlobalReference { name: Name::Name("global".to_owned()), ty: module.types.i32() })));
     assert_eq!(module.type_of(global_store), module.types.void());
 }
 
@@ -412,17 +426,24 @@ fn rustbc() {
         module.types.pointer_to(module.types.array_of(module.types.i64(), 0)),
         module.types.i64(),
     ], false);
-    if let Either::Right(Operand::ConstantOperand(Constant::GlobalReference { ref name, ref ty })) = call.function {
-        assert_eq!(name, &Name::from("_ZN68_$LT$alloc..vec..Vec$LT$T$GT$$u20$as$u20$core..ops..deref..Deref$GT$5deref17h378128d7d9378466E"));
-        match ty.as_ref() {
-            Type::FuncType { result_type, param_types, is_var_arg } => {
-                assert_eq!(result_type, &ret_type);
-                assert_eq!(&param_types[0], &param_type);
-                assert_eq!(*is_var_arg, false);
-            },
-            _ => panic!("Expected called global to have FuncType, but got {:?}", ty),
+    if let Either::Right(Operand::ConstantOperand(cref)) = &call.function {
+        if let Constant::GlobalReference { ref name, ref ty } = cref.as_ref() {
+            assert_eq!(name, &Name::from("_ZN68_$LT$alloc..vec..Vec$LT$T$GT$$u20$as$u20$core..ops..deref..Deref$GT$5deref17h378128d7d9378466E"));
+            match ty.as_ref() {
+                Type::FuncType { result_type, param_types, is_var_arg } => {
+                    assert_eq!(result_type, &ret_type);
+                    assert_eq!(&param_types[0], &param_type);
+                    assert_eq!(*is_var_arg, false);
+                },
+                _ => panic!("Expected called global to have FuncType, but got {:?}", ty),
+            }
+            assert_eq!(module.type_of(call), ret_type);
+        } else {
+            panic!(
+                "call.function not a GlobalReference as expected; it is actually another kind of Constant: {:?}",
+                cref
+            );
         }
-        assert_eq!(module.type_of(call), ret_type);
     } else {
         panic!(
             "call.function not a GlobalReference as expected; it is actually {:?}",

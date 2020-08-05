@@ -2,6 +2,8 @@ use crate::name::Name;
 use crate::predicates::*;
 use crate::types::{FPType, NamedStructDef, Type, TypeRef, Typed, Types};
 use std::convert::TryFrom;
+use std::ops::Deref;
+use std::sync::Arc;
 
 /// See [LLVM 10 docs on Constants](https://releases.llvm.org/10.0.0/docs/LangRef.html#constants).
 /// Constants can be either values, or expressions involving other constants (see [LLVM 10 docs on Constant Expressions](https://releases.llvm.org/10.0.0/docs/LangRef.html#constant-expressions)).
@@ -18,14 +20,14 @@ pub enum Constant {
     AggregateZero(TypeRef),
     Struct {
         name: Option<String>, // llvm-hs-pure has Option<Name> here, but I don't think struct types can be numbered
-        values: Vec<Constant>,
+        values: Vec<ConstantRef>,
         is_packed: bool,
     },
     Array {
         element_type: TypeRef,
-        elements: Vec<Constant>,
+        elements: Vec<ConstantRef>,
     },
-    Vector(Vec<Constant>),
+    Vector(Vec<ConstantRef>),
     /// `Undef` can be used anywhere a constant is expected. See [LLVM 10 docs on Undefined Values](https://releases.llvm.org/10.0.0/docs/LangRef.html#undefined-values)
     Undef(TypeRef),
     /// The address of the given (non-entry) [`BasicBlock`](../struct.BasicBlock.html). See [LLVM 10 docs on Addresses of Basic Blocks](https://releases.llvm.org/10.0.0/docs/LangRef.html#addresses-of-basic-blocks).
@@ -40,60 +42,60 @@ pub enum Constant {
     // Constants can also be expressed as operations applied to other constants:
 
     // Integer binary ops
-    Add(Box<Add>),
-    Sub(Box<Sub>),
-    Mul(Box<Mul>),
-    UDiv(Box<UDiv>),
-    SDiv(Box<SDiv>),
-    URem(Box<URem>),
-    SRem(Box<SRem>),
+    Add(Add),
+    Sub(Sub),
+    Mul(Mul),
+    UDiv(UDiv),
+    SDiv(SDiv),
+    URem(URem),
+    SRem(SRem),
 
     // Bitwise binary ops
-    And(Box<And>),
-    Or(Box<Or>),
-    Xor(Box<Xor>),
-    Shl(Box<Shl>),
-    LShr(Box<LShr>),
-    AShr(Box<AShr>),
+    And(And),
+    Or(Or),
+    Xor(Xor),
+    Shl(Shl),
+    LShr(LShr),
+    AShr(AShr),
 
     // Floating-point ops
-    FAdd(Box<FAdd>),
-    FSub(Box<FSub>),
-    FMul(Box<FMul>),
-    FDiv(Box<FDiv>),
-    FRem(Box<FRem>),
+    FAdd(FAdd),
+    FSub(FSub),
+    FMul(FMul),
+    FDiv(FDiv),
+    FRem(FRem),
 
     // Vector ops
-    ExtractElement(Box<ExtractElement>),
-    InsertElement(Box<InsertElement>),
-    ShuffleVector(Box<ShuffleVector>),
+    ExtractElement(ExtractElement),
+    InsertElement(InsertElement),
+    ShuffleVector(ShuffleVector),
 
     // Aggregate ops
-    ExtractValue(Box<ExtractValue>),
-    InsertValue(Box<InsertValue>),
+    ExtractValue(ExtractValue),
+    InsertValue(InsertValue),
 
     // Memory-related ops
-    GetElementPtr(Box<GetElementPtr>),
+    GetElementPtr(GetElementPtr),
 
     // Conversion ops
-    Trunc(Box<Trunc>),
-    ZExt(Box<ZExt>),
-    SExt(Box<SExt>),
-    FPTrunc(Box<FPTrunc>),
-    FPExt(Box<FPExt>),
-    FPToUI(Box<FPToUI>),
-    FPToSI(Box<FPToSI>),
-    UIToFP(Box<UIToFP>),
-    SIToFP(Box<SIToFP>),
-    PtrToInt(Box<PtrToInt>),
-    IntToPtr(Box<IntToPtr>),
-    BitCast(Box<BitCast>),
-    AddrSpaceCast(Box<AddrSpaceCast>),
+    Trunc(Trunc),
+    ZExt(ZExt),
+    SExt(SExt),
+    FPTrunc(FPTrunc),
+    FPExt(FPExt),
+    FPToUI(FPToUI),
+    FPToSI(FPToSI),
+    UIToFP(UIToFP),
+    SIToFP(SIToFP),
+    PtrToInt(PtrToInt),
+    IntToPtr(IntToPtr),
+    BitCast(BitCast),
+    AddrSpaceCast(AddrSpaceCast),
 
     // Other ops
-    ICmp(Box<ICmp>),
-    FCmp(Box<FCmp>),
-    Select(Box<Select>),
+    ICmp(ICmp),
+    FCmp(FCmp),
+    Select(Select),
 }
 
 /// All of these `Float` variants should have data associated with them, but
@@ -148,64 +150,106 @@ impl Typed for Constant {
             Constant::BlockAddress { .. } => types.label_type(),
             Constant::GlobalReference { ty, .. } => types.pointer_to(ty.clone()),
             Constant::TokenNone => types.token_type(),
-            Constant::Add(a) => types.type_of(a.as_ref()),
-            Constant::Sub(s) => types.type_of(s.as_ref()),
-            Constant::Mul(m) => types.type_of(m.as_ref()),
-            Constant::UDiv(d) => types.type_of(d.as_ref()),
-            Constant::SDiv(d) => types.type_of(d.as_ref()),
-            Constant::URem(r) => types.type_of(r.as_ref()),
-            Constant::SRem(r) => types.type_of(r.as_ref()),
-            Constant::And(a) => types.type_of(a.as_ref()),
-            Constant::Or(o) => types.type_of(o.as_ref()),
-            Constant::Xor(x) => types.type_of(x.as_ref()),
-            Constant::Shl(s) => types.type_of(s.as_ref()),
-            Constant::LShr(l) => types.type_of(l.as_ref()),
-            Constant::AShr(a) => types.type_of(a.as_ref()),
-            Constant::FAdd(f) => types.type_of(f.as_ref()),
-            Constant::FSub(f) => types.type_of(f.as_ref()),
-            Constant::FMul(f) => types.type_of(f.as_ref()),
-            Constant::FDiv(f) => types.type_of(f.as_ref()),
-            Constant::FRem(f) => types.type_of(f.as_ref()),
-            Constant::ExtractElement(e) => types.type_of(e.as_ref()),
-            Constant::InsertElement(i) => types.type_of(i.as_ref()),
-            Constant::ShuffleVector(s) => types.type_of(s.as_ref()),
-            Constant::ExtractValue(e) => types.type_of(e.as_ref()),
-            Constant::InsertValue(i) => types.type_of(i.as_ref()),
-            Constant::GetElementPtr(g) => types.type_of(g.as_ref()),
-            Constant::Trunc(t) => types.type_of(t.as_ref()),
-            Constant::ZExt(z) => types.type_of(z.as_ref()),
-            Constant::SExt(s) => types.type_of(s.as_ref()),
-            Constant::FPTrunc(f) => types.type_of(f.as_ref()),
-            Constant::FPExt(f) => types.type_of(f.as_ref()),
-            Constant::FPToUI(f) => types.type_of(f.as_ref()),
-            Constant::FPToSI(f) => types.type_of(f.as_ref()),
-            Constant::UIToFP(u) => types.type_of(u.as_ref()),
-            Constant::SIToFP(s) => types.type_of(s.as_ref()),
-            Constant::PtrToInt(p) => types.type_of(p.as_ref()),
-            Constant::IntToPtr(i) => types.type_of(i.as_ref()),
-            Constant::BitCast(b) => types.type_of(b.as_ref()),
-            Constant::AddrSpaceCast(a) => types.type_of(a.as_ref()),
-            Constant::ICmp(i) => types.type_of(i.as_ref()),
-            Constant::FCmp(f) => types.type_of(f.as_ref()),
-            Constant::Select(s) => types.type_of(s.as_ref()),
+            Constant::Add(a) => types.type_of(a),
+            Constant::Sub(s) => types.type_of(s),
+            Constant::Mul(m) => types.type_of(m),
+            Constant::UDiv(d) => types.type_of(d),
+            Constant::SDiv(d) => types.type_of(d),
+            Constant::URem(r) => types.type_of(r),
+            Constant::SRem(r) => types.type_of(r),
+            Constant::And(a) => types.type_of(a),
+            Constant::Or(o) => types.type_of(o),
+            Constant::Xor(x) => types.type_of(x),
+            Constant::Shl(s) => types.type_of(s),
+            Constant::LShr(l) => types.type_of(l),
+            Constant::AShr(a) => types.type_of(a),
+            Constant::FAdd(f) => types.type_of(f),
+            Constant::FSub(f) => types.type_of(f),
+            Constant::FMul(f) => types.type_of(f),
+            Constant::FDiv(f) => types.type_of(f),
+            Constant::FRem(f) => types.type_of(f),
+            Constant::ExtractElement(e) => types.type_of(e),
+            Constant::InsertElement(i) => types.type_of(i),
+            Constant::ShuffleVector(s) => types.type_of(s),
+            Constant::ExtractValue(e) => types.type_of(e),
+            Constant::InsertValue(i) => types.type_of(i),
+            Constant::GetElementPtr(g) => types.type_of(g),
+            Constant::Trunc(t) => types.type_of(t),
+            Constant::ZExt(z) => types.type_of(z),
+            Constant::SExt(s) => types.type_of(s),
+            Constant::FPTrunc(f) => types.type_of(f),
+            Constant::FPExt(f) => types.type_of(f),
+            Constant::FPToUI(f) => types.type_of(f),
+            Constant::FPToSI(f) => types.type_of(f),
+            Constant::UIToFP(u) => types.type_of(u),
+            Constant::SIToFP(s) => types.type_of(s),
+            Constant::PtrToInt(p) => types.type_of(p),
+            Constant::IntToPtr(i) => types.type_of(i),
+            Constant::BitCast(b) => types.type_of(b),
+            Constant::AddrSpaceCast(a) => types.type_of(a),
+            Constant::ICmp(i) => types.type_of(i),
+            Constant::FCmp(f) => types.type_of(f),
+            Constant::Select(s) => types.type_of(s),
         }
     }
 }
 
+/// A `ConstantRef` is a reference to a [`Constant`](../enum.Constant.html).
+/// Most importantly, it implements `AsRef<Constant>` and `Deref<Target = Constant>`.
+/// It also has a cheap `Clone` -- only the reference is cloned, not the
+/// underlying `Constant`.
+//
+// `Arc` is used rather than `Rc` so that `Module` can remain `Sync`.
+// This is important because it allows multiple threads to simultaneously access
+// a single (immutable) `Module`.
+#[derive(PartialEq, Clone, Debug)]
+pub struct ConstantRef(Arc<Constant>);
+
+impl AsRef<Constant> for ConstantRef {
+    fn as_ref(&self) -> &Constant {
+        self.0.as_ref()
+    }
+}
+
+impl Deref for ConstantRef {
+    type Target = Constant;
+
+    fn deref(&self) -> &Constant {
+        self.0.deref()
+    }
+}
+
+impl Typed for ConstantRef {
+    fn get_type(&self, types: &Types) -> TypeRef {
+        self.as_ref().get_type(types)
+    }
+}
+
+impl ConstantRef {
+    /// Construct a new `ConstantRef` by consuming the given owned `Constant`.
+    //
+    // Internal users should get `ConstantRef`s from the `Constants` cache
+    // instead, so that if we already have that `Constant` somewhere, we can
+    // just give you a new `ConstantRef` to that `Constant`.
+    pub fn new(c: Constant) -> Self {
+        Self(Arc::new(c))
+    }
+}
+
 pub trait ConstUnaryOp {
-    fn get_operand(&self) -> &Constant;
+    fn get_operand(&self) -> ConstantRef;
 }
 
 pub trait ConstBinaryOp {
-    fn get_operand0(&self) -> &Constant;
-    fn get_operand1(&self) -> &Constant;
+    fn get_operand0(&self) -> ConstantRef;
+    fn get_operand1(&self) -> ConstantRef;
 }
 
 macro_rules! impl_constexpr {
     ($expr:ty, $id:ident) => {
         impl From<$expr> for Constant {
             fn from(expr: $expr) -> Constant {
-                Constant::$id(Box::new(expr))
+                Constant::$id(expr)
             }
         }
 
@@ -213,8 +257,8 @@ macro_rules! impl_constexpr {
             type Error = &'static str;
             fn try_from(constant: Constant) -> Result<Self, Self::Error> {
                 match constant {
-                    Constant::$id(expr) => Ok(*expr),
-                    _ => Err("Constant is not of requested type"),
+                    Constant::$id(expr) => Ok(expr),
+                    _ => Err("Constant is not of requested kind"),
                 }
             }
         }
@@ -224,8 +268,8 @@ macro_rules! impl_constexpr {
 macro_rules! impl_unop {
     ($expr:ty) => {
         impl ConstUnaryOp for $expr {
-            fn get_operand(&self) -> &Constant {
-                &self.operand
+            fn get_operand(&self) -> ConstantRef {
+                self.operand.clone()
             }
         }
     };
@@ -234,11 +278,11 @@ macro_rules! impl_unop {
 macro_rules! impl_binop {
     ($expr:ty) => {
         impl ConstBinaryOp for $expr {
-            fn get_operand0(&self) -> &Constant {
-                &self.operand0
+            fn get_operand0(&self) -> ConstantRef {
+                self.operand0.clone()
             }
-            fn get_operand1(&self) -> &Constant {
-                &self.operand1
+            fn get_operand1(&self) -> ConstantRef {
+                self.operand1.clone()
             }
         }
     };
@@ -249,8 +293,8 @@ macro_rules! binop_same_type {
     ($expr:ty) => {
         impl Typed for $expr {
             fn get_type(&self, types: &Types) -> TypeRef {
-                let t = types.type_of(self.get_operand0());
-                assert_eq!(t, types.type_of(self.get_operand1()));
+                let t = types.type_of(&self.get_operand0());
+                assert_eq!(t, types.type_of(&self.get_operand1()));
                 t
             }
         }
@@ -262,7 +306,7 @@ macro_rules! binop_left_type {
     ($expr:ty) => {
         impl Typed for $expr {
             fn get_type(&self, types: &Types) -> TypeRef {
-                types.type_of(self.get_operand0())
+                types.type_of(&self.get_operand0())
             }
         }
     };
@@ -281,8 +325,8 @@ macro_rules! explicitly_typed {
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct Add {
-    pub operand0: Constant,
-    pub operand1: Constant,
+    pub operand0: ConstantRef,
+    pub operand1: ConstantRef,
     // pub nsw: bool,  // getters for these seem to not be exposed in the LLVM C API, only in the C++ one
     // pub nuw: bool,  // getters for these seem to not be exposed in the LLVM C API, only in the C++ one
 }
@@ -293,8 +337,8 @@ binop_same_type!(Add);
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct Sub {
-    pub operand0: Constant,
-    pub operand1: Constant,
+    pub operand0: ConstantRef,
+    pub operand1: ConstantRef,
     // pub nsw: bool,  // getters for these seem to not be exposed in the LLVM C API, only in the C++ one
     // pub nuw: bool,  // getters for these seem to not be exposed in the LLVM C API, only in the C++ one
 }
@@ -305,8 +349,8 @@ binop_same_type!(Sub);
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct Mul {
-    pub operand0: Constant,
-    pub operand1: Constant,
+    pub operand0: ConstantRef,
+    pub operand1: ConstantRef,
     // pub nsw: bool,  // getters for these seem to not be exposed in the LLVM C API, only in the C++ one
     // pub nuw: bool,  // getters for these seem to not be exposed in the LLVM C API, only in the C++ one
 }
@@ -317,8 +361,8 @@ binop_same_type!(Mul);
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct UDiv {
-    pub operand0: Constant,
-    pub operand1: Constant,
+    pub operand0: ConstantRef,
+    pub operand1: ConstantRef,
     // pub exact: bool,  // getters for these seem to not be exposed in the LLVM C API, only in the C++ one
 }
 
@@ -328,8 +372,8 @@ binop_same_type!(UDiv);
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct SDiv {
-    pub operand0: Constant,
-    pub operand1: Constant,
+    pub operand0: ConstantRef,
+    pub operand1: ConstantRef,
     // pub exact: bool,  // getters for these seem to not be exposed in the LLVM C API, only in the C++ one
 }
 
@@ -339,8 +383,8 @@ binop_same_type!(SDiv);
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct URem {
-    pub operand0: Constant,
-    pub operand1: Constant,
+    pub operand0: ConstantRef,
+    pub operand1: ConstantRef,
 }
 
 impl_constexpr!(URem, URem);
@@ -349,8 +393,8 @@ binop_same_type!(URem);
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct SRem {
-    pub operand0: Constant,
-    pub operand1: Constant,
+    pub operand0: ConstantRef,
+    pub operand1: ConstantRef,
 }
 
 impl_constexpr!(SRem, SRem);
@@ -359,8 +403,8 @@ binop_same_type!(SRem);
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct And {
-    pub operand0: Constant,
-    pub operand1: Constant,
+    pub operand0: ConstantRef,
+    pub operand1: ConstantRef,
 }
 
 impl_constexpr!(And, And);
@@ -369,8 +413,8 @@ binop_same_type!(And);
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct Or {
-    pub operand0: Constant,
-    pub operand1: Constant,
+    pub operand0: ConstantRef,
+    pub operand1: ConstantRef,
 }
 
 impl_constexpr!(Or, Or);
@@ -379,8 +423,8 @@ binop_same_type!(Or);
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct Xor {
-    pub operand0: Constant,
-    pub operand1: Constant,
+    pub operand0: ConstantRef,
+    pub operand1: ConstantRef,
 }
 
 impl_constexpr!(Xor, Xor);
@@ -389,8 +433,8 @@ binop_same_type!(Xor);
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct Shl {
-    pub operand0: Constant,
-    pub operand1: Constant,
+    pub operand0: ConstantRef,
+    pub operand1: ConstantRef,
     // pub nsw: bool,  // getters for these seem to not be exposed in the LLVM C API, only in the C++ one
     // pub nuw: bool,  // getters for these seem to not be exposed in the LLVM C API, only in the C++ one
 }
@@ -401,8 +445,8 @@ binop_left_type!(Shl);
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct LShr {
-    pub operand0: Constant,
-    pub operand1: Constant,
+    pub operand0: ConstantRef,
+    pub operand1: ConstantRef,
     // pub exact: bool,  // getters for these seem to not be exposed in the LLVM C API, only in the C++ one
 }
 
@@ -412,8 +456,8 @@ binop_left_type!(LShr);
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct AShr {
-    pub operand0: Constant,
-    pub operand1: Constant,
+    pub operand0: ConstantRef,
+    pub operand1: ConstantRef,
     // pub exact: bool,  // getters for these seem to not be exposed in the LLVM C API, only in the C++ one
 }
 
@@ -423,8 +467,8 @@ binop_left_type!(AShr);
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct FAdd {
-    pub operand0: Constant,
-    pub operand1: Constant,
+    pub operand0: ConstantRef,
+    pub operand1: ConstantRef,
 }
 
 impl_constexpr!(FAdd, FAdd);
@@ -433,8 +477,8 @@ binop_same_type!(FAdd);
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct FSub {
-    pub operand0: Constant,
-    pub operand1: Constant,
+    pub operand0: ConstantRef,
+    pub operand1: ConstantRef,
 }
 
 impl_constexpr!(FSub, FSub);
@@ -443,8 +487,8 @@ binop_same_type!(FSub);
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct FMul {
-    pub operand0: Constant,
-    pub operand1: Constant,
+    pub operand0: ConstantRef,
+    pub operand1: ConstantRef,
 }
 
 impl_constexpr!(FMul, FMul);
@@ -453,8 +497,8 @@ binop_same_type!(FMul);
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct FDiv {
-    pub operand0: Constant,
-    pub operand1: Constant,
+    pub operand0: ConstantRef,
+    pub operand1: ConstantRef,
 }
 
 impl_constexpr!(FDiv, FDiv);
@@ -463,8 +507,8 @@ binop_same_type!(FDiv);
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct FRem {
-    pub operand0: Constant,
-    pub operand1: Constant,
+    pub operand0: ConstantRef,
+    pub operand1: ConstantRef,
 }
 
 impl_constexpr!(FRem, FRem);
@@ -473,8 +517,8 @@ binop_same_type!(FRem);
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct ExtractElement {
-    pub vector: Constant,
-    pub index: Constant,
+    pub vector: ConstantRef,
+    pub index: ConstantRef,
 }
 
 impl_constexpr!(ExtractElement, ExtractElement);
@@ -493,9 +537,9 @@ impl Typed for ExtractElement {
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct InsertElement {
-    pub vector: Constant,
-    pub element: Constant,
-    pub index: Constant,
+    pub vector: ConstantRef,
+    pub element: ConstantRef,
+    pub index: ConstantRef,
 }
 
 impl_constexpr!(InsertElement, InsertElement);
@@ -508,9 +552,9 @@ impl Typed for InsertElement {
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct ShuffleVector {
-    pub operand0: Constant,
-    pub operand1: Constant,
-    pub mask: Constant,
+    pub operand0: ConstantRef,
+    pub operand1: ConstantRef,
+    pub mask: ConstantRef,
 }
 
 impl_constexpr!(ShuffleVector, ShuffleVector);
@@ -540,7 +584,7 @@ impl Typed for ShuffleVector {
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct ExtractValue {
-    pub aggregate: Constant,
+    pub aggregate: ConstantRef,
     pub indices: Vec<u32>,
 }
 
@@ -574,8 +618,8 @@ fn ev_type(cur_type: TypeRef, mut indices: impl Iterator<Item = u32>) -> TypeRef
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct InsertValue {
-    pub aggregate: Constant,
-    pub element: Constant,
+    pub aggregate: ConstantRef,
+    pub element: ConstantRef,
     pub indices: Vec<u32>,
 }
 
@@ -589,8 +633,8 @@ impl Typed for InsertValue {
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct GetElementPtr {
-    pub address: Constant,
-    pub indices: Vec<Constant>,
+    pub address: ConstantRef,
+    pub indices: Vec<ConstantRef>,
     pub in_bounds: bool,
 }
 
@@ -604,7 +648,7 @@ impl Typed for GetElementPtr {
 
 fn gep_type<'c>(
     cur_type: TypeRef,
-    mut indices: impl Iterator<Item = &'c Constant>,
+    mut indices: impl Iterator<Item = &'c ConstantRef>,
     types: &Types,
 ) -> TypeRef {
     match indices.next() {
@@ -614,7 +658,7 @@ fn gep_type<'c>(
             Type::VectorType { element_type, .. } => gep_type(element_type.clone(), indices, types),
             Type::ArrayType { element_type, .. } => gep_type(element_type.clone(), indices, types),
             Type::StructType { element_types, .. } => {
-                if let Constant::Int { value, .. } = index {
+                if let Constant::Int { value, .. } = index.as_ref() {
                     gep_type(
                         element_types.get(*value as usize).cloned().expect("GEP index out of range"),
                         indices,
@@ -629,7 +673,7 @@ fn gep_type<'c>(
                 Some(NamedStructDef::Opaque) => panic!("GEP on an opaque struct type"),
                 Some(NamedStructDef::Defined(ty)) => match ty.as_ref() {
                     Type::StructType { element_types, .. } => {
-                        if let Constant::Int { value, .. } = index {
+                        if let Constant::Int { value, .. } = index.as_ref() {
                             gep_type(element_types.get(*value as usize).cloned().expect("GEP index out of range"), indices, types)
                         } else {
                             panic!("Expected GEP index on a struct to be a Constant::Int; got {:?}", index)
@@ -645,7 +689,7 @@ fn gep_type<'c>(
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct Trunc {
-    pub operand: Constant,
+    pub operand: ConstantRef,
     pub to_type: TypeRef,
 }
 
@@ -655,7 +699,7 @@ explicitly_typed!(Trunc);
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct ZExt {
-    pub operand: Constant,
+    pub operand: ConstantRef,
     pub to_type: TypeRef,
 }
 
@@ -665,7 +709,7 @@ explicitly_typed!(ZExt);
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct SExt {
-    pub operand: Constant,
+    pub operand: ConstantRef,
     pub to_type: TypeRef,
 }
 
@@ -675,7 +719,7 @@ explicitly_typed!(SExt);
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct FPTrunc {
-    pub operand: Constant,
+    pub operand: ConstantRef,
     pub to_type: TypeRef,
 }
 
@@ -685,7 +729,7 @@ explicitly_typed!(FPTrunc);
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct FPExt {
-    pub operand: Constant,
+    pub operand: ConstantRef,
     pub to_type: TypeRef,
 }
 
@@ -695,7 +739,7 @@ explicitly_typed!(FPExt);
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct FPToUI {
-    pub operand: Constant,
+    pub operand: ConstantRef,
     pub to_type: TypeRef,
 }
 
@@ -705,7 +749,7 @@ explicitly_typed!(FPToUI);
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct FPToSI {
-    pub operand: Constant,
+    pub operand: ConstantRef,
     pub to_type: TypeRef,
 }
 
@@ -715,7 +759,7 @@ explicitly_typed!(FPToSI);
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct UIToFP {
-    pub operand: Constant,
+    pub operand: ConstantRef,
     pub to_type: TypeRef,
 }
 
@@ -725,7 +769,7 @@ explicitly_typed!(UIToFP);
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct SIToFP {
-    pub operand: Constant,
+    pub operand: ConstantRef,
     pub to_type: TypeRef,
 }
 
@@ -735,7 +779,7 @@ explicitly_typed!(SIToFP);
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct PtrToInt {
-    pub operand: Constant,
+    pub operand: ConstantRef,
     pub to_type: TypeRef,
 }
 
@@ -745,7 +789,7 @@ explicitly_typed!(PtrToInt);
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct IntToPtr {
-    pub operand: Constant,
+    pub operand: ConstantRef,
     pub to_type: TypeRef,
 }
 
@@ -755,7 +799,7 @@ explicitly_typed!(IntToPtr);
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct BitCast {
-    pub operand: Constant,
+    pub operand: ConstantRef,
     pub to_type: TypeRef,
 }
 
@@ -765,7 +809,7 @@ explicitly_typed!(BitCast);
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct AddrSpaceCast {
-    pub operand: Constant,
+    pub operand: ConstantRef,
     pub to_type: TypeRef,
 }
 
@@ -776,8 +820,8 @@ explicitly_typed!(AddrSpaceCast);
 #[derive(PartialEq, Clone, Debug)]
 pub struct ICmp {
     pub predicate: IntPredicate,
-    pub operand0: Constant,
-    pub operand1: Constant,
+    pub operand0: ConstantRef,
+    pub operand1: ConstantRef,
 }
 
 impl_constexpr!(ICmp, ICmp);
@@ -797,8 +841,8 @@ impl Typed for ICmp {
 #[derive(PartialEq, Clone, Debug)]
 pub struct FCmp {
     pub predicate: FPPredicate,
-    pub operand0: Constant,
-    pub operand1: Constant,
+    pub operand0: ConstantRef,
+    pub operand1: ConstantRef,
 }
 
 impl_constexpr!(FCmp, FCmp);
@@ -817,9 +861,9 @@ impl Typed for FCmp {
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct Select {
-    pub condition: Constant,
-    pub true_value: Constant,
-    pub false_value: Constant,
+    pub condition: ConstantRef,
+    pub true_value: ConstantRef,
+    pub false_value: ConstantRef,
 }
 
 impl_constexpr!(Select, Select);
@@ -839,12 +883,32 @@ impl Typed for Select {
 use crate::from_llvm::*;
 use crate::types::TypesBuilder;
 use std::collections::HashMap;
+use std::collections::hash_map::Entry;
 
 pub(crate) type GlobalNameMap = HashMap<LLVMValueRef, Name>;
+
+pub(crate) type Constants = HashMap<LLVMValueRef, ConstantRef>;
 
 impl Constant {
     pub(crate) fn from_llvm_ref(
         constant: LLVMValueRef,
+        constants: &mut Constants,
+        gnmap: &GlobalNameMap,
+        types: &mut TypesBuilder,
+    ) -> ConstantRef {
+        if let Some(constantref) = constants.get(&constant) {
+            return constantref.clone();
+        }
+        let parsed = Self::parse_from_llvm_ref(constant, constants, gnmap, types);
+        match constants.entry(constant) {
+            Entry::Occupied(_) => panic!("This case should have been handled above"),
+            Entry::Vacant(ventry) => ventry.insert(ConstantRef::new(parsed)).clone(),
+        }
+    }
+
+    fn parse_from_llvm_ref(
+        constant: LLVMValueRef,
+        constants: &mut Constants,
         gnmap: &GlobalNameMap,
         types: &mut TypesBuilder,
     ) -> Self {
@@ -904,7 +968,7 @@ impl Constant {
                     name: None,  // --TODO not yet implemented: Constant::Struct name
                     values: {
                         (0 .. num_elements).map(|i| {
-                            Constant::from_llvm_ref( unsafe { LLVMGetOperand(constant, i as u32) }, gnmap, types)
+                            Constant::from_llvm_ref( unsafe { LLVMGetOperand(constant, i as u32) }, constants, gnmap, types)
                         }).collect()
                     },
                     is_packed,
@@ -915,7 +979,7 @@ impl Constant {
                     Type::ArrayType { element_type, num_elements } => Constant::Array {
                         element_type: element_type.clone(),
                         elements: {
-                            (0 .. *num_elements).map(|i| Constant::from_llvm_ref( unsafe { LLVMGetOperand(constant, i as u32) }, gnmap, types)).collect()
+                            (0 .. *num_elements).map(|i| Constant::from_llvm_ref( unsafe { LLVMGetOperand(constant, i as u32) }, constants, gnmap, types)).collect()
                         },
                     },
                     ty => panic!("Expected Constant::Array to have type Type::ArrayType; got {:?}", ty),
@@ -924,7 +988,7 @@ impl Constant {
             LLVMValueKind::LLVMConstantVectorValueKind => {
                 let num_elements = unsafe { LLVMGetNumOperands(constant) };
                 Constant::Vector(
-                    (0 .. num_elements).map(|i| Constant::from_llvm_ref( unsafe { LLVMGetOperand(constant, i as u32) }, gnmap, types)).collect()
+                    (0 .. num_elements).map(|i| Constant::from_llvm_ref( unsafe { LLVMGetOperand(constant, i as u32) }, constants, gnmap, types)).collect()
                 )
             },
             LLVMValueKind::LLVMConstantDataArrayValueKind => {
@@ -932,7 +996,7 @@ impl Constant {
                     Type::ArrayType { element_type, num_elements } => Constant::Array {
                         element_type: element_type.clone(),
                         elements: {
-                            (0 .. *num_elements).map(|i| Constant::from_llvm_ref( unsafe { LLVMGetElementAsConstant(constant, i as u32) }, gnmap, types)).collect()
+                            (0 .. *num_elements).map(|i| Constant::from_llvm_ref( unsafe { LLVMGetElementAsConstant(constant, i as u32) }, constants, gnmap, types)).collect()
                         },
                     },
                     ty => panic!("Expected ConstantDataArray to have type Type::ArrayType; got {:?}", ty),
@@ -941,7 +1005,7 @@ impl Constant {
             LLVMValueKind::LLVMConstantDataVectorValueKind => {
                 match types.type_from_llvm_ref( unsafe { LLVMTypeOf(constant) } ).as_ref() {
                     Type::VectorType { num_elements, .. } => Constant::Vector(
-                        (0 .. *num_elements).map(|i| Constant::from_llvm_ref( unsafe { LLVMGetElementAsConstant(constant, i as u32) }, gnmap, types)).collect()
+                        (0 .. *num_elements).map(|i| Constant::from_llvm_ref( unsafe { LLVMGetElementAsConstant(constant, i as u32) }, constants, gnmap, types)).collect()
                     ),
                     ty => panic!("Expected ConstantDataVector to have type Type::VectorType; got {:?}", ty),
                 }
@@ -964,46 +1028,46 @@ impl Constant {
             LLVMValueKind::LLVMConstantExprValueKind => {
                 use llvm_sys::LLVMOpcode;
                 match unsafe { LLVMGetConstOpcode(constant) } {
-                    LLVMOpcode::LLVMAdd => Constant::Add(Box::new(Add::from_llvm_ref(constant, gnmap, types))),
-                    LLVMOpcode::LLVMSub => Constant::Sub(Box::new(Sub::from_llvm_ref(constant, gnmap, types))),
-                    LLVMOpcode::LLVMMul => Constant::Mul(Box::new(Mul::from_llvm_ref(constant, gnmap, types))),
-                    LLVMOpcode::LLVMUDiv => Constant::UDiv(Box::new(UDiv::from_llvm_ref(constant, gnmap, types))),
-                    LLVMOpcode::LLVMSDiv => Constant::SDiv(Box::new(SDiv::from_llvm_ref(constant, gnmap, types))),
-                    LLVMOpcode::LLVMURem => Constant::URem(Box::new(URem::from_llvm_ref(constant, gnmap, types))),
-                    LLVMOpcode::LLVMSRem => Constant::SRem(Box::new(SRem::from_llvm_ref(constant, gnmap, types))),
-                    LLVMOpcode::LLVMAnd => Constant::And(Box::new(And::from_llvm_ref(constant, gnmap, types))),
-                    LLVMOpcode::LLVMOr => Constant::Or(Box::new(Or::from_llvm_ref(constant, gnmap, types))),
-                    LLVMOpcode::LLVMXor => Constant::Xor(Box::new(Xor::from_llvm_ref(constant, gnmap, types))),
-                    LLVMOpcode::LLVMShl => Constant::Shl(Box::new(Shl::from_llvm_ref(constant, gnmap, types))),
-                    LLVMOpcode::LLVMLShr => Constant::LShr(Box::new(LShr::from_llvm_ref(constant, gnmap, types))),
-                    LLVMOpcode::LLVMAShr => Constant::AShr(Box::new(AShr::from_llvm_ref(constant, gnmap, types))),
-                    LLVMOpcode::LLVMFAdd => Constant::FAdd(Box::new(FAdd::from_llvm_ref(constant, gnmap, types))),
-                    LLVMOpcode::LLVMFSub => Constant::FSub(Box::new(FSub::from_llvm_ref(constant, gnmap, types))),
-                    LLVMOpcode::LLVMFMul => Constant::FMul(Box::new(FMul::from_llvm_ref(constant, gnmap, types))),
-                    LLVMOpcode::LLVMFDiv => Constant::FDiv(Box::new(FDiv::from_llvm_ref(constant, gnmap, types))),
-                    LLVMOpcode::LLVMFRem => Constant::FRem(Box::new(FRem::from_llvm_ref(constant, gnmap, types))),
-                    LLVMOpcode::LLVMExtractElement => Constant::ExtractElement(Box::new(ExtractElement::from_llvm_ref(constant, gnmap, types))),
-                    LLVMOpcode::LLVMInsertElement => Constant::InsertElement(Box::new(InsertElement::from_llvm_ref(constant, gnmap, types))),
-                    LLVMOpcode::LLVMShuffleVector => Constant::ShuffleVector(Box::new(ShuffleVector::from_llvm_ref(constant, gnmap, types))),
-                    LLVMOpcode::LLVMExtractValue => Constant::ExtractValue(Box::new(ExtractValue::from_llvm_ref(constant, gnmap, types))),
-                    LLVMOpcode::LLVMInsertValue => Constant::InsertValue(Box::new(InsertValue::from_llvm_ref(constant, gnmap, types))),
-                    LLVMOpcode::LLVMGetElementPtr => Constant::GetElementPtr(Box::new(GetElementPtr::from_llvm_ref(constant, gnmap, types))),
-                    LLVMOpcode::LLVMTrunc => Constant::Trunc(Box::new(Trunc::from_llvm_ref(constant, gnmap, types))),
-                    LLVMOpcode::LLVMZExt => Constant::ZExt(Box::new(ZExt::from_llvm_ref(constant, gnmap, types))),
-                    LLVMOpcode::LLVMSExt => Constant::SExt(Box::new(SExt::from_llvm_ref(constant, gnmap, types))),
-                    LLVMOpcode::LLVMFPTrunc => Constant::FPTrunc(Box::new(FPTrunc::from_llvm_ref(constant, gnmap, types))),
-                    LLVMOpcode::LLVMFPExt => Constant::FPExt(Box::new(FPExt::from_llvm_ref(constant, gnmap, types))),
-                    LLVMOpcode::LLVMFPToUI => Constant::FPToUI(Box::new(FPToUI::from_llvm_ref(constant, gnmap, types))),
-                    LLVMOpcode::LLVMFPToSI => Constant::FPToSI(Box::new(FPToSI::from_llvm_ref(constant, gnmap, types))),
-                    LLVMOpcode::LLVMUIToFP => Constant::UIToFP(Box::new(UIToFP::from_llvm_ref(constant, gnmap, types))),
-                    LLVMOpcode::LLVMSIToFP => Constant::SIToFP(Box::new(SIToFP::from_llvm_ref(constant, gnmap, types))),
-                    LLVMOpcode::LLVMPtrToInt => Constant::PtrToInt(Box::new(PtrToInt::from_llvm_ref(constant, gnmap, types))),
-                    LLVMOpcode::LLVMIntToPtr => Constant::IntToPtr(Box::new(IntToPtr::from_llvm_ref(constant, gnmap, types))),
-                    LLVMOpcode::LLVMBitCast => Constant::BitCast(Box::new(BitCast::from_llvm_ref(constant, gnmap, types))),
-                    LLVMOpcode::LLVMAddrSpaceCast => Constant::AddrSpaceCast(Box::new(AddrSpaceCast::from_llvm_ref(constant, gnmap, types))),
-                    LLVMOpcode::LLVMICmp => Constant::ICmp(Box::new(ICmp::from_llvm_ref(constant, gnmap, types))),
-                    LLVMOpcode::LLVMFCmp => Constant::FCmp(Box::new(FCmp::from_llvm_ref(constant, gnmap, types))),
-                    LLVMOpcode::LLVMSelect => Constant::Select(Box::new(Select::from_llvm_ref(constant, gnmap, types))),
+                    LLVMOpcode::LLVMAdd => Constant::Add(Add::from_llvm_ref(constant, gnmap, constants, types)),
+                    LLVMOpcode::LLVMSub => Constant::Sub(Sub::from_llvm_ref(constant, gnmap, constants, types)),
+                    LLVMOpcode::LLVMMul => Constant::Mul(Mul::from_llvm_ref(constant, gnmap, constants, types)),
+                    LLVMOpcode::LLVMUDiv => Constant::UDiv(UDiv::from_llvm_ref(constant, gnmap, constants, types)),
+                    LLVMOpcode::LLVMSDiv => Constant::SDiv(SDiv::from_llvm_ref(constant, gnmap, constants, types)),
+                    LLVMOpcode::LLVMURem => Constant::URem(URem::from_llvm_ref(constant, gnmap, constants, types)),
+                    LLVMOpcode::LLVMSRem => Constant::SRem(SRem::from_llvm_ref(constant, gnmap, constants, types)),
+                    LLVMOpcode::LLVMAnd => Constant::And(And::from_llvm_ref(constant, gnmap, constants, types)),
+                    LLVMOpcode::LLVMOr => Constant::Or(Or::from_llvm_ref(constant, gnmap, constants, types)),
+                    LLVMOpcode::LLVMXor => Constant::Xor(Xor::from_llvm_ref(constant, gnmap, constants, types)),
+                    LLVMOpcode::LLVMShl => Constant::Shl(Shl::from_llvm_ref(constant, gnmap, constants, types)),
+                    LLVMOpcode::LLVMLShr => Constant::LShr(LShr::from_llvm_ref(constant, gnmap, constants, types)),
+                    LLVMOpcode::LLVMAShr => Constant::AShr(AShr::from_llvm_ref(constant, gnmap, constants, types)),
+                    LLVMOpcode::LLVMFAdd => Constant::FAdd(FAdd::from_llvm_ref(constant, gnmap, constants, types)),
+                    LLVMOpcode::LLVMFSub => Constant::FSub(FSub::from_llvm_ref(constant, gnmap, constants, types)),
+                    LLVMOpcode::LLVMFMul => Constant::FMul(FMul::from_llvm_ref(constant, gnmap, constants, types)),
+                    LLVMOpcode::LLVMFDiv => Constant::FDiv(FDiv::from_llvm_ref(constant, gnmap, constants, types)),
+                    LLVMOpcode::LLVMFRem => Constant::FRem(FRem::from_llvm_ref(constant, gnmap, constants, types)),
+                    LLVMOpcode::LLVMExtractElement => Constant::ExtractElement(ExtractElement::from_llvm_ref(constant, gnmap, constants, types)),
+                    LLVMOpcode::LLVMInsertElement => Constant::InsertElement(InsertElement::from_llvm_ref(constant, gnmap, constants, types)),
+                    LLVMOpcode::LLVMShuffleVector => Constant::ShuffleVector(ShuffleVector::from_llvm_ref(constant, gnmap, constants, types)),
+                    LLVMOpcode::LLVMExtractValue => Constant::ExtractValue(ExtractValue::from_llvm_ref(constant, gnmap, constants, types)),
+                    LLVMOpcode::LLVMInsertValue => Constant::InsertValue(InsertValue::from_llvm_ref(constant, gnmap, constants, types)),
+                    LLVMOpcode::LLVMGetElementPtr => Constant::GetElementPtr(GetElementPtr::from_llvm_ref(constant, gnmap, constants, types)),
+                    LLVMOpcode::LLVMTrunc => Constant::Trunc(Trunc::from_llvm_ref(constant, gnmap, constants, types)),
+                    LLVMOpcode::LLVMZExt => Constant::ZExt(ZExt::from_llvm_ref(constant, gnmap, constants, types)),
+                    LLVMOpcode::LLVMSExt => Constant::SExt(SExt::from_llvm_ref(constant, gnmap, constants, types)),
+                    LLVMOpcode::LLVMFPTrunc => Constant::FPTrunc(FPTrunc::from_llvm_ref(constant, gnmap, constants, types)),
+                    LLVMOpcode::LLVMFPExt => Constant::FPExt(FPExt::from_llvm_ref(constant, gnmap, constants, types)),
+                    LLVMOpcode::LLVMFPToUI => Constant::FPToUI(FPToUI::from_llvm_ref(constant, gnmap, constants, types)),
+                    LLVMOpcode::LLVMFPToSI => Constant::FPToSI(FPToSI::from_llvm_ref(constant, gnmap, constants, types)),
+                    LLVMOpcode::LLVMUIToFP => Constant::UIToFP(UIToFP::from_llvm_ref(constant, gnmap, constants, types)),
+                    LLVMOpcode::LLVMSIToFP => Constant::SIToFP(SIToFP::from_llvm_ref(constant, gnmap, constants, types)),
+                    LLVMOpcode::LLVMPtrToInt => Constant::PtrToInt(PtrToInt::from_llvm_ref(constant, gnmap, constants, types)),
+                    LLVMOpcode::LLVMIntToPtr => Constant::IntToPtr(IntToPtr::from_llvm_ref(constant, gnmap, constants, types)),
+                    LLVMOpcode::LLVMBitCast => Constant::BitCast(BitCast::from_llvm_ref(constant, gnmap, constants, types)),
+                    LLVMOpcode::LLVMAddrSpaceCast => Constant::AddrSpaceCast(AddrSpaceCast::from_llvm_ref(constant, gnmap, constants, types)),
+                    LLVMOpcode::LLVMICmp => Constant::ICmp(ICmp::from_llvm_ref(constant, gnmap, constants, types)),
+                    LLVMOpcode::LLVMFCmp => Constant::FCmp(FCmp::from_llvm_ref(constant, gnmap, constants, types)),
+                    LLVMOpcode::LLVMSelect => Constant::Select(Select::from_llvm_ref(constant, gnmap, constants, types)),
                     opcode => panic!("ConstantExpr has unexpected opcode {:?}", opcode),
                 }
             },
@@ -1026,17 +1090,20 @@ macro_rules! binop_from_llvm {
             pub(crate) fn from_llvm_ref(
                 expr: LLVMValueRef,
                 gnmap: &GlobalNameMap,
+                constants: &mut Constants,
                 types: &mut TypesBuilder,
             ) -> Self {
                 assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 2);
                 Self {
                     operand0: Constant::from_llvm_ref(
                         unsafe { LLVMGetOperand(expr, 0) },
+                        constants,
                         gnmap,
                         types,
                     ),
                     operand1: Constant::from_llvm_ref(
                         unsafe { LLVMGetOperand(expr, 1) },
+                        constants,
                         gnmap,
                         types,
                     ),
@@ -1069,12 +1136,13 @@ impl ExtractElement {
     pub(crate) fn from_llvm_ref(
         expr: LLVMValueRef,
         gnmap: &GlobalNameMap,
+        constants: &mut Constants,
         types: &mut TypesBuilder,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 2);
         Self {
-            vector: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, gnmap, types),
-            index: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 1) }, gnmap, types),
+            vector: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, constants, gnmap, types),
+            index: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 1) }, constants, gnmap, types),
         }
     }
 }
@@ -1083,13 +1151,14 @@ impl InsertElement {
     pub(crate) fn from_llvm_ref(
         expr: LLVMValueRef,
         gnmap: &GlobalNameMap,
+        constants: &mut Constants,
         types: &mut TypesBuilder,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 3);
         Self {
-            vector: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, gnmap, types),
-            element: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 1) }, gnmap, types),
-            index: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 2) }, gnmap, types),
+            vector: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, constants, gnmap, types),
+            element: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 1) }, constants, gnmap, types),
+            index: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 2) }, constants, gnmap, types),
         }
     }
 }
@@ -1098,13 +1167,14 @@ impl ShuffleVector {
     pub(crate) fn from_llvm_ref(
         expr: LLVMValueRef,
         gnmap: &GlobalNameMap,
+        constants: &mut Constants,
         types: &mut TypesBuilder,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 3);
         Self {
-            operand0: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, gnmap, types),
-            operand1: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 1) }, gnmap, types),
-            mask: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 2) }, gnmap, types),
+            operand0: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, constants, gnmap, types),
+            operand1: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 1) }, constants, gnmap, types),
+            mask: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 2) }, constants, gnmap, types),
         }
     }
 }
@@ -1113,11 +1183,12 @@ impl ExtractValue {
     pub(crate) fn from_llvm_ref(
         expr: LLVMValueRef,
         gnmap: &GlobalNameMap,
+        constants: &mut Constants,
         types: &mut TypesBuilder,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 2);
         Self {
-            aggregate: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, gnmap, types),
+            aggregate: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, constants, gnmap, types),
             indices: unsafe {
                 let num_indices = LLVMGetNumIndices(expr);
                 let ptr = LLVMGetIndices(expr);
@@ -1131,12 +1202,13 @@ impl InsertValue {
     pub(crate) fn from_llvm_ref(
         expr: LLVMValueRef,
         gnmap: &GlobalNameMap,
+        constants: &mut Constants,
         types: &mut TypesBuilder,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 3);
         Self {
-            aggregate: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, gnmap, types),
-            element: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 1) }, gnmap, types),
+            aggregate: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, constants, gnmap, types),
+            element: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 1) }, constants, gnmap, types),
             indices: unsafe {
                 let num_indices = LLVMGetNumIndices(expr);
                 let ptr = LLVMGetIndices(expr);
@@ -1150,15 +1222,16 @@ impl GetElementPtr {
     pub(crate) fn from_llvm_ref(
         expr: LLVMValueRef,
         gnmap: &GlobalNameMap,
+        constants: &mut Constants,
         types: &mut TypesBuilder,
     ) -> Self {
         Self {
-            address: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, gnmap, types),
+            address: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, constants, gnmap, types),
             indices: {
                 let num_indices = unsafe { LLVMGetNumOperands(expr) as u32 } - 1; // LLVMGetNumIndices(), which we use for instruction::GetElementPtr, appears empirically to not work for constant::GetElementPtr
                 (1 ..= num_indices)
                     .map(|i| {
-                        Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, i) }, gnmap, types)
+                        Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, i) }, constants, gnmap, types)
                     })
                     .collect()
             },
@@ -1175,12 +1248,14 @@ macro_rules! typed_unop_from_llvm {
             pub(crate) fn from_llvm_ref(
                 expr: LLVMValueRef,
                 gnmap: &GlobalNameMap,
+                constants: &mut Constants,
                 types: &mut TypesBuilder,
             ) -> Self {
                 assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 1);
                 Self {
                     operand: Constant::from_llvm_ref(
                         unsafe { LLVMGetOperand(expr, 0) },
+                        constants,
                         gnmap,
                         types,
                     ),
@@ -1209,13 +1284,14 @@ impl ICmp {
     pub(crate) fn from_llvm_ref(
         expr: LLVMValueRef,
         gnmap: &GlobalNameMap,
+        constants: &mut Constants,
         types: &mut TypesBuilder,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 2);
         Self {
             predicate: IntPredicate::from_llvm(unsafe { LLVMGetICmpPredicate(expr) }),
-            operand0: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, gnmap, types),
-            operand1: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 1) }, gnmap, types),
+            operand0: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, constants, gnmap, types),
+            operand1: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 1) }, constants, gnmap, types),
         }
     }
 }
@@ -1224,13 +1300,14 @@ impl FCmp {
     pub(crate) fn from_llvm_ref(
         expr: LLVMValueRef,
         gnmap: &GlobalNameMap,
+        constants: &mut Constants,
         types: &mut TypesBuilder,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 2);
         Self {
             predicate: FPPredicate::from_llvm(unsafe { LLVMGetFCmpPredicate(expr) }),
-            operand0: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, gnmap, types),
-            operand1: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 1) }, gnmap, types),
+            operand0: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, constants, gnmap, types),
+            operand1: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 1) }, constants, gnmap, types),
         }
     }
 }
@@ -1239,13 +1316,14 @@ impl Select {
     pub(crate) fn from_llvm_ref(
         expr: LLVMValueRef,
         gnmap: &GlobalNameMap,
+        constants: &mut Constants,
         types: &mut TypesBuilder,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 3);
         Self {
-            condition: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, gnmap, types),
-            true_value: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 1) }, gnmap, types),
-            false_value: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 2) }, gnmap, types),
+            condition: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, constants, gnmap, types),
+            true_value: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 1) }, constants, gnmap, types),
+            false_value: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 2) }, constants, gnmap, types),
         }
     }
 }

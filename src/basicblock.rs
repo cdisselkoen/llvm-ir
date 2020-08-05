@@ -28,7 +28,7 @@ impl BasicBlock {
 // from_llvm //
 // ********* //
 
-use crate::constant::GlobalNameMap;
+use crate::constant::{Constants, GlobalNameMap};
 use crate::from_llvm::*;
 use crate::operand::ValToNameMap;
 use crate::types::TypesBuilder;
@@ -45,6 +45,7 @@ impl BasicBlock {
         vnmap: &ValToNameMap,
         bbmap: &BBMap,
         gnmap: &GlobalNameMap,
+        constants: &mut Constants,
         types: &mut TypesBuilder,
     ) -> Self {
         let name = Name::name_or_num(unsafe { get_bb_name(bb) }, ctr);
@@ -53,7 +54,7 @@ impl BasicBlock {
         Self {
             name,
             instrs: all_but_last(get_instructions(bb))
-                .map(|i| Instruction::from_llvm_ref(i, ctr, vnmap, bbmap, gnmap, types))
+                .map(|i| Instruction::from_llvm_ref(i, ctr, vnmap, bbmap, gnmap, constants, types))
                 .collect(),
             term: Terminator::from_llvm_ref(
                 unsafe { LLVMGetBasicBlockTerminator(bb) },
@@ -61,6 +62,7 @@ impl BasicBlock {
                 vnmap,
                 bbmap,
                 gnmap,
+                constants,
                 types,
             ),
         }

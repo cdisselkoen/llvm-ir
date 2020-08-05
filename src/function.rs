@@ -1,7 +1,7 @@
 use crate::debugloc::{DebugLoc, HasDebugLoc};
 use crate::module::{Comdat, DLLStorageClass, Linkage, Visibility};
 use crate::types::{TypeRef, Typed, Types};
-use crate::{BasicBlock, Constant, Name};
+use crate::{BasicBlock, ConstantRef, Name};
 use std::num;
 
 /// See [LLVM 10 docs on Functions](https://releases.llvm.org/10.0.0/docs/LangRef.html#functions)
@@ -23,9 +23,9 @@ pub struct Function {
     pub alignment: u32,
     /// See [LLVM 10 docs on Garbage Collector Strategy Names](https://releases.llvm.org/10.0.0/docs/LangRef.html#gc)
     pub garbage_collector_name: Option<String>,
-    // pub prefix: Option<Constant>,  // appears to not be exposed in the LLVM C API, only the C++ API
+    // pub prefix: Option<ConstantRef>,  // appears to not be exposed in the LLVM C API, only the C++ API
     /// Personalities are used for exception handling. See [LLVM 10 docs on Personality Function](https://releases.llvm.org/10.0.0/docs/LangRef.html#personalityfn)
-    pub personality_function: Option<Constant>,
+    pub personality_function: Option<ConstantRef>,
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: Vec<(String, MetadataRef<MetadataNode>)>,
 }
@@ -241,7 +241,7 @@ pub type GroupID = usize;
 // ********* //
 
 use crate::basicblock::BBMap;
-use crate::constant::GlobalNameMap;
+use crate::constant::{Constant, Constants, GlobalNameMap};
 use crate::from_llvm::*;
 use crate::operand::ValToNameMap;
 use crate::types::TypesBuilder;
@@ -252,6 +252,7 @@ impl Function {
     pub(crate) fn from_llvm_ref(
         func: LLVMValueRef,
         gnmap: &GlobalNameMap,
+        constants: &mut Constants,
         types: &mut TypesBuilder,
     ) -> Self {
         let func = unsafe { LLVMIsAFunction(func) };
@@ -316,7 +317,7 @@ impl Function {
             basic_blocks: {
                 get_basic_blocks(func)
                     .map(|bb| {
-                        BasicBlock::from_llvm_ref(bb, &mut local_ctr, &vnmap, &bbmap, gnmap, types)
+                        BasicBlock::from_llvm_ref(bb, &mut local_ctr, &vnmap, &bbmap, gnmap, constants, types)
                     })
                     .collect()
             },
@@ -383,6 +384,7 @@ impl Function {
                 if unsafe { LLVMHasPersonalityFn(func) } != 0 {
                     Some(Constant::from_llvm_ref(
                         unsafe { LLVMGetPersonalityFn(func) },
+                        constants,
                         gnmap,
                         types,
                     ))

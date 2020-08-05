@@ -114,8 +114,15 @@ fn DILocation_implicit_code_extra_checks() {
         .clone()
         .try_into()
         .unwrap_or_else(|_| panic!("Expected an invoke, got {:?}", &entry.term));
-    if let Either::Right(Operand::ConstantOperand(Constant::GlobalReference { name, .. })) = &invoke.function {
-        assert_eq!(name, &Name::Name("_ZN1A3fooEi".to_owned()));
+    if let Either::Right(Operand::ConstantOperand(cref)) = &invoke.function {
+        if let Constant::GlobalReference { name, .. } = cref.as_ref() {
+            assert_eq!(name, &Name::Name("_ZN1A3fooEi".to_owned()));
+        } else {
+            panic!(
+                "Expected invoke.function to be a GlobalReference; instead it was another kind of Constant: {:?}",
+                cref
+            );
+        }
     } else {
         panic!(
             "Expected invoke.function to be a GlobalReference; instead it was {:?}",
@@ -143,7 +150,7 @@ fn DILocation_implicit_code_extra_checks() {
     } else {
         panic!("Expected invoke.arguments[0].0 to be a local operand; instead it was {:?}", &invoke.arguments[0].0);
     }
-    assert_eq!(invoke.arguments[1].0, Operand::ConstantOperand(Constant::Int { bits: 32, value: 0 }));
+    assert_eq!(invoke.arguments[1].0, Operand::ConstantOperand(ConstantRef::new(Constant::Int { bits: 32, value: 0 })));
     assert_eq!(invoke.return_label, Name::Name("invoke.cont".to_owned()));
     assert_eq!(invoke.exception_label, Name::Name("lpad".to_owned()));
 
@@ -233,7 +240,7 @@ fn DILocation_implicit_code_extra_checks() {
         .unwrap_or_else(|_| panic!("Expected an insertvalue, got {:?}", &ehresume.instrs[2]));
     assert_eq!(
         ival.aggregate,
-        Operand::ConstantOperand(Constant::Undef(expected_landingpad_resultty.clone()))
+        Operand::ConstantOperand(ConstantRef::new(Constant::Undef(expected_landingpad_resultty.clone())))
     );
     assert_eq!(
         ival.element,
@@ -291,15 +298,15 @@ fn atomics() {
     let bb = &func.basic_blocks[0];
     let cmpxchg: &instruction::CmpXchg = &bb.instrs[0].clone().try_into().unwrap_or_else(|_| panic!("Expected a cmpxchg, got {:?}", &bb.instrs[0]));
     assert_eq!(cmpxchg.address, Operand::LocalOperand { name: Name::from("word"), ty: module.types.pointer_to(module.types.i32()) });
-    assert_eq!(cmpxchg.expected, Operand::ConstantOperand(Constant::Int { bits: 32, value: 0 }));
-    assert_eq!(cmpxchg.replacement, Operand::ConstantOperand(Constant::Int { bits: 32, value: 4 }));
+    assert_eq!(cmpxchg.expected, Operand::ConstantOperand(ConstantRef::new(Constant::Int { bits: 32, value: 0 })));
+    assert_eq!(cmpxchg.replacement, Operand::ConstantOperand(ConstantRef::new(Constant::Int { bits: 32, value: 4 })));
     assert_eq!(cmpxchg.dest, Name::from("cmpxchg.0"));
     assert_eq!(cmpxchg.volatile, false);
     assert_eq!(cmpxchg.atomicity, Atomicity { synch_scope: SynchronizationScope::System, mem_ordering: MemoryOrdering::Monotonic });
     assert_eq!(cmpxchg.failure_memory_ordering, MemoryOrdering::Monotonic);
     let atomicrmw: &instruction::AtomicRMW = &bb.instrs[8].clone().try_into().unwrap_or_else(|_| panic!("Expected an atomicrmw, got {:?}", &bb.instrs[8]));
     assert_eq!(atomicrmw.address, Operand::LocalOperand { name: Name::from("word"), ty: module.types.pointer_to(module.types.i32()) });
-    assert_eq!(atomicrmw.value, Operand::ConstantOperand(Constant::Int { bits: 32, value: 12 }));
+    assert_eq!(atomicrmw.value, Operand::ConstantOperand(ConstantRef::new(Constant::Int { bits: 32, value: 12 })));
     assert_eq!(atomicrmw.dest, Name::from("atomicrmw.xchg"));
     assert_eq!(module.type_of(atomicrmw), module.types.i32());
 }

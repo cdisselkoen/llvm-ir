@@ -9,7 +9,7 @@ mod iterators;
 pub mod basicblock;
 pub use basicblock::BasicBlock;
 pub mod constant;
-pub use constant::Constant;
+pub use constant::{Constant, ConstantRef};
 pub mod debugloc;
 pub use debugloc::{DebugLoc, HasDebugLoc};
 pub mod function;

@@ -29,7 +29,7 @@ llvm_test!("tests/llvm_bc/upgrade-mrr-runtime-calls.bc", upgrade_mrr_runtime_cal
 // instructions, AtomicRMWBinOps, and the `weak` field on CmpXchg -- were parsed
 // correctly
 use llvm_ir::instruction::RMWBinOp;
-use llvm_ir::{instruction, Constant, Name, Operand};
+use llvm_ir::{instruction, Constant, ConstantRef, Name, Operand};
 use std::convert::TryInto;
 
 /// LLVM 10 added the Freeze instruction; ensure that that was parsed correctly
@@ -46,7 +46,7 @@ fn freeze() {
     assert_eq!(freeze.operand, Operand::LocalOperand { name: Name::from("op1"), ty: module.types.i32() });
     assert_eq!(freeze.dest, Name::from(31));
     let freeze: &instruction::Freeze = &bb.instrs[7].clone().try_into().unwrap_or_else(|_| panic!("Expected a freeze, got {:?}", &bb.instrs[7]));
-    assert_eq!(freeze.operand, Operand::ConstantOperand(Constant::Int { bits: 32, value: 10 }));
+    assert_eq!(freeze.operand, Operand::ConstantOperand(ConstantRef::new(Constant::Int { bits: 32, value: 10 })));
     assert_eq!(freeze.dest, Name::from(32));
     let freeze: &instruction::Freeze = &bb.instrs[9].clone().try_into().unwrap_or_else(|_| panic!("Expected a freeze, got {:?}", &bb.instrs[9]));
     assert_eq!(freeze.operand, Operand::LocalOperand { name: Name::from("vop"), ty: module.types.vector_of(module.types.i32(), 2) });

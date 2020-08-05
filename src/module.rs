@@ -1,4 +1,4 @@
-use crate::constant::Constant;
+use crate::constant::ConstantRef;
 use crate::debugloc::*;
 use crate::function::{Function, FunctionAttribute, GroupID};
 use crate::name::Name;
@@ -109,7 +109,7 @@ pub struct GlobalVariable {
     pub dll_storage_class: DLLStorageClass,
     pub thread_local_mode: ThreadLocalMode,
     pub unnamed_addr: Option<UnnamedAddr>,
-    pub initializer: Option<Constant>,
+    pub initializer: Option<ConstantRef>,
     pub section: Option<String>,
     pub comdat: Option<Comdat>, // llvm-hs-pure has Option<String> for some reason
     pub alignment: u32,
@@ -133,7 +133,7 @@ impl HasDebugLoc for GlobalVariable {
 #[derive(PartialEq, Clone, Debug)]
 pub struct GlobalAlias {
     pub name: Name,
-    pub aliasee: Constant,
+    pub aliasee: ConstantRef,
     pub linkage: Linkage,
     pub visibility: Visibility,
     pub ty: TypeRef,
@@ -284,7 +284,7 @@ pub enum AlignType {
 // from_llvm //
 // ********* //
 
-use crate::constant::GlobalNameMap;
+use crate::constant::{Constant, Constants, GlobalNameMap};
 use crate::from_llvm::*;
 use llvm_sys::comdat::*;
 use llvm_sys::{
@@ -320,6 +320,7 @@ impl Module {
             .collect();
         global_ctr = 0; // reset the global_ctr; the second pass should number everything exactly the same though
 
+        let mut constants = Constants::new();
         let mut types = TypesBuilder::new();
 
         Self {
@@ -328,13 +329,13 @@ impl Module {
             data_layout: unsafe { get_data_layout_str(module) },
             target_triple: unsafe { get_target(module) },
             functions: get_defined_functions(module)
-                .map(|f| Function::from_llvm_ref(f, &gnmap, &mut types))
+                .map(|f| Function::from_llvm_ref(f, &gnmap, &mut constants, &mut types))
                 .collect(),
             global_vars: get_globals(module)
-                .map(|g| GlobalVariable::from_llvm_ref(g, &mut global_ctr, &gnmap, &mut types))
+                .map(|g| GlobalVariable::from_llvm_ref(g, &mut global_ctr, &gnmap, &mut constants, &mut types))
                 .collect(),
             global_aliases: get_global_aliases(module)
-                .map(|g| GlobalAlias::from_llvm_ref(g, &mut global_ctr, &gnmap, &mut types))
+                .map(|g| GlobalAlias::from_llvm_ref(g, &mut global_ctr, &gnmap, &mut constants, &mut types))
                 .collect(),
             // function_attribute_groups: unimplemented!("function_attribute_groups"),  // llvm-hs collects these in the decoder monad or something
             inline_assembly: unsafe { get_module_inline_asm(module) },
@@ -351,6 +352,7 @@ impl GlobalVariable {
         global: LLVMValueRef,
         ctr: &mut usize,
         gnmap: &GlobalNameMap,
+        constants: &mut Constants,
         types: &mut TypesBuilder,
     ) -> Self {
         let ty = types.type_from_llvm_ref(unsafe { LLVMTypeOf(global) });
@@ -378,7 +380,7 @@ impl GlobalVariable {
                 if it.is_null() {
                     None
                 } else {
-                    Some(Constant::from_llvm_ref(it, gnmap, types))
+                    Some(Constant::from_llvm_ref(it, constants, gnmap, types))
                 }
             },
             section: unsafe { get_section(global) },
@@ -402,6 +404,7 @@ impl GlobalAlias {
         alias: LLVMValueRef,
         ctr: &mut usize,
         gnmap: &GlobalNameMap,
+        constants: &mut Constants,
         types: &mut TypesBuilder,
     ) -> Self {
         let ty = types.type_from_llvm_ref(unsafe { LLVMTypeOf(alias) });
@@ -411,7 +414,7 @@ impl GlobalAlias {
         };
         Self {
             name: Name::name_or_num(unsafe { get_value_name(alias) }, ctr),
-            aliasee: Constant::from_llvm_ref(unsafe { LLVMAliasGetAliasee(alias) }, gnmap, types),
+            aliasee: Constant::from_llvm_ref(unsafe { LLVMAliasGetAliasee(alias) }, constants, gnmap, types),
             linkage: Linkage::from_llvm(unsafe { LLVMGetLinkage(alias) }),
             visibility: Visibility::from_llvm(unsafe { LLVMGetVisibility(alias) }),
             ty,

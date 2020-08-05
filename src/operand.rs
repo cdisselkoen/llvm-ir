@@ -1,5 +1,5 @@
 use crate::types::{TypeRef, Typed, Types};
-use crate::{Constant, Name};
+use crate::{ConstantRef, Name};
 use std::collections::HashMap;
 
 #[derive(PartialEq, Clone, Debug)]
@@ -10,7 +10,7 @@ pub enum Operand {
         ty: TypeRef,
     },
     /// includes [`GlobalReference`](../constant/enum.Constant.html#variant.GlobalReference) for things like `@foo`
-    ConstantOperand(Constant),
+    ConstantOperand(ConstantRef),
     MetadataOperand, // --TODO not yet implemented-- MetadataOperand(Box<Metadata>),
 }
 
@@ -28,7 +28,7 @@ impl Typed for Operand {
 // from_llvm //
 // ********* //
 
-use crate::constant::GlobalNameMap;
+use crate::constant::{Constant, Constants, GlobalNameMap};
 use crate::from_llvm::*;
 use crate::types::TypesBuilder;
 use llvm_sys::LLVMValueKind;
@@ -40,11 +40,12 @@ impl Operand {
         operand: LLVMValueRef,
         vnmap: &ValToNameMap,
         gnmap: &GlobalNameMap,
+        constants: &mut Constants,
         types: &mut TypesBuilder,
     ) -> Self {
         let constant = unsafe { LLVMIsAConstant(operand) };
         if !constant.is_null() {
-            Operand::ConstantOperand(Constant::from_llvm_ref(constant, gnmap, types))
+            Operand::ConstantOperand(Constant::from_llvm_ref(constant, constants, gnmap, types))
         } else if unsafe {
             LLVMGetValueKind(operand) == LLVMValueKind::LLVMMetadataAsValueValueKind
         } {
