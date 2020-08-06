@@ -242,7 +242,7 @@ pub type GroupID = usize;
 
 use crate::constant::Constant;
 use crate::from_llvm::*;
-use crate::module::FromLLVMContext;
+use crate::module::ModuleContext;
 use llvm_sys::comdat::*;
 use llvm_sys::{LLVMAttributeFunctionIndex, LLVMAttributeReturnIndex};
 use std::collections::HashMap;
@@ -259,7 +259,7 @@ pub(crate) struct FunctionContext<'a> {
 }
 
 impl Function {
-    pub(crate) fn from_llvm_ref(func: LLVMValueRef, ctx: &mut FromLLVMContext) -> Self {
+    pub(crate) fn from_llvm_ref(func: LLVMValueRef, ctx: &mut ModuleContext) -> Self {
         let func = unsafe { LLVMIsAFunction(func) };
         assert!(!func.is_null());
         debug!("Processing func {:?}", unsafe { get_value_name(func) });

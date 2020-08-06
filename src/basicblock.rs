@@ -30,14 +30,14 @@ impl BasicBlock {
 
 use crate::from_llvm::*;
 use crate::function::FunctionContext;
-use crate::module::FromLLVMContext;
+use crate::module::ModuleContext;
 use llvm_sys::LLVMOpcode;
 use llvm_sys::LLVMTypeKind::LLVMVoidTypeKind;
 
 impl BasicBlock {
     pub(crate) fn from_llvm_ref(
         bb: LLVMBasicBlockRef,
-        ctx: &mut FromLLVMContext,
+        ctx: &mut ModuleContext,
         func_ctx: &mut FunctionContext,
     ) -> Self {
         let name = Name::name_or_num(unsafe { get_bb_name(bb) }, &mut func_ctx.ctr);

@@ -298,7 +298,7 @@ use std::collections::HashMap;
 
 /// This struct contains data used when translating llvm-sys objects into our
 /// data structures
-pub(crate) struct FromLLVMContext<'a> {
+pub(crate) struct ModuleContext<'a> {
     pub types: TypesBuilder,
     /// Map from an llvm-sys constant to the corresponding llvm-ir `ConstantRef`
     pub constants: HashMap<LLVMValueRef, ConstantRef>,
@@ -306,7 +306,7 @@ pub(crate) struct FromLLVMContext<'a> {
     pub global_names: &'a HashMap<LLVMValueRef, Name>,
 }
 
-impl<'a> FromLLVMContext<'a> {
+impl<'a> ModuleContext<'a> {
     fn new(global_names: &'a HashMap<LLVMValueRef, Name>) -> Self {
         Self {
             types: TypesBuilder::new(),
@@ -341,7 +341,7 @@ impl Module {
             .collect();
         global_ctr = 0; // reset the global_ctr; the second pass should number everything exactly the same though
 
-        let mut ctx = FromLLVMContext::new(&global_names);
+        let mut ctx = ModuleContext::new(&global_names);
 
         Self {
             name: unsafe { get_module_identifier(module) },
@@ -371,7 +371,7 @@ impl GlobalVariable {
     pub(crate) fn from_llvm_ref(
         global: LLVMValueRef,
         ctr: &mut usize,
-        ctx: &mut FromLLVMContext,
+        ctx: &mut ModuleContext,
     ) -> Self {
         let ty = ctx.types.type_from_llvm_ref(unsafe { LLVMTypeOf(global) });
         let addr_space = match ty.as_ref() {
@@ -421,7 +421,7 @@ impl GlobalAlias {
     pub(crate) fn from_llvm_ref(
         alias: LLVMValueRef,
         ctr: &mut usize,
-        ctx: &mut FromLLVMContext,
+        ctx: &mut ModuleContext,
     ) -> Self {
         let ty = ctx.types.type_from_llvm_ref(unsafe { LLVMTypeOf(alias) });
         let addr_space = match ty.as_ref() {

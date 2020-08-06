@@ -1760,7 +1760,7 @@ pub struct LandingPadClause {}
 use crate::constant::Constant;
 use crate::from_llvm::*;
 use crate::function::FunctionContext;
-use crate::module::FromLLVMContext;
+use crate::module::ModuleContext;
 use crate::types::TypesBuilder;
 use llvm_sys::LLVMAtomicOrdering;
 use llvm_sys::LLVMAtomicRMWBinOp;
@@ -1770,7 +1770,7 @@ use llvm_sys::LLVMTypeKind::LLVMVoidTypeKind;
 impl Instruction {
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
-        ctx: &mut FromLLVMContext,
+        ctx: &mut ModuleContext,
         func_ctx: &mut FunctionContext,
     ) -> Self {
         debug!("Processing instruction {:?}", unsafe {
@@ -1890,7 +1890,7 @@ macro_rules! unop_from_llvm {
         impl $inst {
             pub(crate) fn from_llvm_ref(
                 inst: LLVMValueRef,
-                ctx: &mut FromLLVMContext,
+                ctx: &mut ModuleContext,
                 func_ctx: &mut FunctionContext,
             ) -> Self {
                 assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 1);
@@ -1914,7 +1914,7 @@ macro_rules! binop_from_llvm {
         impl $inst {
             pub(crate) fn from_llvm_ref(
                 inst: LLVMValueRef,
-                ctx: &mut FromLLVMContext,
+                ctx: &mut ModuleContext,
                 func_ctx: &mut FunctionContext,
             ) -> Self {
                 assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 2);
@@ -1962,7 +1962,7 @@ unop_from_llvm!(Freeze);
 impl ExtractElement {
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
-        ctx: &mut FromLLVMContext,
+        ctx: &mut ModuleContext,
         func_ctx: &mut FunctionContext,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 2);
@@ -1979,7 +1979,7 @@ impl ExtractElement {
 impl InsertElement {
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
-        ctx: &mut FromLLVMContext,
+        ctx: &mut ModuleContext,
         func_ctx: &mut FunctionContext,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 3);
@@ -1997,7 +1997,7 @@ impl InsertElement {
 impl ShuffleVector {
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
-        ctx: &mut FromLLVMContext,
+        ctx: &mut ModuleContext,
         func_ctx: &mut FunctionContext,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 3);
@@ -2015,7 +2015,7 @@ impl ShuffleVector {
 impl ExtractValue {
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
-        ctx: &mut FromLLVMContext,
+        ctx: &mut ModuleContext,
         func_ctx: &mut FunctionContext,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 1);
@@ -2036,7 +2036,7 @@ impl ExtractValue {
 impl InsertValue {
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
-        ctx: &mut FromLLVMContext,
+        ctx: &mut ModuleContext,
         func_ctx: &mut FunctionContext,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 2);
@@ -2058,7 +2058,7 @@ impl InsertValue {
 impl Alloca {
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
-        ctx: &mut FromLLVMContext,
+        ctx: &mut ModuleContext,
         func_ctx: &mut FunctionContext,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 1);
@@ -2080,7 +2080,7 @@ impl Alloca {
 impl Load {
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
-        ctx: &mut FromLLVMContext,
+        ctx: &mut ModuleContext,
         func_ctx: &mut FunctionContext,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 1);
@@ -2109,7 +2109,7 @@ impl Load {
 impl Store {
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
-        ctx: &mut FromLLVMContext,
+        ctx: &mut ModuleContext,
         func_ctx: &mut FunctionContext,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 2);
@@ -2152,7 +2152,7 @@ impl Fence {
 impl CmpXchg {
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
-        ctx: &mut FromLLVMContext,
+        ctx: &mut ModuleContext,
         func_ctx: &mut FunctionContext,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 3);
@@ -2181,7 +2181,7 @@ impl CmpXchg {
 impl AtomicRMW {
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
-        ctx: &mut FromLLVMContext,
+        ctx: &mut ModuleContext,
         func_ctx: &mut FunctionContext,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 2);
@@ -2204,7 +2204,7 @@ impl AtomicRMW {
 impl GetElementPtr {
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
-        ctx: &mut FromLLVMContext,
+        ctx: &mut ModuleContext,
         func_ctx: &mut FunctionContext,
     ) -> Self {
         Self {
@@ -2232,7 +2232,7 @@ macro_rules! typed_unop_from_llvm {
         impl $inst {
             pub(crate) fn from_llvm_ref(
                 inst: LLVMValueRef,
-                ctx: &mut FromLLVMContext,
+                ctx: &mut ModuleContext,
                 func_ctx: &mut FunctionContext,
             ) -> Self {
                 assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 1);
@@ -2269,7 +2269,7 @@ typed_unop_from_llvm!(AddrSpaceCast);
 impl ICmp {
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
-        ctx: &mut FromLLVMContext,
+        ctx: &mut ModuleContext,
         func_ctx: &mut FunctionContext,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 2);
@@ -2287,7 +2287,7 @@ impl ICmp {
 impl FCmp {
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
-        ctx: &mut FromLLVMContext,
+        ctx: &mut ModuleContext,
         func_ctx: &mut FunctionContext,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 2);
@@ -2305,7 +2305,7 @@ impl FCmp {
 impl Phi {
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
-        ctx: &mut FromLLVMContext,
+        ctx: &mut ModuleContext,
         func_ctx: &mut FunctionContext,
     ) -> Self {
         Self {
@@ -2338,7 +2338,7 @@ impl Phi {
 impl Select {
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
-        ctx: &mut FromLLVMContext,
+        ctx: &mut ModuleContext,
         func_ctx: &mut FunctionContext,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 3);
@@ -2366,7 +2366,7 @@ impl CallInfo {
     // Call this function only an a Call instruction or Invoke terminator
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
-        ctx: &mut FromLLVMContext,
+        ctx: &mut ModuleContext,
         func_ctx: &mut FunctionContext,
     ) -> Self {
         use llvm_sys::{LLVMAttributeFunctionIndex, LLVMAttributeReturnIndex};
@@ -2443,7 +2443,7 @@ impl CallInfo {
 impl Call {
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
-        ctx: &mut FromLLVMContext,
+        ctx: &mut ModuleContext,
         func_ctx: &mut FunctionContext,
     ) -> Self {
         let callinfo = CallInfo::from_llvm_ref(inst, ctx, func_ctx);
@@ -2474,7 +2474,7 @@ impl Call {
 impl VAArg {
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
-        ctx: &mut FromLLVMContext,
+        ctx: &mut ModuleContext,
         func_ctx: &mut FunctionContext,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 1);
@@ -2491,7 +2491,7 @@ impl VAArg {
 impl LandingPad {
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
-        ctx: &mut FromLLVMContext,
+        ctx: &mut ModuleContext,
         func_ctx: &mut FunctionContext,
     ) -> Self {
         Self {
@@ -2513,7 +2513,7 @@ impl LandingPad {
 impl CatchPad {
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
-        ctx: &mut FromLLVMContext,
+        ctx: &mut ModuleContext,
         func_ctx: &mut FunctionContext,
     ) -> Self {
         Self {
@@ -2540,7 +2540,7 @@ impl CatchPad {
 impl CleanupPad {
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
-        ctx: &mut FromLLVMContext,
+        ctx: &mut ModuleContext,
         func_ctx: &mut FunctionContext,
     ) -> Self {
         Self {

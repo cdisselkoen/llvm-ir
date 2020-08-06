@@ -228,7 +228,7 @@ impl Typed for ConstantRef {
 impl ConstantRef {
     /// Construct a new `ConstantRef` by consuming the given owned `Constant`.
     //
-    // Internal users should get `ConstantRef`s from the `FromLLVMContext` cache
+    // Internal users should get `ConstantRef`s from the `ModuleContext` cache
     // instead if possible, so that if we already have that `Constant`
     // somewhere, we can just give you a new `ConstantRef` to that `Constant`.
     pub fn new(c: Constant) -> Self {
@@ -881,11 +881,11 @@ impl Typed for Select {
 // ********* //
 
 use crate::from_llvm::*;
-use crate::module::FromLLVMContext;
+use crate::module::ModuleContext;
 use std::collections::hash_map::Entry;
 
 impl Constant {
-    pub(crate) fn from_llvm_ref(constant: LLVMValueRef, ctx: &mut FromLLVMContext) -> ConstantRef {
+    pub(crate) fn from_llvm_ref(constant: LLVMValueRef, ctx: &mut ModuleContext) -> ConstantRef {
         if let Some(constantref) = ctx.constants.get(&constant) {
             return constantref.clone();
         }
@@ -896,7 +896,7 @@ impl Constant {
         }
     }
 
-    fn parse_from_llvm_ref(constant: LLVMValueRef, ctx: &mut FromLLVMContext) -> Self {
+    fn parse_from_llvm_ref(constant: LLVMValueRef, ctx: &mut ModuleContext) -> Self {
         use llvm_sys::LLVMValueKind;
         if unsafe { LLVMIsAConstant(constant).is_null() } {
             panic!(
@@ -1072,7 +1072,7 @@ impl Constant {
 macro_rules! binop_from_llvm {
     ($expr:ident) => {
         impl $expr {
-            pub(crate) fn from_llvm_ref(expr: LLVMValueRef, ctx: &mut FromLLVMContext) -> Self {
+            pub(crate) fn from_llvm_ref(expr: LLVMValueRef, ctx: &mut ModuleContext) -> Self {
                 assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 2);
                 Self {
                     operand0: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, ctx),
@@ -1103,7 +1103,7 @@ binop_from_llvm!(FDiv);
 binop_from_llvm!(FRem);
 
 impl ExtractElement {
-    pub(crate) fn from_llvm_ref(expr: LLVMValueRef, ctx: &mut FromLLVMContext) -> Self {
+    pub(crate) fn from_llvm_ref(expr: LLVMValueRef, ctx: &mut ModuleContext) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 2);
         Self {
             vector: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, ctx),
@@ -1113,7 +1113,7 @@ impl ExtractElement {
 }
 
 impl InsertElement {
-    pub(crate) fn from_llvm_ref(expr: LLVMValueRef, ctx: &mut FromLLVMContext) -> Self {
+    pub(crate) fn from_llvm_ref(expr: LLVMValueRef, ctx: &mut ModuleContext) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 3);
         Self {
             vector: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, ctx),
@@ -1124,7 +1124,7 @@ impl InsertElement {
 }
 
 impl ShuffleVector {
-    pub(crate) fn from_llvm_ref(expr: LLVMValueRef, ctx: &mut FromLLVMContext) -> Self {
+    pub(crate) fn from_llvm_ref(expr: LLVMValueRef, ctx: &mut ModuleContext) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 3);
         Self {
             operand0: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, ctx),
@@ -1135,7 +1135,7 @@ impl ShuffleVector {
 }
 
 impl ExtractValue {
-    pub(crate) fn from_llvm_ref(expr: LLVMValueRef, ctx: &mut FromLLVMContext) -> Self {
+    pub(crate) fn from_llvm_ref(expr: LLVMValueRef, ctx: &mut ModuleContext) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 2);
         Self {
             aggregate: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, ctx),
@@ -1149,7 +1149,7 @@ impl ExtractValue {
 }
 
 impl InsertValue {
-    pub(crate) fn from_llvm_ref(expr: LLVMValueRef, ctx: &mut FromLLVMContext) -> Self {
+    pub(crate) fn from_llvm_ref(expr: LLVMValueRef, ctx: &mut ModuleContext) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 3);
         Self {
             aggregate: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, ctx),
@@ -1164,7 +1164,7 @@ impl InsertValue {
 }
 
 impl GetElementPtr {
-    pub(crate) fn from_llvm_ref(expr: LLVMValueRef, ctx: &mut FromLLVMContext) -> Self {
+    pub(crate) fn from_llvm_ref(expr: LLVMValueRef, ctx: &mut ModuleContext) -> Self {
         Self {
             address: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, ctx),
             indices: {
@@ -1183,7 +1183,7 @@ impl GetElementPtr {
 macro_rules! typed_unop_from_llvm {
     ($expr:ident) => {
         impl $expr {
-            pub(crate) fn from_llvm_ref(expr: LLVMValueRef, ctx: &mut FromLLVMContext) -> Self {
+            pub(crate) fn from_llvm_ref(expr: LLVMValueRef, ctx: &mut ModuleContext) -> Self {
                 assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 1);
                 Self {
                     operand: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, ctx),
@@ -1209,7 +1209,7 @@ typed_unop_from_llvm!(BitCast);
 typed_unop_from_llvm!(AddrSpaceCast);
 
 impl ICmp {
-    pub(crate) fn from_llvm_ref(expr: LLVMValueRef, ctx: &mut FromLLVMContext) -> Self {
+    pub(crate) fn from_llvm_ref(expr: LLVMValueRef, ctx: &mut ModuleContext) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 2);
         Self {
             predicate: IntPredicate::from_llvm(unsafe { LLVMGetICmpPredicate(expr) }),
@@ -1220,7 +1220,7 @@ impl ICmp {
 }
 
 impl FCmp {
-    pub(crate) fn from_llvm_ref(expr: LLVMValueRef, ctx: &mut FromLLVMContext) -> Self {
+    pub(crate) fn from_llvm_ref(expr: LLVMValueRef, ctx: &mut ModuleContext) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 2);
         Self {
             predicate: FPPredicate::from_llvm(unsafe { LLVMGetFCmpPredicate(expr) }),
@@ -1231,7 +1231,7 @@ impl FCmp {
 }
 
 impl Select {
-    pub(crate) fn from_llvm_ref(expr: LLVMValueRef, ctx: &mut FromLLVMContext) -> Self {
+    pub(crate) fn from_llvm_ref(expr: LLVMValueRef, ctx: &mut ModuleContext) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 3);
         Self {
             condition: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, ctx),

@@ -353,13 +353,13 @@ impl Typed for CallBr {
 
 use crate::from_llvm::*;
 use crate::function::FunctionContext;
-use crate::module::FromLLVMContext;
+use crate::module::ModuleContext;
 use llvm_sys::LLVMOpcode;
 
 impl Terminator {
     pub(crate) fn from_llvm_ref(
         term: LLVMValueRef,
-        ctx: &mut FromLLVMContext,
+        ctx: &mut ModuleContext,
         func_ctx: &mut FunctionContext,
     ) -> Self {
         debug!("Processing terminator {:?}", unsafe {
@@ -412,7 +412,7 @@ impl Terminator {
 impl Ret {
     pub(crate) fn from_llvm_ref(
         term: LLVMValueRef,
-        ctx: &mut FromLLVMContext,
+        ctx: &mut ModuleContext,
         func_ctx: &mut FunctionContext,
     ) -> Self {
         Self {
@@ -449,7 +449,7 @@ impl Br {
 impl CondBr {
     pub(crate) fn from_llvm_ref(
         term: LLVMValueRef,
-        ctx: &mut FromLLVMContext,
+        ctx: &mut ModuleContext,
         func_ctx: &mut FunctionContext,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(term) }, 3);
@@ -474,7 +474,7 @@ impl CondBr {
 impl Switch {
     pub(crate) fn from_llvm_ref(
         term: LLVMValueRef,
-        ctx: &mut FromLLVMContext,
+        ctx: &mut ModuleContext,
         func_ctx: &mut FunctionContext,
     ) -> Self {
         Self {
@@ -509,7 +509,7 @@ impl Switch {
 impl IndirectBr {
     pub(crate) fn from_llvm_ref(
         term: LLVMValueRef,
-        ctx: &mut FromLLVMContext,
+        ctx: &mut ModuleContext,
         func_ctx: &mut FunctionContext,
     ) -> Self {
         Self {
@@ -535,7 +535,7 @@ impl IndirectBr {
 impl Invoke {
     pub(crate) fn from_llvm_ref(
         term: LLVMValueRef,
-        ctx: &mut FromLLVMContext,
+        ctx: &mut ModuleContext,
         func_ctx: &mut FunctionContext,
     ) -> Self {
         use crate::instruction::CallInfo;
@@ -566,7 +566,7 @@ impl Invoke {
 impl Resume {
     pub(crate) fn from_llvm_ref(
         term: LLVMValueRef,
-        ctx: &mut FromLLVMContext,
+        ctx: &mut ModuleContext,
         func_ctx: &mut FunctionContext,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(term) }, 1);
@@ -591,7 +591,7 @@ impl Unreachable {
 impl CleanupRet {
     pub(crate) fn from_llvm_ref(
         term: LLVMValueRef,
-        ctx: &mut FromLLVMContext,
+        ctx: &mut ModuleContext,
         func_ctx: &mut FunctionContext,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(term) }, 1);
@@ -626,7 +626,7 @@ impl CleanupRet {
 impl CatchRet {
     pub(crate) fn from_llvm_ref(
         term: LLVMValueRef,
-        ctx: &mut FromLLVMContext,
+        ctx: &mut ModuleContext,
         func_ctx: &mut FunctionContext,
     ) -> Self {
         Self {
@@ -645,7 +645,7 @@ impl CatchRet {
 impl CatchSwitch {
     pub(crate) fn from_llvm_ref(
         term: LLVMValueRef,
-        ctx: &mut FromLLVMContext,
+        ctx: &mut ModuleContext,
         func_ctx: &mut FunctionContext,
     ) -> Self {
         Self {
@@ -690,7 +690,7 @@ impl CatchSwitch {
 impl CallBr {
     pub(crate) fn from_llvm_ref(
         term: LLVMValueRef,
-        ctx: &mut FromLLVMContext,
+        ctx: &mut ModuleContext,
         func_ctx: &mut FunctionContext,
     ) -> Self {
         use crate::instruction::CallInfo;

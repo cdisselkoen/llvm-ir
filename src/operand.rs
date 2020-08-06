@@ -30,13 +30,13 @@ impl Typed for Operand {
 use crate::constant::Constant;
 use crate::from_llvm::*;
 use crate::function::FunctionContext;
-use crate::module::FromLLVMContext;
+use crate::module::ModuleContext;
 use llvm_sys::LLVMValueKind;
 
 impl Operand {
     pub(crate) fn from_llvm_ref(
         operand: LLVMValueRef,
-        ctx: &mut FromLLVMContext,
+        ctx: &mut ModuleContext,
         func_ctx: &FunctionContext,
     ) -> Self {
         let constant = unsafe { LLVMIsAConstant(operand) };
