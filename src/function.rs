@@ -240,20 +240,30 @@ pub type GroupID = usize;
 // from_llvm //
 // ********* //
 
-use crate::basicblock::BBMap;
 use crate::constant::Constant;
 use crate::from_llvm::*;
 use crate::module::FromLLVMContext;
-use crate::operand::ValToNameMap;
 use llvm_sys::comdat::*;
 use llvm_sys::{LLVMAttributeFunctionIndex, LLVMAttributeReturnIndex};
+use std::collections::HashMap;
+
+/// This struct contains data used when translating from llvm-sys into our data
+/// structures. The data here is local to a particular Function.
+pub(crate) struct FunctionContext<'a> {
+    /// Map from llvm-sys basic block to its `Name`
+    pub bb_names: &'a HashMap<LLVMBasicBlockRef, Name>,
+    /// Map from llvm-sys value to its `Name`
+    pub val_names: &'a HashMap<LLVMValueRef, Name>,
+    /// this counter is used to number parameters, variables, and basic blocks that aren't named
+    pub ctr: usize,
+}
 
 impl Function {
     pub(crate) fn from_llvm_ref(func: LLVMValueRef, ctx: &mut FromLLVMContext) -> Self {
         let func = unsafe { LLVMIsAFunction(func) };
         assert!(!func.is_null());
         debug!("Processing func {:?}", unsafe { get_value_name(func) });
-        let mut local_ctr = 0; // this ctr is used to number parameters, variables, and basic blocks that aren't named
+        let mut local_ctr = 0; // this counter is used to number parameters, variables, and basic blocks that aren't named
 
         let parameters: Vec<Parameter> = {
             get_parameters(func)
@@ -290,19 +300,23 @@ impl Function {
         let bbresults: Vec<_> = get_basic_blocks(func)
             .map(|bb| (bb, BasicBlock::first_pass_names(bb, &mut local_ctr)))
             .collect();
-        let bbmap: BBMap = bbresults
+        let bb_names: HashMap<_, Name> = bbresults
             .iter()
             .map(|(bb, (bbname, _))| (*bb, bbname.clone()))
             .collect();
-        debug!("Collected a BBMap with {} entries", bbmap.len());
-        let vnmap: ValToNameMap = bbresults
+        debug!("Collected names of {} basic blocks", bb_names.len());
+        let val_names: HashMap<_, Name> = bbresults
             .into_iter()
             .flat_map(|(_, (_, namepairs))| namepairs.into_iter())
             .chain(get_parameters(func).zip(parameters.iter().map(|p| p.name.clone())))
             .collect();
-        debug!("Collected a ValToNameMap with {} entries", vnmap.len());
+        debug!("Collected names of {} values", val_names.len());
+        let mut func_ctx = FunctionContext {
+            bb_names: &bb_names,
+            val_names: &val_names,
+            ctr: ctr_val_after_parameters, // restart the local_ctr; the second pass should number everything exactly the same though
+        };
 
-        local_ctr = ctr_val_after_parameters; // reset the local_ctr; the second pass should number everything exactly the same though
         let functy = unsafe { LLVMGetElementType(LLVMTypeOf(func)) }; // for some reason the TypeOf a function is <pointer to function> and not just <function> so we have to deref it like this
         Self {
             name: unsafe { get_value_name(func) },
@@ -311,7 +325,7 @@ impl Function {
             return_type: ctx.types.type_from_llvm_ref(unsafe { LLVMGetReturnType(functy) }),
             basic_blocks: {
                 get_basic_blocks(func)
-                    .map(|bb| BasicBlock::from_llvm_ref(bb, &mut local_ctr, &vnmap, &bbmap, ctx))
+                    .map(|bb| BasicBlock::from_llvm_ref(bb, ctx, &mut func_ctx))
                     .collect()
             },
             function_attributes: {

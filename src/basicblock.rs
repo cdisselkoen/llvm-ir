@@ -29,36 +29,29 @@ impl BasicBlock {
 // ********* //
 
 use crate::from_llvm::*;
+use crate::function::FunctionContext;
 use crate::module::FromLLVMContext;
-use crate::operand::ValToNameMap;
 use llvm_sys::LLVMOpcode;
 use llvm_sys::LLVMTypeKind::LLVMVoidTypeKind;
-use std::collections::HashMap;
-
-pub(crate) type BBMap = HashMap<LLVMBasicBlockRef, Name>;
 
 impl BasicBlock {
     pub(crate) fn from_llvm_ref(
         bb: LLVMBasicBlockRef,
-        ctr: &mut usize,
-        vnmap: &ValToNameMap,
-        bbmap: &BBMap,
         ctx: &mut FromLLVMContext,
+        func_ctx: &mut FunctionContext,
     ) -> Self {
-        let name = Name::name_or_num(unsafe { get_bb_name(bb) }, ctr);
-        assert_eq!(&name, bbmap.get(&bb).expect("Expected to find bb in bbmap"));
+        let name = Name::name_or_num(unsafe { get_bb_name(bb) }, &mut func_ctx.ctr);
+        assert_eq!(&name, func_ctx.bb_names.get(&bb).expect("Expected to find bb name in func_ctx"));
         debug!("Processing a basic block named {:?}", name);
         Self {
             name,
             instrs: all_but_last(get_instructions(bb))
-                .map(|i| Instruction::from_llvm_ref(i, ctr, vnmap, bbmap, ctx))
+                .map(|i| Instruction::from_llvm_ref(i, ctx, func_ctx))
                 .collect(),
             term: Terminator::from_llvm_ref(
                 unsafe { LLVMGetBasicBlockTerminator(bb) },
-                ctr,
-                vnmap,
-                bbmap,
                 ctx,
+                func_ctx,
             ),
         }
     }

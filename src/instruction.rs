@@ -1757,11 +1757,10 @@ pub struct LandingPadClause {}
 // from_llvm //
 // ********* //
 
-use crate::basicblock::BBMap;
 use crate::constant::Constant;
 use crate::from_llvm::*;
+use crate::function::FunctionContext;
 use crate::module::FromLLVMContext;
-use crate::operand::ValToNameMap;
 use crate::types::TypesBuilder;
 use llvm_sys::LLVMAtomicOrdering;
 use llvm_sys::LLVMAtomicRMWBinOp;
@@ -1771,122 +1770,112 @@ use llvm_sys::LLVMTypeKind::LLVMVoidTypeKind;
 impl Instruction {
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
-        ctr: &mut usize,
-        vnmap: &ValToNameMap,
-        bbmap: &BBMap,
         ctx: &mut FromLLVMContext,
+        func_ctx: &mut FunctionContext,
     ) -> Self {
         debug!("Processing instruction {:?}", unsafe {
             print_to_string(inst)
         });
         match unsafe { LLVMGetInstructionOpcode(inst) } {
-            LLVMOpcode::LLVMAdd => Instruction::Add(Add::from_llvm_ref(inst, ctr, vnmap, ctx)),
-            LLVMOpcode::LLVMSub => Instruction::Sub(Sub::from_llvm_ref(inst, ctr, vnmap, ctx)),
-            LLVMOpcode::LLVMMul => Instruction::Mul(Mul::from_llvm_ref(inst, ctr, vnmap, ctx)),
-            LLVMOpcode::LLVMUDiv => Instruction::UDiv(UDiv::from_llvm_ref(inst, ctr, vnmap, ctx)),
-            LLVMOpcode::LLVMSDiv => Instruction::SDiv(SDiv::from_llvm_ref(inst, ctr, vnmap, ctx)),
-            LLVMOpcode::LLVMURem => Instruction::URem(URem::from_llvm_ref(inst, ctr, vnmap, ctx)),
-            LLVMOpcode::LLVMSRem => Instruction::SRem(SRem::from_llvm_ref(inst, ctr, vnmap, ctx)),
-            LLVMOpcode::LLVMAnd => Instruction::And(And::from_llvm_ref(inst, ctr, vnmap, ctx)),
-            LLVMOpcode::LLVMOr => Instruction::Or(Or::from_llvm_ref(inst, ctr, vnmap, ctx)),
-            LLVMOpcode::LLVMXor => Instruction::Xor(Xor::from_llvm_ref(inst, ctr, vnmap, ctx)),
-            LLVMOpcode::LLVMShl => Instruction::Shl(Shl::from_llvm_ref(inst, ctr, vnmap, ctx)),
-            LLVMOpcode::LLVMLShr => Instruction::LShr(LShr::from_llvm_ref(inst, ctr, vnmap, ctx)),
-            LLVMOpcode::LLVMAShr => Instruction::AShr(AShr::from_llvm_ref(inst, ctr, vnmap, ctx)),
-            LLVMOpcode::LLVMFAdd => Instruction::FAdd(FAdd::from_llvm_ref(inst, ctr, vnmap, ctx)),
-            LLVMOpcode::LLVMFSub => Instruction::FSub(FSub::from_llvm_ref(inst, ctr, vnmap, ctx)),
-            LLVMOpcode::LLVMFMul => Instruction::FMul(FMul::from_llvm_ref(inst, ctr, vnmap, ctx)),
-            LLVMOpcode::LLVMFDiv => Instruction::FDiv(FDiv::from_llvm_ref(inst, ctr, vnmap, ctx)),
-            LLVMOpcode::LLVMFRem => Instruction::FRem(FRem::from_llvm_ref(inst, ctr, vnmap, ctx)),
-            LLVMOpcode::LLVMFNeg => Instruction::FNeg(FNeg::from_llvm_ref(inst, ctr, vnmap, ctx)),
+            LLVMOpcode::LLVMAdd => Instruction::Add(Add::from_llvm_ref(inst, ctx, func_ctx)),
+            LLVMOpcode::LLVMSub => Instruction::Sub(Sub::from_llvm_ref(inst, ctx, func_ctx)),
+            LLVMOpcode::LLVMMul => Instruction::Mul(Mul::from_llvm_ref(inst, ctx, func_ctx)),
+            LLVMOpcode::LLVMUDiv => Instruction::UDiv(UDiv::from_llvm_ref(inst, ctx, func_ctx)),
+            LLVMOpcode::LLVMSDiv => Instruction::SDiv(SDiv::from_llvm_ref(inst, ctx, func_ctx)),
+            LLVMOpcode::LLVMURem => Instruction::URem(URem::from_llvm_ref(inst, ctx, func_ctx)),
+            LLVMOpcode::LLVMSRem => Instruction::SRem(SRem::from_llvm_ref(inst, ctx, func_ctx)),
+            LLVMOpcode::LLVMAnd => Instruction::And(And::from_llvm_ref(inst, ctx, func_ctx)),
+            LLVMOpcode::LLVMOr => Instruction::Or(Or::from_llvm_ref(inst, ctx, func_ctx)),
+            LLVMOpcode::LLVMXor => Instruction::Xor(Xor::from_llvm_ref(inst, ctx, func_ctx)),
+            LLVMOpcode::LLVMShl => Instruction::Shl(Shl::from_llvm_ref(inst, ctx, func_ctx)),
+            LLVMOpcode::LLVMLShr => Instruction::LShr(LShr::from_llvm_ref(inst, ctx, func_ctx)),
+            LLVMOpcode::LLVMAShr => Instruction::AShr(AShr::from_llvm_ref(inst, ctx, func_ctx)),
+            LLVMOpcode::LLVMFAdd => Instruction::FAdd(FAdd::from_llvm_ref(inst, ctx, func_ctx)),
+            LLVMOpcode::LLVMFSub => Instruction::FSub(FSub::from_llvm_ref(inst, ctx, func_ctx)),
+            LLVMOpcode::LLVMFMul => Instruction::FMul(FMul::from_llvm_ref(inst, ctx, func_ctx)),
+            LLVMOpcode::LLVMFDiv => Instruction::FDiv(FDiv::from_llvm_ref(inst, ctx, func_ctx)),
+            LLVMOpcode::LLVMFRem => Instruction::FRem(FRem::from_llvm_ref(inst, ctx, func_ctx)),
+            LLVMOpcode::LLVMFNeg => Instruction::FNeg(FNeg::from_llvm_ref(inst, ctx, func_ctx)),
             LLVMOpcode::LLVMExtractElement => {
-                Instruction::ExtractElement(ExtractElement::from_llvm_ref(inst, ctr, vnmap, ctx))
+                Instruction::ExtractElement(ExtractElement::from_llvm_ref(inst, ctx, func_ctx))
             },
             LLVMOpcode::LLVMInsertElement => {
-                Instruction::InsertElement(InsertElement::from_llvm_ref(inst, ctr, vnmap, ctx))
+                Instruction::InsertElement(InsertElement::from_llvm_ref(inst, ctx, func_ctx))
             },
             LLVMOpcode::LLVMShuffleVector => {
-                Instruction::ShuffleVector(ShuffleVector::from_llvm_ref(inst, ctr, vnmap, ctx))
+                Instruction::ShuffleVector(ShuffleVector::from_llvm_ref(inst, ctx, func_ctx))
             },
             LLVMOpcode::LLVMExtractValue => {
-                Instruction::ExtractValue(ExtractValue::from_llvm_ref(inst, ctr, vnmap, ctx))
+                Instruction::ExtractValue(ExtractValue::from_llvm_ref(inst, ctx, func_ctx))
             },
             LLVMOpcode::LLVMInsertValue => {
-                Instruction::InsertValue(InsertValue::from_llvm_ref(inst, ctr, vnmap, ctx))
+                Instruction::InsertValue(InsertValue::from_llvm_ref(inst, ctx, func_ctx))
             },
             LLVMOpcode::LLVMAlloca => {
-                Instruction::Alloca(Alloca::from_llvm_ref(inst, ctr, vnmap, ctx))
+                Instruction::Alloca(Alloca::from_llvm_ref(inst, ctx, func_ctx))
             },
-            LLVMOpcode::LLVMLoad => Instruction::Load(Load::from_llvm_ref(inst, ctr, vnmap, ctx)),
-            LLVMOpcode::LLVMStore => Instruction::Store(Store::from_llvm_ref(inst, vnmap, ctx)),
+            LLVMOpcode::LLVMLoad => Instruction::Load(Load::from_llvm_ref(inst, ctx, func_ctx)),
+            LLVMOpcode::LLVMStore => Instruction::Store(Store::from_llvm_ref(inst, ctx, func_ctx)),
             LLVMOpcode::LLVMFence => Instruction::Fence(Fence::from_llvm_ref(inst)),
             LLVMOpcode::LLVMAtomicCmpXchg => {
-                Instruction::CmpXchg(CmpXchg::from_llvm_ref(inst, ctr, vnmap, ctx))
+                Instruction::CmpXchg(CmpXchg::from_llvm_ref(inst, ctx, func_ctx))
             },
             LLVMOpcode::LLVMAtomicRMW => {
-                Instruction::AtomicRMW(AtomicRMW::from_llvm_ref(inst, ctr, vnmap, ctx))
+                Instruction::AtomicRMW(AtomicRMW::from_llvm_ref(inst, ctx, func_ctx))
             },
             LLVMOpcode::LLVMGetElementPtr => {
-                Instruction::GetElementPtr(GetElementPtr::from_llvm_ref(inst, ctr, vnmap, ctx))
+                Instruction::GetElementPtr(GetElementPtr::from_llvm_ref(inst, ctx, func_ctx))
             },
-            LLVMOpcode::LLVMTrunc => {
-                Instruction::Trunc(Trunc::from_llvm_ref(inst, ctr, vnmap, ctx))
-            },
-            LLVMOpcode::LLVMZExt => Instruction::ZExt(ZExt::from_llvm_ref(inst, ctr, vnmap, ctx)),
-            LLVMOpcode::LLVMSExt => Instruction::SExt(SExt::from_llvm_ref(inst, ctr, vnmap, ctx)),
+            LLVMOpcode::LLVMTrunc => Instruction::Trunc(Trunc::from_llvm_ref(inst, ctx, func_ctx)),
+            LLVMOpcode::LLVMZExt => Instruction::ZExt(ZExt::from_llvm_ref(inst, ctx, func_ctx)),
+            LLVMOpcode::LLVMSExt => Instruction::SExt(SExt::from_llvm_ref(inst, ctx, func_ctx)),
             LLVMOpcode::LLVMFPTrunc => {
-                Instruction::FPTrunc(FPTrunc::from_llvm_ref(inst, ctr, vnmap, ctx))
+                Instruction::FPTrunc(FPTrunc::from_llvm_ref(inst, ctx, func_ctx))
             },
-            LLVMOpcode::LLVMFPExt => {
-                Instruction::FPExt(FPExt::from_llvm_ref(inst, ctr, vnmap, ctx))
-            },
+            LLVMOpcode::LLVMFPExt => Instruction::FPExt(FPExt::from_llvm_ref(inst, ctx, func_ctx)),
             LLVMOpcode::LLVMFPToUI => {
-                Instruction::FPToUI(FPToUI::from_llvm_ref(inst, ctr, vnmap, ctx))
+                Instruction::FPToUI(FPToUI::from_llvm_ref(inst, ctx, func_ctx))
             },
             LLVMOpcode::LLVMFPToSI => {
-                Instruction::FPToSI(FPToSI::from_llvm_ref(inst, ctr, vnmap, ctx))
+                Instruction::FPToSI(FPToSI::from_llvm_ref(inst, ctx, func_ctx))
             },
             LLVMOpcode::LLVMUIToFP => {
-                Instruction::UIToFP(UIToFP::from_llvm_ref(inst, ctr, vnmap, ctx))
+                Instruction::UIToFP(UIToFP::from_llvm_ref(inst, ctx, func_ctx))
             },
             LLVMOpcode::LLVMSIToFP => {
-                Instruction::SIToFP(SIToFP::from_llvm_ref(inst, ctr, vnmap, ctx))
+                Instruction::SIToFP(SIToFP::from_llvm_ref(inst, ctx, func_ctx))
             },
             LLVMOpcode::LLVMPtrToInt => {
-                Instruction::PtrToInt(PtrToInt::from_llvm_ref(inst, ctr, vnmap, ctx))
+                Instruction::PtrToInt(PtrToInt::from_llvm_ref(inst, ctx, func_ctx))
             },
             LLVMOpcode::LLVMIntToPtr => {
-                Instruction::IntToPtr(IntToPtr::from_llvm_ref(inst, ctr, vnmap, ctx))
+                Instruction::IntToPtr(IntToPtr::from_llvm_ref(inst, ctx, func_ctx))
             },
             LLVMOpcode::LLVMBitCast => {
-                Instruction::BitCast(BitCast::from_llvm_ref(inst, ctr, vnmap, ctx))
+                Instruction::BitCast(BitCast::from_llvm_ref(inst, ctx, func_ctx))
             },
             LLVMOpcode::LLVMAddrSpaceCast => {
-                Instruction::AddrSpaceCast(AddrSpaceCast::from_llvm_ref(inst, ctr, vnmap, ctx))
+                Instruction::AddrSpaceCast(AddrSpaceCast::from_llvm_ref(inst, ctx, func_ctx))
             },
-            LLVMOpcode::LLVMICmp => Instruction::ICmp(ICmp::from_llvm_ref(inst, ctr, vnmap, ctx)),
-            LLVMOpcode::LLVMFCmp => Instruction::FCmp(FCmp::from_llvm_ref(inst, ctr, vnmap, ctx)),
-            LLVMOpcode::LLVMPHI => {
-                Instruction::Phi(Phi::from_llvm_ref(inst, ctr, vnmap, bbmap, ctx))
-            },
+            LLVMOpcode::LLVMICmp => Instruction::ICmp(ICmp::from_llvm_ref(inst, ctx, func_ctx)),
+            LLVMOpcode::LLVMFCmp => Instruction::FCmp(FCmp::from_llvm_ref(inst, ctx, func_ctx)),
+            LLVMOpcode::LLVMPHI => Instruction::Phi(Phi::from_llvm_ref(inst, ctx, func_ctx)),
             LLVMOpcode::LLVMSelect => {
-                Instruction::Select(Select::from_llvm_ref(inst, ctr, vnmap, ctx))
+                Instruction::Select(Select::from_llvm_ref(inst, ctx, func_ctx))
             },
             LLVMOpcode::LLVMFreeze => {
-                Instruction::Freeze(Freeze::from_llvm_ref(inst, ctr, vnmap, ctx))
+                Instruction::Freeze(Freeze::from_llvm_ref(inst, ctx, func_ctx))
             },
-            LLVMOpcode::LLVMCall => Instruction::Call(Call::from_llvm_ref(inst, ctr, vnmap, ctx)),
-            LLVMOpcode::LLVMVAArg => {
-                Instruction::VAArg(VAArg::from_llvm_ref(inst, ctr, vnmap, ctx))
-            },
+            LLVMOpcode::LLVMCall => Instruction::Call(Call::from_llvm_ref(inst, ctx, func_ctx)),
+            LLVMOpcode::LLVMVAArg => Instruction::VAArg(VAArg::from_llvm_ref(inst, ctx, func_ctx)),
             LLVMOpcode::LLVMLandingPad => {
-                Instruction::LandingPad(LandingPad::from_llvm_ref(inst, ctr, &mut ctx.types))
+                Instruction::LandingPad(LandingPad::from_llvm_ref(inst, ctx, func_ctx))
             },
             LLVMOpcode::LLVMCatchPad => {
-                Instruction::CatchPad(CatchPad::from_llvm_ref(inst, ctr, vnmap, ctx))
+                Instruction::CatchPad(CatchPad::from_llvm_ref(inst, ctx, func_ctx))
             },
             LLVMOpcode::LLVMCleanupPad => {
-                Instruction::CleanupPad(CleanupPad::from_llvm_ref(inst, ctr, vnmap, ctx))
+                Instruction::CleanupPad(CleanupPad::from_llvm_ref(inst, ctx, func_ctx))
             },
             opcode => panic!(
                 "Instruction::from_llvm_ref called with a terminator instruction (opcode {:?})",
@@ -1901,14 +1890,17 @@ macro_rules! unop_from_llvm {
         impl $inst {
             pub(crate) fn from_llvm_ref(
                 inst: LLVMValueRef,
-                ctr: &mut usize,
-                vnmap: &ValToNameMap,
                 ctx: &mut FromLLVMContext,
+                func_ctx: &mut FunctionContext,
             ) -> Self {
                 assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 1);
                 Self {
-                    operand: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 0) }, vnmap, ctx),
-                    dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
+                    operand: Operand::from_llvm_ref(
+                        unsafe { LLVMGetOperand(inst, 0) },
+                        ctx,
+                        func_ctx,
+                    ),
+                    dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
                     debugloc: DebugLoc::from_llvm_with_col(inst),
                     // metadata: InstructionMetadata::from_llvm_inst(inst),
                 }
@@ -1922,23 +1914,22 @@ macro_rules! binop_from_llvm {
         impl $inst {
             pub(crate) fn from_llvm_ref(
                 inst: LLVMValueRef,
-                ctr: &mut usize,
-                vnmap: &ValToNameMap,
                 ctx: &mut FromLLVMContext,
+                func_ctx: &mut FunctionContext,
             ) -> Self {
                 assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 2);
                 Self {
                     operand0: Operand::from_llvm_ref(
                         unsafe { LLVMGetOperand(inst, 0) },
-                        vnmap,
                         ctx,
+                        func_ctx,
                     ),
                     operand1: Operand::from_llvm_ref(
                         unsafe { LLVMGetOperand(inst, 1) },
-                        vnmap,
                         ctx,
+                        func_ctx,
                     ),
-                    dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
+                    dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
                     debugloc: DebugLoc::from_llvm_with_col(inst),
                     // metadata: InstructionMetadata::from_llvm_inst(inst),
                 }
@@ -1971,15 +1962,14 @@ unop_from_llvm!(Freeze);
 impl ExtractElement {
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
-        ctr: &mut usize,
-        vnmap: &ValToNameMap,
         ctx: &mut FromLLVMContext,
+        func_ctx: &mut FunctionContext,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 2);
         Self {
-            vector: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 0) }, vnmap, ctx),
-            index: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 1) }, vnmap, ctx),
-            dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
+            vector: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 0) }, ctx, func_ctx),
+            index: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 1) }, ctx, func_ctx),
+            dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
             debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
@@ -1989,16 +1979,15 @@ impl ExtractElement {
 impl InsertElement {
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
-        ctr: &mut usize,
-        vnmap: &ValToNameMap,
         ctx: &mut FromLLVMContext,
+        func_ctx: &mut FunctionContext,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 3);
         Self {
-            vector: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 0) }, vnmap, ctx),
-            element: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 1) }, vnmap, ctx),
-            index: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 2) }, vnmap, ctx),
-            dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
+            vector: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 0) }, ctx, func_ctx),
+            element: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 1) }, ctx, func_ctx),
+            index: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 2) }, ctx, func_ctx),
+            dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
             debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
@@ -2008,16 +1997,15 @@ impl InsertElement {
 impl ShuffleVector {
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
-        ctr: &mut usize,
-        vnmap: &ValToNameMap,
         ctx: &mut FromLLVMContext,
+        func_ctx: &mut FunctionContext,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 3);
         Self {
-            operand0: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 0) }, vnmap, ctx),
-            operand1: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 1) }, vnmap, ctx),
+            operand0: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 0) }, ctx, func_ctx),
+            operand1: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 1) }, ctx, func_ctx),
             mask: Constant::from_llvm_ref(unsafe { LLVMGetOperand(inst, 2) }, ctx),
-            dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
+            dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
             debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
@@ -2027,19 +2015,18 @@ impl ShuffleVector {
 impl ExtractValue {
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
-        ctr: &mut usize,
-        vnmap: &ValToNameMap,
         ctx: &mut FromLLVMContext,
+        func_ctx: &mut FunctionContext,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 1);
         Self {
-            aggregate: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 0) }, vnmap, ctx),
+            aggregate: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 0) }, ctx, func_ctx),
             indices: unsafe {
                 let num_indices = LLVMGetNumIndices(inst);
                 let ptr = LLVMGetIndices(inst);
                 std::slice::from_raw_parts(ptr, num_indices as usize).to_vec()
             },
-            dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
+            dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
             debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
@@ -2049,20 +2036,19 @@ impl ExtractValue {
 impl InsertValue {
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
-        ctr: &mut usize,
-        vnmap: &ValToNameMap,
         ctx: &mut FromLLVMContext,
+        func_ctx: &mut FunctionContext,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 2);
         Self {
-            aggregate: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 0) }, vnmap, ctx),
-            element: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 1) }, vnmap, ctx),
+            aggregate: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 0) }, ctx, func_ctx),
+            element: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 1) }, ctx, func_ctx),
             indices: unsafe {
                 let num_indices = LLVMGetNumIndices(inst);
                 let ptr = LLVMGetIndices(inst);
                 std::slice::from_raw_parts(ptr, num_indices as usize).to_vec()
             },
-            dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
+            dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
             debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
@@ -2072,19 +2058,18 @@ impl InsertValue {
 impl Alloca {
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
-        ctr: &mut usize,
-        vnmap: &ValToNameMap,
         ctx: &mut FromLLVMContext,
+        func_ctx: &mut FunctionContext,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 1);
         Self {
             allocated_type: ctx.types.type_from_llvm_ref(unsafe { LLVMGetAllocatedType(inst) }),
             num_elements: Operand::from_llvm_ref(
                 unsafe { LLVMGetOperand(inst, 0) }, // This is a guess. or maybe num_elements is included in allocated_type?
-                vnmap,
                 ctx,
+                func_ctx,
             ),
-            dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
+            dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
             alignment: unsafe { LLVMGetAlignment(inst) },
             debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
@@ -2095,14 +2080,13 @@ impl Alloca {
 impl Load {
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
-        ctr: &mut usize,
-        vnmap: &ValToNameMap,
         ctx: &mut FromLLVMContext,
+        func_ctx: &mut FunctionContext,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 1);
         Self {
-            address: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 0) }, vnmap, ctx),
-            dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
+            address: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 0) }, ctx, func_ctx),
+            dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
             volatile: unsafe { LLVMGetVolatile(inst) } != 0,
             atomicity: {
                 let ordering = unsafe { LLVMGetOrdering(inst) };
@@ -2125,13 +2109,13 @@ impl Load {
 impl Store {
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
-        vnmap: &ValToNameMap,
         ctx: &mut FromLLVMContext,
+        func_ctx: &mut FunctionContext,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 2);
         Self {
-            address: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 1) }, vnmap, ctx),
-            value: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 0) }, vnmap, ctx),
+            address: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 1) }, ctx, func_ctx),
+            value: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 0) }, ctx, func_ctx),
             volatile: unsafe { LLVMGetVolatile(inst) } != 0,
             atomicity: {
                 let ordering = unsafe { LLVMGetOrdering(inst) };
@@ -2168,16 +2152,15 @@ impl Fence {
 impl CmpXchg {
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
-        ctr: &mut usize,
-        vnmap: &ValToNameMap,
         ctx: &mut FromLLVMContext,
+        func_ctx: &mut FunctionContext,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 3);
         Self {
-            address: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 0) }, vnmap, ctx),
-            expected: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 1) }, vnmap, ctx),
-            replacement: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 2) }, vnmap, ctx),
-            dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
+            address: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 0) }, ctx, func_ctx),
+            expected: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 1) }, ctx, func_ctx),
+            replacement: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 2) }, ctx, func_ctx),
+            dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
             volatile: unsafe { LLVMGetVolatile(inst) } != 0,
             atomicity: Atomicity {
                 synch_scope: SynchronizationScope::from_llvm_ref(inst),
@@ -2198,16 +2181,15 @@ impl CmpXchg {
 impl AtomicRMW {
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
-        ctr: &mut usize,
-        vnmap: &ValToNameMap,
         ctx: &mut FromLLVMContext,
+        func_ctx: &mut FunctionContext,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 2);
         Self {
             operation: RMWBinOp::from_llvm(unsafe { LLVMGetAtomicRMWBinOp(inst) }),
-            address: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 0) }, vnmap, ctx),
-            value: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 1) }, vnmap, ctx),
-            dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
+            address: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 0) }, ctx, func_ctx),
+            value: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 1) }, ctx, func_ctx),
+            dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
             volatile: unsafe { LLVMGetVolatile(inst) } != 0,
             atomicity: Atomicity {
                 synch_scope: SynchronizationScope::from_llvm_ref(inst),
@@ -2222,19 +2204,20 @@ impl AtomicRMW {
 impl GetElementPtr {
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
-        ctr: &mut usize,
-        vnmap: &ValToNameMap,
         ctx: &mut FromLLVMContext,
+        func_ctx: &mut FunctionContext,
     ) -> Self {
         Self {
-            address: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 0) }, vnmap, ctx),
+            address: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 0) }, ctx, func_ctx),
             indices: {
                 let num_indices = unsafe { LLVMGetNumIndices(inst) };
                 (1 ..= num_indices)
-                    .map(|i| Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, i) }, vnmap, ctx))
+                    .map(|i| {
+                        Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, i) }, ctx, func_ctx)
+                    })
                     .collect()
             },
-            dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
+            dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
             in_bounds: unsafe { LLVMIsInBounds(inst) } != 0,
             debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
@@ -2249,15 +2232,18 @@ macro_rules! typed_unop_from_llvm {
         impl $inst {
             pub(crate) fn from_llvm_ref(
                 inst: LLVMValueRef,
-                ctr: &mut usize,
-                vnmap: &ValToNameMap,
                 ctx: &mut FromLLVMContext,
+                func_ctx: &mut FunctionContext,
             ) -> Self {
                 assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 1);
                 Self {
-                    operand: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 0) }, vnmap, ctx),
+                    operand: Operand::from_llvm_ref(
+                        unsafe { LLVMGetOperand(inst, 0) },
+                        ctx,
+                        func_ctx,
+                    ),
                     to_type: ctx.types.type_from_llvm_ref(unsafe { LLVMTypeOf(inst) }),
-                    dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
+                    dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
                     debugloc: DebugLoc::from_llvm_with_col(inst),
                     // metadata: InstructionMetadata::from_llvm_inst(inst),
                 }
@@ -2283,16 +2269,15 @@ typed_unop_from_llvm!(AddrSpaceCast);
 impl ICmp {
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
-        ctr: &mut usize,
-        vnmap: &ValToNameMap,
         ctx: &mut FromLLVMContext,
+        func_ctx: &mut FunctionContext,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 2);
         Self {
             predicate: IntPredicate::from_llvm(unsafe { LLVMGetICmpPredicate(inst) }),
-            operand0: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 0) }, vnmap, ctx),
-            operand1: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 1) }, vnmap, ctx),
-            dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
+            operand0: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 0) }, ctx, func_ctx),
+            operand1: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 1) }, ctx, func_ctx),
+            dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
             debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
@@ -2302,16 +2287,15 @@ impl ICmp {
 impl FCmp {
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
-        ctr: &mut usize,
-        vnmap: &ValToNameMap,
         ctx: &mut FromLLVMContext,
+        func_ctx: &mut FunctionContext,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 2);
         Self {
             predicate: FPPredicate::from_llvm(unsafe { LLVMGetFCmpPredicate(inst) }),
-            operand0: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 0) }, vnmap, ctx),
-            operand1: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 1) }, vnmap, ctx),
-            dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
+            operand0: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 0) }, ctx, func_ctx),
+            operand1: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 1) }, ctx, func_ctx),
+            dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
             debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
@@ -2321,10 +2305,8 @@ impl FCmp {
 impl Phi {
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
-        ctr: &mut usize,
-        vnmap: &ValToNameMap,
-        bbmap: &BBMap,
         ctx: &mut FromLLVMContext,
+        func_ctx: &mut FunctionContext,
     ) -> Self {
         Self {
             incoming_values: {
@@ -2333,10 +2315,11 @@ impl Phi {
                     .map(|i| {
                         let operand = Operand::from_llvm_ref(
                             unsafe { LLVMGetIncomingValue(inst, i) },
-                            vnmap,
                             ctx,
+                            func_ctx,
                         );
-                        let name = bbmap
+                        let name = func_ctx
+                            .bb_names
                             .get(unsafe { &LLVMGetIncomingBlock(inst, i) })
                             .expect("Failed to find incoming block in the map")
                             .clone();
@@ -2344,7 +2327,7 @@ impl Phi {
                     })
                     .collect()
             },
-            dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
+            dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
             to_type: ctx.types.type_from_llvm_ref(unsafe { LLVMTypeOf(inst) }),
             debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
@@ -2355,16 +2338,15 @@ impl Phi {
 impl Select {
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
-        ctr: &mut usize,
-        vnmap: &ValToNameMap,
         ctx: &mut FromLLVMContext,
+        func_ctx: &mut FunctionContext,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 3);
         Self {
-            condition: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 0) }, vnmap, ctx),
-            true_value: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 1) }, vnmap, ctx),
-            false_value: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 2) }, vnmap, ctx),
-            dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
+            condition: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 0) }, ctx, func_ctx),
+            true_value: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 1) }, ctx, func_ctx),
+            false_value: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 2) }, ctx, func_ctx),
+            dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
             debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
@@ -2384,8 +2366,8 @@ impl CallInfo {
     // Call this function only an a Call instruction or Invoke terminator
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
-        vnmap: &ValToNameMap,
         ctx: &mut FromLLVMContext,
+        func_ctx: &mut FunctionContext,
     ) -> Self {
         use llvm_sys::{LLVMAttributeFunctionIndex, LLVMAttributeReturnIndex};
         Self {
@@ -2395,15 +2377,18 @@ impl CallInfo {
                 if !asm.is_null() {
                     Either::Left(InlineAssembly::from_llvm_ref(asm, &mut ctx.types))
                 } else {
-                    Either::Right(Operand::from_llvm_ref(called_val, vnmap, ctx))
+                    Either::Right(Operand::from_llvm_ref(called_val, ctx, func_ctx))
                 }
             },
             arguments: {
                 let num_args: u32 = unsafe { LLVMGetNumArgOperands(inst) } as u32;
                 (0 .. num_args) // arguments are (0 .. num_args); other operands (such as the called function) are after that
                     .map(|i| {
-                        let operand =
-                            Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, i) }, vnmap, ctx);
+                        let operand = Operand::from_llvm_ref(
+                            unsafe { LLVMGetOperand(inst, i) },
+                            ctx,
+                            func_ctx,
+                        );
                         let attrs = {
                             let num_attrs =
                                 unsafe { LLVMGetCallSiteAttributeCount(inst, (i + 1) as u32) }; // see LLVM C API (Core.h) comments on `LLVMAttributeReturnIndex` and `LLVMAttributeFunctionIndex`
@@ -2458,11 +2443,10 @@ impl CallInfo {
 impl Call {
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
-        ctr: &mut usize,
-        vnmap: &ValToNameMap,
         ctx: &mut FromLLVMContext,
+        func_ctx: &mut FunctionContext,
     ) -> Self {
-        let callinfo = CallInfo::from_llvm_ref(inst, vnmap, ctx);
+        let callinfo = CallInfo::from_llvm_ref(inst, ctx, func_ctx);
         Self {
             function: callinfo.function,
             arguments: callinfo.arguments,
@@ -2473,7 +2457,10 @@ impl Call {
             } {
                 None
             } else {
-                Some(Name::name_or_num(unsafe { get_value_name(inst) }, ctr))
+                Some(Name::name_or_num(
+                    unsafe { get_value_name(inst) },
+                    &mut func_ctx.ctr,
+                ))
             },
             function_attributes: callinfo.function_attributes,
             is_tail_call: unsafe { LLVMIsTailCall(inst) } != 0,
@@ -2487,15 +2474,14 @@ impl Call {
 impl VAArg {
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
-        ctr: &mut usize,
-        vnmap: &ValToNameMap,
         ctx: &mut FromLLVMContext,
+        func_ctx: &mut FunctionContext,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 1);
         Self {
-            arg_list: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 0) }, vnmap, ctx),
+            arg_list: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 0) }, ctx, func_ctx),
             cur_type: ctx.types.type_from_llvm_ref(unsafe { LLVMTypeOf(inst) }),
-            dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
+            dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
             debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
@@ -2505,18 +2491,18 @@ impl VAArg {
 impl LandingPad {
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
-        ctr: &mut usize,
-        types: &mut TypesBuilder,
+        ctx: &mut FromLLVMContext,
+        func_ctx: &mut FunctionContext,
     ) -> Self {
         Self {
-            result_type: types.type_from_llvm_ref(unsafe { LLVMTypeOf(inst) }),
+            result_type: ctx.types.type_from_llvm_ref(unsafe { LLVMTypeOf(inst) }),
             clauses: {
                 let num_clauses = unsafe { LLVMGetNumClauses(inst) };
                 (0 .. num_clauses)
                     .map(|i| LandingPadClause::from_llvm_ref(unsafe { LLVMGetClause(inst, i) }))
                     .collect()
             },
-            dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
+            dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
             cleanup: unsafe { LLVMIsCleanup(inst) } != 0,
             debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
@@ -2527,25 +2513,24 @@ impl LandingPad {
 impl CatchPad {
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
-        ctr: &mut usize,
-        vnmap: &ValToNameMap,
         ctx: &mut FromLLVMContext,
+        func_ctx: &mut FunctionContext,
     ) -> Self {
         Self {
             catch_switch: Operand::from_llvm_ref(
                 unsafe { LLVMGetParentCatchSwitch(inst) },
-                vnmap,
                 ctx,
+                func_ctx,
             ),
             args: {
                 let num_args = unsafe { LLVMGetNumArgOperands(inst) };
                 (0 .. num_args)
                     .map(|i| {
-                        Operand::from_llvm_ref(unsafe { LLVMGetArgOperand(inst, i) }, vnmap, ctx)
+                        Operand::from_llvm_ref(unsafe { LLVMGetArgOperand(inst, i) }, ctx, func_ctx)
                     })
                     .collect()
             },
-            dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
+            dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
             debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
@@ -2555,21 +2540,20 @@ impl CatchPad {
 impl CleanupPad {
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
-        ctr: &mut usize,
-        vnmap: &ValToNameMap,
         ctx: &mut FromLLVMContext,
+        func_ctx: &mut FunctionContext,
     ) -> Self {
         Self {
-            parent_pad: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 0) }, vnmap, ctx),
+            parent_pad: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 0) }, ctx, func_ctx),
             args: {
                 let num_args = unsafe { LLVMGetNumArgOperands(inst) };
                 (0 .. num_args)
                     .map(|i| {
-                        Operand::from_llvm_ref(unsafe { LLVMGetArgOperand(inst, i) }, vnmap, ctx)
+                        Operand::from_llvm_ref(unsafe { LLVMGetArgOperand(inst, i) }, ctx, func_ctx)
                     })
                     .collect()
             },
-            dest: Name::name_or_num(unsafe { get_value_name(inst) }, ctr),
+            dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
             debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }

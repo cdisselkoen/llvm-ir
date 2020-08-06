@@ -351,58 +351,55 @@ impl Typed for CallBr {
 // from_llvm //
 // ********* //
 
-use crate::basicblock::BBMap;
 use crate::from_llvm::*;
+use crate::function::FunctionContext;
 use crate::module::FromLLVMContext;
-use crate::operand::ValToNameMap;
 use llvm_sys::LLVMOpcode;
 
 impl Terminator {
     pub(crate) fn from_llvm_ref(
         term: LLVMValueRef,
-        ctr: &mut usize,
-        vnmap: &ValToNameMap,
-        bbmap: &BBMap,
         ctx: &mut FromLLVMContext,
+        func_ctx: &mut FunctionContext,
     ) -> Self {
         debug!("Processing terminator {:?}", unsafe {
             print_to_string(term)
         });
         match unsafe { LLVMGetInstructionOpcode(term) } {
             LLVMOpcode::LLVMRet => {
-                Terminator::Ret(Ret::from_llvm_ref(term, vnmap, ctx))
+                Terminator::Ret(Ret::from_llvm_ref(term, ctx, func_ctx))
             },
             LLVMOpcode::LLVMBr => match unsafe { LLVMGetNumOperands(term) } {
-                1 => Terminator::Br(Br::from_llvm_ref(term, bbmap)),
-                3 => Terminator::CondBr(CondBr::from_llvm_ref(term, vnmap, bbmap, ctx)),
+                1 => Terminator::Br(Br::from_llvm_ref(term, func_ctx)),
+                3 => Terminator::CondBr(CondBr::from_llvm_ref(term, ctx, func_ctx)),
                 n => panic!("LLVMBr with {} operands, expected 1 or 3", n),
             },
             LLVMOpcode::LLVMSwitch => {
-                Terminator::Switch(Switch::from_llvm_ref(term, vnmap, bbmap, ctx))
+                Terminator::Switch(Switch::from_llvm_ref(term, ctx, func_ctx))
             },
             LLVMOpcode::LLVMIndirectBr => {
-                Terminator::IndirectBr(IndirectBr::from_llvm_ref(term, vnmap, bbmap, ctx))
+                Terminator::IndirectBr(IndirectBr::from_llvm_ref(term, ctx, func_ctx))
             },
             LLVMOpcode::LLVMInvoke => {
-                Terminator::Invoke(Invoke::from_llvm_ref(term, ctr, vnmap, bbmap, ctx))
+                Terminator::Invoke(Invoke::from_llvm_ref(term, ctx, func_ctx))
             },
             LLVMOpcode::LLVMResume => {
-                Terminator::Resume(Resume::from_llvm_ref(term, vnmap, ctx))
+                Terminator::Resume(Resume::from_llvm_ref(term, ctx, func_ctx))
             },
             LLVMOpcode::LLVMUnreachable => {
                 Terminator::Unreachable(Unreachable::from_llvm_ref(term))
             },
             LLVMOpcode::LLVMCleanupRet => {
-                Terminator::CleanupRet(CleanupRet::from_llvm_ref(term, vnmap, bbmap, ctx))
+                Terminator::CleanupRet(CleanupRet::from_llvm_ref(term, ctx, func_ctx))
             },
             LLVMOpcode::LLVMCatchRet => {
-                Terminator::CatchRet(CatchRet::from_llvm_ref(term, vnmap, bbmap, ctx))
+                Terminator::CatchRet(CatchRet::from_llvm_ref(term, ctx, func_ctx))
             },
             LLVMOpcode::LLVMCatchSwitch => {
-                Terminator::CatchSwitch(CatchSwitch::from_llvm_ref(term, ctr, vnmap, bbmap, ctx))
+                Terminator::CatchSwitch(CatchSwitch::from_llvm_ref(term, ctx, func_ctx))
             },
             LLVMOpcode::LLVMCallBr => {
-                Terminator::CallBr(CallBr::from_llvm_ref(term, ctr, vnmap, bbmap, ctx))
+                Terminator::CallBr(CallBr::from_llvm_ref(term, ctx, func_ctx))
             },
             opcode => panic!(
                 "Terminator::from_llvm_ref called with a non-terminator instruction (opcode {:?})",
@@ -415,16 +412,16 @@ impl Terminator {
 impl Ret {
     pub(crate) fn from_llvm_ref(
         term: LLVMValueRef,
-        vnmap: &ValToNameMap,
         ctx: &mut FromLLVMContext,
+        func_ctx: &mut FunctionContext,
     ) -> Self {
         Self {
             return_operand: match unsafe { LLVMGetNumOperands(term) } {
                 0 => None,
                 1 => Some(Operand::from_llvm_ref(
                     unsafe { LLVMGetOperand(term, 0) },
-                    vnmap,
                     ctx,
+                    func_ctx,
                 )),
                 n => panic!("Ret instruction with {} operands", n),
             },
@@ -435,10 +432,11 @@ impl Ret {
 }
 
 impl Br {
-    pub(crate) fn from_llvm_ref(term: LLVMValueRef, bbmap: &BBMap) -> Self {
+    pub(crate) fn from_llvm_ref(term: LLVMValueRef, func_ctx: &mut FunctionContext) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(term) }, 1);
         Self {
-            dest: bbmap
+            dest: func_ctx
+                .bb_names
                 .get(unsafe { &op_to_bb(LLVMGetOperand(term, 0)) })
                 .expect("Failed to find destination bb in map")
                 .clone(),
@@ -451,18 +449,19 @@ impl Br {
 impl CondBr {
     pub(crate) fn from_llvm_ref(
         term: LLVMValueRef,
-        vnmap: &ValToNameMap,
-        bbmap: &BBMap,
         ctx: &mut FromLLVMContext,
+        func_ctx: &mut FunctionContext,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(term) }, 3);
         Self {
-            condition: Operand::from_llvm_ref(unsafe { LLVMGetOperand(term, 0) }, vnmap, ctx),
-            true_dest: bbmap
+            condition: Operand::from_llvm_ref(unsafe { LLVMGetOperand(term, 0) }, ctx, func_ctx),
+            true_dest: func_ctx
+                .bb_names
                 .get(unsafe { &op_to_bb(LLVMGetOperand(term, 2)) })
                 .expect("Failed to find true-destination bb in map")
                 .clone(),
-            false_dest: bbmap
+            false_dest: func_ctx
+                .bb_names
                 .get(unsafe { &op_to_bb(LLVMGetOperand(term, 1)) })
                 .expect("Failed to find false-destination in bb map")
                 .clone(),
@@ -475,17 +474,17 @@ impl CondBr {
 impl Switch {
     pub(crate) fn from_llvm_ref(
         term: LLVMValueRef,
-        vnmap: &ValToNameMap,
-        bbmap: &BBMap,
         ctx: &mut FromLLVMContext,
+        func_ctx: &mut FunctionContext,
     ) -> Self {
         Self {
-            operand: Operand::from_llvm_ref(unsafe { LLVMGetOperand(term, 0) }, vnmap, ctx),
+            operand: Operand::from_llvm_ref(unsafe { LLVMGetOperand(term, 0) }, ctx, func_ctx),
             dests: {
                 let num_dests = unsafe { LLVMGetNumSuccessors(term) };
                 let dest_bbs = (1 ..= num_dests) // LLVMGetSuccessor(0) apparently gives the default dest
                     .map(|i| {
-                        bbmap
+                        func_ctx
+                            .bb_names
                             .get(unsafe { &LLVMGetSuccessor(term, i) })
                             .expect("Failed to find switch destination in map")
                             .clone()
@@ -496,7 +495,8 @@ impl Switch {
                 });
                 Iterator::zip(dest_vals, dest_bbs).collect()
             },
-            default_dest: bbmap
+            default_dest: func_ctx
+                .bb_names
                 .get(unsafe { &LLVMGetSwitchDefaultDest(term) })
                 .expect("Failed to find switch default destination in map")
                 .clone(),
@@ -509,17 +509,17 @@ impl Switch {
 impl IndirectBr {
     pub(crate) fn from_llvm_ref(
         term: LLVMValueRef,
-        vnmap: &ValToNameMap,
-        bbmap: &BBMap,
         ctx: &mut FromLLVMContext,
+        func_ctx: &mut FunctionContext,
     ) -> Self {
         Self {
-            operand: Operand::from_llvm_ref(unsafe { LLVMGetOperand(term, 0) }, vnmap, ctx),
+            operand: Operand::from_llvm_ref(unsafe { LLVMGetOperand(term, 0) }, ctx, func_ctx),
             possible_dests: {
                 let num_dests = unsafe { LLVMGetNumSuccessors(term) };
                 (0 .. num_dests)
                     .map(|i| {
-                        bbmap
+                        func_ctx
+                            .bb_names
                             .get(unsafe { &LLVMGetSuccessor(term, i) })
                             .expect("Failed to find indirect branch destination in map")
                             .clone()
@@ -535,23 +535,23 @@ impl IndirectBr {
 impl Invoke {
     pub(crate) fn from_llvm_ref(
         term: LLVMValueRef,
-        ctr: &mut usize,
-        vnmap: &ValToNameMap,
-        bbmap: &BBMap,
         ctx: &mut FromLLVMContext,
+        func_ctx: &mut FunctionContext,
     ) -> Self {
         use crate::instruction::CallInfo;
-        let callinfo = CallInfo::from_llvm_ref(term, vnmap, ctx);
+        let callinfo = CallInfo::from_llvm_ref(term, ctx, func_ctx);
         Self {
             function: callinfo.function,
             arguments: callinfo.arguments,
             return_attributes: callinfo.return_attributes,
-            result: Name::name_or_num(unsafe { get_value_name(term) }, ctr),
-            return_label: bbmap
+            result: Name::name_or_num(unsafe { get_value_name(term) }, &mut func_ctx.ctr),
+            return_label: func_ctx
+                .bb_names
                 .get(unsafe { &LLVMGetNormalDest(term) })
                 .expect("Failed to find invoke return destination in map")
                 .clone(),
-            exception_label: bbmap
+            exception_label: func_ctx
+                .bb_names
                 .get(unsafe { &LLVMGetUnwindDest(term) })
                 .expect("Failed to find invoke exception destination in map")
                 .clone(),
@@ -566,12 +566,12 @@ impl Invoke {
 impl Resume {
     pub(crate) fn from_llvm_ref(
         term: LLVMValueRef,
-        vnmap: &ValToNameMap,
         ctx: &mut FromLLVMContext,
+        func_ctx: &mut FunctionContext,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(term) }, 1);
         Self {
-            operand: Operand::from_llvm_ref(unsafe { LLVMGetOperand(term, 0) }, vnmap, ctx),
+            operand: Operand::from_llvm_ref(unsafe { LLVMGetOperand(term, 0) }, ctx, func_ctx),
             debugloc: DebugLoc::from_llvm_with_col(term),
             // metadata: InstructionMetadata::from_llvm_inst(term),
         }
@@ -591,23 +591,23 @@ impl Unreachable {
 impl CleanupRet {
     pub(crate) fn from_llvm_ref(
         term: LLVMValueRef,
-        vnmap: &ValToNameMap,
-        bbmap: &BBMap,
         ctx: &mut FromLLVMContext,
+        func_ctx: &mut FunctionContext,
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(term) }, 1);
         Self {
-            cleanup_pad: Operand::from_llvm_ref(unsafe { LLVMGetOperand(term, 0) }, vnmap, ctx),
+            cleanup_pad: Operand::from_llvm_ref(unsafe { LLVMGetOperand(term, 0) }, ctx, func_ctx),
             unwind_dest: {
                 let dest = unsafe { LLVMGetUnwindDest(term) };
                 if dest.is_null() {
                     None
                 } else {
                     Some(
-                        bbmap
+                        func_ctx
+                            .bb_names
                             .get(&dest)
                             .unwrap_or_else(|| {
-                                let names: Vec<_> = bbmap.values().collect();
+                                let names: Vec<_> = func_ctx.bb_names.values().collect();
                                 panic!(
                                     "Failed to find unwind destination in map; have names {:?}",
                                     names
@@ -626,13 +626,13 @@ impl CleanupRet {
 impl CatchRet {
     pub(crate) fn from_llvm_ref(
         term: LLVMValueRef,
-        vnmap: &ValToNameMap,
-        bbmap: &BBMap,
         ctx: &mut FromLLVMContext,
+        func_ctx: &mut FunctionContext,
     ) -> Self {
         Self {
-            catch_pad: Operand::from_llvm_ref(unsafe { LLVMGetOperand(term, 0) }, vnmap, ctx),
-            successor: bbmap
+            catch_pad: Operand::from_llvm_ref(unsafe { LLVMGetOperand(term, 0) }, ctx, func_ctx),
+            successor: func_ctx
+                .bb_names
                 .get(unsafe { &LLVMGetSuccessor(term, 0) })
                 .expect("Failed to find CatchRet successor in map")
                 .clone(),
@@ -645,13 +645,11 @@ impl CatchRet {
 impl CatchSwitch {
     pub(crate) fn from_llvm_ref(
         term: LLVMValueRef,
-        ctr: &mut usize,
-        vnmap: &ValToNameMap,
-        bbmap: &BBMap,
         ctx: &mut FromLLVMContext,
+        func_ctx: &mut FunctionContext,
     ) -> Self {
         Self {
-            parent_pad: Operand::from_llvm_ref(unsafe { LLVMGetOperand(term, 0) }, vnmap, ctx),
+            parent_pad: Operand::from_llvm_ref(unsafe { LLVMGetOperand(term, 0) }, ctx, func_ctx),
             catch_handlers: {
                 let num_handlers = unsafe { LLVMGetNumHandlers(term) };
                 let mut handlers: Vec<LLVMBasicBlockRef> =
@@ -663,7 +661,8 @@ impl CatchSwitch {
                 handlers
                     .into_iter()
                     .map(|h| {
-                        bbmap
+                        func_ctx
+                            .bb_names
                             .get(&h)
                             .expect("Failed to find catch handler in map")
                             .clone()
@@ -675,13 +674,13 @@ impl CatchSwitch {
                 if dest.is_null() {
                     None
                 } else {
-                    Some(bbmap.get(&dest)
-                        .unwrap_or_else(|| { let names: Vec<_> = bbmap.values().collect(); panic!("Failed to find CatchSwitch default unwind destination in map; have names {:?}", names) })
+                    Some(func_ctx.bb_names.get(&dest)
+                        .unwrap_or_else(|| { let names: Vec<_> = func_ctx.bb_names.values().collect(); panic!("Failed to find CatchSwitch default unwind destination in map; have names {:?}", names) })
                         .clone()
                     )
                 }
             },
-            result: Name::name_or_num(unsafe { get_value_name(term) }, ctr),
+            result: Name::name_or_num(unsafe { get_value_name(term) }, &mut func_ctx.ctr),
             debugloc: DebugLoc::from_llvm_with_col(term),
             // metadata: InstructionMetadata::from_llvm_inst(term),
         }
@@ -691,19 +690,18 @@ impl CatchSwitch {
 impl CallBr {
     pub(crate) fn from_llvm_ref(
         term: LLVMValueRef,
-        ctr: &mut usize,
-        vnmap: &ValToNameMap,
-        bbmap: &BBMap,
         ctx: &mut FromLLVMContext,
+        func_ctx: &mut FunctionContext,
     ) -> Self {
         use crate::instruction::CallInfo;
-        let callinfo = CallInfo::from_llvm_ref(term, vnmap, ctx);
+        let callinfo = CallInfo::from_llvm_ref(term, ctx, func_ctx);
         Self {
             function: callinfo.function,
             arguments: callinfo.arguments,
             return_attributes: callinfo.return_attributes,
-            result: Name::name_or_num(unsafe { get_value_name(term) }, ctr),
-            return_label: bbmap
+            result: Name::name_or_num(unsafe { get_value_name(term) }, &mut func_ctx.ctr),
+            return_label: func_ctx
+                .bb_names
                 .get(unsafe { &LLVMGetNormalDest(term) })
                 .expect("Failed to find invoke return destination in map")
                 .clone(),

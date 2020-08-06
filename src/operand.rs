@@ -1,6 +1,5 @@
 use crate::types::{TypeRef, Typed, Types};
 use crate::{ConstantRef, Name};
-use std::collections::HashMap;
 
 #[derive(PartialEq, Clone, Debug)]
 pub enum Operand {
@@ -30,16 +29,15 @@ impl Typed for Operand {
 
 use crate::constant::Constant;
 use crate::from_llvm::*;
+use crate::function::FunctionContext;
 use crate::module::FromLLVMContext;
 use llvm_sys::LLVMValueKind;
-
-pub(crate) type ValToNameMap = HashMap<LLVMValueRef, Name>;
 
 impl Operand {
     pub(crate) fn from_llvm_ref(
         operand: LLVMValueRef,
-        vnmap: &ValToNameMap,
         ctx: &mut FromLLVMContext,
+        func_ctx: &FunctionContext,
     ) -> Self {
         let constant = unsafe { LLVMIsAConstant(operand) };
         if !constant.is_null() {
@@ -50,13 +48,13 @@ impl Operand {
             Operand::MetadataOperand
         } else {
             Operand::LocalOperand {
-                name: vnmap
+                name: func_ctx.val_names
                     .get(&operand)
                     .unwrap_or_else(|| {
-                        let names: Vec<_> = vnmap.values().collect();
+                        let names: Vec<_> = func_ctx.val_names.values().collect();
                         let kind = unsafe { LLVMGetValueKind(operand) };
                         panic!(
-                            "Failed to find operand with kind {:?} in vnmap; have names {:?}",
+                            "Failed to find operand with kind {:?} in func_ctx.val_names; have names {:?}",
                             kind, names
                         )
                     })
