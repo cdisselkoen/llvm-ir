@@ -241,20 +241,15 @@ pub type GroupID = usize;
 // ********* //
 
 use crate::basicblock::BBMap;
-use crate::constant::{Constant, Constants, GlobalNameMap};
+use crate::constant::Constant;
 use crate::from_llvm::*;
+use crate::module::FromLLVMContext;
 use crate::operand::ValToNameMap;
-use crate::types::TypesBuilder;
 use llvm_sys::comdat::*;
 use llvm_sys::{LLVMAttributeFunctionIndex, LLVMAttributeReturnIndex};
 
 impl Function {
-    pub(crate) fn from_llvm_ref(
-        func: LLVMValueRef,
-        gnmap: &GlobalNameMap,
-        constants: &mut Constants,
-        types: &mut TypesBuilder,
-    ) -> Self {
+    pub(crate) fn from_llvm_ref(func: LLVMValueRef, ctx: &mut FromLLVMContext) -> Self {
         let func = unsafe { LLVMIsAFunction(func) };
         assert!(!func.is_null());
         debug!("Processing func {:?}", unsafe { get_value_name(func) });
@@ -265,7 +260,7 @@ impl Function {
                 .enumerate()
                 .map(|(i, p)| Parameter {
                     name: Name::name_or_num(unsafe { get_value_name(p) }, &mut local_ctr),
-                    ty: types.type_from_llvm_ref(unsafe { LLVMTypeOf(p) }),
+                    ty: ctx.types.type_from_llvm_ref(unsafe { LLVMTypeOf(p) }),
                     attributes: {
                         let num_attrs = unsafe { LLVMGetAttributeCountAtIndex(func, i as u32) };
                         let mut attrs: Vec<LLVMAttributeRef> =
@@ -313,12 +308,10 @@ impl Function {
             name: unsafe { get_value_name(func) },
             parameters,
             is_var_arg: unsafe { LLVMIsFunctionVarArg(functy) } != 0,
-            return_type: types.type_from_llvm_ref(unsafe { LLVMGetReturnType(functy) }),
+            return_type: ctx.types.type_from_llvm_ref(unsafe { LLVMGetReturnType(functy) }),
             basic_blocks: {
                 get_basic_blocks(func)
-                    .map(|bb| {
-                        BasicBlock::from_llvm_ref(bb, &mut local_ctr, &vnmap, &bbmap, gnmap, constants, types)
-                    })
+                    .map(|bb| BasicBlock::from_llvm_ref(bb, &mut local_ctr, &vnmap, &bbmap, ctx))
                     .collect()
             },
             function_attributes: {
@@ -384,9 +377,7 @@ impl Function {
                 if unsafe { LLVMHasPersonalityFn(func) } != 0 {
                     Some(Constant::from_llvm_ref(
                         unsafe { LLVMGetPersonalityFn(func) },
-                        constants,
-                        gnmap,
-                        types,
+                        ctx,
                     ))
                 } else {
                     None

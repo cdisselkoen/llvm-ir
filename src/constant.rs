@@ -228,9 +228,9 @@ impl Typed for ConstantRef {
 impl ConstantRef {
     /// Construct a new `ConstantRef` by consuming the given owned `Constant`.
     //
-    // Internal users should get `ConstantRef`s from the `Constants` cache
-    // instead, so that if we already have that `Constant` somewhere, we can
-    // just give you a new `ConstantRef` to that `Constant`.
+    // Internal users should get `ConstantRef`s from the `FromLLVMContext` cache
+    // instead if possible, so that if we already have that `Constant`
+    // somewhere, we can just give you a new `ConstantRef` to that `Constant`.
     pub fn new(c: Constant) -> Self {
         Self(Arc::new(c))
     }
@@ -881,37 +881,22 @@ impl Typed for Select {
 // ********* //
 
 use crate::from_llvm::*;
-use crate::types::TypesBuilder;
-use std::collections::HashMap;
+use crate::module::FromLLVMContext;
 use std::collections::hash_map::Entry;
 
-pub(crate) type GlobalNameMap = HashMap<LLVMValueRef, Name>;
-
-pub(crate) type Constants = HashMap<LLVMValueRef, ConstantRef>;
-
 impl Constant {
-    pub(crate) fn from_llvm_ref(
-        constant: LLVMValueRef,
-        constants: &mut Constants,
-        gnmap: &GlobalNameMap,
-        types: &mut TypesBuilder,
-    ) -> ConstantRef {
-        if let Some(constantref) = constants.get(&constant) {
+    pub(crate) fn from_llvm_ref(constant: LLVMValueRef, ctx: &mut FromLLVMContext) -> ConstantRef {
+        if let Some(constantref) = ctx.constants.get(&constant) {
             return constantref.clone();
         }
-        let parsed = Self::parse_from_llvm_ref(constant, constants, gnmap, types);
-        match constants.entry(constant) {
+        let parsed = Self::parse_from_llvm_ref(constant, ctx);
+        match ctx.constants.entry(constant) {
             Entry::Occupied(_) => panic!("This case should have been handled above"),
             Entry::Vacant(ventry) => ventry.insert(ConstantRef::new(parsed)).clone(),
         }
     }
 
-    fn parse_from_llvm_ref(
-        constant: LLVMValueRef,
-        constants: &mut Constants,
-        gnmap: &GlobalNameMap,
-        types: &mut TypesBuilder,
-    ) -> Self {
+    fn parse_from_llvm_ref(constant: LLVMValueRef, ctx: &mut FromLLVMContext) -> Self {
         use llvm_sys::LLVMValueKind;
         if unsafe { LLVMIsAConstant(constant).is_null() } {
             panic!(
@@ -921,7 +906,7 @@ impl Constant {
         }
         match unsafe { LLVMGetValueKind(constant) } {
             LLVMValueKind::LLVMConstantIntValueKind => {
-                match types.type_from_llvm_ref( unsafe { LLVMTypeOf(constant) } ).as_ref() {
+                match ctx.types.type_from_llvm_ref( unsafe { LLVMTypeOf(constant) } ).as_ref() {
                     Type::IntegerType { bits } => Constant::Int {
                         bits: *bits,
                         value: unsafe { LLVMConstIntGetZExtValue(constant) } as u64,
@@ -930,7 +915,7 @@ impl Constant {
                 }
             },
             LLVMValueKind::LLVMConstantFPValueKind => {
-                match types.type_from_llvm_ref( unsafe { LLVMTypeOf(constant) } ).as_ref() {
+                match ctx.types.type_from_llvm_ref( unsafe { LLVMTypeOf(constant) } ).as_ref() {
                     Type::FPType(fptype) => Constant::Float(match fptype {
                         FPType::Half => Float::Half,
                         FPType::Single => Float::Single( unsafe {
@@ -951,9 +936,9 @@ impl Constant {
                 }
             },
             LLVMValueKind::LLVMConstantStructValueKind => {
-                let (num_elements, is_packed) = match types.type_from_llvm_ref( unsafe { LLVMTypeOf(constant) } ).as_ref() {
+                let (num_elements, is_packed) = match ctx.types.type_from_llvm_ref( unsafe { LLVMTypeOf(constant) } ).as_ref() {
                     Type::StructType { element_types, is_packed } => (element_types.len(), *is_packed),
-                    Type::NamedStructType { name } => match types.named_struct_def(name) {
+                    Type::NamedStructType { name } => match ctx.types.named_struct_def(name) {
                         NamedStructDef::Opaque => panic!("Constant of opaque struct type (struct name {:?})", name),
                         NamedStructDef::Defined(ty) => match ty.as_ref() {
                             Type::StructType { element_types, is_packed } => {
@@ -968,18 +953,18 @@ impl Constant {
                     name: None,  // --TODO not yet implemented: Constant::Struct name
                     values: {
                         (0 .. num_elements).map(|i| {
-                            Constant::from_llvm_ref( unsafe { LLVMGetOperand(constant, i as u32) }, constants, gnmap, types)
+                            Constant::from_llvm_ref( unsafe { LLVMGetOperand(constant, i as u32) }, ctx)
                         }).collect()
                     },
                     is_packed,
                 }
             },
             LLVMValueKind::LLVMConstantArrayValueKind => {
-                match types.type_from_llvm_ref( unsafe { LLVMTypeOf(constant) } ).as_ref() {
+                match ctx.types.type_from_llvm_ref( unsafe { LLVMTypeOf(constant) } ).as_ref() {
                     Type::ArrayType { element_type, num_elements } => Constant::Array {
                         element_type: element_type.clone(),
                         elements: {
-                            (0 .. *num_elements).map(|i| Constant::from_llvm_ref( unsafe { LLVMGetOperand(constant, i as u32) }, constants, gnmap, types)).collect()
+                            (0 .. *num_elements).map(|i| Constant::from_llvm_ref( unsafe { LLVMGetOperand(constant, i as u32) }, ctx)).collect()
                         },
                     },
                     ty => panic!("Expected Constant::Array to have type Type::ArrayType; got {:?}", ty),
@@ -988,36 +973,36 @@ impl Constant {
             LLVMValueKind::LLVMConstantVectorValueKind => {
                 let num_elements = unsafe { LLVMGetNumOperands(constant) };
                 Constant::Vector(
-                    (0 .. num_elements).map(|i| Constant::from_llvm_ref( unsafe { LLVMGetOperand(constant, i as u32) }, constants, gnmap, types)).collect()
+                    (0 .. num_elements).map(|i| Constant::from_llvm_ref( unsafe { LLVMGetOperand(constant, i as u32) }, ctx)).collect()
                 )
             },
             LLVMValueKind::LLVMConstantDataArrayValueKind => {
-                match types.type_from_llvm_ref( unsafe { LLVMTypeOf(constant) } ).as_ref() {
+                match ctx.types.type_from_llvm_ref( unsafe { LLVMTypeOf(constant) } ).as_ref() {
                     Type::ArrayType { element_type, num_elements } => Constant::Array {
                         element_type: element_type.clone(),
                         elements: {
-                            (0 .. *num_elements).map(|i| Constant::from_llvm_ref( unsafe { LLVMGetElementAsConstant(constant, i as u32) }, constants, gnmap, types)).collect()
+                            (0 .. *num_elements).map(|i| Constant::from_llvm_ref( unsafe { LLVMGetElementAsConstant(constant, i as u32) }, ctx)).collect()
                         },
                     },
                     ty => panic!("Expected ConstantDataArray to have type Type::ArrayType; got {:?}", ty),
                 }
             },
             LLVMValueKind::LLVMConstantDataVectorValueKind => {
-                match types.type_from_llvm_ref( unsafe { LLVMTypeOf(constant) } ).as_ref() {
+                match ctx.types.type_from_llvm_ref( unsafe { LLVMTypeOf(constant) } ).as_ref() {
                     Type::VectorType { num_elements, .. } => Constant::Vector(
-                        (0 .. *num_elements).map(|i| Constant::from_llvm_ref( unsafe { LLVMGetElementAsConstant(constant, i as u32) }, constants, gnmap, types)).collect()
+                        (0 .. *num_elements).map(|i| Constant::from_llvm_ref( unsafe { LLVMGetElementAsConstant(constant, i as u32) }, ctx)).collect()
                     ),
                     ty => panic!("Expected ConstantDataVector to have type Type::VectorType; got {:?}", ty),
                 }
             },
             LLVMValueKind::LLVMConstantPointerNullValueKind => {
-                Constant::Null(types.type_from_llvm_ref( unsafe { LLVMTypeOf(constant) } ))
+                Constant::Null(ctx.types.type_from_llvm_ref( unsafe { LLVMTypeOf(constant) } ))
             },
             LLVMValueKind::LLVMConstantAggregateZeroValueKind => {
-                Constant::AggregateZero(types.type_from_llvm_ref( unsafe { LLVMTypeOf(constant) } ))
+                Constant::AggregateZero(ctx.types.type_from_llvm_ref( unsafe { LLVMTypeOf(constant) } ))
             },
             LLVMValueKind::LLVMUndefValueValueKind => {
-                Constant::Undef(types.type_from_llvm_ref( unsafe { LLVMTypeOf(constant) } ))
+                Constant::Undef(ctx.types.type_from_llvm_ref( unsafe { LLVMTypeOf(constant) } ))
             },
             LLVMValueKind::LLVMConstantTokenNoneValueKind => {
                 Constant::TokenNone
@@ -1028,55 +1013,55 @@ impl Constant {
             LLVMValueKind::LLVMConstantExprValueKind => {
                 use llvm_sys::LLVMOpcode;
                 match unsafe { LLVMGetConstOpcode(constant) } {
-                    LLVMOpcode::LLVMAdd => Constant::Add(Add::from_llvm_ref(constant, gnmap, constants, types)),
-                    LLVMOpcode::LLVMSub => Constant::Sub(Sub::from_llvm_ref(constant, gnmap, constants, types)),
-                    LLVMOpcode::LLVMMul => Constant::Mul(Mul::from_llvm_ref(constant, gnmap, constants, types)),
-                    LLVMOpcode::LLVMUDiv => Constant::UDiv(UDiv::from_llvm_ref(constant, gnmap, constants, types)),
-                    LLVMOpcode::LLVMSDiv => Constant::SDiv(SDiv::from_llvm_ref(constant, gnmap, constants, types)),
-                    LLVMOpcode::LLVMURem => Constant::URem(URem::from_llvm_ref(constant, gnmap, constants, types)),
-                    LLVMOpcode::LLVMSRem => Constant::SRem(SRem::from_llvm_ref(constant, gnmap, constants, types)),
-                    LLVMOpcode::LLVMAnd => Constant::And(And::from_llvm_ref(constant, gnmap, constants, types)),
-                    LLVMOpcode::LLVMOr => Constant::Or(Or::from_llvm_ref(constant, gnmap, constants, types)),
-                    LLVMOpcode::LLVMXor => Constant::Xor(Xor::from_llvm_ref(constant, gnmap, constants, types)),
-                    LLVMOpcode::LLVMShl => Constant::Shl(Shl::from_llvm_ref(constant, gnmap, constants, types)),
-                    LLVMOpcode::LLVMLShr => Constant::LShr(LShr::from_llvm_ref(constant, gnmap, constants, types)),
-                    LLVMOpcode::LLVMAShr => Constant::AShr(AShr::from_llvm_ref(constant, gnmap, constants, types)),
-                    LLVMOpcode::LLVMFAdd => Constant::FAdd(FAdd::from_llvm_ref(constant, gnmap, constants, types)),
-                    LLVMOpcode::LLVMFSub => Constant::FSub(FSub::from_llvm_ref(constant, gnmap, constants, types)),
-                    LLVMOpcode::LLVMFMul => Constant::FMul(FMul::from_llvm_ref(constant, gnmap, constants, types)),
-                    LLVMOpcode::LLVMFDiv => Constant::FDiv(FDiv::from_llvm_ref(constant, gnmap, constants, types)),
-                    LLVMOpcode::LLVMFRem => Constant::FRem(FRem::from_llvm_ref(constant, gnmap, constants, types)),
-                    LLVMOpcode::LLVMExtractElement => Constant::ExtractElement(ExtractElement::from_llvm_ref(constant, gnmap, constants, types)),
-                    LLVMOpcode::LLVMInsertElement => Constant::InsertElement(InsertElement::from_llvm_ref(constant, gnmap, constants, types)),
-                    LLVMOpcode::LLVMShuffleVector => Constant::ShuffleVector(ShuffleVector::from_llvm_ref(constant, gnmap, constants, types)),
-                    LLVMOpcode::LLVMExtractValue => Constant::ExtractValue(ExtractValue::from_llvm_ref(constant, gnmap, constants, types)),
-                    LLVMOpcode::LLVMInsertValue => Constant::InsertValue(InsertValue::from_llvm_ref(constant, gnmap, constants, types)),
-                    LLVMOpcode::LLVMGetElementPtr => Constant::GetElementPtr(GetElementPtr::from_llvm_ref(constant, gnmap, constants, types)),
-                    LLVMOpcode::LLVMTrunc => Constant::Trunc(Trunc::from_llvm_ref(constant, gnmap, constants, types)),
-                    LLVMOpcode::LLVMZExt => Constant::ZExt(ZExt::from_llvm_ref(constant, gnmap, constants, types)),
-                    LLVMOpcode::LLVMSExt => Constant::SExt(SExt::from_llvm_ref(constant, gnmap, constants, types)),
-                    LLVMOpcode::LLVMFPTrunc => Constant::FPTrunc(FPTrunc::from_llvm_ref(constant, gnmap, constants, types)),
-                    LLVMOpcode::LLVMFPExt => Constant::FPExt(FPExt::from_llvm_ref(constant, gnmap, constants, types)),
-                    LLVMOpcode::LLVMFPToUI => Constant::FPToUI(FPToUI::from_llvm_ref(constant, gnmap, constants, types)),
-                    LLVMOpcode::LLVMFPToSI => Constant::FPToSI(FPToSI::from_llvm_ref(constant, gnmap, constants, types)),
-                    LLVMOpcode::LLVMUIToFP => Constant::UIToFP(UIToFP::from_llvm_ref(constant, gnmap, constants, types)),
-                    LLVMOpcode::LLVMSIToFP => Constant::SIToFP(SIToFP::from_llvm_ref(constant, gnmap, constants, types)),
-                    LLVMOpcode::LLVMPtrToInt => Constant::PtrToInt(PtrToInt::from_llvm_ref(constant, gnmap, constants, types)),
-                    LLVMOpcode::LLVMIntToPtr => Constant::IntToPtr(IntToPtr::from_llvm_ref(constant, gnmap, constants, types)),
-                    LLVMOpcode::LLVMBitCast => Constant::BitCast(BitCast::from_llvm_ref(constant, gnmap, constants, types)),
-                    LLVMOpcode::LLVMAddrSpaceCast => Constant::AddrSpaceCast(AddrSpaceCast::from_llvm_ref(constant, gnmap, constants, types)),
-                    LLVMOpcode::LLVMICmp => Constant::ICmp(ICmp::from_llvm_ref(constant, gnmap, constants, types)),
-                    LLVMOpcode::LLVMFCmp => Constant::FCmp(FCmp::from_llvm_ref(constant, gnmap, constants, types)),
-                    LLVMOpcode::LLVMSelect => Constant::Select(Select::from_llvm_ref(constant, gnmap, constants, types)),
+                    LLVMOpcode::LLVMAdd => Constant::Add(Add::from_llvm_ref(constant, ctx)),
+                    LLVMOpcode::LLVMSub => Constant::Sub(Sub::from_llvm_ref(constant, ctx)),
+                    LLVMOpcode::LLVMMul => Constant::Mul(Mul::from_llvm_ref(constant, ctx)),
+                    LLVMOpcode::LLVMUDiv => Constant::UDiv(UDiv::from_llvm_ref(constant, ctx)),
+                    LLVMOpcode::LLVMSDiv => Constant::SDiv(SDiv::from_llvm_ref(constant, ctx)),
+                    LLVMOpcode::LLVMURem => Constant::URem(URem::from_llvm_ref(constant, ctx)),
+                    LLVMOpcode::LLVMSRem => Constant::SRem(SRem::from_llvm_ref(constant, ctx)),
+                    LLVMOpcode::LLVMAnd => Constant::And(And::from_llvm_ref(constant, ctx)),
+                    LLVMOpcode::LLVMOr => Constant::Or(Or::from_llvm_ref(constant, ctx)),
+                    LLVMOpcode::LLVMXor => Constant::Xor(Xor::from_llvm_ref(constant, ctx)),
+                    LLVMOpcode::LLVMShl => Constant::Shl(Shl::from_llvm_ref(constant, ctx)),
+                    LLVMOpcode::LLVMLShr => Constant::LShr(LShr::from_llvm_ref(constant, ctx)),
+                    LLVMOpcode::LLVMAShr => Constant::AShr(AShr::from_llvm_ref(constant, ctx)),
+                    LLVMOpcode::LLVMFAdd => Constant::FAdd(FAdd::from_llvm_ref(constant, ctx)),
+                    LLVMOpcode::LLVMFSub => Constant::FSub(FSub::from_llvm_ref(constant, ctx)),
+                    LLVMOpcode::LLVMFMul => Constant::FMul(FMul::from_llvm_ref(constant, ctx)),
+                    LLVMOpcode::LLVMFDiv => Constant::FDiv(FDiv::from_llvm_ref(constant, ctx)),
+                    LLVMOpcode::LLVMFRem => Constant::FRem(FRem::from_llvm_ref(constant, ctx)),
+                    LLVMOpcode::LLVMExtractElement => Constant::ExtractElement(ExtractElement::from_llvm_ref(constant, ctx)),
+                    LLVMOpcode::LLVMInsertElement => Constant::InsertElement(InsertElement::from_llvm_ref(constant, ctx)),
+                    LLVMOpcode::LLVMShuffleVector => Constant::ShuffleVector(ShuffleVector::from_llvm_ref(constant, ctx)),
+                    LLVMOpcode::LLVMExtractValue => Constant::ExtractValue(ExtractValue::from_llvm_ref(constant, ctx)),
+                    LLVMOpcode::LLVMInsertValue => Constant::InsertValue(InsertValue::from_llvm_ref(constant, ctx)),
+                    LLVMOpcode::LLVMGetElementPtr => Constant::GetElementPtr(GetElementPtr::from_llvm_ref(constant, ctx)),
+                    LLVMOpcode::LLVMTrunc => Constant::Trunc(Trunc::from_llvm_ref(constant, ctx)),
+                    LLVMOpcode::LLVMZExt => Constant::ZExt(ZExt::from_llvm_ref(constant, ctx)),
+                    LLVMOpcode::LLVMSExt => Constant::SExt(SExt::from_llvm_ref(constant, ctx)),
+                    LLVMOpcode::LLVMFPTrunc => Constant::FPTrunc(FPTrunc::from_llvm_ref(constant, ctx)),
+                    LLVMOpcode::LLVMFPExt => Constant::FPExt(FPExt::from_llvm_ref(constant, ctx)),
+                    LLVMOpcode::LLVMFPToUI => Constant::FPToUI(FPToUI::from_llvm_ref(constant, ctx)),
+                    LLVMOpcode::LLVMFPToSI => Constant::FPToSI(FPToSI::from_llvm_ref(constant, ctx)),
+                    LLVMOpcode::LLVMUIToFP => Constant::UIToFP(UIToFP::from_llvm_ref(constant, ctx)),
+                    LLVMOpcode::LLVMSIToFP => Constant::SIToFP(SIToFP::from_llvm_ref(constant, ctx)),
+                    LLVMOpcode::LLVMPtrToInt => Constant::PtrToInt(PtrToInt::from_llvm_ref(constant, ctx)),
+                    LLVMOpcode::LLVMIntToPtr => Constant::IntToPtr(IntToPtr::from_llvm_ref(constant, ctx)),
+                    LLVMOpcode::LLVMBitCast => Constant::BitCast(BitCast::from_llvm_ref(constant, ctx)),
+                    LLVMOpcode::LLVMAddrSpaceCast => Constant::AddrSpaceCast(AddrSpaceCast::from_llvm_ref(constant, ctx)),
+                    LLVMOpcode::LLVMICmp => Constant::ICmp(ICmp::from_llvm_ref(constant, ctx)),
+                    LLVMOpcode::LLVMFCmp => Constant::FCmp(FCmp::from_llvm_ref(constant, ctx)),
+                    LLVMOpcode::LLVMSelect => Constant::Select(Select::from_llvm_ref(constant, ctx)),
                     opcode => panic!("ConstantExpr has unexpected opcode {:?}", opcode),
                 }
             },
             _ if unsafe { !LLVMIsAGlobalValue(constant).is_null() } => {
                 Constant::GlobalReference {
-                    name: gnmap.get(&constant)
-                        .unwrap_or_else(|| { let names: Vec<_> = gnmap.values().collect(); panic!("Global not found in GlobalNameMap; have names {:?}", names) })
+                    name: ctx.global_names.get(&constant)
+                        .unwrap_or_else(|| { let names: Vec<_> = ctx.global_names.values().collect(); panic!("Global not found in ctx.global_names; have names {:?}", names) })
                         .clone(),
-                    ty: types.type_from_llvm_ref( unsafe { LLVMGlobalGetValueType(constant) } ),
+                    ty: ctx.types.type_from_llvm_ref( unsafe { LLVMGlobalGetValueType(constant) } ),
                 }
             },
             k => panic!("Constant::from_llvm_ref: don't know how to handle this Constant with ValueKind {:?}", k),
@@ -1087,26 +1072,11 @@ impl Constant {
 macro_rules! binop_from_llvm {
     ($expr:ident) => {
         impl $expr {
-            pub(crate) fn from_llvm_ref(
-                expr: LLVMValueRef,
-                gnmap: &GlobalNameMap,
-                constants: &mut Constants,
-                types: &mut TypesBuilder,
-            ) -> Self {
+            pub(crate) fn from_llvm_ref(expr: LLVMValueRef, ctx: &mut FromLLVMContext) -> Self {
                 assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 2);
                 Self {
-                    operand0: Constant::from_llvm_ref(
-                        unsafe { LLVMGetOperand(expr, 0) },
-                        constants,
-                        gnmap,
-                        types,
-                    ),
-                    operand1: Constant::from_llvm_ref(
-                        unsafe { LLVMGetOperand(expr, 1) },
-                        constants,
-                        gnmap,
-                        types,
-                    ),
+                    operand0: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, ctx),
+                    operand1: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 1) }, ctx),
                 }
             }
         }
@@ -1133,62 +1103,42 @@ binop_from_llvm!(FDiv);
 binop_from_llvm!(FRem);
 
 impl ExtractElement {
-    pub(crate) fn from_llvm_ref(
-        expr: LLVMValueRef,
-        gnmap: &GlobalNameMap,
-        constants: &mut Constants,
-        types: &mut TypesBuilder,
-    ) -> Self {
+    pub(crate) fn from_llvm_ref(expr: LLVMValueRef, ctx: &mut FromLLVMContext) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 2);
         Self {
-            vector: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, constants, gnmap, types),
-            index: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 1) }, constants, gnmap, types),
+            vector: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, ctx),
+            index: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 1) }, ctx),
         }
     }
 }
 
 impl InsertElement {
-    pub(crate) fn from_llvm_ref(
-        expr: LLVMValueRef,
-        gnmap: &GlobalNameMap,
-        constants: &mut Constants,
-        types: &mut TypesBuilder,
-    ) -> Self {
+    pub(crate) fn from_llvm_ref(expr: LLVMValueRef, ctx: &mut FromLLVMContext) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 3);
         Self {
-            vector: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, constants, gnmap, types),
-            element: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 1) }, constants, gnmap, types),
-            index: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 2) }, constants, gnmap, types),
+            vector: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, ctx),
+            element: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 1) }, ctx),
+            index: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 2) }, ctx),
         }
     }
 }
 
 impl ShuffleVector {
-    pub(crate) fn from_llvm_ref(
-        expr: LLVMValueRef,
-        gnmap: &GlobalNameMap,
-        constants: &mut Constants,
-        types: &mut TypesBuilder,
-    ) -> Self {
+    pub(crate) fn from_llvm_ref(expr: LLVMValueRef, ctx: &mut FromLLVMContext) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 3);
         Self {
-            operand0: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, constants, gnmap, types),
-            operand1: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 1) }, constants, gnmap, types),
-            mask: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 2) }, constants, gnmap, types),
+            operand0: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, ctx),
+            operand1: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 1) }, ctx),
+            mask: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 2) }, ctx),
         }
     }
 }
 
 impl ExtractValue {
-    pub(crate) fn from_llvm_ref(
-        expr: LLVMValueRef,
-        gnmap: &GlobalNameMap,
-        constants: &mut Constants,
-        types: &mut TypesBuilder,
-    ) -> Self {
+    pub(crate) fn from_llvm_ref(expr: LLVMValueRef, ctx: &mut FromLLVMContext) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 2);
         Self {
-            aggregate: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, constants, gnmap, types),
+            aggregate: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, ctx),
             indices: unsafe {
                 let num_indices = LLVMGetNumIndices(expr);
                 let ptr = LLVMGetIndices(expr);
@@ -1199,16 +1149,11 @@ impl ExtractValue {
 }
 
 impl InsertValue {
-    pub(crate) fn from_llvm_ref(
-        expr: LLVMValueRef,
-        gnmap: &GlobalNameMap,
-        constants: &mut Constants,
-        types: &mut TypesBuilder,
-    ) -> Self {
+    pub(crate) fn from_llvm_ref(expr: LLVMValueRef, ctx: &mut FromLLVMContext) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 3);
         Self {
-            aggregate: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, constants, gnmap, types),
-            element: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 1) }, constants, gnmap, types),
+            aggregate: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, ctx),
+            element: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 1) }, ctx),
             indices: unsafe {
                 let num_indices = LLVMGetNumIndices(expr);
                 let ptr = LLVMGetIndices(expr);
@@ -1219,20 +1164,13 @@ impl InsertValue {
 }
 
 impl GetElementPtr {
-    pub(crate) fn from_llvm_ref(
-        expr: LLVMValueRef,
-        gnmap: &GlobalNameMap,
-        constants: &mut Constants,
-        types: &mut TypesBuilder,
-    ) -> Self {
+    pub(crate) fn from_llvm_ref(expr: LLVMValueRef, ctx: &mut FromLLVMContext) -> Self {
         Self {
-            address: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, constants, gnmap, types),
+            address: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, ctx),
             indices: {
                 let num_indices = unsafe { LLVMGetNumOperands(expr) as u32 } - 1; // LLVMGetNumIndices(), which we use for instruction::GetElementPtr, appears empirically to not work for constant::GetElementPtr
                 (1 ..= num_indices)
-                    .map(|i| {
-                        Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, i) }, constants, gnmap, types)
-                    })
+                    .map(|i| Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, i) }, ctx))
                     .collect()
             },
             in_bounds: unsafe { LLVMIsInBounds(expr) } != 0,
@@ -1245,21 +1183,11 @@ impl GetElementPtr {
 macro_rules! typed_unop_from_llvm {
     ($expr:ident) => {
         impl $expr {
-            pub(crate) fn from_llvm_ref(
-                expr: LLVMValueRef,
-                gnmap: &GlobalNameMap,
-                constants: &mut Constants,
-                types: &mut TypesBuilder,
-            ) -> Self {
+            pub(crate) fn from_llvm_ref(expr: LLVMValueRef, ctx: &mut FromLLVMContext) -> Self {
                 assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 1);
                 Self {
-                    operand: Constant::from_llvm_ref(
-                        unsafe { LLVMGetOperand(expr, 0) },
-                        constants,
-                        gnmap,
-                        types,
-                    ),
-                    to_type: types.type_from_llvm_ref(unsafe { LLVMTypeOf(expr) }),
+                    operand: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, ctx),
+                    to_type: ctx.types.type_from_llvm_ref(unsafe { LLVMTypeOf(expr) }),
                 }
             }
         }
@@ -1281,49 +1209,34 @@ typed_unop_from_llvm!(BitCast);
 typed_unop_from_llvm!(AddrSpaceCast);
 
 impl ICmp {
-    pub(crate) fn from_llvm_ref(
-        expr: LLVMValueRef,
-        gnmap: &GlobalNameMap,
-        constants: &mut Constants,
-        types: &mut TypesBuilder,
-    ) -> Self {
+    pub(crate) fn from_llvm_ref(expr: LLVMValueRef, ctx: &mut FromLLVMContext) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 2);
         Self {
             predicate: IntPredicate::from_llvm(unsafe { LLVMGetICmpPredicate(expr) }),
-            operand0: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, constants, gnmap, types),
-            operand1: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 1) }, constants, gnmap, types),
+            operand0: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, ctx),
+            operand1: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 1) }, ctx),
         }
     }
 }
 
 impl FCmp {
-    pub(crate) fn from_llvm_ref(
-        expr: LLVMValueRef,
-        gnmap: &GlobalNameMap,
-        constants: &mut Constants,
-        types: &mut TypesBuilder,
-    ) -> Self {
+    pub(crate) fn from_llvm_ref(expr: LLVMValueRef, ctx: &mut FromLLVMContext) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 2);
         Self {
             predicate: FPPredicate::from_llvm(unsafe { LLVMGetFCmpPredicate(expr) }),
-            operand0: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, constants, gnmap, types),
-            operand1: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 1) }, constants, gnmap, types),
+            operand0: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, ctx),
+            operand1: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 1) }, ctx),
         }
     }
 }
 
 impl Select {
-    pub(crate) fn from_llvm_ref(
-        expr: LLVMValueRef,
-        gnmap: &GlobalNameMap,
-        constants: &mut Constants,
-        types: &mut TypesBuilder,
-    ) -> Self {
+    pub(crate) fn from_llvm_ref(expr: LLVMValueRef, ctx: &mut FromLLVMContext) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 3);
         Self {
-            condition: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, constants, gnmap, types),
-            true_value: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 1) }, constants, gnmap, types),
-            false_value: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 2) }, constants, gnmap, types),
+            condition: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, ctx),
+            true_value: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 1) }, ctx),
+            false_value: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 2) }, ctx),
         }
     }
 }

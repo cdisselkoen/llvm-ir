@@ -2,13 +2,13 @@ use either::Either;
 use llvm_ir::instruction;
 use llvm_ir::terminator;
 use llvm_ir::types::NamedStructDef;
-use llvm_ir::{Constant, ConstantRef};
 use llvm_ir::HasDebugLoc;
 use llvm_ir::IntPredicate;
 use llvm_ir::Module;
 use llvm_ir::Name;
 use llvm_ir::Operand;
 use llvm_ir::Type;
+use llvm_ir::{Constant, ConstantRef};
 use std::convert::TryInto;
 use std::path::Path;
 

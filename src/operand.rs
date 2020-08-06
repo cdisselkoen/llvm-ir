@@ -28,9 +28,9 @@ impl Typed for Operand {
 // from_llvm //
 // ********* //
 
-use crate::constant::{Constant, Constants, GlobalNameMap};
+use crate::constant::Constant;
 use crate::from_llvm::*;
-use crate::types::TypesBuilder;
+use crate::module::FromLLVMContext;
 use llvm_sys::LLVMValueKind;
 
 pub(crate) type ValToNameMap = HashMap<LLVMValueRef, Name>;
@@ -39,13 +39,11 @@ impl Operand {
     pub(crate) fn from_llvm_ref(
         operand: LLVMValueRef,
         vnmap: &ValToNameMap,
-        gnmap: &GlobalNameMap,
-        constants: &mut Constants,
-        types: &mut TypesBuilder,
+        ctx: &mut FromLLVMContext,
     ) -> Self {
         let constant = unsafe { LLVMIsAConstant(operand) };
         if !constant.is_null() {
-            Operand::ConstantOperand(Constant::from_llvm_ref(constant, constants, gnmap, types))
+            Operand::ConstantOperand(Constant::from_llvm_ref(constant, ctx))
         } else if unsafe {
             LLVMGetValueKind(operand) == LLVMValueKind::LLVMMetadataAsValueValueKind
         } {
@@ -63,7 +61,7 @@ impl Operand {
                         )
                     })
                     .clone(),
-                ty: types.type_from_llvm_ref(unsafe { LLVMTypeOf(operand) }),
+                ty: ctx.types.type_from_llvm_ref(unsafe { LLVMTypeOf(operand) }),
             }
         }
     }

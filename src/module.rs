@@ -284,7 +284,7 @@ pub enum AlignType {
 // from_llvm //
 // ********* //
 
-use crate::constant::{Constant, Constants, GlobalNameMap};
+use crate::constant::Constant;
 use crate::from_llvm::*;
 use llvm_sys::comdat::*;
 use llvm_sys::{
@@ -294,6 +294,27 @@ use llvm_sys::{
     LLVMUnnamedAddr,
     LLVMVisibility,
 };
+use std::collections::HashMap;
+
+/// This struct contains data used when translating llvm-sys objects into our
+/// data structures
+pub(crate) struct FromLLVMContext<'a> {
+    pub types: TypesBuilder,
+    /// Map from an llvm-sys constant to the corresponding llvm-ir `ConstantRef`
+    pub constants: HashMap<LLVMValueRef, ConstantRef>,
+    /// Map from an llvm-sys global to its `Name`
+    pub global_names: &'a HashMap<LLVMValueRef, Name>,
+}
+
+impl<'a> FromLLVMContext<'a> {
+    fn new(global_names: &'a HashMap<LLVMValueRef, Name>) -> Self {
+        Self {
+            types: TypesBuilder::new(),
+            constants: HashMap::new(),
+            global_names,
+        }
+    }
+}
 
 impl Module {
     pub(crate) fn from_llvm_ref(module: LLVMModuleRef) -> Self {
@@ -307,7 +328,7 @@ impl Module {
         // This is necessary because these structures may reference each other in a
         //   circular fashion, and we need to be able to fill in the Name of the
         //   referenced object from having only its `LLVMValueRef`.
-        let gnmap: GlobalNameMap = get_defined_functions(module)
+        let global_names: HashMap<LLVMValueRef, Name> = get_defined_functions(module)
             .chain(get_declared_functions(module))
             .chain(get_globals(module))
             .chain(get_global_aliases(module))
@@ -320,8 +341,7 @@ impl Module {
             .collect();
         global_ctr = 0; // reset the global_ctr; the second pass should number everything exactly the same though
 
-        let mut constants = Constants::new();
-        let mut types = TypesBuilder::new();
+        let mut ctx = FromLLVMContext::new(&global_names);
 
         Self {
             name: unsafe { get_module_identifier(module) },
@@ -329,20 +349,20 @@ impl Module {
             data_layout: unsafe { get_data_layout_str(module) },
             target_triple: unsafe { get_target(module) },
             functions: get_defined_functions(module)
-                .map(|f| Function::from_llvm_ref(f, &gnmap, &mut constants, &mut types))
+                .map(|f| Function::from_llvm_ref(f, &mut ctx))
                 .collect(),
             global_vars: get_globals(module)
-                .map(|g| GlobalVariable::from_llvm_ref(g, &mut global_ctr, &gnmap, &mut constants, &mut types))
+                .map(|g| GlobalVariable::from_llvm_ref(g, &mut global_ctr, &mut ctx))
                 .collect(),
             global_aliases: get_global_aliases(module)
-                .map(|g| GlobalAlias::from_llvm_ref(g, &mut global_ctr, &gnmap, &mut constants, &mut types))
+                .map(|g| GlobalAlias::from_llvm_ref(g, &mut global_ctr, &mut ctx))
                 .collect(),
             // function_attribute_groups: unimplemented!("function_attribute_groups"),  // llvm-hs collects these in the decoder monad or something
             inline_assembly: unsafe { get_module_inline_asm(module) },
             // metadata_nodes: unimplemented!("metadata_nodes"),
             // named_metadatas: unimplemented!("named_metadatas"),
             // comdats: unimplemented!("comdats"),  // I think llvm-hs also collects these along the way
-            types: types.build(),
+            types: ctx.types.build(),
         }
     }
 }
@@ -351,11 +371,9 @@ impl GlobalVariable {
     pub(crate) fn from_llvm_ref(
         global: LLVMValueRef,
         ctr: &mut usize,
-        gnmap: &GlobalNameMap,
-        constants: &mut Constants,
-        types: &mut TypesBuilder,
+        ctx: &mut FromLLVMContext,
     ) -> Self {
-        let ty = types.type_from_llvm_ref(unsafe { LLVMTypeOf(global) });
+        let ty = ctx.types.type_from_llvm_ref(unsafe { LLVMTypeOf(global) });
         let addr_space = match ty.as_ref() {
             Type::PointerType { addr_space, .. } => *addr_space,
             _ => panic!("GlobalVariable has a non-pointer type, {:?}", ty),
@@ -380,7 +398,7 @@ impl GlobalVariable {
                 if it.is_null() {
                     None
                 } else {
-                    Some(Constant::from_llvm_ref(it, constants, gnmap, types))
+                    Some(Constant::from_llvm_ref(it, ctx))
                 }
             },
             section: unsafe { get_section(global) },
@@ -403,18 +421,16 @@ impl GlobalAlias {
     pub(crate) fn from_llvm_ref(
         alias: LLVMValueRef,
         ctr: &mut usize,
-        gnmap: &GlobalNameMap,
-        constants: &mut Constants,
-        types: &mut TypesBuilder,
+        ctx: &mut FromLLVMContext,
     ) -> Self {
-        let ty = types.type_from_llvm_ref(unsafe { LLVMTypeOf(alias) });
+        let ty = ctx.types.type_from_llvm_ref(unsafe { LLVMTypeOf(alias) });
         let addr_space = match ty.as_ref() {
             Type::PointerType { addr_space, .. } => *addr_space,
             _ => panic!("GlobalAlias has a non-pointer type, {:?}", ty),
         };
         Self {
             name: Name::name_or_num(unsafe { get_value_name(alias) }, ctr),
-            aliasee: Constant::from_llvm_ref(unsafe { LLVMAliasGetAliasee(alias) }, constants, gnmap, types),
+            aliasee: Constant::from_llvm_ref(unsafe { LLVMAliasGetAliasee(alias) }, ctx),
             linkage: Linkage::from_llvm(unsafe { LLVMGetLinkage(alias) }),
             visibility: Visibility::from_llvm(unsafe { LLVMGetVisibility(alias) }),
             ty,
