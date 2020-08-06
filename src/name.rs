@@ -5,7 +5,13 @@ use std::fmt;
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Debug, Hash)]
 pub enum Name {
     /// has a string name
-    Name(String),
+    // with `Box`, the enum `Name` has size 16 bytes, vs with a `String`
+    // directly, the enum `Name` has size 32 bytes. This has implications also
+    // for the size of other important structures, such as `Operand`.
+    // `Name::Name` should be the less common case, so the `Box` shouldn't hurt
+    // much, and we'll have much better memory consumption and maybe better
+    // cache performance.
+    Name(Box<String>),
     /// doesn't have a string name and was given this sequential number
     Number(usize),
 }
@@ -13,7 +19,7 @@ pub enum Name {
 impl Name {
     pub(crate) fn name_or_num(s: String, ctr: &mut usize) -> Self {
         if s != "" {
-            Name::Name(s)
+            Name::Name(Box::new(s))
         } else {
             let rval = Name::Number(*ctr);
             *ctr += 1;
@@ -24,13 +30,13 @@ impl Name {
 
 impl From<String> for Name {
     fn from(s: String) -> Self {
-        Name::Name(s)
+        Name::Name(Box::new(s))
     }
 }
 
 impl From<&str> for Name {
     fn from(s: &str) -> Self {
-        Name::Name(s.to_owned())
+        Name::Name(Box::new(s.into()))
     }
 }
 

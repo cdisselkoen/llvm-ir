@@ -107,7 +107,7 @@ fn DILocation_implicit_code_extra_checks() {
         .expect("Failed to find function");
 
     let entry = func
-        .get_bb_by_name(&Name::Name("entry".to_owned()))
+        .get_bb_by_name(&Name::from("entry"))
         .expect("Failed to find entry bb");
     let invoke: &terminator::Invoke = &entry
         .term
@@ -116,7 +116,7 @@ fn DILocation_implicit_code_extra_checks() {
         .unwrap_or_else(|_| panic!("Expected an invoke, got {:?}", &entry.term));
     if let Either::Right(Operand::ConstantOperand(cref)) = &invoke.function {
         if let Constant::GlobalReference { name, .. } = cref.as_ref() {
-            assert_eq!(name, &Name::Name("_ZN1A3fooEi".to_owned()));
+            assert_eq!(name, &Name::from("_ZN1A3fooEi"));
         } else {
             panic!(
                 "Expected invoke.function to be a GlobalReference; instead it was another kind of Constant: {:?}",
@@ -131,7 +131,7 @@ fn DILocation_implicit_code_extra_checks() {
     }
     assert_eq!(invoke.arguments.len(), 2);
     if let Operand::LocalOperand { name, ty} = &invoke.arguments[0].0 {
-        assert_eq!(name, &Name::Name("a".to_owned()));
+        assert_eq!(name, &Name::from("a"));
         if let Type::PointerType { pointee_type, .. } = ty.as_ref() {
             if let Type::NamedStructType { name } = pointee_type.as_ref() {
                 match module.types.named_struct_def(name) {
@@ -151,8 +151,8 @@ fn DILocation_implicit_code_extra_checks() {
         panic!("Expected invoke.arguments[0].0 to be a local operand; instead it was {:?}", &invoke.arguments[0].0);
     }
     assert_eq!(invoke.arguments[1].0, Operand::ConstantOperand(ConstantRef::new(Constant::Int { bits: 32, value: 0 })));
-    assert_eq!(invoke.return_label, Name::Name("invoke.cont".to_owned()));
-    assert_eq!(invoke.exception_label, Name::Name("lpad".to_owned()));
+    assert_eq!(invoke.return_label, Name::from("invoke.cont"));
+    assert_eq!(invoke.exception_label, Name::from("lpad"));
 
     // For the rest of the function, our numbered variables are one-off the
     // numbers in the .ll file in the LLVM repo.
@@ -164,7 +164,7 @@ fn DILocation_implicit_code_extra_checks() {
     // particular the examples -- are clear that 'invoke' does produce a result.
 
     let lpad = func
-        .get_bb_by_name(&Name::Name("lpad".to_owned()))
+        .get_bb_by_name(&Name::from("lpad"))
         .expect("Failed to find lpad bb");
     let landingpad: &instruction::LandingPad = &lpad.instrs[0]
         .clone()
@@ -198,7 +198,7 @@ fn DILocation_implicit_code_extra_checks() {
     // See notes above.
 
     let lpad1 = func
-        .get_bb_by_name(&Name::Name("lpad1".to_owned()))
+        .get_bb_by_name(&Name::from("lpad1"))
         .expect("Failed to find lpad1 bb");
     let landingpad: &instruction::LandingPad = &lpad1.instrs[0]
         .clone()
@@ -223,7 +223,7 @@ fn DILocation_implicit_code_extra_checks() {
     assert_eq!(eval.dest, Name::Number(12));
 
     let trycont = func
-        .get_bb_by_name(&Name::Name("try.cont".to_owned()))
+        .get_bb_by_name(&Name::from("try.cont"))
         .expect("Failed to find trycont bb");
     let _: &terminator::Unreachable = &trycont
         .term
@@ -232,7 +232,7 @@ fn DILocation_implicit_code_extra_checks() {
         .unwrap_or_else(|_| panic!("Expected an unreachable, got {:?}", &trycont.term));
 
     let ehresume = func
-        .get_bb_by_name(&Name::Name("eh.resume".to_owned()))
+        .get_bb_by_name(&Name::from("eh.resume"))
         .expect("Failed to find ehresume bb");
     let ival: &instruction::InsertValue = &ehresume.instrs[2]
         .clone()
@@ -245,13 +245,13 @@ fn DILocation_implicit_code_extra_checks() {
     assert_eq!(
         ival.element,
         Operand::LocalOperand {
-            name: Name::Name("exn4".to_owned()),
+            name: Name::from("exn4"),
             ty: module.types.pointer_to(module.types.i8())
         }
     );
     assert_eq!(ival.indices.len(), 1);
     assert_eq!(ival.indices[0], 0);
-    assert_eq!(ival.dest, Name::Name("lpad.val".to_owned()));
+    assert_eq!(ival.dest, Name::from("lpad.val"));
     let ival2: &instruction::InsertValue = &ehresume.instrs[3]
         .clone()
         .try_into()
@@ -259,20 +259,20 @@ fn DILocation_implicit_code_extra_checks() {
     assert_eq!(
         ival2.aggregate,
         Operand::LocalOperand {
-            name: Name::Name("lpad.val".to_owned()),
+            name: Name::from("lpad.val"),
             ty: expected_landingpad_resultty.clone()
         }
     );
     assert_eq!(
         ival2.element,
         Operand::LocalOperand {
-            name: Name::Name("sel5".to_owned()),
+            name: Name::from("sel5"),
             ty: module.types.i32()
         }
     );
     assert_eq!(ival2.indices.len(), 1);
     assert_eq!(ival2.indices[0], 1);
-    assert_eq!(ival2.dest, Name::Name("lpad.val6".to_owned()));
+    assert_eq!(ival2.dest, Name::from("lpad.val6"));
     let resume: &terminator::Resume = &ehresume
         .term
         .clone()
@@ -281,7 +281,7 @@ fn DILocation_implicit_code_extra_checks() {
     assert_eq!(
         resume.operand,
         Operand::LocalOperand {
-            name: Name::Name("lpad.val6".to_owned()),
+            name: Name::from("lpad.val6"),
             ty: expected_landingpad_resultty.clone()
         }
     );

@@ -170,7 +170,7 @@ fn loopbc() {
     if let Either::Right(Operand::ConstantOperand(cref)) = &lifetimestart.function {
         if let Constant::GlobalReference { ref name, ref ty } = cref.as_ref() {
             assert_eq!(module.type_of(&lifetimestart.function), module.types.pointer_to(ty.clone()));  // lifetimestart.function should be a constant function pointer
-            assert_eq!(*name, Name::Name("llvm.lifetime.start.p0i8".to_owned()));
+            assert_eq!(*name, Name::from("llvm.lifetime.start.p0i8"));
             if let Type::FuncType { result_type, param_types, is_var_arg } = ty.as_ref() {
                 assert_eq!(result_type, &module.types.void());
                 assert_eq!(param_types, &vec![module.types.i64(), module.types.pointer_to(module.types.i8())]);
@@ -200,7 +200,7 @@ fn loopbc() {
     let memset: &instruction::Call = &bb2.instrs[3].clone().try_into().expect("Should be a call");
     if let Either::Right(Operand::ConstantOperand(cref)) = &memset.function {
         if let Constant::GlobalReference { ref name, ref ty } = cref.as_ref() {
-            assert_eq!(*name, Name::Name("llvm.memset.p0i8.i64".to_owned()));
+            assert_eq!(*name, Name::from("llvm.memset.p0i8.i64"));
             if let Type::FuncType { result_type, param_types, is_var_arg } = ty.as_ref() {
                 assert_eq!(result_type, &module.types.void());
                 assert_eq!(param_types, &vec![module.types.pointer_to(module.types.i8()), module.types.i8(), module.types.i64(), module.types.bool()]);
@@ -351,7 +351,7 @@ fn variablesbc() {
     let module = Module::from_bc_path(&path).expect("Failed to parse module");
     assert_eq!(module.global_vars.len(), 1);
     let var = &module.global_vars[0];
-    assert_eq!(var.name, Name::Name("global".to_owned()));
+    assert_eq!(var.name, Name::from("global"));
     assert_eq!(var.is_constant, false);
     assert_eq!(var.ty, module.types.pointer_to(module.types.i32()));
     assert_eq!(var.initializer, Some(ConstantRef::new(Constant::Int { bits: 32, value: 5 })));
@@ -369,10 +369,10 @@ fn variablesbc() {
     assert_eq!(load.address, Operand::LocalOperand { name: Name::Number(4), ty: module.types.pointer_to(module.types.i32()) });
     assert_eq!(module.type_of(load), module.types.i32());
     let global_load: &instruction::Load = &bb.instrs[14].clone().try_into().expect("Should be a load");
-    assert_eq!(global_load.address, Operand::ConstantOperand(ConstantRef::new(Constant::GlobalReference { name: Name::Name("global".to_owned()), ty: module.types.i32() })));
+    assert_eq!(global_load.address, Operand::ConstantOperand(ConstantRef::new(Constant::GlobalReference { name: Name::from("global"), ty: module.types.i32() })));
     assert_eq!(module.type_of(global_load), module.types.i32());
     let global_store: &instruction::Store = &bb.instrs[16].clone().try_into().expect("Should be a store");
-    assert_eq!(global_store.address, Operand::ConstantOperand(ConstantRef::new(Constant::GlobalReference { name: Name::Name("global".to_owned()), ty: module.types.i32() })));
+    assert_eq!(global_store.address, Operand::ConstantOperand(ConstantRef::new(Constant::GlobalReference { name: Name::from("global"), ty: module.types.i32() })));
     assert_eq!(module.type_of(global_store), module.types.void());
 }
 
