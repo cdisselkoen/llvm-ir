@@ -652,7 +652,7 @@ fn gep_type<'c>(
     types: &Types,
 ) -> TypeRef {
     match indices.next() {
-        None => types.pointer_to(cur_type.clone()), // iterator is done
+        None => types.pointer_to(cur_type), // iterator is done
         Some(index) => match cur_type.as_ref() {
             Type::PointerType { pointee_type, .. } => gep_type(pointee_type.clone(), indices, types),
             Type::VectorType { element_type, .. } => gep_type(element_type.clone(), indices, types),
