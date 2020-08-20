@@ -1,4 +1,5 @@
 use either::Either;
+use llvm_ir::function::Attribute;
 use llvm_ir::instruction;
 use llvm_ir::terminator;
 use llvm_ir::Constant;
@@ -383,6 +384,31 @@ fn variablesbcg() {
     assert_eq!(debugloc.col, None);  // only `Instruction`s and `Terminator`s get column numbers
     assert_eq!(debugloc.filename, debug_filename);
     assert_eq!(debugloc.directory, debug_directory);
+}
+
+// this test checks for regression on issue #4
+#[test]
+fn issue4() {
+    init_logging();
+    let path = Path::new("tests/basic_bc/issue_4.bc");
+    let module = Module::from_bc_path(&path).expect("Failed to parse module");
+    assert_eq!(module.functions.len(), 1);
+    let func = &module.functions[0];
+
+    // not part of issue 4 proper, but let's check that we correctly have exactly 21 function attributes
+    assert_eq!(func.function_attributes.len(), 21);
+    // and that exactly 6 of them are EnumAttributes / 15 are StringAttributes
+    let enum_attrs = func.function_attributes.iter().filter(|attr| if let Attribute::EnumAttribute { .. } = attr { true } else { false });
+    assert_eq!(enum_attrs.count(), 6);
+    let string_attrs = func.function_attributes.iter().filter(|attr| if let Attribute::StringAttribute { .. } = attr { true } else { false });
+    assert_eq!(string_attrs.count(), 15);
+
+    // now check that the first parameter has 3 attributes and the second parameter has 0
+    assert_eq!(func.parameters.len(), 2);
+    let first_param_attrs = &func.parameters[0].attributes;
+    assert_eq!(first_param_attrs.len(), 3);
+    let second_param_attrs = &func.parameters[1].attributes;
+    assert_eq!(second_param_attrs.len(), 0);
 }
 
 #[test]
