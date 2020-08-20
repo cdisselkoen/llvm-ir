@@ -272,11 +272,12 @@ impl Function {
                     name: Name::name_or_num(unsafe { get_value_name(p) }, &mut local_ctr),
                     ty: ctx.types.type_from_llvm_ref(unsafe { LLVMTypeOf(p) }),
                     attributes: {
-                        let num_attrs = unsafe { LLVMGetAttributeCountAtIndex(func, i as u32) };
+                        let param_num = i + 1; // https://docs.rs/llvm-sys/100.0.1/llvm_sys/type.LLVMAttributeIndex.html indicates that parameter numbers are 1-indexed here; see issue #4
+                        let num_attrs = unsafe { LLVMGetAttributeCountAtIndex(func, param_num as u32) };
                         let mut attrs: Vec<LLVMAttributeRef> =
                             Vec::with_capacity(num_attrs as usize);
                         unsafe {
-                            LLVMGetAttributesAtIndex(func, i as u32, attrs.as_mut_ptr());
+                            LLVMGetAttributesAtIndex(func, param_num as u32, attrs.as_mut_ptr());
                             attrs.set_len(num_attrs as usize);
                         };
                         attrs

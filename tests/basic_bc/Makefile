@@ -10,6 +10,7 @@ all: hello.bc hello.ll hello.bc-g hello.ll-g \
 		linkedlist.bc linkedlist.ll linkedlist.bc-g linkedlist.ll-g \
 		variables.bc variables.ll variables.bc-g variables.ll-g \
 		rust.bc rust.ll rust.bc-g rust.ll-g \
+		issue_4.bc issue_4.ll \
 
 %.ll : %.c
 	$(CC) $(CFLAGS) -S -emit-llvm $^ -o $@
