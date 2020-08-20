@@ -83,7 +83,7 @@ impl From<FPType> for Type {
     }
 }
 
-/// A `TypeRef` is a reference to a [`Type`](../enum.Type.html).
+/// A `TypeRef` is a reference to a [`Type`](enum.Type.html).
 /// Most importantly, it implements `AsRef<Type>` and `Deref<Target = Type>`.
 /// It also has a cheap `Clone` -- only the reference is cloned, not the
 /// underlying `Type`.

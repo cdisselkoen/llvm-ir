@@ -194,7 +194,7 @@ impl Typed for Constant {
     }
 }
 
-/// A `ConstantRef` is a reference to a [`Constant`](../enum.Constant.html).
+/// A `ConstantRef` is a reference to a [`Constant`](enum.Constant.html).
 /// Most importantly, it implements `AsRef<Constant>` and `Deref<Target = Constant>`.
 /// It also has a cheap `Clone` -- only the reference is cloned, not the
 /// underlying `Constant`.
