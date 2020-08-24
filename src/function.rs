@@ -2,7 +2,6 @@ use crate::debugloc::{DebugLoc, HasDebugLoc};
 use crate::module::{Comdat, DLLStorageClass, Linkage, Visibility};
 use crate::types::{TypeRef, Typed, Types};
 use crate::{BasicBlock, ConstantRef, Name};
-use std::num;
 
 /// See [LLVM 10 docs on Functions](https://releases.llvm.org/10.0.0/docs/LangRef.html#functions)
 #[derive(PartialEq, Clone, Debug)]
@@ -145,94 +144,88 @@ pub enum CallingConvention {
     Numbered(u32),
 }
 
-#[derive(PartialEq, Eq, Clone, Debug)]
-pub enum Attribute {
-    EnumAttribute {
-        kind: u32,
-        value: Option<num::NonZeroU64>, // LLVM C API documentation for LLVMGetEnumAttributeValue says "0 is returned if none exists", so it seems to be impossible to distinguish between a value of 0 and no value (if a value of 0 is legal at all)
-    },
-    StringAttribute {
-        kind: String,
-        value: String, // for no value, use ""
-    },
-}
-
 /// See [LLVM 10 docs on Function Attributes](https://releases.llvm.org/10.0.0/docs/LangRef.html#fnattrs)
-pub type FunctionAttribute = Attribute;
-/* llvm-hs-pure has the following enum here, but the LLVM C API just uses an unsigned for enum attributes
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub enum FunctionAttribute {
+    AlignStack(u64),
+    AllocSize {
+        elt_size: u32,
+        num_elts: Option<u32>,
+    },
+    AlwaysInline,
+    Builtin,
+    Cold,
+    Convergent,
+    InaccessibleMemOnly,
+    InaccessibleMemOrArgMemOnly,
+    InlineHint,
+    JumpTable,
+    MinimizeSize,
+    Naked,
+    NoBuiltin,
+    NoCFCheck,
+    NoDuplicate,
+    NoFree,
+    NoImplicitFloat,
+    NoInline,
+    NonLazyBind,
+    NoRedZone,
     NoReturn,
+    NoRecurse,
+    WillReturn,
+    ReturnsTwice,
+    NoSync,
     NoUnwind,
+    OptForFuzzing,
+    OptNone,
+    OptSize,
     ReadNone,
     ReadOnly,
-    NoInline,
-    NoRecurse,
-    AlwaysInline,
-    MinimizeSize,
-    OptimizeForSize,
-    OptimizeNone,
+    WriteOnly,
+    ArgMemOnly,
+    SafeStack,
+    SanitizeAddress,
+    SanitizeMemory,
+    SanitizeThread,
+    SanitizeHWAddress,
+    SanitizeMemTag,
+    ShadowCallStack,
+    SpeculativeLoadHardening,
+    Speculatable,
     StackProtect,
     StackProtectReq,
     StackProtectStrong,
     StrictFP,
-    NoRedZone,
-    NoImplicitFloat,
-    Naked,
-    InlineHint,
-    StackAlignment(u64),
-    ReturnsTwice,
     UWTable,
-    NonLazyBind,
-    Builtin,
-    NoBuiltin,
-    Cold,
-    JumpTable,
-    NoDuplicate,
-    SanitizeAddress,
-    SanitizeHWAddress,
-    SanitizeThread,
-    SanitizeMemory,
-    Speculatable,
-    StringAttribute { kind: String, value: String },  // for no value, use ""
-    AllocSize((u32, Option<u32>)),  // if the first is 0, the second cannot be Some(0)
-    WriteOnly,
-    ArgMemOnly,
-    Convergent,
-    InaccessibleMemOnly,
-    InaccessibleMemOrArgMemOnly,
-    SafeStack,
+    StringAttribute { kind: String, value: String }, // for no value, use ""
+    UnknownAttribute, // this is used if we get a value not in the above list
 }
-*/
 
 /// `ParameterAttribute`s can apply to function parameters as well as function return types.
 /// See [LLVM 10 docs on Parameter Attributes](https://releases.llvm.org/10.0.0/docs/LangRef.html#paramattrs)
-pub type ParameterAttribute = Attribute;
-/* llvm-hs-pure has the following enum here, but the LLVM C API just uses an unsigned for enum attributes
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub enum ParameterAttribute {
     ZeroExt,
     SignExt,
     InReg,
+    ByVal,
+    InAlloca,
     SRet,
     Alignment(u64),
     NoAlias,
-    ByVal,
     NoCapture,
+    NoFree,
     Nest,
-    ReadNone,
-    ReadOnly,
-    WriteOnly,
-    InAlloca,
+    Returned,
     NonNull,
     Dereferenceable(u64),
     DereferenceableOrNull(u64),
-    Returned,
     SwiftSelf,
     SwiftError,
-    StringAttribute { kind: String, value: String },  // for no value, use ""
+    ImmArg,
+    StringAttribute { kind: String, value: String }, // for no value, use ""
+    UnknownAttribute, // this is used if we get a value not in the above list
 }
-*/
 
 pub type GroupID = usize;
 
@@ -246,6 +239,7 @@ use crate::module::ModuleContext;
 use llvm_sys::comdat::*;
 use llvm_sys::{LLVMAttributeFunctionIndex, LLVMAttributeReturnIndex};
 use std::collections::HashMap;
+use std::ffi::CString;
 
 /// This struct contains data used when translating from llvm-sys into our data
 /// structures. The data here is local to a particular Function.
@@ -282,7 +276,7 @@ impl Function {
                         };
                         attrs
                             .into_iter()
-                            .filter_map(ParameterAttribute::from_llvm_ref)
+                            .map(|attr| ParameterAttribute::from_llvm_ref(attr, &ctx.attrsdata))
                             .collect()
                     },
                 })
@@ -344,7 +338,7 @@ impl Function {
                     };
                     attrs
                         .into_iter()
-                        .filter_map(FunctionAttribute::from_llvm_ref)
+                        .map(|attr| FunctionAttribute::from_llvm_ref(attr, &ctx.attrsdata))
                         .collect()
                 } else {
                     vec![]
@@ -365,7 +359,7 @@ impl Function {
                     };
                     attrs
                         .into_iter()
-                        .filter_map(ParameterAttribute::from_llvm_ref)
+                        .map(|attr| ParameterAttribute::from_llvm_ref(attr, &ctx.attrsdata))
                         .collect()
                 } else {
                     vec![]
@@ -457,23 +451,227 @@ impl CallingConvention {
     }
 }
 
-impl Attribute {
-    /// Returns `None` if we encounter an attribute we don't know about or aren't
-    /// equipped to handle
-    pub(crate) fn from_llvm_ref(a: LLVMAttributeRef) -> Option<Self> {
+pub(crate) struct AttributesData {
+    function_attribute_names: HashMap<u32, String>,
+    param_attribute_names: HashMap<u32, String>,
+}
+
+impl AttributesData {
+    pub fn create() -> Self {
+        let function_attribute_names = [
+            "alignstack",
+            "allocsize",
+            "alwaysinline",
+            "builtin",
+            "cold",
+            "convergent",
+            "inaccessiblememonly",
+            "inaccessiblemem_or_argmemonly",
+            "inlinehint",
+            "jumptable",
+            "minsize",
+            "naked",
+            "nobuiltin",
+            "nocf_check",
+            "noduplicate",
+            "nofree",
+            "noimplicitfloat",
+            "noinline",
+            "nonlazybind",
+            "noredzone",
+            "noreturn",
+            "norecurse",
+            "willreturn",
+            "returns_twice",
+            "nosync",
+            "nounwind",
+            "optforfuzzing",
+            "optnone",
+            "optsize",
+            "readnone",
+            "readonly",
+            "writeonly",
+            "argmemonly",
+            "safestack",
+            "sanitize_address",
+            "sanitize_memory",
+            "sanitize_thread",
+            "sanitize_hwaddress",
+            "sanitize_memtag",
+            "shadowcallstack",
+            "speculative_load_hardening",
+            "speculatable",
+            "ssp",
+            "sspreq",
+            "sspstrong",
+            "strictfp",
+            "uwtable",
+        ].iter().map(|&attrname| {
+            let cstr = CString::new(attrname).unwrap();
+            let kind = unsafe { LLVMGetEnumAttributeKindForName(cstr.as_ptr(), attrname.len()) };
+            assert_ne!(kind, 0, "Function attribute {:?} not found", attrname);
+            (kind, attrname.into())
+        }).collect();
+        let param_attribute_names = [
+            "zeroext",
+            "signext",
+            "inreg",
+            "byval",
+            "inalloca",
+            "sret",
+            "align",
+            "noalias",
+            "nocapture",
+            "nofree",
+            "nest",
+            "returned",
+            "nonnull",
+            "dereferenceable",
+            "dereferenceable_or_null",
+            "swiftself",
+            "swifterror",
+            "immarg",
+        ].iter().map(|&attrname| {
+            let cstr = CString::new(attrname).unwrap();
+            let kind = unsafe { LLVMGetEnumAttributeKindForName(cstr.as_ptr(), attrname.len()) };
+            assert_ne!(kind, 0, "Parameter attribute {:?} not found", attrname);
+            (kind, attrname.into())
+        }).collect();
+        Self {
+            function_attribute_names,
+            param_attribute_names,
+        }
+    }
+
+    /// Get the string name of an enum-style function attribute, or `None` if
+    /// it's not one that we know about
+    pub fn lookup_function_attr(&self, kind: u32) -> Option<&str> {
+        self.function_attribute_names.get(&kind).map(|s| s.as_str())
+    }
+
+    /// Get the string name of an enum-style parameter attribute, or `None` if
+    /// it's not one that we know about
+    pub fn lookup_param_attr(&self, kind: u32) -> Option<&str> {
+        self.param_attribute_names.get(&kind).map(|s| s.as_str())
+    }
+}
+
+impl FunctionAttribute {
+    pub(crate) fn from_llvm_ref(a: LLVMAttributeRef, attrsdata: &AttributesData) -> Self {
         if unsafe { LLVMIsEnumAttribute(a) } != 0 {
-            Some(Attribute::EnumAttribute {
-                kind: unsafe { LLVMGetEnumAttributeKind(a) },
-                value: num::NonZeroU64::new(unsafe { LLVMGetEnumAttributeValue(a) }),
-            })
+            let kind = unsafe { LLVMGetEnumAttributeKind(a) };
+            match attrsdata.lookup_function_attr(kind) {
+                Some("alignstack") => Self::AlignStack(unsafe { LLVMGetEnumAttributeValue(a) }),
+                Some("allocsize") => {
+                    let value = unsafe { LLVMGetEnumAttributeValue(a) };
+                    // looking at the LLVM implementation as of this writing
+                    // (near the top of Attributes.cpp),
+                    // the elt_size value is the upper 32 bits, and the num_elts value
+                    // is the lower 32 bits, or the sentinel -1 for None
+                    let elt_size = (value >> 32) as u32;
+                    let num_elts = match (value & 0xFFFF_FFFF) as u32 {
+                        0xFFFF_FFFF => None,
+                        val => Some(val),
+                    };
+                    Self::AllocSize {
+                        elt_size,
+                        num_elts,
+                    }
+                },
+                Some("alwaysinline") => Self::AlwaysInline,
+                Some("builtin") => Self::Builtin,
+                Some("cold") => Self::Cold,
+                Some("convergent") => Self::Convergent,
+                Some("inaccessiblememonly") => Self::InaccessibleMemOnly,
+                Some("inaccessiblemem_or_argmemonly") => Self::InaccessibleMemOrArgMemOnly,
+                Some("inlinehint") => Self::InlineHint,
+                Some("jumptable") => Self::JumpTable,
+                Some("minsize") => Self::MinimizeSize,
+                Some("naked") => Self::Naked,
+                Some("nobuiltin") => Self::NoBuiltin,
+                Some("nocf_check") => Self::NoCFCheck,
+                Some("noduplicate") => Self::NoDuplicate,
+                Some("nofree") => Self::NoFree,
+                Some("noimplicitfloat") => Self::NoImplicitFloat,
+                Some("noinline") => Self::NoInline,
+                Some("nonlazybind") => Self::NonLazyBind,
+                Some("noredzone") => Self::NoRedZone,
+                Some("noreturn") => Self::NoReturn,
+                Some("norecurse") => Self::NoRecurse,
+                Some("willreturn") => Self::WillReturn,
+                Some("returns_twice") => Self::ReturnsTwice,
+                Some("nosync") => Self::NoSync,
+                Some("nounwind") => Self::NoUnwind,
+                Some("optforfuzzing") => Self::OptForFuzzing,
+                Some("optnone") => Self::OptNone,
+                Some("optsize") => Self::OptSize,
+                Some("readnone") => Self::ReadNone,
+                Some("readonly") => Self::ReadOnly,
+                Some("writeonly") => Self::WriteOnly,
+                Some("argmemonly") => Self::ArgMemOnly,
+                Some("safestack") => Self::SafeStack,
+                Some("sanitize_address") => Self::SanitizeAddress,
+                Some("sanitize_memory") => Self::SanitizeMemory,
+                Some("sanitize_thread") => Self::SanitizeThread,
+                Some("sanitize_hwaddress") => Self::SanitizeHWAddress,
+                Some("sanitize_memtag") => Self::SanitizeMemTag,
+                Some("shadowcallstack") => Self::ShadowCallStack,
+                Some("speculative_load_hardening") => Self::SpeculativeLoadHardening,
+                Some("speculatable") => Self::Speculatable,
+                Some("ssp") => Self::StackProtect,
+                Some("sspreq") => Self::StackProtectReq,
+                Some("sspstrong") => Self::StackProtectStrong,
+                Some("strictfp") => Self::StrictFP,
+                Some("uwtable") => Self::UWTable,
+                Some(s) => panic!("Unhandled value from lookup_function_attr: {:?}", s),
+                None => Self::UnknownAttribute,
+            }
         } else if unsafe { LLVMIsStringAttribute(a) } != 0 {
-            Some(Attribute::StringAttribute {
+            Self::StringAttribute {
                 kind: unsafe { get_string_attribute_kind(a) },
                 value: unsafe { get_string_attribute_value(a) },
-            })
+            }
         } else {
             debug!("Encountered an unknown attribute: neither enum nor string");
-            None
+            Self::UnknownAttribute
+        }
+    }
+}
+
+impl ParameterAttribute {
+    pub(crate) fn from_llvm_ref(a: LLVMAttributeRef, attrsdata: &AttributesData) -> Self {
+        if unsafe { LLVMIsEnumAttribute(a) } != 0 {
+            let kind = unsafe { LLVMGetEnumAttributeKind(a) };
+            match attrsdata.lookup_param_attr(kind) {
+                Some("zeroext") => Self::ZeroExt,
+                Some("signext") => Self::SignExt,
+                Some("inreg") => Self::InReg,
+                Some("byval") => Self::ByVal,
+                Some("inalloca") => Self::InAlloca,
+                Some("sret") => Self::SRet,
+                Some("align") => Self::Alignment(unsafe { LLVMGetEnumAttributeValue(a) }),
+                Some("noalias") => Self::NoAlias,
+                Some("nocapture") => Self::NoCapture,
+                Some("nofree") => Self::NoFree,
+                Some("nest") => Self::Nest,
+                Some("returned") => Self::Returned,
+                Some("nonnull") => Self::NonNull,
+                Some("dereferenceable") => Self::Dereferenceable(unsafe { LLVMGetEnumAttributeValue(a) }),
+                Some("dereferenceable_or_null") => Self::DereferenceableOrNull(unsafe { LLVMGetEnumAttributeValue(a) }),
+                Some("swiftself") => Self::SwiftSelf,
+                Some("swifterror") => Self::SwiftError,
+                Some("immarg") => Self::ImmArg,
+                Some(s) => panic!("Unhandled value from lookup_param_attr: {:?}", s),
+                None => Self::UnknownAttribute,
+            }
+        } else if unsafe { LLVMIsStringAttribute(a) } != 0 {
+            Self::StringAttribute {
+                kind: unsafe { get_string_attribute_kind(a) },
+                value: unsafe { get_string_attribute_value(a) },
+            }
+        } else {
+            debug!("Encountered an unknown attribute: neither enum nor string");
+            Self::UnknownAttribute
         }
     }
 }

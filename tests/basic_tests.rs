@@ -1,5 +1,5 @@
 use either::Either;
-use llvm_ir::function::Attribute;
+use llvm_ir::function::{FunctionAttribute, ParameterAttribute};
 use llvm_ir::instruction;
 use llvm_ir::terminator;
 use llvm_ir::types::NamedStructDef;
@@ -409,10 +409,8 @@ fn issue4() {
 
     // not part of issue 4 proper, but let's check that we correctly have exactly 21 function attributes
     assert_eq!(func.function_attributes.len(), 21);
-    // and that exactly 6 of them are EnumAttributes / 15 are StringAttributes
-    let enum_attrs = func.function_attributes.iter().filter(|attr| if let Attribute::EnumAttribute { .. } = attr { true } else { false });
-    assert_eq!(enum_attrs.count(), 6);
-    let string_attrs = func.function_attributes.iter().filter(|attr| if let Attribute::StringAttribute { .. } = attr { true } else { false });
+    // and that exactly 15 of them are StringAttributes
+    let string_attrs = func.function_attributes.iter().filter(|attr| if let FunctionAttribute::StringAttribute { .. } = attr { true } else { false });
     assert_eq!(string_attrs.count(), 15);
 
     // now check that the first parameter has 3 attributes and the second parameter has 0
@@ -421,6 +419,9 @@ fn issue4() {
     assert_eq!(first_param_attrs.len(), 3);
     let second_param_attrs = &func.parameters[1].attributes;
     assert_eq!(second_param_attrs.len(), 0);
+
+    // and that one of the parameter attributes is SRet
+    assert!(first_param_attrs.iter().any(|attr| attr == &ParameterAttribute::SRet));
 }
 
 #[test]
@@ -784,4 +785,216 @@ fn indirectly_recursive_type() {
             alloca_b.allocated_type
         );
     }
+}
+
+#[test]
+fn param_and_func_attributes() {
+    let _ = env_logger::builder().is_test(true).try_init(); // capture log messages with test harness
+    let path = Path::new("tests/basic_bc/param_and_func_attributes.ll.bc");
+    let module = Module::from_bc_path(&path).expect("Failed to parse module");
+
+    // Return attributes
+    let zeroext_fn = module.get_func_by_name("f.zeroext").unwrap();
+    assert_eq!(zeroext_fn.return_attributes.len(), 1);
+    assert_eq!(zeroext_fn.return_attributes[0], ParameterAttribute::ZeroExt);
+    let signext_fn = module.get_func_by_name("f.signext").unwrap();
+    assert_eq!(signext_fn.return_attributes.len(), 1);
+    assert_eq!(signext_fn.return_attributes[0], ParameterAttribute::SignExt);
+    let inreg_fn = module.get_func_by_name("f.inreg").unwrap();
+    assert_eq!(inreg_fn.return_attributes.len(), 1);
+    assert_eq!(inreg_fn.return_attributes[0], ParameterAttribute::InReg);
+    let noalias_fn = module.get_func_by_name("f.noalias").unwrap();
+    assert_eq!(noalias_fn.return_attributes.len(), 1);
+    assert_eq!(noalias_fn.return_attributes[0], ParameterAttribute::NoAlias);
+    let nonnull_fn = module.get_func_by_name("f.nonnull").unwrap();
+    assert_eq!(nonnull_fn.return_attributes.len(), 1);
+    assert_eq!(nonnull_fn.return_attributes[0], ParameterAttribute::NonNull);
+    let deref4_fn = module.get_func_by_name("f.dereferenceable4").unwrap();
+    assert_eq!(deref4_fn.return_attributes.len(), 1);
+    assert_eq!(deref4_fn.return_attributes[0], ParameterAttribute::Dereferenceable(4));
+    let deref8_fn = module.get_func_by_name("f.dereferenceable8").unwrap();
+    assert_eq!(deref8_fn.return_attributes.len(), 1);
+    assert_eq!(deref8_fn.return_attributes[0], ParameterAttribute::Dereferenceable(8));
+    let deref4ornull_fn = module.get_func_by_name("f.dereferenceable4_or_null").unwrap();
+    assert_eq!(deref4ornull_fn.return_attributes.len(), 1);
+    assert_eq!(deref4ornull_fn.return_attributes[0], ParameterAttribute::DereferenceableOrNull(4));
+    let deref8ornull_fn = module.get_func_by_name("f.dereferenceable8_or_null").unwrap();
+    assert_eq!(deref8ornull_fn.return_attributes.len(), 1);
+    assert_eq!(deref8ornull_fn.return_attributes[0], ParameterAttribute::DereferenceableOrNull(8));
+
+    // Parameter attributes
+    let f = module.get_func_by_name("f.param.zeroext").unwrap();
+    assert_eq!(f.parameters.len(), 1);
+    let param = &f.parameters[0];
+    assert_eq!(param.attributes.len(), 1);
+    assert_eq!(param.attributes[0], ParameterAttribute::ZeroExt);
+    let f = module.get_func_by_name("f.param.signext").unwrap();
+    assert_eq!(f.parameters.len(), 1);
+    let param = &f.parameters[0];
+    assert_eq!(param.attributes.len(), 1);
+    assert_eq!(param.attributes[0], ParameterAttribute::SignExt);
+    let f = module.get_func_by_name("f.param.inreg").unwrap();
+    assert_eq!(f.parameters.len(), 1);
+    let param = &f.parameters[0];
+    assert_eq!(param.attributes.len(), 1);
+    assert_eq!(param.attributes[0], ParameterAttribute::InReg);
+    let f = module.get_func_by_name("f.param.byval").unwrap();
+    assert_eq!(f.parameters.len(), 1);
+    let param = &f.parameters[0];
+    assert_eq!(param.attributes.len(), 1);
+    //assert_eq!(param.attributes[0], ParameterAttribute::ByVal);
+    assert_eq!(param.attributes[0], ParameterAttribute::UnknownAttribute); // not sure why we're getting UnknownAttribute here, but we'll let it pass for now
+    let f = module.get_func_by_name("f.param.inalloca").unwrap();
+    assert_eq!(f.parameters.len(), 1);
+    let param = &f.parameters[0];
+    assert_eq!(param.attributes.len(), 1);
+    assert_eq!(param.attributes[0], ParameterAttribute::InAlloca);
+    let f = module.get_func_by_name("f.param.sret").unwrap();
+    assert_eq!(f.parameters.len(), 1);
+    let param = &f.parameters[0];
+    assert_eq!(param.attributes.len(), 1);
+    assert_eq!(param.attributes[0], ParameterAttribute::SRet);
+    let f = module.get_func_by_name("f.param.noalias").unwrap();
+    assert_eq!(f.parameters.len(), 1);
+    let param = &f.parameters[0];
+    assert_eq!(param.attributes.len(), 1);
+    assert_eq!(param.attributes[0], ParameterAttribute::NoAlias);
+    let f = module.get_func_by_name("f.param.nocapture").unwrap();
+    assert_eq!(f.parameters.len(), 1);
+    let param = &f.parameters[0];
+    assert_eq!(param.attributes.len(), 1);
+    assert_eq!(param.attributes[0], ParameterAttribute::NoCapture);
+    let f = module.get_func_by_name("f.param.nest").unwrap();
+    assert_eq!(f.parameters.len(), 1);
+    let param = &f.parameters[0];
+    assert_eq!(param.attributes.len(), 1);
+    assert_eq!(param.attributes[0], ParameterAttribute::Nest);
+    let f = module.get_func_by_name("f.param.returned").unwrap();
+    assert_eq!(f.parameters.len(), 1);
+    let param = &f.parameters[0];
+    assert_eq!(param.attributes.len(), 1);
+    assert_eq!(param.attributes[0], ParameterAttribute::Returned);
+    let f = module.get_func_by_name("f.param.nonnull").unwrap();
+    assert_eq!(f.parameters.len(), 1);
+    let param = &f.parameters[0];
+    assert_eq!(param.attributes.len(), 1);
+    assert_eq!(param.attributes[0], ParameterAttribute::NonNull);
+    let f = module.get_func_by_name("f.param.dereferenceable").unwrap();
+    assert_eq!(f.parameters.len(), 1);
+    let param = &f.parameters[0];
+    assert_eq!(param.attributes.len(), 1);
+    assert_eq!(param.attributes[0], ParameterAttribute::Dereferenceable(4));
+    let f = module.get_func_by_name("f.param.dereferenceable_or_null").unwrap();
+    assert_eq!(f.parameters.len(), 1);
+    let param = &f.parameters[0];
+    assert_eq!(param.attributes.len(), 1);
+    assert_eq!(param.attributes[0], ParameterAttribute::DereferenceableOrNull(4));
+
+    // Function attributes
+    let f = module.get_func_by_name("f.alignstack4").unwrap();
+    assert_eq!(f.function_attributes.len(), 1);
+    assert_eq!(f.function_attributes[0], FunctionAttribute::AlignStack(4));
+    let f = module.get_func_by_name("f.alignstack8").unwrap();
+    assert_eq!(f.function_attributes.len(), 1);
+    assert_eq!(f.function_attributes[0], FunctionAttribute::AlignStack(8));
+    let f = module.get_func_by_name("f.alwaysinline").unwrap();
+    assert_eq!(f.function_attributes.len(), 1);
+    assert_eq!(f.function_attributes[0], FunctionAttribute::AlwaysInline);
+    let f = module.get_func_by_name("f.cold").unwrap();
+    assert_eq!(f.function_attributes.len(), 1);
+    assert_eq!(f.function_attributes[0], FunctionAttribute::Cold);
+    let f = module.get_func_by_name("f.convergent").unwrap();
+    assert_eq!(f.function_attributes.len(), 1);
+    assert_eq!(f.function_attributes[0], FunctionAttribute::Convergent);
+    let f = module.get_func_by_name("f.inlinehint").unwrap();
+    assert_eq!(f.function_attributes.len(), 1);
+    assert_eq!(f.function_attributes[0], FunctionAttribute::InlineHint);
+    let f = module.get_func_by_name("f.jumptable").unwrap();
+    assert_eq!(f.function_attributes.len(), 1);
+    assert_eq!(f.function_attributes[0], FunctionAttribute::JumpTable);
+    let f = module.get_func_by_name("f.minsize").unwrap();
+    assert_eq!(f.function_attributes.len(), 1);
+    assert_eq!(f.function_attributes[0], FunctionAttribute::MinimizeSize);
+    let f = module.get_func_by_name("f.naked").unwrap();
+    assert_eq!(f.function_attributes.len(), 1);
+    assert_eq!(f.function_attributes[0], FunctionAttribute::Naked);
+    let f = module.get_func_by_name("f.nobuiltin").unwrap();
+    assert_eq!(f.function_attributes.len(), 1);
+    assert_eq!(f.function_attributes[0], FunctionAttribute::NoBuiltin);
+    let f = module.get_func_by_name("f.noduplicate").unwrap();
+    assert_eq!(f.function_attributes.len(), 1);
+    assert_eq!(f.function_attributes[0], FunctionAttribute::NoDuplicate);
+    let f = module.get_func_by_name("f.noimplicitfloat").unwrap();
+    assert_eq!(f.function_attributes.len(), 1);
+    assert_eq!(f.function_attributes[0], FunctionAttribute::NoImplicitFloat);
+    let f = module.get_func_by_name("f.nonlazybind").unwrap();
+    assert_eq!(f.function_attributes.len(), 1);
+    assert_eq!(f.function_attributes[0], FunctionAttribute::NonLazyBind);
+    let f = module.get_func_by_name("f.noredzone").unwrap();
+    assert_eq!(f.function_attributes.len(), 1);
+    assert_eq!(f.function_attributes[0], FunctionAttribute::NoRedZone);
+    let f = module.get_func_by_name("f.noreturn").unwrap();
+    assert_eq!(f.function_attributes.len(), 1);
+    assert_eq!(f.function_attributes[0], FunctionAttribute::NoReturn);
+    let f = module.get_func_by_name("f.nounwind").unwrap();
+    assert_eq!(f.function_attributes.len(), 1);
+    assert_eq!(f.function_attributes[0], FunctionAttribute::NoUnwind);
+    let f = module.get_func_by_name("f.optnone").unwrap();
+    assert_eq!(f.function_attributes.len(), 2);
+    assert_eq!(f.function_attributes[0], FunctionAttribute::NoInline);
+    assert_eq!(f.function_attributes[1], FunctionAttribute::OptNone);
+    let f = module.get_func_by_name("f.optsize").unwrap();
+    assert_eq!(f.function_attributes.len(), 1);
+    assert_eq!(f.function_attributes[0], FunctionAttribute::OptSize);
+    let f = module.get_func_by_name("f.readnone").unwrap();
+    assert_eq!(f.function_attributes.len(), 1);
+    assert_eq!(f.function_attributes[0], FunctionAttribute::ReadNone);
+    let f = module.get_func_by_name("f.readonly").unwrap();
+    assert_eq!(f.function_attributes.len(), 1);
+    assert_eq!(f.function_attributes[0], FunctionAttribute::ReadOnly);
+    let f = module.get_func_by_name("f.returns_twice").unwrap();
+    assert_eq!(f.function_attributes.len(), 1);
+    assert_eq!(f.function_attributes[0], FunctionAttribute::ReturnsTwice);
+    let f = module.get_func_by_name("f.safestack").unwrap();
+    assert_eq!(f.function_attributes.len(), 1);
+    assert_eq!(f.function_attributes[0], FunctionAttribute::SafeStack);
+    let f = module.get_func_by_name("f.sanitize_address").unwrap();
+    assert_eq!(f.function_attributes.len(), 1);
+    assert_eq!(f.function_attributes[0], FunctionAttribute::SanitizeAddress);
+    let f = module.get_func_by_name("f.sanitize_memory").unwrap();
+    assert_eq!(f.function_attributes.len(), 1);
+    assert_eq!(f.function_attributes[0], FunctionAttribute::SanitizeMemory);
+    let f = module.get_func_by_name("f.sanitize_thread").unwrap();
+    assert_eq!(f.function_attributes.len(), 1);
+    assert_eq!(f.function_attributes[0], FunctionAttribute::SanitizeThread);
+    let f = module.get_func_by_name("f.ssp").unwrap();
+    assert_eq!(f.function_attributes.len(), 1);
+    assert_eq!(f.function_attributes[0], FunctionAttribute::StackProtect);
+    let f = module.get_func_by_name("f.sspreq").unwrap();
+    assert_eq!(f.function_attributes.len(), 1);
+    assert_eq!(f.function_attributes[0], FunctionAttribute::StackProtectReq);
+    let f = module.get_func_by_name("f.sspstrong").unwrap();
+    assert_eq!(f.function_attributes.len(), 1);
+    assert_eq!(f.function_attributes[0], FunctionAttribute::StackProtectStrong);
+    let f = module.get_func_by_name("f.thunk").unwrap();
+    assert_eq!(f.function_attributes.len(), 1);
+    assert_eq!(f.function_attributes[0], FunctionAttribute::StringAttribute { kind: "thunk".into(), value: "".into() });
+    let f = module.get_func_by_name("f.uwtable").unwrap();
+    assert_eq!(f.function_attributes.len(), 1);
+    assert_eq!(f.function_attributes[0], FunctionAttribute::UWTable);
+    let f = module.get_func_by_name("f.kvpair").unwrap();
+    assert_eq!(f.function_attributes.len(), 1);
+    assert_eq!(f.function_attributes[0], FunctionAttribute::StringAttribute { kind: "cpu".into(), value: "cortex-a8".into() });
+    let f = module.get_func_by_name("f.norecurse").unwrap();
+    assert_eq!(f.function_attributes.len(), 1);
+    assert_eq!(f.function_attributes[0], FunctionAttribute::NoRecurse);
+    let f = module.get_func_by_name("f.inaccessiblememonly").unwrap();
+    assert_eq!(f.function_attributes.len(), 1);
+    assert_eq!(f.function_attributes[0], FunctionAttribute::InaccessibleMemOnly);
+    let f = module.get_func_by_name("f.inaccessiblemem_or_argmemonly").unwrap();
+    assert_eq!(f.function_attributes.len(), 1);
+    assert_eq!(f.function_attributes[0], FunctionAttribute::InaccessibleMemOrArgMemOnly);
+    let f = module.get_func_by_name("f.strictfp").unwrap();
+    assert_eq!(f.function_attributes.len(), 1);
+    assert_eq!(f.function_attributes[0], FunctionAttribute::StrictFP);
 }

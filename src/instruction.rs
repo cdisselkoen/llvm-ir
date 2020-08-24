@@ -2400,7 +2400,7 @@ impl CallInfo {
                             };
                             attrs
                                 .into_iter()
-                                .filter_map(ParameterAttribute::from_llvm_ref)
+                                .map(|attr| ParameterAttribute::from_llvm_ref(attr, &ctx.attrsdata))
                                 .collect()
                         };
                         (operand, attrs)
@@ -2417,7 +2417,7 @@ impl CallInfo {
                 };
                 attrs
                     .into_iter()
-                    .filter_map(ParameterAttribute::from_llvm_ref)
+                    .map(|attr| ParameterAttribute::from_llvm_ref(attr, &ctx.attrsdata))
                     .collect()
             },
             function_attributes: {
@@ -2430,7 +2430,7 @@ impl CallInfo {
                 };
                 attrs
                     .into_iter()
-                    .filter_map(FunctionAttribute::from_llvm_ref)
+                    .map(|attr| FunctionAttribute::from_llvm_ref(attr, &ctx.attrsdata))
                     .collect()
             },
             calling_convention: CallingConvention::from_u32(unsafe {

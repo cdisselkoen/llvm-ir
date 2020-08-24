@@ -285,6 +285,7 @@ pub enum AlignType {
 // ********* //
 
 use crate::constant::Constant;
+use crate::function::AttributesData;
 use crate::from_llvm::*;
 use llvm_sys::comdat::*;
 use llvm_sys::{
@@ -300,6 +301,7 @@ use std::collections::HashMap;
 /// data structures
 pub(crate) struct ModuleContext<'a> {
     pub types: TypesBuilder,
+    pub attrsdata: AttributesData,
     /// Map from an llvm-sys constant to the corresponding llvm-ir `ConstantRef`
     pub constants: HashMap<LLVMValueRef, ConstantRef>,
     /// Map from an llvm-sys global to its `Name`
@@ -310,6 +312,7 @@ impl<'a> ModuleContext<'a> {
     fn new(global_names: &'a HashMap<LLVMValueRef, Name>) -> Self {
         Self {
             types: TypesBuilder::new(),
+            attrsdata: AttributesData::create(),
             constants: HashMap::new(),
             global_names,
         }

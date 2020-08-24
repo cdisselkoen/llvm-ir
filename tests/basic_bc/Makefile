@@ -11,6 +11,7 @@ all: hello.bc hello.ll hello.bc-g hello.ll-g \
 		variables.bc variables.ll variables.bc-g variables.ll-g \
 		rust.bc rust.ll rust.bc-g rust.ll-g \
 		issue_4.bc issue_4.ll \
+		param_and_func_attributes.ll.bc \
 
 %.ll : %.c
 	$(CC) $(CFLAGS) -S -emit-llvm $^ -o $@
@@ -46,6 +47,10 @@ linkedlist.ll-g : linkedlist.c
 	$(CC) -O0 -g -S -emit-llvm $^ -o $@
 linkedlist.bc-g : linkedlist.c
 	$(CC) -O0 -g -c -emit-llvm $^ -o $@
+
+# assemble this one directly from .ll
+param_and_func_attributes.ll.bc : param_and_func_attributes.ll
+	llvm-as $< -o $@
 
 .PHONY: clean
 clean:
