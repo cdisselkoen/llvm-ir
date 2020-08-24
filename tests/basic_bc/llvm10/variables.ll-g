@@ -1,12 +1,12 @@
 ; ModuleID = 'variables.c'
 source_filename = "variables.c"
-target datalayout = "e-m:o-i64:64-f80:128-n8:16:32:64-S128"
-target triple = "x86_64-apple-macosx10.14.0"
+target datalayout = "e-m:o-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-apple-macosx10.15.0"
 
 @global = global i32 5, align 4, !dbg !0
 
 ; Function Attrs: nounwind ssp uwtable
-define void @variables(i32, i32*) local_unnamed_addr #0 !dbg !15 {
+define void @variables(i32 %0, i32* %1) local_unnamed_addr #0 !dbg !15 {
   %3 = alloca i32, align 4
   %4 = alloca i32, align 4
   store volatile i32 %0, i32* %3, align 4, !tbaa !23
@@ -16,7 +16,7 @@ define void @variables(i32, i32*) local_unnamed_addr #0 !dbg !15 {
   call void @llvm.lifetime.start.p0i8(i64 4, i8* nonnull %5), !dbg !29
   call void @llvm.dbg.declare(metadata i32* %4, metadata !21, metadata !DIExpression()), !dbg !30
   store volatile i32 72, i32* %4, align 4, !dbg !30, !tbaa !23
-  %6 = tail call i8* @malloc(i64 4) #4, !dbg !31
+  %6 = tail call dereferenceable_or_null(4) i8* @malloc(i64 4) #4, !dbg !31
   %7 = bitcast i8* %6 to i32*, !dbg !32
   call void @llvm.dbg.value(metadata i32* %7, metadata !22, metadata !DIExpression()), !dbg !28
   %8 = load volatile i32, i32* %4, align 4, !dbg !33, !tbaa !23
@@ -38,25 +38,25 @@ define void @variables(i32, i32*) local_unnamed_addr #0 !dbg !15 {
   ret void, !dbg !48
 }
 
-; Function Attrs: nounwind readnone speculatable
+; Function Attrs: nounwind readnone speculatable willreturn
 declare void @llvm.dbg.declare(metadata, metadata, metadata) #1
 
-; Function Attrs: argmemonly nounwind
+; Function Attrs: argmemonly nounwind willreturn
 declare void @llvm.lifetime.start.p0i8(i64 immarg, i8* nocapture) #2
 
 ; Function Attrs: nofree nounwind allocsize(0)
 declare noalias i8* @malloc(i64) local_unnamed_addr #3
 
-; Function Attrs: argmemonly nounwind
+; Function Attrs: argmemonly nounwind willreturn
 declare void @llvm.lifetime.end.p0i8(i64 immarg, i8* nocapture) #2
 
-; Function Attrs: nounwind readnone speculatable
+; Function Attrs: nounwind readnone speculatable willreturn
 declare void @llvm.dbg.value(metadata, metadata, metadata) #1
 
-attributes #0 = { nounwind ssp uwtable "correctly-rounded-divide-sqrt-fp-math"="false" "disable-tail-calls"="false" "less-precise-fpmad"="false" "min-legal-vector-width"="0" "no-frame-pointer-elim"="true" "no-frame-pointer-elim-non-leaf" "no-infs-fp-math"="false" "no-jump-tables"="false" "no-nans-fp-math"="false" "no-signed-zeros-fp-math"="false" "no-trapping-math"="false" "stack-protector-buffer-size"="8" "target-cpu"="penryn" "target-features"="+cx16,+cx8,+fxsr,+mmx,+sahf,+sse,+sse2,+sse3,+sse4.1,+ssse3,+x87" "unsafe-fp-math"="false" "use-soft-float"="false" }
-attributes #1 = { nounwind readnone speculatable }
-attributes #2 = { argmemonly nounwind }
-attributes #3 = { nofree nounwind allocsize(0) "correctly-rounded-divide-sqrt-fp-math"="false" "disable-tail-calls"="false" "less-precise-fpmad"="false" "no-frame-pointer-elim"="true" "no-frame-pointer-elim-non-leaf" "no-infs-fp-math"="false" "no-nans-fp-math"="false" "no-signed-zeros-fp-math"="false" "no-trapping-math"="false" "stack-protector-buffer-size"="8" "target-cpu"="penryn" "target-features"="+cx16,+cx8,+fxsr,+mmx,+sahf,+sse,+sse2,+sse3,+sse4.1,+ssse3,+x87" "unsafe-fp-math"="false" "use-soft-float"="false" }
+attributes #0 = { nounwind ssp uwtable "correctly-rounded-divide-sqrt-fp-math"="false" "disable-tail-calls"="false" "frame-pointer"="all" "less-precise-fpmad"="false" "min-legal-vector-width"="0" "no-infs-fp-math"="false" "no-jump-tables"="false" "no-nans-fp-math"="false" "no-signed-zeros-fp-math"="false" "no-trapping-math"="false" "stack-protector-buffer-size"="8" "target-cpu"="penryn" "target-features"="+cx16,+cx8,+fxsr,+mmx,+sahf,+sse,+sse2,+sse3,+sse4.1,+ssse3,+x87" "unsafe-fp-math"="false" "use-soft-float"="false" }
+attributes #1 = { nounwind readnone speculatable willreturn }
+attributes #2 = { argmemonly nounwind willreturn }
+attributes #3 = { nofree nounwind allocsize(0) "correctly-rounded-divide-sqrt-fp-math"="false" "disable-tail-calls"="false" "frame-pointer"="all" "less-precise-fpmad"="false" "no-infs-fp-math"="false" "no-nans-fp-math"="false" "no-signed-zeros-fp-math"="false" "no-trapping-math"="false" "stack-protector-buffer-size"="8" "target-cpu"="penryn" "target-features"="+cx16,+cx8,+fxsr,+mmx,+sahf,+sse,+sse2,+sse3,+sse4.1,+ssse3,+x87" "unsafe-fp-math"="false" "use-soft-float"="false" }
 attributes #4 = { allocsize(0) }
 
 !llvm.dbg.cu = !{!2}
@@ -65,7 +65,7 @@ attributes #4 = { allocsize(0) }
 
 !0 = !DIGlobalVariableExpression(var: !1, expr: !DIExpression())
 !1 = distinct !DIGlobalVariable(name: "global", scope: !2, file: !3, line: 5, type: !7, isLocal: false, isDefinition: true)
-!2 = distinct !DICompileUnit(language: DW_LANG_C99, file: !3, producer: "clang version 9.0.0 (tags/RELEASE_900/final)", isOptimized: true, runtimeVersion: 0, emissionKind: FullDebug, enums: !4, retainedTypes: !5, globals: !9, nameTableKind: GNU)
+!2 = distinct !DICompileUnit(language: DW_LANG_C99, file: !3, producer: "clang version 10.0.0 ", isOptimized: true, runtimeVersion: 0, emissionKind: FullDebug, enums: !4, retainedTypes: !5, globals: !9, nameTableKind: None)
 !3 = !DIFile(filename: "variables.c", directory: "/Users/craig/llvm-ir/tests/basic_bc")
 !4 = !{}
 !5 = !{!6}
@@ -73,11 +73,11 @@ attributes #4 = { allocsize(0) }
 !7 = !DIDerivedType(tag: DW_TAG_volatile_type, baseType: !8)
 !8 = !DIBasicType(name: "int", size: 32, encoding: DW_ATE_signed)
 !9 = !{!0}
-!10 = !{i32 2, !"Dwarf Version", i32 4}
+!10 = !{i32 7, !"Dwarf Version", i32 4}
 !11 = !{i32 2, !"Debug Info Version", i32 3}
 !12 = !{i32 1, !"wchar_size", i32 4}
 !13 = !{i32 7, !"PIC Level", i32 2}
-!14 = !{!"clang version 9.0.0 (tags/RELEASE_900/final)"}
+!14 = !{!"clang version 10.0.0 "}
 !15 = distinct !DISubprogram(name: "variables", scope: !3, file: !3, line: 7, type: !16, scopeLine: 7, flags: DIFlagPrototyped | DIFlagAllCallsDescribed, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !2, retainedNodes: !18)
 !16 = !DISubroutineType(types: !17)
 !17 = !{null, !7, !6}

@@ -1,6 +1,6 @@
 [package]
 name = "llvm-ir"
-version = "0.6.0"
+version = "0.7.0"
 authors = ["Craig Disselkoen <craigdissel@gmail.com>"]
 edition = "2018"
 description = "LLVM IR in natural Rust data structures"
@@ -9,11 +9,26 @@ repository = "https://github.com/cdisselkoen/llvm-ir"
 readme = "README.md"
 keywords = ["llvm", "ir"]
 license = "MIT"
+build = "build.rs"
 
 [dependencies]
-llvm-sys = "100.1"
+llvm-sys = { package = "llvm-sys-featured", version = "0.1.0" }
 either = "1.5.2"
 log = "0.4.0"
 
 [dev-dependencies]
 env_logger = "0.6.2"
+
+[features]
+# You _must_ enable exactly one of the following features
+llvm-8 = ["llvm-sys/llvm-8"]
+llvm-9 = ["llvm-sys/llvm-9"]
+llvm-10 = ["llvm-sys/llvm-10"]
+
+# Require an exact match between the LLVM version being used and the one
+# selected with the above features; see llvm-sys-featured for more details
+strict-versioning = ["llvm-sys/strict-versioning"]
+
+[package.metadata.docs.rs]
+# Generate docs.rs documentation with the llvm-10 feature
+features = ["llvm-10"]

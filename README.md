@@ -33,11 +33,14 @@ working in pure Rust, that's exactly what `llvm-ir` can provide today.
 
 ## Getting started
 This crate is on [crates.io](https://crates.io/crates/llvm-ir), so you can simply
-add it as a dependency in your `Cargo.toml`:
+add it as a dependency in your `Cargo.toml`, selecting the feature corresponding
+to the LLVM version you want:
 ```toml
 [dependencies]
-llvm-ir = "0.6.0"
+llvm-ir = { version = "0.7.0", features = ["llvm-10"] }
 ```
+
+Currently, the supported LLVM versions are `llvm-8`, `llvm-9` and `llvm-10`.
 
 Then, the easiest way to get started is to parse some existing LLVM IR into
 this crate's data structures.
@@ -68,19 +71,14 @@ The documentation includes links to relevant parts of the LLVM documentation
 when appropriate.
 
 ## Compatibility
-Depending on your LLVM version, you may need to use a different version of `llvm-ir`.
+Starting with `llvm-ir` 0.7.0, LLVM versions are selected by a Cargo feature flag.
+This means that a single crate version can be used for any supported LLVM
+version, and it also means that all supported LLVM versions will
+automatically receive all new features and bugfixes, as appropriate.
 
-- LLVM 10: Supported by current crates.io releases (versions `0.6.x`) and the
-`master` branch.
-- LLVM 9: Supported by `0.5.x` crates.io releases and the `0.5.x` branch.
-This branch will receive bugfixes if necessary, but no new features or
-breaking API changes.
-- LLVM 8: Unofficially supported - it may work if you start from the `0.5.x`
-branch of `llvm-ir`, open the `llvm-ir` `Cargo.toml`, and change the
-`llvm-sys` dependency version from `90.0` to `80.1`.
-- LLVM 7 and earlier: Not supported.
+Currently, the supported LLVM versions are `llvm-8`, `llvm-9` and `llvm-10`.
 
-`llvm-ir` works on stable Rust, and requires Rust 1.36+.
+`llvm-ir` works on stable Rust, and requires Rust 1.39+.
 
 ## Development/Debugging
 For development or debugging, you may want LLVM text-format (`*.ll`) files in
@@ -101,6 +99,9 @@ debuginfo; this will ensure that [`Instruction`]s, [`Terminator`]s,
 (See the [`HasDebugLoc`] trait.)
 You can do this by passing the `-g` flag to `clang`, `clang++`, or `rustc`
 when generating bitcode.
+Also note that these `DebugLoc`s are only available in LLVM 9 and newer;
+previous versions of LLVM had a bug in this interface in the C API which
+would cause segfaults.
 
 ## Limitations
 A few features of LLVM IR are not yet represented in `llvm-ir`'s data

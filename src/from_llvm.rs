@@ -8,12 +8,13 @@ use std::os::raw::c_char;
 // partly because we intend to serialize/deserialize our ASTs eventually
 pub unsafe fn raw_to_string(raw: *const c_char) -> String {
     let cstr = CStr::from_ptr(raw);
-    cstr.to_str().expect("Failed to convert CStr").to_owned()
+    cstr.to_str().expect("Failed to convert CStr").into()
 }
 
 macro_rules! wrap {
     ($llvmFunc:ident, $argty:ty, $wrapperFunc:ident) => {
         pub unsafe fn $wrapperFunc(arg: $argty) -> String {
+            debug_assert!(arg != std::ptr::null_mut());
             let ptr = $llvmFunc(arg);
             raw_to_string(ptr)
         }
@@ -23,6 +24,7 @@ macro_rules! wrap {
 macro_rules! wrap_maybe_null {
     ($llvmFunc: ident, $argty:ty, $wrapperFunc:ident) => {
         pub unsafe fn $wrapperFunc(arg: $argty) -> Option<String> {
+            debug_assert!(arg != std::ptr::null_mut());
             let ptr = $llvmFunc(arg);
             if ptr.is_null() {
                 None
@@ -36,6 +38,7 @@ macro_rules! wrap_maybe_null {
 macro_rules! wrap_with_len {
     ($llvmFunc:ident, $argty:ty, $wrapperFunc:ident) => {
         pub unsafe fn $wrapperFunc(arg: $argty) -> String {
+            debug_assert!(arg != std::ptr::null_mut());
             let mut len = 0;
             let ptr = $llvmFunc(arg, &mut len);
             raw_to_string(ptr)
@@ -43,9 +46,11 @@ macro_rules! wrap_with_len {
     };
 }
 
+#[cfg(LLVM_VERSION_9_OR_GREATER)]
 macro_rules! wrap_with_len_maybe_null {
     ($llvmFunc:ident, $argty:ty, $wrapperFunc:ident) => {
         pub unsafe fn $wrapperFunc(arg: $argty) -> Option<String> {
+            debug_assert!(arg != std::ptr::null_mut());
             let mut len = 0;
             let ptr = $llvmFunc(arg, &mut len);
             if ptr.is_null() {
@@ -71,7 +76,9 @@ wrap!(LLVMPrintValueToString, LLVMValueRef, print_to_string);
 // wrap!(LLVMPrintTypeToString, LLVMTypeRef, print_type_to_string);
 wrap_with_len!(LLVMGetStringAttributeKind, LLVMAttributeRef, get_string_attribute_kind);
 wrap_with_len!(LLVMGetStringAttributeValue, LLVMAttributeRef, get_string_attribute_value);
+#[cfg(LLVM_VERSION_9_OR_GREATER)]
 wrap_with_len_maybe_null!(LLVMGetDebugLocFilename, LLVMValueRef, get_debugloc_filename);
+#[cfg(LLVM_VERSION_9_OR_GREATER)]
 wrap_with_len_maybe_null!(LLVMGetDebugLocDirectory, LLVMValueRef, get_debugloc_directory);
 
 // Panics if the LLVMValueRef is not a basic block

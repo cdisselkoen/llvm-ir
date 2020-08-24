@@ -1,3 +1,5 @@
+#![cfg(LLVM_VERSION_10_OR_GREATER)]
+
 //! These tests simply ensure that we can parse all of the `.bc` files in LLVM 10's `test/Bitcode` directory without crashing.
 //! We only include the `.bc` files which are new or have changed since LLVM 9 (older ones are covered in llvm_9_tests.rs or llvm_8_tests.rs).
 //! Human-readable `.ll` versions of these files can be found in the LLVM repo at `test/Bitcode` at the git tag `llvmorg-10.0.1`.

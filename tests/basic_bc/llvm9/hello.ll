@@ -1,7 +1,7 @@
 ; ModuleID = 'hello.c'
 source_filename = "hello.c"
 target datalayout = "e-m:o-i64:64-f80:128-n8:16:32:64-S128"
-target triple = "x86_64-apple-macosx10.14.0"
+target triple = "x86_64-apple-macosx10.15.0"
 
 ; Function Attrs: norecurse nounwind readnone ssp uwtable
 define i32 @main() local_unnamed_addr #0 {
@@ -15,4 +15,4 @@ attributes #0 = { norecurse nounwind readnone ssp uwtable "correctly-rounded-div
 
 !0 = !{i32 1, !"wchar_size", i32 4}
 !1 = !{i32 7, !"PIC Level", i32 2}
-!2 = !{!"clang version 9.0.0 (tags/RELEASE_900/final)"}
+!2 = !{!"clang version 9.0.1 "}

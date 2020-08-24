@@ -3,29 +3,52 @@ use llvm_ir::function::{FunctionAttribute, ParameterAttribute};
 use llvm_ir::instruction;
 use llvm_ir::terminator;
 use llvm_ir::types::NamedStructDef;
+#[cfg(LLVM_VERSION_9_OR_GREATER)]
 use llvm_ir::HasDebugLoc;
+use llvm_ir::Instruction;
 use llvm_ir::IntPredicate;
 use llvm_ir::Module;
 use llvm_ir::Name;
 use llvm_ir::Operand;
+use llvm_ir::Terminator;
 use llvm_ir::Type;
 use llvm_ir::{Constant, ConstantRef};
 use std::convert::TryInto;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 fn init_logging() {
     // capture log messages with test harness
     let _ = env_logger::builder().is_test(true).try_init();
 }
 
+const BC_DIR: &str = "tests/basic_bc/";
+
+// Test against bitcode compiled with the same version of LLVM
+#[cfg(feature = "llvm-8")]
+fn llvm_bc_dir() -> PathBuf {
+    Path::new(BC_DIR).join("llvm8")
+}
+#[cfg(feature = "llvm-9")]
+fn llvm_bc_dir() -> PathBuf {
+    Path::new(BC_DIR).join("llvm9")
+}
+#[cfg(feature = "llvm-10")]
+fn llvm_bc_dir() -> PathBuf {
+    Path::new(BC_DIR).join("llvm10")
+}
+
+fn rust_bc_dir() -> PathBuf {
+    Path::new(BC_DIR).join("rust")
+}
+
 #[test]
 fn hellobc() {
     init_logging();
-    let path = Path::new("tests/basic_bc/hello.bc");
+    let path = llvm_bc_dir().join("hello.bc");
     let module = Module::from_bc_path(&path).expect("Failed to parse module");
-    assert_eq!(module.name, "tests/basic_bc/hello.bc");
+    assert_eq!(&module.name, &path.to_str().unwrap());
     assert_eq!(module.source_file_name, "hello.c");
-    assert_eq!(module.target_triple, Some("x86_64-apple-macosx10.14.0".to_owned()));
+    assert_eq!(module.target_triple, Some("x86_64-apple-macosx10.15.0".into()));
     assert_eq!(module.functions.len(), 1);
     let func = &module.functions[0];
     assert_eq!(func.name, "main");
@@ -49,21 +72,25 @@ fn hellobc() {
         })))
     );
 
-    // this file was compiled without debuginfo, so nothing should have a debugloc
-    assert_eq!(func.debugloc, None);
-    assert_eq!(ret.debugloc, None);
+    #[cfg(LLVM_VERSION_9_OR_GREATER)]
+    {
+        // this file was compiled without debuginfo, so nothing should have a debugloc
+        assert_eq!(func.debugloc, None);
+        assert_eq!(ret.debugloc, None);
+    }
 }
 
 // this test relates to the version of the file compiled with debuginfo
+#[cfg(LLVM_VERSION_9_OR_GREATER)]
 #[test]
 fn hellobcg() {
     init_logging();
-    let path = Path::new("tests/basic_bc/hello.bc-g");
+    let path = llvm_bc_dir().join("hello.bc-g");
     let module = Module::from_bc_path(&path).expect("Failed to parse module");
-    assert_eq!(module.name, "tests/basic_bc/hello.bc-g");
+    assert_eq!(&module.name, &path.to_str().unwrap());
     assert_eq!(module.source_file_name, "hello.c");
     let debug_filename = "hello.c";
-    let debug_directory = Some("/Users/craig/llvm-ir/tests/basic_bc".to_owned());
+    let debug_directory = std::env::current_dir().unwrap().join(BC_DIR);
 
     let func = &module.functions[0];
     assert_eq!(func.name, "main");
@@ -71,7 +98,7 @@ fn hellobcg() {
     assert_eq!(debugloc.line, 3);
     assert_eq!(debugloc.col, None);
     assert_eq!(debugloc.filename, debug_filename);
-    assert_eq!(debugloc.directory, debug_directory);
+    assert_eq!(debugloc.directory.as_ref().map(PathBuf::from).as_ref(), Some(&debug_directory));
 
     let bb = &func.basic_blocks[0];
     let ret: &terminator::Ret = &bb.term.clone().try_into().unwrap_or_else(|_| panic!("Terminator should be a Ret but is {:?}", &bb.term));
@@ -79,14 +106,14 @@ fn hellobcg() {
     assert_eq!(debugloc.line, 4);
     assert_eq!(debugloc.col, Some(3));
     assert_eq!(debugloc.filename, debug_filename);
-    assert_eq!(debugloc.directory, debug_directory);
+    assert_eq!(debugloc.directory.as_ref().map(PathBuf::from).as_ref(), Some(&debug_directory));
 }
 
 #[test]
 #[allow(clippy::cognitive_complexity)]
 fn loopbc() {
     init_logging();
-    let path = Path::new("tests/basic_bc/loop.bc");
+    let path = llvm_bc_dir().join("loop.bc");
     let module = Module::from_bc_path(&path).expect("Failed to parse module");
 
     // get function and check info on it
@@ -117,24 +144,44 @@ fn loopbc() {
     assert_eq!(module.type_of(param1), module.types.i32());
 
     // get basic blocks and check their names
-    assert_eq!(func.basic_blocks.len(), 6);
-    let bb2 = &func.basic_blocks[0];
-    let bb7 = &func.basic_blocks[1];
-    let bb10 = &func.basic_blocks[2];
-    let bb14 = &func.basic_blocks[3];
-    let bb19 = &func.basic_blocks[4];
-    let bb22 = &func.basic_blocks[5];
-    assert_eq!(bb2.name, Name::Number(2));
-    assert_eq!(bb7.name, Name::Number(7));
-    assert_eq!(bb10.name, Name::Number(10));
-    assert_eq!(bb14.name, Name::Number(14));
-    assert_eq!(bb19.name, Name::Number(19));
-    assert_eq!(bb22.name, Name::Number(22));
-    assert_eq!(func.get_bb_by_name(&Name::Number(2)), Some(bb2));
-    assert_eq!(func.get_bb_by_name(&Name::Number(19)), Some(bb19));
+    // LLVM 10+ bitcode has fewer basic blocks for this function
+    #[cfg(LLVM_VERSION_9_OR_LOWER)]
+    let bbs = {
+        assert_eq!(func.basic_blocks.len(), 6);
+        let bb2 = &func.basic_blocks[0];
+        let bb7 = &func.basic_blocks[1];
+        let bb10 = &func.basic_blocks[2];
+        let bb14 = &func.basic_blocks[3];
+        let bb19 = &func.basic_blocks[4];
+        let bb22 = &func.basic_blocks[5];
+        assert_eq!(bb2.name, Name::Number(2));
+        assert_eq!(bb7.name, Name::Number(7));
+        assert_eq!(bb10.name, Name::Number(10));
+        assert_eq!(bb14.name, Name::Number(14));
+        assert_eq!(bb19.name, Name::Number(19));
+        assert_eq!(bb22.name, Name::Number(22));
+        assert_eq!(func.get_bb_by_name(&Name::Number(2)), Some(bb2));
+        assert_eq!(func.get_bb_by_name(&Name::Number(19)), Some(bb19));
+        vec![bb2, bb7, bb10, bb14, bb19, bb22]
+    };
+    #[cfg(LLVM_VERSION_10_OR_GREATER)]
+    let bbs = {
+        assert_eq!(func.basic_blocks.len(), 4);
+        let bb2 = &func.basic_blocks[0];
+        let bb7 = &func.basic_blocks[1];
+        let bb12 = &func.basic_blocks[2];
+        let bb21 = &func.basic_blocks[3];
+        assert_eq!(bb2.name, Name::Number(2));
+        assert_eq!(bb7.name, Name::Number(7));
+        assert_eq!(bb12.name, Name::Number(12));
+        assert_eq!(bb21.name, Name::Number(21));
+        assert_eq!(func.get_bb_by_name(&Name::Number(2)), Some(bb2));
+        assert_eq!(func.get_bb_by_name(&Name::Number(12)), Some(bb12));
+        vec![bb2, bb7, bb12, bb21]
+    };
 
     // check details about the instructions in basic block %2
-    let alloca: &instruction::Alloca = &bb2.instrs[0]
+    let alloca: &instruction::Alloca = &bbs[0].instrs[0]
         .clone()
         .try_into()
         .expect("Should be an alloca");
@@ -151,7 +198,7 @@ fn loopbc() {
     assert_eq!(alloca.alignment, 16);
     assert_eq!(module.type_of(alloca), module.types.pointer_to(allocated_type.clone()));
     assert_eq!(module.type_of(&alloca.num_elements), module.types.i32());
-    let bitcast: &instruction::BitCast = &bb2.instrs[1]
+    let bitcast: &instruction::BitCast = &bbs[0].instrs[1]
         .clone()
         .try_into()
         .expect("Should be a bitcast");
@@ -167,7 +214,7 @@ fn loopbc() {
     assert_eq!(module.type_of(bitcast), module.types.pointer_to(module.types.i8()));
     assert_eq!(module.type_of(&bitcast.operand), module.types.pointer_to(allocated_type.clone()));
     let lifetimestart: &instruction::Call =
-        &bb2.instrs[2].clone().try_into().expect("Should be a call");
+        &bbs[0].instrs[2].clone().try_into().expect("Should be a call");
     if let Either::Right(Operand::ConstantOperand(cref)) = &lifetimestart.function {
         if let Constant::GlobalReference { ref name, ref ty } = cref.as_ref() {
             assert_eq!(module.type_of(&lifetimestart.function), module.types.pointer_to(ty.clone()));  // lifetimestart.function should be a constant function pointer
@@ -198,7 +245,7 @@ fn loopbc() {
     assert_eq!(arg0.1, vec![]);  // should have no parameter attributes
     assert_eq!(arg1.1.len(), 1);  // should have one parameter attribute
     assert_eq!(lifetimestart.dest, None);
-    let memset: &instruction::Call = &bb2.instrs[3].clone().try_into().expect("Should be a call");
+    let memset: &instruction::Call = &bbs[0].instrs[3].clone().try_into().expect("Should be a call");
     if let Either::Right(Operand::ConstantOperand(cref)) = &memset.function {
         if let Constant::GlobalReference { ref name, ref ty } = cref.as_ref() {
             assert_eq!(*name, Name::from("llvm.memset.p0i8.i64"));
@@ -227,35 +274,54 @@ fn loopbc() {
     assert_eq!(memset.arguments[2].0, Operand::ConstantOperand(ConstantRef::new(Constant::Int { bits: 64, value: 40 })));
     assert_eq!(memset.arguments[3].0, Operand::ConstantOperand(ConstantRef::new(Constant::Int { bits: 1, value: 1 })));
     assert_eq!(memset.arguments[0].1.len(), 2); // should have two parameter attributes
-    let add: &instruction::Add = &bb2.instrs[4].clone().try_into().expect("Should be an add");
+    let add: &instruction::Add = &bbs[0].instrs[4].clone().try_into().expect("Should be an add");
     assert_eq!(add.operand0, Operand::LocalOperand { name: Name::Number(1), ty: module.types.i32() } );
     assert_eq!(add.operand1, Operand::ConstantOperand(ConstantRef::new(Constant::Int { bits: 32, value: 0x0000_0000_FFFF_FFFF })));
     assert_eq!(add.dest, Name::Number(5));
     assert_eq!(module.type_of(add), module.types.i32());
-    let icmp: &instruction::ICmp = &bb2.instrs[5].clone().try_into().expect("Should be an icmp");
+    let icmp: &instruction::ICmp = &bbs[0].instrs[5].clone().try_into().expect("Should be an icmp");
     assert_eq!(icmp.predicate, IntPredicate::ULT);
     assert_eq!(icmp.operand0, Operand::LocalOperand { name: Name::Number(5), ty: module.types.i32() } );
     assert_eq!(icmp.operand1, Operand::ConstantOperand(ConstantRef::new(Constant::Int { bits: 32, value: 10 })));
     assert_eq!(module.type_of(icmp), module.types.bool());
-    let condbr: &terminator::CondBr = &bb2.term.clone().try_into().expect("Should be a condbr");
+    let condbr: &terminator::CondBr = &bbs[0].term.clone().try_into().expect("Should be a condbr");
     assert_eq!(condbr.condition, Operand::LocalOperand { name: Name::Number(6), ty: module.types.bool() } );
     assert_eq!(condbr.true_dest, Name::Number(7));
-    assert_eq!(condbr.false_dest, Name::Number(22));
+    let false_dest = if cfg!(LLVM_VERSION_9_OR_LOWER) {
+        Name::Number(22)
+    } else {
+        Name::Number(21)
+    };
+    assert_eq!(condbr.false_dest, false_dest);
     assert_eq!(module.type_of(condbr), module.types.void());
 
     // check details about certain instructions in basic block %7
-    let sext: &instruction::SExt = &bb7.instrs[1].clone().try_into().expect("Should be a SExt");
-    assert_eq!(sext.operand, Operand::LocalOperand { name: Name::Number(1), ty: module.types.i32() } );
-    assert_eq!(sext.to_type, module.types.i64());
-    assert_eq!(sext.dest, Name::Number(9));
-    assert_eq!(module.type_of(sext), module.types.i64());
-    let br: &terminator::Br = &bb7.term.clone().try_into().expect("Should be a Br");
-    assert_eq!(br.dest, Name::Number(10));
+    // not sure why LLVM 10 puts a ZExt here instead of SExt. Maybe it can prove it's equivalent?
+    #[cfg(LLVM_VERSION_9_OR_LOWER)]
+    let ext: &instruction::SExt = &bbs[1].instrs[1].clone().try_into().expect("Should be a SExt");
+    #[cfg(LLVM_VERSION_10_OR_GREATER)]
+    let ext: &instruction::ZExt = &bbs[1].instrs[1].clone().try_into().expect("Should be a ZExt");
+    assert_eq!(ext.operand, Operand::LocalOperand { name: Name::Number(1), ty: module.types.i32() } );
+    assert_eq!(ext.to_type, module.types.i64());
+    assert_eq!(ext.dest, Name::Number(9));
+    assert_eq!(module.type_of(ext), module.types.i64());
+    #[cfg(LLVM_VERSION_9_OR_LOWER)]
+    {
+        // LLVM 10 doesn't have a Br in this function
+        let br: &terminator::Br = &bbs[1].term.clone().try_into().expect("Should be a Br");
+        assert_eq!(br.dest, Name::Number(10));
+    }
 
-    // check details about certain instructions in basic block %10
-    let phi: &instruction::Phi = &bb10.instrs[0].clone().try_into().expect("Should be a Phi");
-    assert_eq!(phi.dest, Name::Number(11));
+    // check details about certain instructions in basic block %10 (LLVM 9-) / %12 (LLVM 10+)
+    let phi: &instruction::Phi = &bbs[2].instrs[0].clone().try_into().expect("Should be a Phi");
+    let phi_dest = if cfg!(LLVM_VERSION_9_OR_LOWER) {
+        Name::Number(11)
+    } else {
+        Name::Number(13)
+    };
+    assert_eq!(phi.dest, phi_dest);
     assert_eq!(phi.to_type, module.types.i64());
+    #[cfg(LLVM_VERSION_9_OR_LOWER)]
     assert_eq!(
         phi.incoming_values,
         vec![
@@ -269,8 +335,23 @@ fn loopbc() {
             ),
         ]
     );
+    #[cfg(LLVM_VERSION_10_OR_GREATER)]
+    assert_eq!(
+        phi.incoming_values,
+        vec![
+            (
+                Operand::LocalOperand { name: Name::Number(19), ty: module.types.i64() },
+                Name::Number(12)
+            ),
+            (
+                Operand::ConstantOperand(ConstantRef::new(Constant::Int { bits: 64, value: 1 })),
+                Name::Number(7)
+            ),
+        ]
+    );
+
     let gep: &instruction::GetElementPtr =
-        &bb10.instrs[1].clone().try_into().expect("Should be a gep");
+        &bbs[2].instrs[1].clone().try_into().expect("Should be a gep");
     assert_eq!(
         gep.address,
         Operand::LocalOperand {
@@ -278,39 +359,64 @@ fn loopbc() {
             ty: module.types.pointer_to(allocated_type.clone())
         }
     );
-    assert_eq!(gep.dest, Name::Number(12));
+    let gep_dest = if cfg!(LLVM_VERSION_9_OR_LOWER) {
+        Name::Number(12)
+    } else {
+        Name::Number(14)
+    };
+    assert_eq!(gep.dest, gep_dest);
     assert_eq!(gep.in_bounds, true);
+    let index = if cfg!(LLVM_VERSION_9_OR_LOWER) {
+        Name::Number(11)
+    } else {
+        Name::Number(13)
+    };
     assert_eq!(
         gep.indices,
         vec![
             Operand::ConstantOperand(ConstantRef::new(Constant::Int { bits: 64, value: 0 })),
             Operand::LocalOperand {
-                name: Name::Number(11),
+                name: index,
                 ty: module.types.i64()
             },
         ]
     );
     assert_eq!(module.type_of(gep), module.types.pointer_to(module.types.i32()));
-    let store: &instruction::Store = &bb10.instrs[2]
+    let store: &instruction::Store = &bbs[2].instrs[2]
         .clone()
         .try_into()
         .expect("Should be a store");
-    assert_eq!(store.address, Operand::LocalOperand { name: Name::Number(12), ty: module.types.pointer_to(module.types.i32()) });
+    let address = if cfg!(LLVM_VERSION_9_OR_LOWER) {
+        Name::Number(12)
+    } else {
+        Name::Number(14)
+    };
+    assert_eq!(store.address, Operand::LocalOperand { name: address, ty: module.types.pointer_to(module.types.i32()) });
     assert_eq!(store.value, Operand::LocalOperand { name: Name::Number(8), ty: module.types.i32() });
     assert_eq!(store.volatile, true);
     assert_eq!(store.alignment, 4);
     assert_eq!(module.type_of(store), module.types.void());
-    assert_eq!(bb10.instrs[2].is_atomic(), false);
+    assert_eq!(bbs[2].instrs[2].is_atomic(), false);
 
     // and finally other instructions of types we haven't seen yet
-    let load: &instruction::Load = &bb14.instrs[2].clone().try_into().expect("Should be a load");
+    let load_inst: &Instruction = if cfg!(LLVM_VERSION_9_OR_LOWER) {
+        &bbs[3].instrs[2]
+    } else {
+        &bbs[2].instrs[5]
+    };
+    let load: &instruction::Load = &load_inst.clone().try_into().expect("Should be a load");
     assert_eq!(load.address, Operand::LocalOperand { name: Name::Number(16), ty: module.types.pointer_to(module.types.i32()) });
     assert_eq!(load.dest, Name::Number(17));
     assert_eq!(load.volatile, true);
     assert_eq!(load.alignment, 4);
     assert_eq!(module.type_of(load), module.types.i32());
-    assert_eq!(bb14.instrs[2].is_atomic(), false);
-    let ret: &terminator::Ret = &bb22.term.clone().try_into().expect("Should be a ret");
+    assert_eq!(load_inst.is_atomic(), false);
+    let ret: &Terminator = if cfg!(LLVM_VERSION_9_OR_LOWER) {
+        &bbs[5].term
+    } else {
+        &bbs[3].term
+    };
+    let ret: &terminator::Ret = &ret.clone().try_into().expect("Should be a ret");
     assert_eq!(ret.return_operand, None);
     assert_eq!(module.type_of(ret), module.types.void());
 }
@@ -318,7 +424,7 @@ fn loopbc() {
 #[test]
 fn switchbc() {
     init_logging();
-    let path = Path::new("tests/basic_bc/switch.bc");
+    let path = llvm_bc_dir().join("switch.bc");
     let module = Module::from_bc_path(&path).expect("Failed to parse module");
     assert_eq!(module.functions.len(), 1);
     let func = &module.functions[0];
@@ -348,7 +454,7 @@ fn switchbc() {
 #[test]
 fn variablesbc() {
     init_logging();
-    let path = Path::new("tests/basic_bc/variables.bc");
+    let path = llvm_bc_dir().join("variables.bc");
     let module = Module::from_bc_path(&path).expect("Failed to parse module");
     assert_eq!(module.global_vars.len(), 1);
     let var = &module.global_vars[0];
@@ -357,6 +463,7 @@ fn variablesbc() {
     assert_eq!(var.ty, module.types.pointer_to(module.types.i32()));
     assert_eq!(var.initializer, Some(ConstantRef::new(Constant::Int { bits: 32, value: 5 })));
     assert_eq!(var.alignment, 4);
+    #[cfg(LLVM_VERSION_9_OR_GREATER)]
     assert!(var.get_debug_loc().is_none());  // this file was compiled without debuginfo
 
     assert_eq!(module.functions.len(), 1);
@@ -378,13 +485,14 @@ fn variablesbc() {
 }
 
 // this test relates to the version of the file compiled with debuginfo
+#[cfg(LLVM_VERSION_9_OR_GREATER)]
 #[test]
 fn variablesbcg() {
     init_logging();
-    let path = Path::new("tests/basic_bc/variables.bc-g");
+    let path = llvm_bc_dir().join("variables.bc-g");
     let module = Module::from_bc_path(&path).expect("Failed to parse module");
     let debug_filename = "variables.c";
-    let debug_directory = Some("/Users/craig/llvm-ir/tests/basic_bc".to_owned());
+    let debug_directory = std::env::current_dir().unwrap().join(BC_DIR);
 
     // really all we want to check is the debugloc of the global variable.
     // other debuginfo stuff is covered in other tests
@@ -395,23 +503,42 @@ fn variablesbcg() {
     assert_eq!(debugloc.line, 5);
     assert_eq!(debugloc.col, None);  // only `Instruction`s and `Terminator`s get column numbers
     assert_eq!(debugloc.filename, debug_filename);
-    assert_eq!(debugloc.directory, debug_directory);
+    assert_eq!(debugloc.directory.as_ref().map(PathBuf::from).as_ref(), Some(&debug_directory));
 }
 
 // this test checks for regression on issue #4
 #[test]
 fn issue4() {
     init_logging();
-    let path = Path::new("tests/basic_bc/issue_4.bc");
+    let path = llvm_bc_dir().join("issue_4.bc");
     let module = Module::from_bc_path(&path).expect("Failed to parse module");
     assert_eq!(module.functions.len(), 1);
     let func = &module.functions[0];
 
-    // not part of issue 4 proper, but let's check that we correctly have exactly 21 function attributes
-    assert_eq!(func.function_attributes.len(), 21);
-    // and that exactly 15 of them are StringAttributes
+    // not part of issue 4 proper, but let's check that we have the correct number of function attributes
+    let expected_num_function_attributes = if cfg!(LLVM_VERSION_8_OR_LOWER) {
+        // LLVM 8 doesn't have the attribute "nofree"
+        21
+    } else if cfg!(feature = "llvm-9") {
+        22
+    } else if cfg!(LLVM_VERSION_10_OR_GREATER) {
+        // LLVM 10 seems to have combined the two attributes
+        // "no-frame-pointer-elim=true" and "no-frame-pointer-elim-non-leaf"
+        // into a single attribute, "frame-pointer=all"
+        21
+    } else {
+        panic!("Shouldn't reach this")
+    };
+    assert_eq!(func.function_attributes.len(), expected_num_function_attributes,
+        "Expected {} function attributes but have {}: {:?}", expected_num_function_attributes, func.function_attributes.len(), func.function_attributes);
+    // and that all but 6 of them are StringAttributes (5 of them for LLVM 8)
+    let expected_num_enum_attrs = if cfg!(LLVM_VERSION_8_OR_LOWER) {
+        5 // missing "nofree"
+    } else {
+        6
+    };
     let string_attrs = func.function_attributes.iter().filter(|attr| if let FunctionAttribute::StringAttribute { .. } = attr { true } else { false });
-    assert_eq!(string_attrs.count(), 15);
+    assert_eq!(string_attrs.count(), expected_num_function_attributes - expected_num_enum_attrs);
 
     // now check that the first parameter has 3 attributes and the second parameter has 0
     assert_eq!(func.parameters.len(), 2);
@@ -428,7 +555,7 @@ fn issue4() {
 fn rustbc() {
     // This tests against the checked-in rust.bc, which was generated from the checked-in rust.rs with rustc 1.39.0
     init_logging();
-    let path = Path::new("tests/basic_bc/rust.bc");
+    let path = rust_bc_dir().join("rust.bc");
     let module = Module::from_bc_path(&path).expect("Failed to parse module");
     let func = module.get_func_by_name("_ZN4rust9rust_loop17h3ed0672b8cf44eb1E").expect("Failed to find function");
 
@@ -484,29 +611,33 @@ fn rustbc() {
     });
     assert_eq!(call.dest, Some(Name::Number(0)));
 
-    // this file was compiled without debuginfo, so nothing should have a debugloc
-    assert!(func.get_debug_loc().is_none());
-    assert!(alloca_iter.get_debug_loc().is_none());
-    assert!(alloca_sum.get_debug_loc().is_none());
-    assert!(store.get_debug_loc().is_none());
-    assert!(call.get_debug_loc().is_none());
+    #[cfg(LLVM_VERSION_9_OR_GREATER)]
+    {
+        // this file was compiled without debuginfo, so nothing should have a debugloc
+        assert!(func.get_debug_loc().is_none());
+        assert!(alloca_iter.get_debug_loc().is_none());
+        assert!(alloca_sum.get_debug_loc().is_none());
+        assert!(store.get_debug_loc().is_none());
+        assert!(call.get_debug_loc().is_none());
+    }
 }
 
 // this test relates to the version of the file compiled with debuginfo
+#[cfg(LLVM_VERSION_9_OR_GREATER)]
 #[test]
 fn rustbcg() {
     init_logging();
-    let path = Path::new("tests/basic_bc/rust.bc-g");
+    let path = rust_bc_dir().join("rust.bc-g");
     let module = Module::from_bc_path(&path).expect("Failed to parse module");
     let debug_filename = "rust.rs";
-    let debug_directory = Some("/Users/craig/llvm-ir/tests/basic_bc".to_owned());
+    let debug_directory = std::env::current_dir().unwrap().join(BC_DIR);
 
     let func = module.get_func_by_name("_ZN4rust9rust_loop17h3ed0672b8cf44eb1E").expect("Failed to find function");
     let debugloc = func.get_debug_loc().as_ref().expect("Expected function to have a debugloc");
     assert_eq!(debugloc.line, 3);
     assert_eq!(debugloc.col, None);
     assert_eq!(debugloc.filename, debug_filename);
-    assert_eq!(debugloc.directory, debug_directory);
+    assert_eq!(debugloc.directory.as_ref().map(PathBuf::from).as_ref(), Some(&debug_directory));
 
     let startbb = func.get_bb_by_name(&Name::from("start")).expect("Failed to find bb 'start'");
 
@@ -519,18 +650,18 @@ fn rustbcg() {
     assert_eq!(store_debugloc.line, 4);
     assert_eq!(store_debugloc.col, Some(18));
     assert_eq!(store_debugloc.filename, debug_filename);
-    assert_eq!(store_debugloc.directory, debug_directory);
+    assert_eq!(store_debugloc.directory.as_ref().map(PathBuf::from).as_ref(), Some(&debug_directory));
     let call_debugloc = startbb.instrs[33].get_debug_loc().as_ref().expect("Expected this call to have a debugloc");
     assert_eq!(call_debugloc.line, 5);
     assert_eq!(call_debugloc.col, Some(13));
     assert_eq!(call_debugloc.filename, debug_filename);
-    assert_eq!(call_debugloc.directory, debug_directory);
+    assert_eq!(call_debugloc.directory.as_ref().map(PathBuf::from).as_ref(), Some(&debug_directory));
 }
 
 #[test]
 fn simple_linked_list() {
     init_logging();
-    let path = Path::new("tests/basic_bc/linkedlist.bc");
+    let path = llvm_bc_dir().join("linkedlist.bc");
     let module = Module::from_bc_path(&path).expect("Failed to parse module");
 
     let struct_name: String = "struct.SimpleLinkedList".into();
@@ -632,20 +763,21 @@ fn simple_linked_list() {
 }
 
 // this test relates to the version of the file compiled with debuginfo
+#[cfg(LLVM_VERSION_9_OR_GREATER)]
 #[test]
 fn simple_linked_list_g() {
     init_logging();
-    let path = Path::new("tests/basic_bc/linkedlist.bc-g");
+    let path = llvm_bc_dir().join("linkedlist.bc-g");
     let module = Module::from_bc_path(&path).expect("Failed to parse module");
     let debug_filename = "linkedlist.c";
-    let debug_directory = Some("/Users/craig/llvm-ir/tests/basic_bc".to_owned());
+    let debug_directory = std::env::current_dir().unwrap().join(BC_DIR);
 
     let func = module.get_func_by_name("simple_linked_list").expect("Failed to find function");
     let debugloc = func.get_debug_loc().as_ref().expect("expected simple_linked_list to have a debugloc");
     assert_eq!(debugloc.line, 8);
     assert_eq!(debugloc.col, None);
     assert_eq!(debugloc.filename, debug_filename);
-    assert_eq!(debugloc.directory, debug_directory);
+    assert_eq!(debugloc.directory.as_ref().map(PathBuf::from).as_ref(), Some(&debug_directory));
 
     // the first seven instructions shouldn't have debuglocs - they are just setting up the stack frame
     for i in 0..7 {
@@ -657,20 +789,20 @@ fn simple_linked_list_g() {
     assert_eq!(debugloc.line, 8);
     assert_eq!(debugloc.col, Some(28));
     assert_eq!(debugloc.filename, debug_filename);
-    assert_eq!(debugloc.directory, debug_directory);
+    assert_eq!(debugloc.directory.as_ref().map(PathBuf::from).as_ref(), Some(&debug_directory));
 
     // the tenth instruction should have a different debugloc
     let debugloc = func.basic_blocks[0].instrs[9].get_debug_loc().as_ref().expect("expected this instruction to have a debugloc");
     assert_eq!(debugloc.line, 9);
     assert_eq!(debugloc.col, Some(34));
     assert_eq!(debugloc.filename, debug_filename);
-    assert_eq!(debugloc.directory, debug_directory);
+    assert_eq!(debugloc.directory.as_ref().map(PathBuf::from).as_ref(), Some(&debug_directory));
 }
 
 #[test]
 fn indirectly_recursive_type() {
     init_logging();
-    let path = Path::new("tests/basic_bc/linkedlist.bc");
+    let path = llvm_bc_dir().join("linkedlist.bc");
     let module = Module::from_bc_path(&path).expect("Failed to parse module");
 
     let struct_name_a: String = "struct.NodeA".into();
@@ -790,7 +922,7 @@ fn indirectly_recursive_type() {
 #[test]
 fn param_and_func_attributes() {
     let _ = env_logger::builder().is_test(true).try_init(); // capture log messages with test harness
-    let path = Path::new("tests/basic_bc/param_and_func_attributes.ll.bc");
+    let path = llvm_bc_dir().join("param_and_func_attributes.ll.bc");
     let module = Module::from_bc_path(&path).expect("Failed to parse module");
 
     // Return attributes
@@ -842,8 +974,10 @@ fn param_and_func_attributes() {
     assert_eq!(f.parameters.len(), 1);
     let param = &f.parameters[0];
     assert_eq!(param.attributes.len(), 1);
-    //assert_eq!(param.attributes[0], ParameterAttribute::ByVal);
-    assert_eq!(param.attributes[0], ParameterAttribute::UnknownAttribute); // not sure why we're getting UnknownAttribute here, but we'll let it pass for now
+    #[cfg(LLVM_VERSION_8_OR_LOWER)]
+    assert_eq!(param.attributes[0], ParameterAttribute::ByVal);
+    #[cfg(LLVM_VERSION_9_OR_GREATER)]
+    assert_eq!(param.attributes[0], ParameterAttribute::UnknownAttribute); // not sure why we're getting UnknownAttribute here with LLVM 9+, but we'll let it pass for now
     let f = module.get_func_by_name("f.param.inalloca").unwrap();
     assert_eq!(f.parameters.len(), 1);
     let param = &f.parameters[0];

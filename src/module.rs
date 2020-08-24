@@ -1,4 +1,5 @@
 use crate::constant::ConstantRef;
+#[cfg(LLVM_VERSION_9_OR_GREATER)]
 use crate::debugloc::*;
 use crate::function::{Function, FunctionAttribute, GroupID};
 use crate::name::Name;
@@ -113,6 +114,7 @@ pub struct GlobalVariable {
     pub section: Option<String>,
     pub comdat: Option<Comdat>, // llvm-hs-pure has Option<String> for some reason
     pub alignment: u32,
+    #[cfg(LLVM_VERSION_9_OR_GREATER)]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: Vec<(String, MetadataRef<MetadataNode>)>,
 }
@@ -123,6 +125,7 @@ impl Typed for GlobalVariable {
     }
 }
 
+#[cfg(LLVM_VERSION_9_OR_GREATER)]
 impl HasDebugLoc for GlobalVariable {
     fn get_debug_loc(&self) -> &Option<DebugLoc> {
         &self.debugloc
@@ -414,6 +417,7 @@ impl GlobalVariable {
                 }
             },
             alignment: unsafe { LLVMGetAlignment(global) },
+            #[cfg(LLVM_VERSION_9_OR_GREATER)]
             debugloc: DebugLoc::from_llvm_no_col(global),
             // metadata: unimplemented!("metadata"),
         }

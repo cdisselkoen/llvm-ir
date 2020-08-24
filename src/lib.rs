@@ -10,7 +10,9 @@ pub mod basicblock;
 pub use basicblock::BasicBlock;
 pub mod constant;
 pub use constant::{Constant, ConstantRef};
+#[cfg(LLVM_VERSION_9_OR_GREATER)]
 pub mod debugloc;
+#[cfg(LLVM_VERSION_9_OR_GREATER)]
 pub use debugloc::{DebugLoc, HasDebugLoc};
 pub mod function;
 pub use function::Function;

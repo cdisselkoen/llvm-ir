@@ -1,7 +1,7 @@
 ; ModuleID = 'switch.c'
 source_filename = "switch.c"
 target datalayout = "e-m:o-i64:64-f80:128-n8:16:32:64-S128"
-target triple = "x86_64-apple-macosx10.14.0"
+target triple = "x86_64-apple-macosx10.15.0"
 
 @str = private unnamed_addr constant [16 x i8] c"reached default\00", align 1
 
@@ -64,4 +64,4 @@ attributes #1 = { nofree nounwind }
 
 !0 = !{i32 1, !"wchar_size", i32 4}
 !1 = !{i32 7, !"PIC Level", i32 2}
-!2 = !{!"clang version 9.0.0 (tags/RELEASE_900/final)"}
+!2 = !{!"clang version 9.0.1 "}
