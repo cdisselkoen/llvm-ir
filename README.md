@@ -93,12 +93,11 @@ clang -S -emit-llvm source.c -o source.ll
 
 For Rust sources, you can use `rustc`'s `--emit=llvm-ir` flag.
 
-Additionally, you may want to ensure you are generating LLVM bitcode with
-debuginfo; this will ensure that [`Instruction`]s, [`Terminator`]s,
-[`GlobalVariable`]s, and [`Function`]s have valid [`DebugLoc`]s attached.
-(See the [`HasDebugLoc`] trait.)
-You can do this by passing the `-g` flag to `clang`, `clang++`, or `rustc`
-when generating bitcode.
+Additionally, you may want to pass the `-g` flag to `clang`, `clang++`, or
+`rustc` when generating bitcode.
+This will generate LLVM bitcode with debuginfo, which will ensure that
+[`Instruction`]s, [`Terminator`]s, [`GlobalVariable`]s, and [`Function`]s
+have valid [`DebugLoc`]s attached. (See the [`HasDebugLoc`] trait.)
 Also note that these `DebugLoc`s are only available in LLVM 9 and newer;
 previous versions of LLVM had a bug in this interface in the C API which
 would cause segfaults.
