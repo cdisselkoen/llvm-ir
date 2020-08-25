@@ -14,7 +14,7 @@ pub unsafe fn raw_to_string(raw: *const c_char) -> String {
 macro_rules! wrap {
     ($llvmFunc:ident, $argty:ty, $wrapperFunc:ident) => {
         pub unsafe fn $wrapperFunc(arg: $argty) -> String {
-            debug_assert!(arg != std::ptr::null_mut());
+            debug_assert!(!arg.is_null());
             let ptr = $llvmFunc(arg);
             raw_to_string(ptr)
         }
@@ -24,7 +24,7 @@ macro_rules! wrap {
 macro_rules! wrap_maybe_null {
     ($llvmFunc: ident, $argty:ty, $wrapperFunc:ident) => {
         pub unsafe fn $wrapperFunc(arg: $argty) -> Option<String> {
-            debug_assert!(arg != std::ptr::null_mut());
+            debug_assert!(!arg.is_null());
             let ptr = $llvmFunc(arg);
             if ptr.is_null() {
                 None
@@ -38,7 +38,7 @@ macro_rules! wrap_maybe_null {
 macro_rules! wrap_with_len {
     ($llvmFunc:ident, $argty:ty, $wrapperFunc:ident) => {
         pub unsafe fn $wrapperFunc(arg: $argty) -> String {
-            debug_assert!(arg != std::ptr::null_mut());
+            debug_assert!(!arg.is_null());
             let mut len = 0;
             let ptr = $llvmFunc(arg, &mut len);
             raw_to_string(ptr)
@@ -50,7 +50,7 @@ macro_rules! wrap_with_len {
 macro_rules! wrap_with_len_maybe_null {
     ($llvmFunc:ident, $argty:ty, $wrapperFunc:ident) => {
         pub unsafe fn $wrapperFunc(arg: $argty) -> Option<String> {
-            debug_assert!(arg != std::ptr::null_mut());
+            debug_assert!(!arg.is_null());
             let mut len = 0;
             let ptr = $llvmFunc(arg, &mut len);
             if ptr.is_null() {

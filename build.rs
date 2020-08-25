@@ -12,12 +12,10 @@ fn main() {
     if cfg!(feature = "llvm-10") {
         versions.push(10);
     }
-    let selected_version = if versions.len() == 0 {
-        panic!("llvm-ir: Please select an LLVM version using a Cargo feature.")
-    } else if versions.len() > 1 {
-        panic!("llvm-ir: Multiple LLVM versions selected. Please activate only one LLVM version feature. (Got {:?})", versions);
-    } else {
-        versions[0]
+    let selected_version = match versions.len() {
+        0 => panic!("llvm-ir: Please select an LLVM version using a Cargo feature."),
+        1 => versions[0],
+        _ => panic!("llvm-ir: Multiple LLVM versions selected. Please activate only one LLVM version feature. (Got {:?})", versions),
     };
 
     // For convenience we set a number of configuration options to avoid

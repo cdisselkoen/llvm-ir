@@ -1,0 +1,3 @@
+# As of this writing, the default is 200; so we're actually more strict than
+# the default here
+enum-variant-size-threshold = 96

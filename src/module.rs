@@ -305,12 +305,15 @@ pub(crate) struct ModuleContext<'a> {
     pub types: TypesBuilder,
     pub attrsdata: AttributesData,
     /// Map from an llvm-sys constant to the corresponding llvm-ir `ConstantRef`
+    #[allow(clippy::mutable_key_type)] // We use LLVMValueRef as a *const, even though it's technically a *mut
     pub constants: HashMap<LLVMValueRef, ConstantRef>,
     /// Map from an llvm-sys global to its `Name`
+    #[allow(clippy::mutable_key_type)] // We use LLVMValueRef as a *const, even though it's technically a *mut
     pub global_names: &'a HashMap<LLVMValueRef, Name>,
 }
 
 impl<'a> ModuleContext<'a> {
+    #[allow(clippy::mutable_key_type)] // We use LLVMValueRef as a *const, even though it's technically a *mut
     fn new(global_names: &'a HashMap<LLVMValueRef, Name>) -> Self {
         Self {
             types: TypesBuilder::new(),
@@ -333,6 +336,7 @@ impl Module {
         // This is necessary because these structures may reference each other in a
         //   circular fashion, and we need to be able to fill in the Name of the
         //   referenced object from having only its `LLVMValueRef`.
+        #[allow(clippy::mutable_key_type)] // We use LLVMValueRef as a *const, even though it's technically a *mut
         let global_names: HashMap<LLVMValueRef, Name> = get_defined_functions(module)
             .chain(get_declared_functions(module))
             .chain(get_globals(module))

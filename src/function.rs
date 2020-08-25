@@ -254,8 +254,10 @@ use std::ffi::CString;
 /// structures. The data here is local to a particular Function.
 pub(crate) struct FunctionContext<'a> {
     /// Map from llvm-sys basic block to its `Name`
+    #[allow(clippy::mutable_key_type)] // We use LLVMBasicBlockRef as a *const, even though it's technically a *mut
     pub bb_names: &'a HashMap<LLVMBasicBlockRef, Name>,
     /// Map from llvm-sys value to its `Name`
+    #[allow(clippy::mutable_key_type)] // We use LLVMValueRef as a *const, even though it's technically a *mut
     pub val_names: &'a HashMap<LLVMValueRef, Name>,
     /// this counter is used to number parameters, variables, and basic blocks that aren't named
     pub ctr: usize,
@@ -306,12 +308,14 @@ impl Function {
         let bbresults: Vec<_> = get_basic_blocks(func)
             .map(|bb| (bb, BasicBlock::first_pass_names(bb, &mut local_ctr)))
             .collect();
-        let bb_names: HashMap<_, Name> = bbresults
+        #[allow(clippy::mutable_key_type)] // We use LLVMBasicBlockRef as a *const, even though it's technically a *mut
+        let bb_names: HashMap<LLVMBasicBlockRef, Name> = bbresults
             .iter()
             .map(|(bb, (bbname, _))| (*bb, bbname.clone()))
             .collect();
         debug!("Collected names of {} basic blocks", bb_names.len());
-        let val_names: HashMap<_, Name> = bbresults
+        #[allow(clippy::mutable_key_type)] // We use LLVMValueRef as a *const, even though it's technically a *mut
+        let val_names: HashMap<LLVMValueRef, Name> = bbresults
             .into_iter()
             .flat_map(|(_, (_, namepairs))| namepairs.into_iter())
             .chain(get_parameters(func).zip(parameters.iter().map(|p| p.name.clone())))
