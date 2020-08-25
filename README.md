@@ -65,18 +65,16 @@ let module = Module::from_bc_path(&path)?;
 ```
 
 ## Documentation
-Documentation for `llvm-ir` can be found [here](https://cdisselkoen.github.io/llvm-ir),
+Documentation for `llvm-ir` can be found [on docs.rs](https://docs.rs/llvm-ir),
 or of course you can generate local documentation with `cargo doc --open`.
 The documentation includes links to relevant parts of the LLVM documentation
 when appropriate.
 
 ## Compatibility
-Starting with `llvm-ir` 0.7.0, LLVM versions are selected by a Cargo feature flag.
-This means that a single crate version can be used for any supported LLVM
-version, and it also means that all supported LLVM versions will
-automatically receive all new features and bugfixes, as appropriate.
-
-Currently, the supported LLVM versions are `llvm-8`, `llvm-9` and `llvm-10`.
+Starting with `llvm-ir` 0.7.0, LLVM versions are selected by a Cargo feature
+flag. This means that a single crate version can be used for any supported
+LLVM version. Currently, the supported LLVM versions are `llvm-8`, `llvm-9`
+and `llvm-10`.
 
 `llvm-ir` works on stable Rust, and requires Rust 1.39+.
 
@@ -182,23 +180,23 @@ number of breaking changes to the public interface:
 [`inkwell`]: https://github.com/TheDan64/inkwell
 [`llvm-hs-pure` Haskell package]: http://hackage.haskell.org/package/llvm-hs-pure
 [`llvm-hs` Haskell package]: http://hackage.haskell.org/package/llvm-hs
-[`Instruction`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/instruction/enum.Instruction.html
-[`Add`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/instruction/struct.Add.html
-[`Call`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/instruction/struct.Call.html
-[`Store`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/instruction/struct.Store.html
-[`BasicBlock`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/basicblock/struct.BasicBlock.html
-[`Function`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/function/struct.Function.html
-[`Module`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/module/struct.Module.html
-[`Terminator`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/terminator/enum.Terminator.html
-[`GlobalVariable`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/module/struct.GlobalVariable.html
-[`DebugLoc`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/debugloc/struct.DebugLoc.html
-[`HasDebugLoc`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/debugloc/trait.HasDebugLoc.html
-[`FunctionAttribute`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/function/enum.FunctionAttribute.html
-[`ParameterAttribute`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/function/enum.ParameterAttribute.html
-[`Type`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/types/enum.Type.html
-[`TypeRef`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/types/struct.TypeRef.html
-[`Typed`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/types/struct.TypeRef.html
-[`Constant`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/constant/enum.Constant.html
-[`ConstantRef`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/constant/struct.ConstantRef.html
-[`module.type_of()`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/module/struct.Module.html#method.type_of
-[`module.types.named_struct_def()`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/types/struct.Types.html#method.named_struct_def
+[`Instruction`]: https://docs.rs/llvm-ir/0.7.0/llvm_ir/instruction/enum.Instruction.html
+[`Add`]: https://docs.rs/llvm-ir/0.7.0/llvm_ir/instruction/struct.Add.html
+[`Call`]: https://docs.rs/llvm-ir/0.7.0/llvm_ir/instruction/struct.Call.html
+[`Store`]: https://docs.rs/llvm-ir/0.7.0/llvm_ir/instruction/struct.Store.html
+[`BasicBlock`]: https://docs.rs/llvm-ir/0.7.0/llvm_ir/basicblock/struct.BasicBlock.html
+[`Function`]: https://docs.rs/llvm-ir/0.7.0/llvm_ir/function/struct.Function.html
+[`Module`]: https://docs.rs/llvm-ir/0.7.0/llvm_ir/module/struct.Module.html
+[`Terminator`]: https://docs.rs/llvm-ir/0.7.0/llvm_ir/terminator/enum.Terminator.html
+[`GlobalVariable`]: https://docs.rs/llvm-ir/0.7.0/llvm_ir/module/struct.GlobalVariable.html
+[`DebugLoc`]: https://docs.rs/llvm-ir/0.7.0/llvm_ir/debugloc/struct.DebugLoc.html
+[`HasDebugLoc`]: https://docs.rs/llvm-ir/0.7.0/llvm_ir/debugloc/trait.HasDebugLoc.html
+[`FunctionAttribute`]: https://docs.rs/llvm-ir/0.7.0/llvm_ir/function/enum.FunctionAttribute.html
+[`ParameterAttribute`]: https://docs.rs/llvm-ir/0.7.0/llvm_ir/function/enum.ParameterAttribute.html
+[`Type`]: https://docs.rs/llvm-ir/0.7.0/llvm_ir/types/enum.Type.html
+[`TypeRef`]: https://docs.rs/llvm-ir/0.7.0/llvm_ir/types/struct.TypeRef.html
+[`Typed`]: https://docs.rs/llvm-ir/0.7.0/llvm_ir/types/struct.TypeRef.html
+[`Constant`]: https://docs.rs/llvm-ir/0.7.0/llvm_ir/constant/enum.Constant.html
+[`ConstantRef`]: https://docs.rs/llvm-ir/0.7.0/llvm_ir/constant/struct.ConstantRef.html
+[`module.type_of()`]: https://docs.rs/llvm-ir/0.7.0/llvm_ir/module/struct.Module.html#method.type_of
+[`module.types.named_struct_def()`]: https://docs.rs/llvm-ir/0.7.0/llvm_ir/types/struct.Types.html#method.named_struct_def
