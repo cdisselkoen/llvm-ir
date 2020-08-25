@@ -294,7 +294,7 @@ macro_rules! binop_same_type {
         impl Typed for $expr {
             fn get_type(&self, types: &Types) -> TypeRef {
                 let t = types.type_of(&self.get_operand0());
-                assert_eq!(t, types.type_of(&self.get_operand1()));
+                debug_assert_eq!(t, types.type_of(&self.get_operand1()));
                 t
             }
         }
@@ -563,7 +563,7 @@ impl_binop!(ShuffleVector);
 impl Typed for ShuffleVector {
     fn get_type(&self, types: &Types) -> TypeRef {
         let ty = types.type_of(&self.operand0);
-        assert_eq!(ty, types.type_of(&self.operand1));
+        debug_assert_eq!(ty, types.type_of(&self.operand1));
         match ty.as_ref() {
             Type::VectorType { element_type, .. } => match types.type_of(&self.mask).as_ref() {
                 Type::VectorType { num_elements, .. } => {
@@ -830,7 +830,7 @@ impl_binop!(ICmp);
 impl Typed for ICmp {
     fn get_type(&self, types: &Types) -> TypeRef {
         let ty = types.type_of(&self.operand0);
-        assert_eq!(ty, types.type_of(&self.operand1));
+        debug_assert_eq!(ty, types.type_of(&self.operand1));
         match ty.as_ref() {
             Type::VectorType { num_elements, .. } => types.vector_of(types.bool(), *num_elements),
             _ => types.bool(),
@@ -851,7 +851,7 @@ impl_binop!(FCmp);
 impl Typed for FCmp {
     fn get_type(&self, types: &Types) -> TypeRef {
         let ty = types.type_of(&self.operand0);
-        assert_eq!(ty, types.type_of(&self.operand1));
+        debug_assert_eq!(ty, types.type_of(&self.operand1));
         match ty.as_ref() {
             Type::VectorType { num_elements, .. } => types.vector_of(types.bool(), *num_elements),
             _ => types.bool(),
@@ -871,7 +871,7 @@ impl_constexpr!(Select, Select);
 impl Typed for Select {
     fn get_type(&self, types: &Types) -> TypeRef {
         let t = types.type_of(&self.true_value);
-        assert_eq!(t, types.type_of(&self.false_value));
+        debug_assert_eq!(t, types.type_of(&self.false_value));
         t
     }
 }

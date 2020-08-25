@@ -578,7 +578,7 @@ macro_rules! binop_same_type {
         impl Typed for $inst {
             fn get_type(&self, types: &Types) -> TypeRef {
                 let ty = types.type_of(self.get_operand0());
-                assert_eq!(ty, types.type_of(self.get_operand1()));
+                debug_assert_eq!(ty, types.type_of(self.get_operand1()));
                 ty
             }
         }
@@ -998,7 +998,7 @@ impl_hasresult!(ShuffleVector);
 impl Typed for ShuffleVector {
     fn get_type(&self, types: &Types) -> TypeRef {
         let ty = types.type_of(&self.operand0);
-        assert_eq!(ty, types.type_of(&self.operand1));
+        debug_assert_eq!(ty, types.type_of(&self.operand1));
         match ty.as_ref() {
             Type::VectorType { element_type, .. } => match types.type_of(&self.mask).as_ref() {
                 Type::VectorType { num_elements, .. } => {
@@ -1183,7 +1183,7 @@ impl_hasresult!(CmpXchg);
 impl Typed for CmpXchg {
     fn get_type(&self, types: &Types) -> TypeRef {
         let ty = types.type_of(&self.expected);
-        assert_eq!(ty, types.type_of(&self.replacement));
+        debug_assert_eq!(ty, types.type_of(&self.replacement));
         types.struct_of(vec![ty, types.bool()], false)
     }
 }
@@ -1507,7 +1507,7 @@ impl_hasresult!(ICmp);
 impl Typed for ICmp {
     fn get_type(&self, types: &Types) -> TypeRef {
         let ty = types.type_of(&self.operand0);
-        assert_eq!(ty, types.type_of(&self.operand1));
+        debug_assert_eq!(ty, types.type_of(&self.operand1));
         match ty.as_ref() {
             Type::VectorType { num_elements, .. } => types.vector_of(types.bool(), *num_elements),
             _ => types.bool(),
@@ -1534,7 +1534,7 @@ impl_hasresult!(FCmp);
 impl Typed for FCmp {
     fn get_type(&self, types: &Types) -> TypeRef {
         let ty = types.type_of(&self.operand0);
-        assert_eq!(ty, types.type_of(&self.operand1));
+        debug_assert_eq!(ty, types.type_of(&self.operand1));
         match ty.as_ref() {
             Type::VectorType { num_elements, .. } => types.vector_of(types.bool(), *num_elements),
             _ => types.bool(),
@@ -1575,7 +1575,7 @@ impl_hasresult!(Select);
 impl Typed for Select {
     fn get_type(&self, types: &Types) -> TypeRef {
         let t = types.type_of(&self.true_value);
-        assert_eq!(t, types.type_of(&self.false_value));
+        debug_assert_eq!(t, types.type_of(&self.false_value));
         t
     }
 }

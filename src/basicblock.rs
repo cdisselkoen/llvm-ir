@@ -44,7 +44,10 @@ impl BasicBlock {
         func_ctx: &mut FunctionContext,
     ) -> Self {
         let name = Name::name_or_num(unsafe { get_bb_name(bb) }, &mut func_ctx.ctr);
-        assert_eq!(&name, func_ctx.bb_names.get(&bb).expect("Expected to find bb name in func_ctx"));
+        debug_assert_eq!(
+            &name,
+            func_ctx.bb_names.get(&bb).expect("Expected to find bb in func_ctx.bb_names"),
+        );
         debug!("Processing a basic block named {:?}", name);
         Self {
             name,
