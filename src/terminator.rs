@@ -380,6 +380,7 @@ use crate::module::ModuleContext;
 use llvm_sys::LLVMOpcode;
 
 impl Terminator {
+    #[rustfmt::skip] // so we can keep all of the match arms consistent
     pub(crate) fn from_llvm_ref(
         term: LLVMValueRef,
         ctx: &mut ModuleContext,

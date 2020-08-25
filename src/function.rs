@@ -276,7 +276,8 @@ impl Function {
                     ty: ctx.types.type_from_llvm_ref(unsafe { LLVMTypeOf(p) }),
                     attributes: {
                         let param_num = i + 1; // https://docs.rs/llvm-sys/100.0.1/llvm_sys/type.LLVMAttributeIndex.html indicates that parameter numbers are 1-indexed here; see issue #4
-                        let num_attrs = unsafe { LLVMGetAttributeCountAtIndex(func, param_num as u32) };
+                        let num_attrs =
+                            unsafe { LLVMGetAttributeCountAtIndex(func, param_num as u32) };
                         let mut attrs: Vec<LLVMAttributeRef> =
                             Vec::with_capacity(num_attrs as usize);
                         unsafe {
@@ -327,7 +328,9 @@ impl Function {
             name: unsafe { get_value_name(func) },
             parameters,
             is_var_arg: unsafe { LLVMIsFunctionVarArg(functy) } != 0,
-            return_type: ctx.types.type_from_llvm_ref(unsafe { LLVMGetReturnType(functy) }),
+            return_type: ctx
+                .types
+                .type_from_llvm_ref(unsafe { LLVMGetReturnType(functy) }),
             basic_blocks: {
                 get_basic_blocks(func)
                     .map(|bb| BasicBlock::from_llvm_ref(bb, ctx, &mut func_ctx))
@@ -521,12 +524,15 @@ impl AttributesData {
             "sspstrong",
             "strictfp",
             "uwtable",
-        ].iter().map(|&attrname| {
+        ]
+        .iter()
+        .map(|&attrname| {
             let cstr = CString::new(attrname).unwrap();
             let kind = unsafe { LLVMGetEnumAttributeKindForName(cstr.as_ptr(), attrname.len()) };
             assert_ne!(kind, 0, "Function attribute {:?} not found", attrname);
             (kind, attrname.into())
-        }).collect();
+        })
+        .collect();
         let param_attribute_names = [
             "zeroext",
             "signext",
@@ -548,12 +554,15 @@ impl AttributesData {
             "swifterror",
             #[cfg(LLVM_VERSION_9_OR_GREATER)]
             "immarg",
-        ].iter().map(|&attrname| {
+        ]
+        .iter()
+        .map(|&attrname| {
             let cstr = CString::new(attrname).unwrap();
             let kind = unsafe { LLVMGetEnumAttributeKindForName(cstr.as_ptr(), attrname.len()) };
             assert_ne!(kind, 0, "Parameter attribute {:?} not found", attrname);
             (kind, attrname.into())
-        }).collect();
+        })
+        .collect();
         Self {
             function_attribute_names,
             param_attribute_names,
@@ -590,10 +599,7 @@ impl FunctionAttribute {
                         0xFFFF_FFFF => None,
                         val => Some(val),
                     };
-                    Self::AllocSize {
-                        elt_size,
-                        num_elts,
-                    }
+                    Self::AllocSize { elt_size, num_elts }
                 },
                 Some("alwaysinline") => Self::AlwaysInline,
                 Some("builtin") => Self::Builtin,

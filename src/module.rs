@@ -30,7 +30,6 @@ pub struct Module {
     // --TODO not yet implemented-- pub metadata_nodes: Vec<(MetadataNodeID, MetadataNode)>,
     // --TODO not yet implemented-- pub named_metadatas: Vec<NamedMetadata>,
     // --TODO not yet implemented-- pub comdats: Vec<Comdat>,
-
     /// Holds a reference to all of the `Type`s used in the `Module`, and
     /// facilitates lookups so you can get a `TypeRef` to the `Type` you want.
     pub types: Types,
@@ -288,8 +287,8 @@ pub enum AlignType {
 // ********* //
 
 use crate::constant::Constant;
-use crate::function::AttributesData;
 use crate::from_llvm::*;
+use crate::function::AttributesData;
 use llvm_sys::comdat::*;
 use llvm_sys::{
     LLVMDLLStorageClass,

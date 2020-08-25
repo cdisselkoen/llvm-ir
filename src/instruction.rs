@@ -2145,7 +2145,9 @@ impl Alloca {
     ) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 1);
         Self {
-            allocated_type: ctx.types.type_from_llvm_ref(unsafe { LLVMGetAllocatedType(inst) }),
+            allocated_type: ctx
+                .types
+                .type_from_llvm_ref(unsafe { LLVMGetAllocatedType(inst) }),
             num_elements: Operand::from_llvm_ref(
                 unsafe { LLVMGetOperand(inst, 0) }, // This is a guess. or maybe num_elements is included in allocated_type?
                 ctx,
