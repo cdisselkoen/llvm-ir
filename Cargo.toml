@@ -20,7 +20,8 @@ log = "0.4.0"
 env_logger = "0.6.2"
 
 [features]
-# You _must_ enable exactly one of the following features
+# Select the LLVM version to be compatible with.
+# You _must_ enable exactly one of the following features.
 llvm-8 = ["llvm-sys/llvm-8"]
 llvm-9 = ["llvm-sys/llvm-9"]
 llvm-10 = ["llvm-sys/llvm-10"]

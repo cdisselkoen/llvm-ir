@@ -148,6 +148,36 @@ Haskell to Rust of the data structures in `llvm-hs-pure` (with some tweaks).
 To a lesser extent, `llvm-ir` borrows from the larger [`llvm-hs` Haskell
 package] as well.
 
+## Changelog for 0.7.0
+
+`llvm-ir` 0.7.0 includes several fairly major changes from previous
+versions, which are outlined here.
+
+- LLVM versions are now selected via Cargo features. You must select exactly
+one of the features `llvm-8`, `llvm-9`, or `llvm-10`. Previously, we had the
+`0.6.x` branch for LLVM 10, the `0.5.x` branch for LLVM 9, and didn't
+officially support LLVM 8. Now, a single release supports LLVM 8, 9, and 10.
+- [`FunctionAttribute`] and [`ParameterAttribute`] are now proper enums with
+descriptive variants such as `NoInline`, `StackProtect`, etc. Previously,
+attributes were opaque numeric codes which were difficult to interpret.
+- Several changes to improve runtime performance and especially memory
+consumption, particularly when parsing large LLVM modules. This involves a
+number of breaking changes to the public interface:
+  - Most users of [`Type`] now own a [`TypeRef`] rather than a `Type` directly.
+  This includes `Operand::LocalOperand`, `GlobalVariable`, many variants of
+  `Instruction`, many variants of `Constant`, and some variants of `Type`
+  itself, among others. See the documentation on [`TypeRef`].
+  - Similarly, most users of [`Constant`] now own a [`ConstantRef`] rather
+  than a `Constant` directly. See the documentation on [`ConstantRef`].
+  - To get the type of [`Typed`] objects, the provided `.get_type()` method
+  now requires an additional argument; most users will probably prefer
+  [`module.type_of()`] (or `module.types.type_of()`).
+  - `Type::NamedStructType` no longer carries a weak reference to its inner
+  type; instead, you can look up the name using
+  [`module.types.named_struct_def()`] to get the definition for any named
+  struct type in the module.
+- The required Rust version increased from 1.36+ to 1.39+.
+
 [`llvm-sys`]: https://crates.io/crates/llvm-sys
 [`inkwell`]: https://github.com/TheDan64/inkwell
 [`llvm-hs-pure` Haskell package]: http://hackage.haskell.org/package/llvm-hs-pure
@@ -163,3 +193,12 @@ package] as well.
 [`GlobalVariable`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/module/struct.GlobalVariable.html
 [`DebugLoc`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/debugloc/struct.DebugLoc.html
 [`HasDebugLoc`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/debugloc/trait.HasDebugLoc.html
+[`FunctionAttribute`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/function/enum.FunctionAttribute.html
+[`ParameterAttribute`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/function/enum.ParameterAttribute.html
+[`Type`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/types/enum.Type.html
+[`TypeRef`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/types/struct.TypeRef.html
+[`Typed`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/types/struct.TypeRef.html
+[`Constant`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/constant/enum.Constant.html
+[`ConstantRef`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/constant/struct.ConstantRef.html
+[`module.type_of()`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/module/struct.Module.html#method.type_of
+[`module.types.named_struct_def()`]: https://cdisselkoen.github.io/llvm-ir/llvm_ir/types/struct.Types.html#method.named_struct_def
