@@ -116,7 +116,7 @@ impl TypeRef {
     }
 }
 
-/// The `Typed` trait is used for anything that has a [`Type`](../enum.Type.html).
+/// The `Typed` trait is used for anything that has a [`Type`](enum.Type.html).
 pub trait Typed {
     fn get_type(&self, types: &Types) -> TypeRef;
 }
