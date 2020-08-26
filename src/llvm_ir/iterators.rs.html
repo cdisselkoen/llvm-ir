@@ -264,13 +264,13 @@
     <span class="ident">p</span>: <span class="ident">Peekable</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span>,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span> <span class="ident">AllButLastIterator</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span> <span class="kw">where</span> <span class="ident">I</span>: <span class="ident">Iterator</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">I</span>: <span class="ident">Iterator</span><span class="op">&gt;</span> <span class="ident">AllButLastIterator</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">i</span>: <span class="ident">I</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> { <span class="ident">p</span>: <span class="ident">i</span>.<span class="ident">peekable</span>() }
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span> <span class="ident">Iterator</span> <span class="kw">for</span> <span class="ident">AllButLastIterator</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span> <span class="kw">where</span> <span class="ident">I</span>: <span class="ident">Iterator</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">I</span>: <span class="ident">Iterator</span><span class="op">&gt;</span> <span class="ident">Iterator</span> <span class="kw">for</span> <span class="ident">AllButLastIterator</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span> {
     <span class="kw">type</span> <span class="ident">Item</span> <span class="op">=</span> <span class="ident">I</span>::<span class="ident">Item</span>;
 
     <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Item</span><span class="op">&gt;</span> {
@@ -282,7 +282,7 @@
                 } <span class="kw">else</span> {
                     <span class="prelude-val">None</span>
                 }
-            }
+            },
         }
     }
 }
@@ -292,4 +292,4 @@
     <span class="kw">unsafe</span> { <span class="ident">LLVMIsDeclaration</span>(<span class="ident">func</span>) <span class="op">=</span><span class="op">=</span> <span class="number">0</span> } <span class="comment">// note that we inverted the logic: if it IsDeclaration then we return false</span>
 }
 </pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "llvm_ir";</script><script src="../../aliases.js"></script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>
+</section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "llvm_ir";</script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>

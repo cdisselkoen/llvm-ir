@@ -360,8 +360,17 @@
 <span id="360">360</span>
 <span id="361">361</span>
 <span id="362">362</span>
+<span id="363">363</span>
+<span id="364">364</span>
+<span id="365">365</span>
+<span id="366">366</span>
+<span id="367">367</span>
+<span id="368">368</span>
+<span id="369">369</span>
+<span id="370">370</span>
 </pre><div class="example-wrap"><pre class="rust ">
-<span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">HasResult</span>, <span class="ident">Instruction</span>, <span class="ident">Name</span>, <span class="ident">Operand</span>, <span class="ident">Type</span>, <span class="ident">Typed</span>};
+<span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">HasResult</span>, <span class="ident">Instruction</span>, <span class="ident">Name</span>, <span class="ident">Operand</span>, <span class="ident">TypeRef</span>, <span class="ident">Typed</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">Types</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">convert</span>::<span class="ident">TryFrom</span>;
 
 <span class="doccomment">/// Just the BinaryOps.  This ends up being better than a `&amp;dyn `[`BinaryOp`](../trait.BinaryOp.html) for various reasons.</span>
@@ -403,6 +412,7 @@
     <span class="ident">FPToSI</span>(<span class="kw">super</span>::<span class="ident">FPToSI</span>),
     <span class="ident">FPToUI</span>(<span class="kw">super</span>::<span class="ident">FPToUI</span>),
     <span class="ident">FPTrunc</span>(<span class="kw">super</span>::<span class="ident">FPTrunc</span>),
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_10_OR_GREATER</span>)]</span>
     <span class="ident">Freeze</span>(<span class="kw">super</span>::<span class="ident">Freeze</span>),
     <span class="ident">IntToPtr</span>(<span class="kw">super</span>::<span class="ident">IntToPtr</span>),
     <span class="ident">PtrToInt</span>(<span class="kw">super</span>::<span class="ident">PtrToInt</span>),
@@ -448,6 +458,7 @@
             <span class="ident">UnaryOp</span>::<span class="ident">FPToSI</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">into</span>(),
             <span class="ident">UnaryOp</span>::<span class="ident">FPToUI</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">into</span>(),
             <span class="ident">UnaryOp</span>::<span class="ident">FPTrunc</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">into</span>(),
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_10_OR_GREATER</span>)]</span>
             <span class="ident">UnaryOp</span>::<span class="ident">Freeze</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">into</span>(),
             <span class="ident">UnaryOp</span>::<span class="ident">IntToPtr</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">into</span>(),
             <span class="ident">UnaryOp</span>::<span class="ident">PtrToInt</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">into</span>(),
@@ -498,6 +509,7 @@
             <span class="ident">Instruction</span>::<span class="ident">FPToSI</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">UnaryOp</span>::<span class="ident">FPToSI</span>(<span class="ident">i</span>)),
             <span class="ident">Instruction</span>::<span class="ident">FPToUI</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">UnaryOp</span>::<span class="ident">FPToUI</span>(<span class="ident">i</span>)),
             <span class="ident">Instruction</span>::<span class="ident">FPTrunc</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">UnaryOp</span>::<span class="ident">FPTrunc</span>(<span class="ident">i</span>)),
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_10_OR_GREATER</span>)]</span>
             <span class="ident">Instruction</span>::<span class="ident">Freeze</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">UnaryOp</span>::<span class="ident">Freeze</span>(<span class="ident">i</span>)),
             <span class="ident">Instruction</span>::<span class="ident">IntToPtr</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">UnaryOp</span>::<span class="ident">IntToPtr</span>(<span class="ident">i</span>)),
             <span class="ident">Instruction</span>::<span class="ident">PtrToInt</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">UnaryOp</span>::<span class="ident">PtrToInt</span>(<span class="ident">i</span>)),
@@ -512,48 +524,49 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Typed</span> <span class="kw">for</span> <span class="ident">BinaryOp</span> {
-    <span class="kw">fn</span> <span class="ident">get_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Type</span> {
+    <span class="kw">fn</span> <span class="ident">get_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">types</span>: <span class="kw-2">&amp;</span><span class="ident">Types</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TypeRef</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">BinaryOp</span>::<span class="ident">Add</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_type</span>(),
-            <span class="ident">BinaryOp</span>::<span class="ident">Sub</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_type</span>(),
-            <span class="ident">BinaryOp</span>::<span class="ident">Mul</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_type</span>(),
-            <span class="ident">BinaryOp</span>::<span class="ident">UDiv</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_type</span>(),
-            <span class="ident">BinaryOp</span>::<span class="ident">SDiv</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_type</span>(),
-            <span class="ident">BinaryOp</span>::<span class="ident">URem</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_type</span>(),
-            <span class="ident">BinaryOp</span>::<span class="ident">SRem</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_type</span>(),
-            <span class="ident">BinaryOp</span>::<span class="ident">And</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_type</span>(),
-            <span class="ident">BinaryOp</span>::<span class="ident">Or</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_type</span>(),
-            <span class="ident">BinaryOp</span>::<span class="ident">Xor</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_type</span>(),
-            <span class="ident">BinaryOp</span>::<span class="ident">Shl</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_type</span>(),
-            <span class="ident">BinaryOp</span>::<span class="ident">LShr</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_type</span>(),
-            <span class="ident">BinaryOp</span>::<span class="ident">AShr</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_type</span>(),
-            <span class="ident">BinaryOp</span>::<span class="ident">FAdd</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_type</span>(),
-            <span class="ident">BinaryOp</span>::<span class="ident">FSub</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_type</span>(),
-            <span class="ident">BinaryOp</span>::<span class="ident">FMul</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_type</span>(),
-            <span class="ident">BinaryOp</span>::<span class="ident">FDiv</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_type</span>(),
-            <span class="ident">BinaryOp</span>::<span class="ident">FRem</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_type</span>(),
+            <span class="ident">BinaryOp</span>::<span class="ident">Add</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">types</span>.<span class="ident">type_of</span>(<span class="ident">i</span>),
+            <span class="ident">BinaryOp</span>::<span class="ident">Sub</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">types</span>.<span class="ident">type_of</span>(<span class="ident">i</span>),
+            <span class="ident">BinaryOp</span>::<span class="ident">Mul</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">types</span>.<span class="ident">type_of</span>(<span class="ident">i</span>),
+            <span class="ident">BinaryOp</span>::<span class="ident">UDiv</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">types</span>.<span class="ident">type_of</span>(<span class="ident">i</span>),
+            <span class="ident">BinaryOp</span>::<span class="ident">SDiv</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">types</span>.<span class="ident">type_of</span>(<span class="ident">i</span>),
+            <span class="ident">BinaryOp</span>::<span class="ident">URem</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">types</span>.<span class="ident">type_of</span>(<span class="ident">i</span>),
+            <span class="ident">BinaryOp</span>::<span class="ident">SRem</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">types</span>.<span class="ident">type_of</span>(<span class="ident">i</span>),
+            <span class="ident">BinaryOp</span>::<span class="ident">And</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">types</span>.<span class="ident">type_of</span>(<span class="ident">i</span>),
+            <span class="ident">BinaryOp</span>::<span class="ident">Or</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">types</span>.<span class="ident">type_of</span>(<span class="ident">i</span>),
+            <span class="ident">BinaryOp</span>::<span class="ident">Xor</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">types</span>.<span class="ident">type_of</span>(<span class="ident">i</span>),
+            <span class="ident">BinaryOp</span>::<span class="ident">Shl</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">types</span>.<span class="ident">type_of</span>(<span class="ident">i</span>),
+            <span class="ident">BinaryOp</span>::<span class="ident">LShr</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">types</span>.<span class="ident">type_of</span>(<span class="ident">i</span>),
+            <span class="ident">BinaryOp</span>::<span class="ident">AShr</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">types</span>.<span class="ident">type_of</span>(<span class="ident">i</span>),
+            <span class="ident">BinaryOp</span>::<span class="ident">FAdd</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">types</span>.<span class="ident">type_of</span>(<span class="ident">i</span>),
+            <span class="ident">BinaryOp</span>::<span class="ident">FSub</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">types</span>.<span class="ident">type_of</span>(<span class="ident">i</span>),
+            <span class="ident">BinaryOp</span>::<span class="ident">FMul</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">types</span>.<span class="ident">type_of</span>(<span class="ident">i</span>),
+            <span class="ident">BinaryOp</span>::<span class="ident">FDiv</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">types</span>.<span class="ident">type_of</span>(<span class="ident">i</span>),
+            <span class="ident">BinaryOp</span>::<span class="ident">FRem</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">types</span>.<span class="ident">type_of</span>(<span class="ident">i</span>),
         }
     }
 }
 
 <span class="kw">impl</span> <span class="ident">Typed</span> <span class="kw">for</span> <span class="ident">UnaryOp</span> {
-    <span class="kw">fn</span> <span class="ident">get_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Type</span> {
+    <span class="kw">fn</span> <span class="ident">get_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">types</span>: <span class="kw-2">&amp;</span><span class="ident">Types</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TypeRef</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">UnaryOp</span>::<span class="ident">AddrSpaceCast</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_type</span>(),
-            <span class="ident">UnaryOp</span>::<span class="ident">BitCast</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_type</span>(),
-            <span class="ident">UnaryOp</span>::<span class="ident">FNeg</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_type</span>(),
-            <span class="ident">UnaryOp</span>::<span class="ident">FPExt</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_type</span>(),
-            <span class="ident">UnaryOp</span>::<span class="ident">FPToSI</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_type</span>(),
-            <span class="ident">UnaryOp</span>::<span class="ident">FPToUI</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_type</span>(),
-            <span class="ident">UnaryOp</span>::<span class="ident">FPTrunc</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_type</span>(),
-            <span class="ident">UnaryOp</span>::<span class="ident">Freeze</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_type</span>(),
-            <span class="ident">UnaryOp</span>::<span class="ident">IntToPtr</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_type</span>(),
-            <span class="ident">UnaryOp</span>::<span class="ident">PtrToInt</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_type</span>(),
-            <span class="ident">UnaryOp</span>::<span class="ident">SExt</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_type</span>(),
-            <span class="ident">UnaryOp</span>::<span class="ident">SIToFP</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_type</span>(),
-            <span class="ident">UnaryOp</span>::<span class="ident">Trunc</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_type</span>(),
-            <span class="ident">UnaryOp</span>::<span class="ident">UIToFP</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_type</span>(),
-            <span class="ident">UnaryOp</span>::<span class="ident">ZExt</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_type</span>(),
+            <span class="ident">UnaryOp</span>::<span class="ident">AddrSpaceCast</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">types</span>.<span class="ident">type_of</span>(<span class="ident">i</span>),
+            <span class="ident">UnaryOp</span>::<span class="ident">BitCast</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">types</span>.<span class="ident">type_of</span>(<span class="ident">i</span>),
+            <span class="ident">UnaryOp</span>::<span class="ident">FNeg</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">types</span>.<span class="ident">type_of</span>(<span class="ident">i</span>),
+            <span class="ident">UnaryOp</span>::<span class="ident">FPExt</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">types</span>.<span class="ident">type_of</span>(<span class="ident">i</span>),
+            <span class="ident">UnaryOp</span>::<span class="ident">FPToSI</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">types</span>.<span class="ident">type_of</span>(<span class="ident">i</span>),
+            <span class="ident">UnaryOp</span>::<span class="ident">FPToUI</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">types</span>.<span class="ident">type_of</span>(<span class="ident">i</span>),
+            <span class="ident">UnaryOp</span>::<span class="ident">FPTrunc</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">types</span>.<span class="ident">type_of</span>(<span class="ident">i</span>),
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_10_OR_GREATER</span>)]</span>
+            <span class="ident">UnaryOp</span>::<span class="ident">Freeze</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">types</span>.<span class="ident">type_of</span>(<span class="ident">i</span>),
+            <span class="ident">UnaryOp</span>::<span class="ident">IntToPtr</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">types</span>.<span class="ident">type_of</span>(<span class="ident">i</span>),
+            <span class="ident">UnaryOp</span>::<span class="ident">PtrToInt</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">types</span>.<span class="ident">type_of</span>(<span class="ident">i</span>),
+            <span class="ident">UnaryOp</span>::<span class="ident">SExt</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">types</span>.<span class="ident">type_of</span>(<span class="ident">i</span>),
+            <span class="ident">UnaryOp</span>::<span class="ident">SIToFP</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">types</span>.<span class="ident">type_of</span>(<span class="ident">i</span>),
+            <span class="ident">UnaryOp</span>::<span class="ident">Trunc</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">types</span>.<span class="ident">type_of</span>(<span class="ident">i</span>),
+            <span class="ident">UnaryOp</span>::<span class="ident">UIToFP</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">types</span>.<span class="ident">type_of</span>(<span class="ident">i</span>),
+            <span class="ident">UnaryOp</span>::<span class="ident">ZExt</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">types</span>.<span class="ident">type_of</span>(<span class="ident">i</span>),
         }
     }
 }
@@ -594,6 +607,7 @@ impl HasMetadata for UnaryOp {
             UnaryOp::FPToSI(i) =&gt; i.get_metadata(),
             UnaryOp::FPToUI(i) =&gt; i.get_metadata(),
             UnaryOp::FPTrunc(i) =&gt; i.get_metadata(),
+            #[cfg(LLVM_VERSION_10_OR_GREATER)]
             UnaryOp::Freeze(i) =&gt; i.get_metadata(),
             UnaryOp::IntToPtr(i) =&gt; i.get_metadata(),
             UnaryOp::PtrToInt(i) =&gt; i.get_metadata(),
@@ -642,6 +656,7 @@ impl HasMetadata for UnaryOp {
             <span class="ident">UnaryOp</span>::<span class="ident">FPToSI</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_result</span>(),
             <span class="ident">UnaryOp</span>::<span class="ident">FPToUI</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_result</span>(),
             <span class="ident">UnaryOp</span>::<span class="ident">FPTrunc</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_result</span>(),
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_10_OR_GREATER</span>)]</span>
             <span class="ident">UnaryOp</span>::<span class="ident">Freeze</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_result</span>(),
             <span class="ident">UnaryOp</span>::<span class="ident">IntToPtr</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_result</span>(),
             <span class="ident">UnaryOp</span>::<span class="ident">PtrToInt</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_result</span>(),
@@ -712,6 +727,7 @@ impl HasMetadata for UnaryOp {
             <span class="ident">UnaryOp</span>::<span class="ident">FPToSI</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_operand</span>(),
             <span class="ident">UnaryOp</span>::<span class="ident">FPToUI</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_operand</span>(),
             <span class="ident">UnaryOp</span>::<span class="ident">FPTrunc</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_operand</span>(),
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_10_OR_GREATER</span>)]</span>
             <span class="ident">UnaryOp</span>::<span class="ident">Freeze</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_operand</span>(),
             <span class="ident">UnaryOp</span>::<span class="ident">IntToPtr</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_operand</span>(),
             <span class="ident">UnaryOp</span>::<span class="ident">PtrToInt</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">get_operand</span>(),
@@ -724,4 +740,4 @@ impl HasMetadata for UnaryOp {
     }
 }
 </pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../../";window.currentCrate = "llvm_ir";</script><script src="../../../aliases.js"></script><script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script><script defer src="../../../search-index.js"></script></body></html>
+</section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../../";window.currentCrate = "llvm_ir";</script><script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script><script defer src="../../../search-index.js"></script></body></html>

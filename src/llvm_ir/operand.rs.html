@@ -64,34 +64,28 @@
 <span id="64">64</span>
 <span id="65">65</span>
 <span id="66">66</span>
-<span id="67">67</span>
-<span id="68">68</span>
-<span id="69">69</span>
-<span id="70">70</span>
 </pre><div class="example-wrap"><pre class="rust ">
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">constant</span>::<span class="ident">Constant</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">name</span>::<span class="ident">Name</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::{<span class="ident">Type</span>, <span class="ident">Typed</span>};
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::<span class="ident">HashMap</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::{<span class="ident">TypeRef</span>, <span class="ident">Typed</span>, <span class="ident">Types</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">ConstantRef</span>, <span class="ident">Name</span>};
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Operand</span> {
     <span class="doccomment">/// e.g., `i32 %foo`</span>
     <span class="ident">LocalOperand</span> {
         <span class="ident">name</span>: <span class="ident">Name</span>,
-        <span class="ident">ty</span>: <span class="ident">Type</span>,
+        <span class="ident">ty</span>: <span class="ident">TypeRef</span>,
     },
     <span class="doccomment">/// includes [`GlobalReference`](../constant/enum.Constant.html#variant.GlobalReference) for things like `@foo`</span>
-    <span class="ident">ConstantOperand</span>(<span class="ident">Constant</span>),
+    <span class="ident">ConstantOperand</span>(<span class="ident">ConstantRef</span>),
     <span class="ident">MetadataOperand</span>, <span class="comment">// --TODO not yet implemented-- MetadataOperand(Box&lt;Metadata&gt;),</span>
 }
 
 <span class="kw">impl</span> <span class="ident">Typed</span> <span class="kw">for</span> <span class="ident">Operand</span> {
-    <span class="kw">fn</span> <span class="ident">get_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Type</span> {
+    <span class="kw">fn</span> <span class="ident">get_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">types</span>: <span class="kw-2">&amp;</span><span class="ident">Types</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TypeRef</span> {
         <span class="kw">match</span> <span class="self">self</span> {
             <span class="ident">Operand</span>::<span class="ident">LocalOperand</span> { <span class="ident">ty</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ty</span>.<span class="ident">clone</span>(),
-            <span class="ident">Operand</span>::<span class="ident">ConstantOperand</span>(<span class="ident">c</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">c</span>.<span class="ident">get_type</span>(),
-            <span class="ident">Operand</span>::<span class="ident">MetadataOperand</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Type</span>::<span class="ident">MetadataType</span>,
+            <span class="ident">Operand</span>::<span class="ident">ConstantOperand</span>(<span class="ident">c</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">types</span>.<span class="ident">type_of</span>(<span class="ident">c</span>),
+            <span class="ident">Operand</span>::<span class="ident">MetadataOperand</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">types</span>.<span class="ident">metadata_type</span>(),
         }
     }
 }
@@ -100,44 +94,42 @@
 <span class="comment">// from_llvm //</span>
 <span class="comment">// ********* //</span>
 
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">constant</span>::<span class="ident">GlobalNameMap</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">constant</span>::<span class="ident">Constant</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">from_llvm</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">TyNameMap</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">function</span>::<span class="ident">FunctionContext</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">module</span>::<span class="ident">ModuleContext</span>;
 <span class="kw">use</span> <span class="ident">llvm_sys</span>::<span class="ident">LLVMValueKind</span>;
-
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">type</span> <span class="ident">ValToNameMap</span> <span class="op">=</span> <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">LLVMValueRef</span>, <span class="ident">Name</span><span class="op">&gt;</span>;
 
 <span class="kw">impl</span> <span class="ident">Operand</span> {
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">from_llvm_ref</span>(
         <span class="ident">operand</span>: <span class="ident">LLVMValueRef</span>,
-        <span class="ident">vnmap</span>: <span class="kw-2">&amp;</span><span class="ident">ValToNameMap</span>,
-        <span class="ident">gnmap</span>: <span class="kw-2">&amp;</span><span class="ident">GlobalNameMap</span>,
-        <span class="ident">tnmap</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">TyNameMap</span>,
+        <span class="ident">ctx</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ModuleContext</span>,
+        <span class="ident">func_ctx</span>: <span class="kw-2">&amp;</span><span class="ident">FunctionContext</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">let</span> <span class="ident">constant</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">LLVMIsAConstant</span>(<span class="ident">operand</span>) };
         <span class="kw">if</span> <span class="op">!</span><span class="ident">constant</span>.<span class="ident">is_null</span>() {
-            <span class="ident">Operand</span>::<span class="ident">ConstantOperand</span>(<span class="ident">Constant</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">gnmap</span>, <span class="ident">tnmap</span>))
+            <span class="ident">Operand</span>::<span class="ident">ConstantOperand</span>(<span class="ident">Constant</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">constant</span>, <span class="ident">ctx</span>))
         } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">unsafe</span> {
             <span class="ident">LLVMGetValueKind</span>(<span class="ident">operand</span>) <span class="op">=</span><span class="op">=</span> <span class="ident">LLVMValueKind</span>::<span class="ident">LLVMMetadataAsValueValueKind</span>
         } {
             <span class="ident">Operand</span>::<span class="ident">MetadataOperand</span>
         } <span class="kw">else</span> {
             <span class="ident">Operand</span>::<span class="ident">LocalOperand</span> {
-                <span class="ident">name</span>: <span class="ident">vnmap</span>
+                <span class="ident">name</span>: <span class="ident">func_ctx</span>.<span class="ident">val_names</span>
                     .<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">operand</span>)
                     .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> {
-                        <span class="kw">let</span> <span class="ident">names</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">vnmap</span>.<span class="ident">values</span>().<span class="ident">collect</span>();
+                        <span class="kw">let</span> <span class="ident">names</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">func_ctx</span>.<span class="ident">val_names</span>.<span class="ident">values</span>().<span class="ident">collect</span>();
                         <span class="kw">let</span> <span class="ident">kind</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">LLVMGetValueKind</span>(<span class="ident">operand</span>) };
                         <span class="macro">panic</span><span class="macro">!</span>(
-                            <span class="string">&quot;Failed to find operand with kind {:?} in vnmap; have names {:?}&quot;</span>,
+                            <span class="string">&quot;Failed to find operand with kind {:?} in func_ctx.val_names; have names {:?}&quot;</span>,
                             <span class="ident">kind</span>, <span class="ident">names</span>
                         )
                     })
                     .<span class="ident">clone</span>(),
-                <span class="ident">ty</span>: <span class="ident">Type</span>::<span class="ident">from_llvm_ref</span>(<span class="kw">unsafe</span> { <span class="ident">LLVMTypeOf</span>(<span class="ident">operand</span>) }, <span class="ident">tnmap</span>),
+                <span class="ident">ty</span>: <span class="ident">ctx</span>.<span class="ident">types</span>.<span class="ident">type_from_llvm_ref</span>(<span class="kw">unsafe</span> { <span class="ident">LLVMTypeOf</span>(<span class="ident">operand</span>) }),
             }
         }
     }
 }
 </pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "llvm_ir";</script><script src="../../aliases.js"></script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>
+</section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "llvm_ir";</script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>

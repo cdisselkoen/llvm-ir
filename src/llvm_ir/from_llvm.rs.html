@@ -108,6 +108,13 @@
 <span id="108">108</span>
 <span id="109">109</span>
 <span id="110">110</span>
+<span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">iterators</span>::<span class="kw-2">*</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">llvm_sys</span>::<span class="ident">core</span>::<span class="kw-2">*</span>;
@@ -119,12 +126,13 @@
 <span class="comment">// partly because we intend to serialize/deserialize our ASTs eventually</span>
 <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">raw_to_string</span>(<span class="ident">raw</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">c_char</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
     <span class="kw">let</span> <span class="ident">cstr</span> <span class="op">=</span> <span class="ident">CStr</span>::<span class="ident">from_ptr</span>(<span class="ident">raw</span>);
-    <span class="ident">cstr</span>.<span class="ident">to_str</span>().<span class="ident">expect</span>(<span class="string">&quot;Failed to convert CStr&quot;</span>).<span class="ident">to_owned</span>()
+    <span class="ident">cstr</span>.<span class="ident">to_str</span>().<span class="ident">expect</span>(<span class="string">&quot;Failed to convert CStr&quot;</span>).<span class="ident">into</span>()
 }
 
 <span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">wrap</span> {
     (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">llvmFunc</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">argty</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">wrapperFunc</span>:<span class="ident">ident</span>) <span class="op">=</span><span class="op">&gt;</span> {
         <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">wrapperFunc</span>(<span class="ident">arg</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">argty</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+            <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="op">!</span><span class="ident">arg</span>.<span class="ident">is_null</span>());
             <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">llvmFunc</span>(<span class="ident">arg</span>);
             <span class="ident">raw_to_string</span>(<span class="ident">ptr</span>)
         }
@@ -134,6 +142,7 @@
 <span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">wrap_maybe_null</span> {
     (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">llvmFunc</span>: <span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">argty</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">wrapperFunc</span>:<span class="ident">ident</span>) <span class="op">=</span><span class="op">&gt;</span> {
         <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">wrapperFunc</span>(<span class="ident">arg</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">argty</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
+            <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="op">!</span><span class="ident">arg</span>.<span class="ident">is_null</span>());
             <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">llvmFunc</span>(<span class="ident">arg</span>);
             <span class="kw">if</span> <span class="ident">ptr</span>.<span class="ident">is_null</span>() {
                 <span class="prelude-val">None</span>
@@ -147,6 +156,7 @@
 <span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">wrap_with_len</span> {
     (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">llvmFunc</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">argty</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">wrapperFunc</span>:<span class="ident">ident</span>) <span class="op">=</span><span class="op">&gt;</span> {
         <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">wrapperFunc</span>(<span class="ident">arg</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">argty</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+            <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="op">!</span><span class="ident">arg</span>.<span class="ident">is_null</span>());
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">len</span> <span class="op">=</span> <span class="number">0</span>;
             <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">llvmFunc</span>(<span class="ident">arg</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">len</span>);
             <span class="ident">raw_to_string</span>(<span class="ident">ptr</span>)
@@ -154,9 +164,11 @@
     };
 }
 
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
 <span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">wrap_with_len_maybe_null</span> {
     (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">llvmFunc</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">argty</span>:<span class="ident">ty</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">wrapperFunc</span>:<span class="ident">ident</span>) <span class="op">=</span><span class="op">&gt;</span> {
         <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">wrapperFunc</span>(<span class="ident">arg</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">argty</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
+            <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="op">!</span><span class="ident">arg</span>.<span class="ident">is_null</span>());
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">len</span> <span class="op">=</span> <span class="number">0</span>;
             <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">llvmFunc</span>(<span class="ident">arg</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">len</span>);
             <span class="kw">if</span> <span class="ident">ptr</span>.<span class="ident">is_null</span>() {
@@ -182,7 +194,9 @@
 <span class="comment">// wrap!(LLVMPrintTypeToString, LLVMTypeRef, print_type_to_string);</span>
 <span class="macro">wrap_with_len</span><span class="macro">!</span>(<span class="ident">LLVMGetStringAttributeKind</span>, <span class="ident">LLVMAttributeRef</span>, <span class="ident">get_string_attribute_kind</span>);
 <span class="macro">wrap_with_len</span><span class="macro">!</span>(<span class="ident">LLVMGetStringAttributeValue</span>, <span class="ident">LLVMAttributeRef</span>, <span class="ident">get_string_attribute_value</span>);
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
 <span class="macro">wrap_with_len_maybe_null</span><span class="macro">!</span>(<span class="ident">LLVMGetDebugLocFilename</span>, <span class="ident">LLVMValueRef</span>, <span class="ident">get_debugloc_filename</span>);
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
 <span class="macro">wrap_with_len_maybe_null</span><span class="macro">!</span>(<span class="ident">LLVMGetDebugLocDirectory</span>, <span class="ident">LLVMValueRef</span>, <span class="ident">get_debugloc_directory</span>);
 
 <span class="comment">// Panics if the LLVMValueRef is not a basic block</span>
@@ -220,4 +234,4 @@
     }
 }
 </pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "llvm_ir";</script><script src="../../aliases.js"></script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>
+</section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "llvm_ir";</script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>

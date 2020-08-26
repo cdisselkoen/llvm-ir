@@ -115,8 +115,12 @@
 <span id="115">115</span>
 <span id="116">116</span>
 <span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
 </pre><div class="example-wrap"><pre class="rust ">
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">cmp</span>::{<span class="ident">PartialOrd</span>, <span class="ident">Ordering</span>};
+<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">cmp</span>::{<span class="ident">Ordering</span>, <span class="ident">PartialOrd</span>};
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fmt</span>;
 
 <span class="doccomment">/// Describes a &quot;debug location&quot; (source location)</span>
@@ -137,6 +141,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">PartialOrd</span> <span class="kw">for</span> <span class="ident">DebugLoc</span> {
+    <span class="attribute">#[<span class="ident">rustfmt</span>::<span class="ident">skip</span>]</span> <span class="comment">// self on one line, other on the next</span>
     <span class="kw">fn</span> <span class="ident">partial_cmp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Ordering</span><span class="op">&gt;</span> {
         <span class="comment">// compare in the order (directory, filename, line, col)</span>
         <span class="prelude-val">Some</span>(
@@ -147,6 +152,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Ord</span> <span class="kw">for</span> <span class="ident">DebugLoc</span> {
+    <span class="attribute">#[<span class="ident">rustfmt</span>::<span class="ident">skip</span>]</span> <span class="comment">// self on one line, other on the next</span>
     <span class="kw">fn</span> <span class="ident">cmp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Ordering</span> {
         <span class="comment">// compare in the order (directory, filename, line, col)</span>
         (<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">directory</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">filename</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">line</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">col</span>)
@@ -175,7 +181,9 @@
             <span class="prelude-val">Some</span>(<span class="ident">col</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;, col {}&quot;</span>, <span class="ident">col</span>),
             <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">String</span>::<span class="ident">new</span>(),
         };
-        <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{}{}{}, line {}{}&quot;</span>,
+        <span class="macro">write</span><span class="macro">!</span>(
+            <span class="ident">f</span>,
+            <span class="string">&quot;{}{}{}, line {}{}&quot;</span>,
             <span class="ident">pretty_directory</span>,
             <span class="kw">if</span> <span class="ident">need_slash</span> { <span class="string">&quot;/&quot;</span> } <span class="kw">else</span> { <span class="string">&quot;&quot;</span> },
             <span class="ident">pretty_filename</span>,
@@ -210,7 +218,7 @@
     <span class="doccomment">/// Returns `None` if the object does not have a `DebugLoc`</span>
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">from_llvm_no_col</span>(<span class="ident">value</span>: <span class="ident">LLVMValueRef</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="kw">unsafe</span> { <span class="ident">get_debugloc_filename</span>(<span class="ident">value</span>) } {
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,  <span class="comment">// if no filename, assume no debugloc. To my knowledge, everything with a debugloc has a filename.</span>
+            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>, <span class="comment">// if no filename, assume no debugloc. To my knowledge, everything with a debugloc has a filename.</span>
             <span class="prelude-val">Some</span>(<span class="ident">filename</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="self">Self</span> {
                 <span class="ident">line</span>: <span class="kw">unsafe</span> { <span class="ident">LLVMGetDebugLocLine</span>(<span class="ident">value</span>) },
                 <span class="ident">col</span>: <span class="prelude-val">None</span>,
@@ -234,4 +242,4 @@
     }
 }
 </pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "llvm_ir";</script><script src="../../aliases.js"></script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>
+</section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "llvm_ir";</script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>
