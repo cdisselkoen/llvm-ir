@@ -58,10 +58,7 @@ In either case, once you have a bitcode file, then you can use `llvm-ir`'s
 `Module::from_bc_path` function:
 ```rust
 use llvm_ir::Module;
-use std::path::Path;
-
-let path = Path::new("path/to/my/file.bc");
-let module = Module::from_bc_path(&path)?;
+let module = Module::from_bc_path("path/to/my/file.bc")?;
 ```
 
 ## Documentation
