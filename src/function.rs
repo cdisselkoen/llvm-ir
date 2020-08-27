@@ -244,6 +244,7 @@ pub type GroupID = usize;
 
 use crate::constant::Constant;
 use crate::from_llvm::*;
+use crate::llvm_sys::*;
 use crate::module::ModuleContext;
 use llvm_sys::comdat::*;
 use llvm_sys::{LLVMAttributeFunctionIndex, LLVMAttributeReturnIndex};

@@ -89,6 +89,7 @@ pub trait HasDebugLoc {
 // ********* //
 
 use crate::from_llvm::*;
+use crate::llvm_sys::*;
 
 impl DebugLoc {
     /// `value`: must represent an Instruction, Terminator, GlobalVariable, or Function

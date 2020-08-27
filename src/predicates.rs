@@ -36,6 +36,7 @@ pub enum FPPredicate {
 // from_llvm //
 // ********* //
 
+use crate::llvm_sys::*;
 use llvm_sys::LLVMIntPredicate;
 use llvm_sys::LLVMRealPredicate;
 

@@ -2,6 +2,7 @@ use crate::constant::ConstantRef;
 #[cfg(LLVM_VERSION_9_OR_GREATER)]
 use crate::debugloc::*;
 use crate::function::{Function, FunctionAttribute, GroupID};
+use crate::llvm_sys::*;
 use crate::name::Name;
 use crate::types::{Type, TypeRef, Typed, Types, TypesBuilder};
 use std::path::Path;

@@ -720,6 +720,7 @@ impl<K: Eq + Hash + Clone> TypeCache<K> {
 // ********* //
 
 use crate::from_llvm::*;
+use crate::llvm_sys::*;
 use llvm_sys::LLVMTypeKind;
 use std::collections::hash_map::Entry;
 

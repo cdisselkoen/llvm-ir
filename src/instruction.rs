@@ -1832,6 +1832,7 @@ pub struct LandingPadClause {}
 use crate::constant::Constant;
 use crate::from_llvm::*;
 use crate::function::FunctionContext;
+use crate::llvm_sys::*;
 use crate::module::ModuleContext;
 use crate::types::TypesBuilder;
 use llvm_sys::LLVMAtomicOrdering;

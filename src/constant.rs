@@ -880,7 +880,7 @@ impl Typed for Select {
 // from_llvm //
 // ********* //
 
-use crate::from_llvm::*;
+use crate::llvm_sys::*;
 use crate::module::ModuleContext;
 use std::collections::hash_map::Entry;
 

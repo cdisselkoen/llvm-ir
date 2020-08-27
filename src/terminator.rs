@@ -376,6 +376,7 @@ impl Typed for CallBr {
 
 use crate::from_llvm::*;
 use crate::function::FunctionContext;
+use crate::llvm_sys::*;
 use crate::module::ModuleContext;
 use llvm_sys::LLVMOpcode;
 

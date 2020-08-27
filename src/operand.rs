@@ -28,7 +28,7 @@ impl Typed for Operand {
 // ********* //
 
 use crate::constant::Constant;
-use crate::from_llvm::*;
+use crate::llvm_sys::*;
 use crate::function::FunctionContext;
 use crate::module::ModuleContext;
 use llvm_sys::LLVMValueKind;

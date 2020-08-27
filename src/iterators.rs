@@ -1,7 +1,6 @@
 //! Iterators over various module-level objects
 
-use llvm_sys::core::*;
-use llvm_sys::prelude::*;
+use crate::llvm_sys::*;
 use std::iter::Peekable;
 
 pub fn get_defined_functions(module: LLVMModuleRef) -> impl Iterator<Item = LLVMValueRef> {

@@ -33,6 +33,7 @@ impl BasicBlock {
 
 use crate::from_llvm::*;
 use crate::function::FunctionContext;
+use crate::llvm_sys::*;
 use crate::module::ModuleContext;
 use llvm_sys::LLVMOpcode;
 use llvm_sys::LLVMTypeKind::LLVMVoidTypeKind;

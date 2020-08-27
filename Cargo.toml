@@ -12,7 +12,9 @@ license = "MIT"
 build = "build.rs"
 
 [dependencies]
-llvm-sys = { package = "llvm-sys-featured", version = "0.1.0" }
+llvm-sys-80 = { package = "llvm-sys", version = "80.3.0", optional = true }
+llvm-sys-90 = { package = "llvm-sys", version = "90.2.0", optional = true }
+llvm-sys-100 = { package = "llvm-sys", version = "100.2.0", optional = true }
 either = "1.5.2"
 log = "0.4.0"
 
@@ -22,13 +24,37 @@ env_logger = "0.6.2"
 [features]
 # Select the LLVM version to be compatible with.
 # You _must_ enable exactly one of the following features.
-llvm-8 = ["llvm-sys/llvm-8"]
-llvm-9 = ["llvm-sys/llvm-9"]
-llvm-10 = ["llvm-sys/llvm-10"]
+llvm-8 = ["llvm-sys-80"]
+llvm-9 = ["llvm-sys-90"]
+llvm-10 = ["llvm-sys-100"]
 
-# Require an exact match between the LLVM version being used and the one
-# selected with the above features; see llvm-sys-featured for more details
-strict-versioning = ["llvm-sys/strict-versioning"]
+# We'd like to have a "strict-versioning" feature which enables the
+# corresponding feature in llvm-sys. "strict-versioning" requires an exact
+# match between the system LLVM version and the version selected with the above
+# features. For more information see the llvm-sys README.
+# Unfortunately, there is currently no way to enable a feature on an optional
+# dependency without also activating the optional dependency.
+# (See https://github.com/rust-lang/cargo/issues/3494.)
+# This means that a declaration like the following:
+# strict-versioning = ["llvm-sys-80/strict-versioning", "llvm-sys-90/strict-versioning", "llvm-sys-100/strict-versioning"]
+# would mean that llvm-sys-80, llvm-sys-90, and llvm-sys-100 would all be
+# enabled, along with their strict-versioning features.
+# This would increase build times as we're building unnecessary crates; and
+# more importantly, it would require the user to have all three of LLVM 8, 9,
+# and 10 available on their system.
+# Since previous versions of llvm-ir did have a "strict-versioning" feature, we
+# will still include a "strict-versioning" feature to avoid breaking
+# compatibility, but this feature currently has no effect.
+strict-versioning = []
+
+# Instead, as a workaround, we'll have a separate strict-versioning feature for
+# each LLVM version. This will enable the corresponding LLVM version feature,
+# and the "strict-versioning" feature on the corresponding llvm-sys dependency.
+# That means that we will require an exact match between the system LLVM
+# version and the LLVM version chosen here.
+llvm-8-strict = ["llvm-8", "llvm-sys-80/strict-versioning"]
+llvm-9-strict = ["llvm-9", "llvm-sys-90/strict-versioning"]
+llvm-10-strict = ["llvm-10", "llvm-sys-100/strict-versioning"]
 
 [package.metadata.docs.rs]
 # Generate docs.rs documentation with the llvm-10 feature

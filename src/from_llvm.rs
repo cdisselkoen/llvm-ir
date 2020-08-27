@@ -1,6 +1,5 @@
 pub use crate::iterators::*;
-pub use llvm_sys::core::*;
-pub use llvm_sys::prelude::*;
+use crate::llvm_sys::*;
 use std::ffi::CStr;
 use std::os::raw::c_char;
 
