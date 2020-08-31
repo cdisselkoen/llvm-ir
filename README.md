@@ -3,6 +3,20 @@
 [![Crates.io](http://meritbadge.herokuapp.com/llvm-ir)](https://crates.io/crates/llvm-ir)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/cdisselkoen/llvm-ir/master/LICENSE)
 
+## `0.6.x` branch is deprecated
+
+You're looking at the `0.6.x` branch of `llvm-ir`, which is now deprecated.
+Previously, the `0.6.x` branch supported LLVM 10, while the `0.5.x` branch
+supported LLVM 9.
+Now, all users are encouraged to use the latest releases (`0.7.x`), which
+support LLVM 8, 9, and 10 simultaneously via Cargo feature flags.
+
+The original README for `0.6.x` follows.
+
+-----
+
+## `llvm-ir` 0.6.x
+
 `llvm-ir` seeks to provide a Rust-y representation of LLVM IR.
 It's based on the idea that an LLVM [`Instruction`] shouldn't be an opaque
 datatype, but rather an `enum` with variants like [`Add`], [`Call`], and
@@ -32,8 +46,12 @@ But if you're looking for a nice read-oriented representation of LLVM IR for
 working in pure Rust, that's exactly what `llvm-ir` can provide today.
 
 ## Getting started
-This crate is on [crates.io](https://crates.io/crates/llvm-ir), so you can simply
-add it as a dependency in your `Cargo.toml`:
+You're looking at the `0.6.x` branch of `llvm-ir`.
+This branch is now deprecated -- see the deprecation notice at the top of
+this README.
+Nonetheless, the `0.6.x` releases are of course still on
+[crates.io](https://crates.io/crates/llvm-ir), so you can simply add the
+appropriate version as a dependency in your `Cargo.toml`:
 ```toml
 [dependencies]
 llvm-ir = "0.6.1"
@@ -68,19 +86,15 @@ The documentation includes links to relevant parts of the LLVM documentation
 when appropriate.
 
 ## Compatibility
-Depending on your LLVM version, you may need to use a different version of `llvm-ir`.
+You're looking at the `0.6.x` branch of `llvm-ir`, which only supports LLVM
+10.
 
-- LLVM 10: Supported by current crates.io releases (versions `0.6.x`) and the
-`master` branch.
-- LLVM 9: Supported by `0.5.x` crates.io releases and the `0.5.x` branch.
-This branch will receive bugfixes if necessary, but no new features or
-breaking API changes.
-- LLVM 8: Unofficially supported - it may work if you start from the `0.5.x`
-branch of `llvm-ir`, open the `llvm-ir` `Cargo.toml`, and change the
-`llvm-sys` dependency version from `90.0` to `80.1`.
-- LLVM 7 and earlier: Not supported.
+The latest releases (`0.7.x`) support LLVM 8, 9, and 10 simultaneously via
+Cargo feature flags.
 
-`llvm-ir` works on stable Rust, and requires Rust 1.36+.
+LLVM 7 and earlier are not supported.
+
+`llvm-ir` 0.6.x requires Rust 1.36+.
 
 ## Development/Debugging
 For development or debugging, you may want LLVM text-format (`*.ll`) files in
