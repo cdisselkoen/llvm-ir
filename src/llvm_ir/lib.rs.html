@@ -35,17 +35,19 @@
 <span id="35">35</span>
 <span id="36">36</span>
 <span id="37">37</span>
+<span id="38">38</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// this ensures that crate users generating docs with --no-deps will still</span>
 <span class="comment">// properly get links to the public docs for llvm-ir&#39;s types</span>
 <span class="comment">// it was especially necessary when the docs.rs docs weren&#39;t working for any</span>
 <span class="comment">// llvm-sys consumers; now that we have docs.rs as the official docs, I&#39;m not</span>
 <span class="comment">// sure if this is necessary or helpful anymore</span>
-<span class="attribute">#![<span class="ident">doc</span>(<span class="ident">html_root_url</span> <span class="op">=</span> <span class="string">&quot;https://docs.rs/llvm-ir/0.7.0&quot;</span>)]</span>
+<span class="attribute">#![<span class="ident">doc</span>(<span class="ident">html_root_url</span> <span class="op">=</span> <span class="string">&quot;https://docs.rs/llvm-ir/0.7.1&quot;</span>)]</span>
 
 <span class="attribute">#[<span class="ident">macro_use</span>]</span>
 <span class="kw">mod</span> <span class="ident">from_llvm</span>;
 <span class="kw">mod</span> <span class="ident">iterators</span>;
+<span class="kw">mod</span> <span class="ident">llvm_sys</span>;
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">basicblock</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">basicblock</span>::<span class="ident">BasicBlock</span>;

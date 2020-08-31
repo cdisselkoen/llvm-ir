@@ -552,11 +552,13 @@
 <span id="552">552</span>
 <span id="553">553</span>
 <span id="554">554</span>
+<span id="555">555</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">constant</span>::<span class="ident">ConstantRef</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">debugloc</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">function</span>::{<span class="ident">Function</span>, <span class="ident">FunctionAttribute</span>, <span class="ident">GroupID</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">llvm_sys</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">name</span>::<span class="ident">Name</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::{<span class="ident">Type</span>, <span class="ident">TypeRef</span>, <span class="ident">Typed</span>, <span class="ident">Types</span>, <span class="ident">TypesBuilder</span>};
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">path</span>::<span class="ident">Path</span>;

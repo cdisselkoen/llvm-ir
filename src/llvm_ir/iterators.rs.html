@@ -143,12 +143,10 @@
 <span id="143">143</span>
 <span id="144">144</span>
 <span id="145">145</span>
-<span id="146">146</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Iterators over various module-level objects</span>
 
-<span class="kw">use</span> <span class="ident">llvm_sys</span>::<span class="ident">core</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident">llvm_sys</span>::<span class="ident">prelude</span>::<span class="kw-2">*</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">llvm_sys</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">iter</span>::<span class="ident">Peekable</span>;
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_defined_functions</span>(<span class="ident">module</span>: <span class="ident">LLVMModuleRef</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">impl</span> <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">LLVMValueRef</span><span class="op">&gt;</span> {

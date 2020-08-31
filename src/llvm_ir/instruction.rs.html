@@ -2731,6 +2731,7 @@
 <span id="2731">2731</span>
 <span id="2732">2732</span>
 <span id="2733">2733</span>
+<span id="2734">2734</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">constant</span>::<span class="ident">ConstantRef</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
@@ -4566,6 +4567,7 @@ pub enum LandingPadClause {
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">constant</span>::<span class="ident">Constant</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">from_llvm</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">function</span>::<span class="ident">FunctionContext</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">llvm_sys</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">module</span>::<span class="ident">ModuleContext</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::<span class="ident">TypesBuilder</span>;
 <span class="kw">use</span> <span class="ident">llvm_sys</span>::<span class="ident">LLVMAtomicOrdering</span>;

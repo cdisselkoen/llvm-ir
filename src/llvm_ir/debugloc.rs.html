@@ -119,6 +119,7 @@
 <span id="119">119</span>
 <span id="120">120</span>
 <span id="121">121</span>
+<span id="122">122</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">cmp</span>::{<span class="ident">Ordering</span>, <span class="ident">PartialOrd</span>};
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fmt</span>;
@@ -211,6 +212,7 @@
 <span class="comment">// ********* //</span>
 
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">from_llvm</span>::<span class="kw-2">*</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">llvm_sys</span>::<span class="kw-2">*</span>;
 
 <span class="kw">impl</span> <span class="ident">DebugLoc</span> {
     <span class="doccomment">/// `value`: must represent an Instruction, Terminator, GlobalVariable, or Function</span>
