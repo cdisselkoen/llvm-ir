@@ -61,6 +61,11 @@ use llvm_ir::Module;
 let module = Module::from_bc_path("path/to/my/file.bc")?;
 ```
 
+You may also be interested in the [`llvm-ir-analysis`] crate, which computes
+control-flow graphs, dominator trees, etc for `llvm-ir` functions.
+
+[`llvm-ir-analysis`]: https://crates.io/crates/llvm-ir-analysis
+
 ## Documentation
 Documentation for `llvm-ir` can be found [on docs.rs](https://docs.rs/llvm-ir),
 or of course you can generate local documentation with `cargo doc --open`.
