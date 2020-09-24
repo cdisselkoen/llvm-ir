@@ -1,8 +1,10 @@
 use either::Either;
+use itertools::Itertools;
 use llvm_ir::function::{FunctionAttribute, ParameterAttribute};
 use llvm_ir::instruction;
+use llvm_ir::module::{Alignment, Endianness, Mangling, PointerLayout};
 use llvm_ir::terminator;
-use llvm_ir::types::NamedStructDef;
+use llvm_ir::types::{FPType, NamedStructDef};
 #[cfg(LLVM_VERSION_9_OR_GREATER)]
 use llvm_ir::HasDebugLoc;
 use llvm_ir::Instruction;
@@ -1131,4 +1133,59 @@ fn param_and_func_attributes() {
     let f = module.get_func_by_name("f.strictfp").unwrap();
     assert_eq!(f.function_attributes.len(), 1);
     assert_eq!(f.function_attributes[0], FunctionAttribute::StrictFP);
+}
+
+#[test]
+fn datalayouts() {
+    init_logging();
+    let path = llvm_bc_dir().join("hello.bc");
+    let module = Module::from_bc_path(&path).expect("Failed to parse module");
+    let data_layout = &module.data_layout;
+
+    #[cfg(LLVM_VERSION_10_OR_GREATER)] {
+        assert_eq!(&data_layout.layout_str, "e-m:o-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128");
+        assert_eq!(&data_layout.endianness, &Endianness::LittleEndian);
+        assert_eq!(&data_layout.mangling, &Some(Mangling::MachO));
+        assert_eq!(data_layout.alignments.ptr_alignment(270), &PointerLayout { size: 32, alignment: Alignment { abi: 32, pref: 32 }, index_size: 32 });
+        assert_eq!(data_layout.alignments.ptr_alignment(271), &PointerLayout { size: 32, alignment: Alignment { abi: 32, pref: 32 }, index_size: 32 });
+        assert_eq!(data_layout.alignments.ptr_alignment(272), &PointerLayout { size: 64, alignment: Alignment { abi: 64, pref: 64 }, index_size: 64 });
+        assert_eq!(data_layout.alignments.ptr_alignment(0), &PointerLayout { size: 64, alignment: Alignment { abi: 64, pref: 64 }, index_size: 64 });
+        assert_eq!(data_layout.alignments.ptr_alignment(33), &PointerLayout { size: 64, alignment: Alignment { abi: 64, pref: 64 }, index_size: 64 });
+        assert_eq!(data_layout.alignments.int_alignment(64), &Alignment { abi: 64, pref: 64 });
+        assert_eq!(data_layout.alignments.int_alignment(7), &Alignment { abi: 8, pref: 8 });
+        assert_eq!(data_layout.alignments.int_alignment(26), &Alignment { abi: 32, pref: 32 });
+        assert_eq!(data_layout.alignments.int_alignment(123456), &Alignment { abi: 64, pref: 64 });
+        assert_eq!(data_layout.alignments.fp_alignment(FPType::Double), &Alignment { abi: 64, pref: 64 });
+        assert_eq!(data_layout.alignments.fp_alignment(FPType::X86_FP80), &Alignment { abi: 128, pref: 128 });
+        assert_eq!(data_layout.native_int_widths.as_ref().unwrap().iter().copied().sorted().collect::<Vec<_>>(), vec![8, 16, 32, 64]);
+        assert_eq!(data_layout.stack_alignment, Some(128));
+    }
+    #[cfg(LLVM_VERSION_9_OR_LOWER)] {
+        assert_eq!(&data_layout.layout_str, "e-m:o-i64:64-f80:128-n8:16:32:64-S128");
+        assert_eq!(&data_layout.endianness, &Endianness::LittleEndian);
+        assert_eq!(&data_layout.mangling, &Some(Mangling::MachO));
+        assert_eq!(data_layout.alignments.ptr_alignment(0), &PointerLayout { size: 64, alignment: Alignment { abi: 64, pref: 64 }, index_size: 64 });
+        assert_eq!(data_layout.alignments.ptr_alignment(33), &PointerLayout { size: 64, alignment: Alignment { abi: 64, pref: 64 }, index_size: 64 });
+        assert_eq!(data_layout.alignments.int_alignment(64), &Alignment { abi: 64, pref: 64 });
+        assert_eq!(data_layout.alignments.int_alignment(7), &Alignment { abi: 8, pref: 8 });
+        assert_eq!(data_layout.alignments.int_alignment(26), &Alignment { abi: 32, pref: 32 });
+        assert_eq!(data_layout.alignments.int_alignment(123456), &Alignment { abi: 64, pref: 64 });
+        assert_eq!(data_layout.alignments.fp_alignment(FPType::Double), &Alignment { abi: 64, pref: 64 });
+        assert_eq!(data_layout.alignments.fp_alignment(FPType::X86_FP80), &Alignment { abi: 128, pref: 128 });
+        assert_eq!(data_layout.native_int_widths.as_ref().unwrap().iter().copied().sorted().collect::<Vec<_>>(), vec![8, 16, 32, 64]);
+        assert_eq!(data_layout.stack_alignment, Some(128));
+    }
+
+    assert_eq!(
+        data_layout.alignments.type_alignment(&module.types.int(26)),
+        &Alignment { abi: 32, pref: 32 }
+    );
+    assert_eq!(
+        data_layout.alignments.type_alignment(&module.types.pointer_in_addr_space(module.types.int(32), 2)),
+        &Alignment { abi: 64, pref: 64 }
+    );
+    assert_eq!(
+        data_layout.alignments.type_alignment(&module.types.pointer_to(module.types.func_type(module.types.void(), vec![], false))),
+        &Alignment { abi: 64, pref: 64 }
+    )
 }

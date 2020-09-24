@@ -4,7 +4,8 @@ use crate::debugloc::*;
 use crate::function::{Function, FunctionAttribute, GroupID};
 use crate::llvm_sys::*;
 use crate::name::Name;
-use crate::types::{Type, TypeRef, Typed, Types, TypesBuilder};
+use crate::types::{FPType, Type, TypeRef, Typed, Types, TypesBuilder};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::Path;
 
 /// See [LLVM 10 docs on Module Structure](https://releases.llvm.org/10.0.0/docs/LangRef.html#module-structure)
@@ -15,7 +16,7 @@ pub struct Module {
     /// See [LLVM 10 docs on Source Filename](https://releases.llvm.org/10.0.0/docs/LangRef.html#source-filename)
     pub source_file_name: String,
     /// See [LLVM 10 docs on Data Layout](https://releases.llvm.org/10.0.0/docs/LangRef.html#data-layout)
-    pub data_layout: String, // llvm-hs parses this String into Option<DataLayout> with a custom parser
+    pub data_layout: DataLayout,
     /// See [LLVM 10 docs on Target Triple](https://releases.llvm.org/10.0.0/docs/LangRef.html#target-triple)
     pub target_triple: Option<String>,
     /// Functions which are defined (not just declared) in this `Module`.
@@ -241,47 +242,220 @@ pub enum SelectionKind {
     SameSize,
 }
 
-/* llvm-hs parses the data_layout into basically this structure
-
+/// See [LLVM 10 docs on Data Layout](https://releases.llvm.org/10.0.0/docs/LangRef.html#data-layout)
 #[derive(Clone, Debug)]
 pub struct DataLayout {
+    /// The data layout in string form, as described in the Data Layout docs linked above
+    pub layout_str: String,
+    /// Little-endian or big-endian?
     pub endianness: Endianness,
-    pub mangling: Option<Mangling>,
+    /// Natural alignment of the stack, in bits. For more, see the Data Layout docs linked above
     pub stack_alignment: Option<u32>,
-    pub pointer_layouts: HashMap<AddrSpace, (u32, AlignmentInfo)>,
-    pub type_layouts: HashMap<(AlignType, u32), AlignmentInfo>,
-    pub aggregate_layout: AlignmentInfo,
-    pub native_sizes: Option<HashSet<u32>>,
+    /// Address space for program memory
+    pub program_address_space: AddrSpace,
+    /// Address space for objects created by `alloca`
+    pub alloca_address_space: AddrSpace,
+    /// Alignment for various types in memory
+    pub alignments: Alignments,
+    /// What mangling will be applied when the LLVM module is compiled to machine code
+    pub mangling: Option<Mangling>,
+    /// Native integer width(s) for the target CPU
+    pub native_int_widths: Option<HashSet<u32>>,
+    /// Address spaces with non-integral pointer types
+    pub non_integral_ptr_types: HashSet<AddrSpace>,
 }
+
+impl PartialEq for DataLayout {
+    fn eq(&self, other: &Self) -> bool {
+        // The layout string fully specifies all the other information
+        &self.layout_str == &other.layout_str
+    }
+}
+
+impl Eq for DataLayout {}
 
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub enum Endianness {
+    /// Least-significant bits are stored in the lowest address location
     LittleEndian,
+    /// Most-significant bits are stored in the lowest address location
     BigEndian,
 }
 
+/// Alignment details for a type.
+/// See [LLVM 10 docs on Data Layout](https://releases.llvm.org/10.0.0/docs/LangRef.html#data-layout)
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct Alignment {
+    /// Minimum alignment (in bits) per the ABI
+    pub abi: u32,
+    /// Preferred alignment (in bits)
+    pub pref: u32,
+}
+
+/// Alignment details for function pointers.
+/// See [LLVM 10 docs on Data Layout](https://releases.llvm.org/10.0.0/docs/LangRef.html#data-layout)
+#[cfg(LLVM_VERSION_9_OR_GREATER)]
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct FunctionPtrAlignment {
+    /// If `true`, function pointer alignment is independent of function alignment.
+    /// If `false`, function pointer alignment is a multiple of function alignment.
+    pub independent: bool,
+    /// Minimum alignment (in bits) per the ABI
+    pub abi: u32,
+}
+
+/// Layout details for pointers (other than function pointers).
+/// See [LLVM 10 docs on Data Layout](https://releases.llvm.org/10.0.0/docs/LangRef.html#data-layout)
+#[derive(Clone, PartialEq, Eq, Debug)]
+pub struct PointerLayout {
+    /// Size of a pointer in bits
+    pub size: u32,
+    /// Alignment of a pointer
+    pub alignment: Alignment,
+    /// Size of an index used for address calculation, in bits
+    pub index_size: u32,
+}
+
+/// Alignment for various types in memory.
+/// See [LLVM 10 docs on Data Layout](https://releases.llvm.org/10.0.0/docs/LangRef.html#data-layout)
+#[derive(Clone, Debug)]
+pub struct Alignments {
+    /// Explicit alignments for various sizes of integers (in bits). Sizes not
+    /// specified here are determined according to the rules described in the
+    /// Data Layout docs.
+    int_alignments: BTreeMap<u32, Alignment>,
+    /// Explicit alignments for various sizes of vectors (in bits). Sizes not
+    /// specified here are determined according to the rules described in the
+    /// Data Layout docs.
+    vec_alignments: BTreeMap<u32, Alignment>,
+    /// Alignment for floating-point types, by size (in bits)
+    fp_alignments: HashMap<u32, Alignment>,
+    /// Alignment for aggregate types (structs, arrays)
+    agg_alignment: Alignment,
+    /// Alignment for function pointers
+    #[cfg(LLVM_VERSION_9_OR_GREATER)]
+    fptr_alignment: FunctionPtrAlignment,
+    /// Alignment for function pointers, as an `Alignment`
+    #[cfg(LLVM_VERSION_9_OR_GREATER)]
+    fptr_alignment_as_alignment: Alignment,
+    /// Layout details for (non-function-pointer) pointers, by address space
+    pointer_layouts: HashMap<AddrSpace, PointerLayout>,
+}
+
+impl Alignments {
+    /// Alignment of the given type (in bits)
+    pub fn type_alignment(&self, ty: &Type) -> &Alignment {
+        match ty {
+            Type::IntegerType { bits } => self.int_alignment(*bits),
+            Type::VectorType { element_type, num_elements } => {
+                let element_size_bits = match element_type.as_ref() {
+                    Type::IntegerType { bits } => *bits,
+                    Type::FPType(fpt) => Self::fpt_size(*fpt),
+                    ty => panic!("Didn't expect a vector with element type {:?}", ty),
+                };
+                self.vec_alignment(element_size_bits * (*num_elements as u32))
+            }
+            Type::FPType(fpt) => self.fp_alignment(*fpt),
+            Type::StructType { .. }
+            | Type::NamedStructType { .. }
+            | Type::ArrayType { .. } => self.agg_alignment(),
+            Type::PointerType { pointee_type, addr_space } => match pointee_type.as_ref() {
+                #[cfg(LLVM_VERSION_9_OR_GREATER)]
+                Type::FuncType { .. } => &self.fptr_alignment_as_alignment,
+                _ => &self.ptr_alignment(*addr_space).alignment,
+            }
+            _ => panic!("Don't know how to get the alignment of {:?}", ty),
+        }
+    }
+
+    /// Alignment of the integer type of the given size (in bits)
+    pub fn int_alignment(&self, size: u32) -> &Alignment {
+        // If we have an explicit entry for this size, use that
+        if let Some(alignment) = self.int_alignments.get(&size) {
+            return alignment;
+        }
+        // Find the next largest size that has an explicit entry and use that
+        let next_largest_entry = self.int_alignments
+            .iter()
+            .filter(|(&k, _)| k > size)
+            .next();
+        match next_largest_entry {
+            Some((_, alignment)) => alignment,
+            None => {
+                // `size` is larger than any explicit entry: use the largest explicit entry
+                self.int_alignments.values().rev().next().expect("Should have at least one explicit entry")
+            }
+        }
+    }
+
+    /// Alignment of the vector type of the given total size (in bits)
+    pub fn vec_alignment(&self, size: u32) -> &Alignment {
+        // If we have an explicit entry for this size, use that
+        if let Some(alignment) = self.vec_alignments.get(&size) {
+            return alignment;
+        }
+        // Find the next smaller size that has an explicit entry and use that
+        let next_smaller_entry = self.vec_alignments
+            .iter()
+            .filter(|(&k, _)| k < size)
+            .next();
+        match next_smaller_entry {
+            Some((_, alignment)) => alignment,
+            None => {
+                // `size` is smaller than any explicit entry. LLVM docs seem to
+                // be not clear what happens here, I assume we just use the
+                // smallest explicit entry
+                self.vec_alignments.values().next().expect("Should have at least one explicit entry")
+            }
+        }
+    }
+
+    /// Alignment of the given floating-point type
+    pub fn fp_alignment(&self, fpt: FPType) -> &Alignment {
+        self.fp_alignments.get(&Self::fpt_size(fpt)).unwrap_or_else(|| panic!("No alignment information for {:?} - does the target support that type?", fpt))
+    }
+
+    /// Alignment of aggregate types (structs, arrays)
+    pub fn agg_alignment(&self) -> &Alignment {
+        &self.agg_alignment
+    }
+
+    /// Alignment of function pointers
+    #[cfg(LLVM_VERSION_9_OR_GREATER)]
+    pub fn fptr_alignment(&self) -> &FunctionPtrAlignment {
+        &self.fptr_alignment
+    }
+
+    /// Alignment of (non-function-pointer) pointers in the given address space
+    pub fn ptr_alignment(&self, addr_space: AddrSpace) -> &PointerLayout {
+        match self.pointer_layouts.get(&addr_space) {
+            Some(layout) => layout,
+            None => self.pointer_layouts.get(&0).expect("Should have a pointer layout for address space 0"),
+        }
+    }
+
+    /// for internal use: size of an `FPType`, in bits
+    fn fpt_size(fpt: FPType) -> u32 {
+        match fpt {
+            FPType::Half => 16,
+            FPType::Single => 32,
+            FPType::Double => 64,
+            FPType::FP128 => 128,
+            FPType::X86_FP80 => 80,
+            FPType::PPC_FP128 => 128,
+        }
+    }
+}
+
+/// See [LLVM 10 docs on Data Layout](https://releases.llvm.org/10.0.0/docs/LangRef.html#data-layout)
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub enum Mangling {
     ELF,
     MIPS,
     MachO,
+    WindowsX86COFF,
     WindowsCOFF,
 }
-
-#[derive(PartialEq, Eq, Clone, Debug)]
-pub struct AlignmentInfo {
-    pub abi_alignment: u32,
-    pub preferred_alignment: u32,
-}
-
-#[derive(PartialEq, Eq, Clone, Copy, Debug, Hash)]
-pub enum AlignType {
-    Integer,
-    Vector,
-    Float,
-}
-
-*/
 
 // ********* //
 // from_llvm //
@@ -298,7 +472,6 @@ use llvm_sys::{
     LLVMUnnamedAddr,
     LLVMVisibility,
 };
-use std::collections::HashMap;
 
 /// This struct contains data used when translating llvm-sys objects into our
 /// data structures
@@ -356,7 +529,7 @@ impl Module {
         Self {
             name: unsafe { get_module_identifier(module) },
             source_file_name: unsafe { get_source_file_name(module) },
-            data_layout: unsafe { get_data_layout_str(module) },
+            data_layout: DataLayout::from_module_ref(module),
             target_triple: unsafe { get_target(module) },
             functions: get_defined_functions(module)
                 .map(|f| Function::from_llvm_ref(f, &mut ctx))
@@ -550,6 +723,222 @@ impl SelectionKind {
             LLVMLargestComdatSelectionKind => SelectionKind::Largest,
             LLVMNoDuplicatesComdatSelectionKind => SelectionKind::NoDuplicates,
             LLVMSameSizeComdatSelectionKind => SelectionKind::SameSize,
+        }
+    }
+}
+
+impl Default for DataLayout {
+    fn default() -> Self {
+        Self {
+            layout_str: String::new(),
+            endianness: Endianness::BigEndian,
+            stack_alignment: None,
+            program_address_space: 0,
+            alloca_address_space: 0,
+            alignments: Alignments::default(),
+            mangling: None,
+            native_int_widths: None,
+            non_integral_ptr_types: HashSet::new(),
+        }
+    }
+}
+
+impl DataLayout {
+    pub(crate) fn from_module_ref(module: LLVMModuleRef) -> Self {
+        let layout_str = unsafe { get_data_layout_str(module) };
+        let mut data_layout = DataLayout::default();
+        data_layout.layout_str = layout_str;
+        for spec in data_layout.layout_str.split('-') {
+            if spec == "E" {
+                data_layout.endianness = Endianness::BigEndian;
+            } else if spec == "e" {
+                data_layout.endianness = Endianness::LittleEndian;
+            } else if spec.starts_with('S') {
+                data_layout.stack_alignment = Some(spec[1..].parse().expect("datalayout 'S': Failed to parse"));
+            } else if spec.starts_with('P') {
+                data_layout.program_address_space = spec[1..].parse().expect("datalayout 'P': Failed to parse");
+            } else if spec.starts_with('A') {
+                data_layout.alloca_address_space = spec[1..].parse().expect("datalayout 'A': Failed to parse");
+            } else if spec.starts_with('p') {
+                let mut chunks = spec.split(':');
+                let first_chunk = chunks.next().unwrap();
+                let addr_space: AddrSpace = if first_chunk == "p" { 0 } else { first_chunk[1..].parse().expect("datalayout 'p': Failed to parse address space") };
+                let second_chunk = chunks.next().expect("datalayout 'p' spec should have a size chunk");
+                let size: u32 = second_chunk.parse().expect("datalayout 'p': Failed to parse pointer size");
+                let third_chunk = chunks.next().expect("datalayout 'p' spec should have an abi chunk");
+                let abi: u32 = third_chunk.parse().expect("datalayout 'p': Failed to parse abi");
+                let pref: u32 = if let Some(fourth_chunk) = chunks.next() {
+                    fourth_chunk.parse().expect("datalayout 'p': Failed to parse pref")
+                } else {
+                    abi
+                };
+                let idx: u32 = if let Some(fifth_chunk) = chunks.next() {
+                    fifth_chunk.parse().expect("datalayout 'p': Failed to parse idx")
+                } else {
+                    size
+                };
+                assert!(chunks.next().is_none(), "datalayout 'p': Too many chunks");
+                data_layout.alignments.pointer_layouts.insert(
+                    addr_space,
+                    PointerLayout {
+                        size,
+                        alignment: Alignment { abi, pref },
+                        index_size: idx,
+                    },
+                );
+            } else if spec.starts_with('i') {
+                let mut chunks = spec.split(':');
+                let first_chunk = chunks.next().unwrap();
+                let size: u32 = first_chunk[1..].parse().expect("datalayout 'i': Failed to parse size");
+                let second_chunk = chunks.next().expect("datalayout 'i' spec should have an abi chunk");
+                let abi: u32 = second_chunk.parse().expect("datalayout 'i': Failed to parse abi");
+                let pref = if let Some(third_chunk) = chunks.next() {
+                    third_chunk.parse().expect("datalayout 'i': Failed to parse pref")
+                } else {
+                    abi
+                };
+                assert!(chunks.next().is_none(), "datalayout 'i': Too many chunks");
+                data_layout.alignments.int_alignments.insert(size, Alignment { abi, pref });
+            } else if spec.starts_with('v') {
+                let mut chunks = spec.split(':');
+                let first_chunk = chunks.next().unwrap();
+                let size: u32 = first_chunk[1..].parse().expect("datalayout 'v': Failed to parse size");
+                let second_chunk = chunks.next().expect("datalayout 'v' spec should have an abi chunk");
+                let abi: u32 = second_chunk.parse().expect("datalayout 'v': Failed to parse abi");
+                let pref = if let Some(third_chunk) = chunks.next() {
+                    third_chunk.parse().expect("datalayout 'v': Failed to parse pref")
+                } else {
+                    abi
+                };
+                assert!(chunks.next().is_none(), "datalayout 'v': Too many chunks");
+                data_layout.alignments.vec_alignments.insert(size, Alignment { abi, pref });
+            } else if spec.starts_with('f') {
+                let mut chunks = spec.split(':');
+                let first_chunk = chunks.next().unwrap();
+                let size: u32 = first_chunk[1..].parse().expect("datalayout 'f': Failed to parse size");
+                let second_chunk = chunks.next().expect("datalayout 'f' spec should have an abi chunk");
+                let abi: u32 = second_chunk.parse().expect("datalayout 'f': Failed to parse abi");
+                let pref = if let Some(third_chunk) = chunks.next() {
+                    third_chunk.parse().expect("datalayout 'f': Failed to parse pref")
+                } else {
+                    abi
+                };
+                assert!(chunks.next().is_none(), "datalayout 'f': Too many chunks");
+                data_layout.alignments.fp_alignments.insert(size, Alignment { abi, pref });
+            } else if spec.starts_with('a') {
+                let mut chunks = spec.split(':');
+                let first_chunk = chunks.next().unwrap();
+                assert!(first_chunk == "a" || first_chunk == "a0");
+                let second_chunk = chunks.next().expect("datalayout 'a' spec should have an abi chunk");
+                let abi: u32 = second_chunk.parse().expect("datalayout 'a': Failed to parse abi");
+                let pref = if let Some(third_chunk) = chunks.next() {
+                    third_chunk.parse().expect("datalayout 'a': Failed to parse pref")
+                } else {
+                    abi
+                };
+                assert!(chunks.next().is_none(), "datalayout 'a': Too many chunks");
+                data_layout.alignments.agg_alignment = Alignment { abi, pref };
+            } else if spec.starts_with("Fi") {
+                #[cfg(LLVM_VERSION_8_OR_LOWER)] {
+                    panic!("datalayout: Unknown spec {:?}", spec);
+                }
+                #[cfg(LLVM_VERSION_9_OR_GREATER)] {
+                    let abi: u32 = spec[2..].parse().expect("datalayout 'Fi': Failed to parse abi");
+                    data_layout.alignments.fptr_alignment = FunctionPtrAlignment { independent: true, abi };
+                    data_layout.alignments.fptr_alignment_as_alignment = Alignment { abi, pref: abi };
+                }
+            } else if spec.starts_with("Fn") {
+                #[cfg(LLVM_VERSION_8_OR_LOWER)] {
+                    panic!("datalayout: Unknown spec {:?}", spec);
+                }
+                #[cfg(LLVM_VERSION_9_OR_GREATER)] {
+                    let abi: u32 = spec[2..].parse().expect("datalayout 'Fn': Failed to parse abi");
+                    data_layout.alignments.fptr_alignment = FunctionPtrAlignment { independent: false, abi };
+                    data_layout.alignments.fptr_alignment_as_alignment = Alignment { abi, pref: abi };
+                }
+            } else if spec.starts_with('m') {
+                let mut chunks = spec.split(':');
+                let first_chunk = chunks.next().unwrap();
+                assert_eq!(first_chunk, "m");
+                let second_chunk = chunks.next().expect("datalayout 'm' spec should have a mangling chunk");
+                let mangling = match second_chunk {
+                    "e" => Mangling::ELF,
+                    "m" => Mangling::MIPS,
+                    "o" => Mangling::MachO,
+                    "x" => Mangling::WindowsX86COFF,
+                    "w" => Mangling::WindowsCOFF,
+                    _ => panic!("datalayout 'm': Unknown mangling {:?}", second_chunk),
+                };
+                assert!(chunks.next().is_none(), "datalayout 'm': Too many chunks");
+                data_layout.mangling = Some(mangling);
+            } else if spec.starts_with("ni") {
+                let mut chunks = spec.split(':');
+                let first_chunk = chunks.next().unwrap();
+                assert_eq!(first_chunk, "ni");
+                for chunk in chunks {
+                    let addr_space: AddrSpace = chunk.parse().expect("datalayout 'ni': Failed to parse addr space");
+                    assert_ne!(addr_space, 0, "LLVM spec does not allow address space 0 to have non-integral pointer types");
+                    data_layout.non_integral_ptr_types.insert(addr_space);
+                }
+            } else if spec.starts_with('n') {
+                let native_int_widths = data_layout.native_int_widths.get_or_insert_with(|| HashSet::new());
+                let mut chunks = spec.split(':');
+                let first_chunk = chunks.next().unwrap();
+                let size = first_chunk[1..].parse().expect("datalayout 'n': Failed to parse first size");
+                native_int_widths.insert(size);
+                for chunk in chunks {
+                    let size = chunk.parse().expect("datalayout 'n': Failed to parse size");
+                    native_int_widths.insert(size);
+                }
+            } else if spec == "" {
+                // do nothing
+            } else {
+                panic!("datalayout: Unknown spec {:?}", spec);
+            }
+        }
+        data_layout
+    }
+}
+
+impl Default for Alignments {
+    fn default() -> Self {
+        Self {
+            /// Explicit alignments for various sizes of integers (in bits). Sizes not
+            /// specified here are determined according to the rules described in the
+            /// Data Layout docs.
+            int_alignments: vec![
+                (1, Alignment { abi: 8, pref: 8 }),
+                (8, Alignment { abi: 8, pref: 8 }),
+                (16, Alignment { abi: 16, pref: 16 }),
+                (32, Alignment { abi: 32, pref: 32 }),
+                (64, Alignment { abi: 32, pref: 64 }),
+            ].into_iter().collect(),
+            /// Explicit alignments for various sizes of vectors (in bits). Sizes not
+            /// specified here are determined according to the rules described in the
+            /// Data Layout docs.
+            vec_alignments: vec![
+                (64, Alignment { abi: 64, pref: 64 }),
+                (128, Alignment { abi: 128, pref: 128 }),
+            ].into_iter().collect(),
+            /// Alignment for floating-point types, by size (in bits)
+            fp_alignments: vec![
+                (16, Alignment { abi: 16, pref: 16 }),
+                (32, Alignment { abi: 32, pref: 32 }),
+                (64, Alignment { abi: 64, pref: 64 }),
+                (128, Alignment { abi: 128, pref: 128 }),
+            ].into_iter().collect(),
+            /// Alignment for aggregate types (structs, arrays)
+            agg_alignment: Alignment { abi: 0, pref: 64 },
+            /// Alignment for function pointers
+            #[cfg(LLVM_VERSION_9_OR_GREATER)]
+            fptr_alignment: FunctionPtrAlignment { independent: true, abi: 64 },
+            /// Alignment for function pointers, as an `Alignment`
+            #[cfg(LLVM_VERSION_9_OR_GREATER)]
+            fptr_alignment_as_alignment: Alignment { abi: 64, pref: 64 },
+            /// Layout details for (non-function-pointer) pointers, by address space
+            pointer_layouts: vec![
+                (0, PointerLayout { size: 64, alignment: Alignment { abi: 64, pref: 64 }, index_size: 64 })
+            ].into_iter().collect(),
         }
     }
 }
