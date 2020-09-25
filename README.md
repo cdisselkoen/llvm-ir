@@ -123,22 +123,23 @@ These include but are not limited to:
 
 - the `nsw` and `nuw` flags on `Add`, `Sub`, `Mul`, and `Shl`, and likewise
 the `exact` flag on `UDiv`, `SDiv`, `LShr`, and `AShr`. The C API has
-functionality to set these flags and/or create new instructions specifying
-values of these flags, but not to query the values of these flags on existing
-instructions.
+functionality to create new instructions specifying values of these flags,
+but not to query the values of these flags on existing instructions.
 - the "fast-math flags" on various floating-point operations
 - contents of inline assembly functions
 - information about the clauses in the variadic `LandingPad` instruction
 - information about the operands of a `BlockAddress` constant expression
-- the "other labels" reachable from a `CallBr` terminator
 - the ["prefix data"](https://releases.llvm.org/10.0.0/docs/LangRef.html#prefix-data)
 associated with a function
+- the values of constant integers which are larger than 64 bits (and don't
+fit in 64 bits) -- see [#5](https://github.com/cdisselkoen/llvm-ir/issues/5)
+- the "other labels" reachable from a `CallBr` terminator (which was
+introduced in LLVM 9)
+- (LLVM 9 and lower -- fixed in LLVM 10 and later) the opcode for the
+`AtomicRMW` instruction, i.e., `Xchg`, `Add`, `Max`, `Min`, and the like.
 
-These issues with the LLVM C API have also been reported as
+More discussion about this is in
 [LLVM bug #42692](https://bugs.llvm.org/show_bug.cgi?id=42692).
-As discussed there, the `AtomicRMW` opcode getters (which were previously
-missing) were added and are available starting with LLVM 10; but the others
-remain open problems.
 Any contributions to filling these gaps in the C API are greatly appreciated!
 
 ## Acknowledgments
