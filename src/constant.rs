@@ -10,8 +10,24 @@ use std::sync::Arc;
 #[derive(PartialEq, Clone, Debug)]
 pub enum Constant {
     Int {
+        /// Number of bits in the constant integer
         bits: u32,
-        value: u64, // If the Int is less than 64 bits, the value will be zero-extended to create the Rust `u64` `value` (so if `bits` is 8, the lowest 8 bits of `value` are the relevant bits, and the others are all zeroes). Note that LLVM integers aren't signed or unsigned; each individual instruction indicates whether it's treating the integer as signed or unsigned if necessary (e.g., UDiv vs SDiv).
+        /// The constant value itself.
+        ///
+        /// If `bits == 64`, this is the value.
+        ///
+        /// If `bits < 64`, the constant value is zero-extended to fit in this
+        /// field.
+        ///
+        /// If `bits > 64`, the constant value is truncated to fit in this field;
+        /// but if this truncation would change the value (i.e., if the value is
+        /// >= 2^64 when interpreted as unsigned) then `Module::from_bc_path()`
+        /// will fail. See [#5](https://github.com/cdisselkoen/llvm-ir/issues/5).
+        //
+        // Note that LLVM integers aren't signed or unsigned; each individual
+        // instruction indicates whether it's treating the integer as signed or
+        // unsigned if necessary (e.g., UDiv vs SDiv).
+        value: u64,
     },
     Float(Float),
     /// The `TypeRef` here must be to a `PointerType`. See [LLVM 10 docs on Simple Constants](https://releases.llvm.org/10.0.0/docs/LangRef.html#simple-constants)
