@@ -92,7 +92,7 @@ fn hellobcg() {
     assert_eq!(&module.name, &path.to_str().unwrap());
     assert_eq!(module.source_file_name, "hello.c");
     let debug_filename = "hello.c";
-    let debug_directory = std::env::current_dir().unwrap().join(BC_DIR);
+    let debug_directory = "/Users/craig/llvm-ir/tests/basic_bc"; // this is what appears in the checked-in copy of hello.bc-g
 
     let func = &module.functions[0];
     assert_eq!(func.name, "main");
@@ -100,7 +100,7 @@ fn hellobcg() {
     assert_eq!(debugloc.line, 3);
     assert_eq!(debugloc.col, None);
     assert_eq!(debugloc.filename, debug_filename);
-    assert_eq!(debugloc.directory.as_ref().map(PathBuf::from).as_ref(), Some(&debug_directory));
+    assert_eq!(debugloc.directory.as_ref().map(|s| s.as_str()), Some(debug_directory));
 
     let bb = &func.basic_blocks[0];
     let ret: &terminator::Ret = &bb.term.clone().try_into().unwrap_or_else(|_| panic!("Terminator should be a Ret but is {:?}", &bb.term));
@@ -108,7 +108,7 @@ fn hellobcg() {
     assert_eq!(debugloc.line, 4);
     assert_eq!(debugloc.col, Some(3));
     assert_eq!(debugloc.filename, debug_filename);
-    assert_eq!(debugloc.directory.as_ref().map(PathBuf::from).as_ref(), Some(&debug_directory));
+    assert_eq!(debugloc.directory.as_ref().map(|s| s.as_str()), Some(debug_directory));
 }
 
 #[test]
@@ -494,7 +494,7 @@ fn variablesbcg() {
     let path = llvm_bc_dir().join("variables.bc-g");
     let module = Module::from_bc_path(&path).expect("Failed to parse module");
     let debug_filename = "variables.c";
-    let debug_directory = std::env::current_dir().unwrap().join(BC_DIR);
+    let debug_directory = "/Users/craig/llvm-ir/tests/basic_bc"; // this is what appears in the checked-in copy of variables.bc-g
 
     // really all we want to check is the debugloc of the global variable.
     // other debuginfo stuff is covered in other tests
@@ -505,7 +505,7 @@ fn variablesbcg() {
     assert_eq!(debugloc.line, 5);
     assert_eq!(debugloc.col, None);  // only `Instruction`s and `Terminator`s get column numbers
     assert_eq!(debugloc.filename, debug_filename);
-    assert_eq!(debugloc.directory.as_ref().map(PathBuf::from).as_ref(), Some(&debug_directory));
+    assert_eq!(debugloc.directory.as_ref().map(|s| s.as_str()), Some(debug_directory));
 }
 
 // this test checks for regression on issue #4
@@ -632,14 +632,14 @@ fn rustbcg() {
     let path = rust_bc_dir().join("rust.bc-g");
     let module = Module::from_bc_path(&path).expect("Failed to parse module");
     let debug_filename = "rust.rs";
-    let debug_directory = std::env::current_dir().unwrap().join(BC_DIR);
+    let debug_directory = "/Users/craig/llvm-ir/tests/basic_bc"; // this is what appears in the checked-in copy of rust.bc-g
 
     let func = module.get_func_by_name("_ZN4rust9rust_loop17h3ed0672b8cf44eb1E").expect("Failed to find function");
     let debugloc = func.get_debug_loc().as_ref().expect("Expected function to have a debugloc");
     assert_eq!(debugloc.line, 3);
     assert_eq!(debugloc.col, None);
     assert_eq!(debugloc.filename, debug_filename);
-    assert_eq!(debugloc.directory.as_ref().map(PathBuf::from).as_ref(), Some(&debug_directory));
+    assert_eq!(debugloc.directory.as_ref().map(|s| s.as_str()), Some(debug_directory));
 
     let startbb = func.get_bb_by_name(&Name::from("start")).expect("Failed to find bb 'start'");
 
@@ -652,12 +652,12 @@ fn rustbcg() {
     assert_eq!(store_debugloc.line, 4);
     assert_eq!(store_debugloc.col, Some(18));
     assert_eq!(store_debugloc.filename, debug_filename);
-    assert_eq!(store_debugloc.directory.as_ref().map(PathBuf::from).as_ref(), Some(&debug_directory));
+    assert_eq!(debugloc.directory.as_ref().map(|s| s.as_str()), Some(debug_directory));
     let call_debugloc = startbb.instrs[33].get_debug_loc().as_ref().expect("Expected this call to have a debugloc");
     assert_eq!(call_debugloc.line, 5);
     assert_eq!(call_debugloc.col, Some(13));
     assert_eq!(call_debugloc.filename, debug_filename);
-    assert_eq!(call_debugloc.directory.as_ref().map(PathBuf::from).as_ref(), Some(&debug_directory));
+    assert_eq!(debugloc.directory.as_ref().map(|s| s.as_str()), Some(debug_directory));
 }
 
 #[test]
@@ -772,14 +772,14 @@ fn simple_linked_list_g() {
     let path = llvm_bc_dir().join("linkedlist.bc-g");
     let module = Module::from_bc_path(&path).expect("Failed to parse module");
     let debug_filename = "linkedlist.c";
-    let debug_directory = std::env::current_dir().unwrap().join(BC_DIR);
+    let debug_directory = "/Users/craig/llvm-ir/tests/basic_bc"; // this is what appears in the checked-in copy of linkedlist.bc-g
 
     let func = module.get_func_by_name("simple_linked_list").expect("Failed to find function");
     let debugloc = func.get_debug_loc().as_ref().expect("expected simple_linked_list to have a debugloc");
     assert_eq!(debugloc.line, 8);
     assert_eq!(debugloc.col, None);
     assert_eq!(debugloc.filename, debug_filename);
-    assert_eq!(debugloc.directory.as_ref().map(PathBuf::from).as_ref(), Some(&debug_directory));
+    assert_eq!(debugloc.directory.as_ref().map(|s| s.as_str()), Some(debug_directory));
 
     // the first seven instructions shouldn't have debuglocs - they are just setting up the stack frame
     for i in 0..7 {
@@ -791,14 +791,14 @@ fn simple_linked_list_g() {
     assert_eq!(debugloc.line, 8);
     assert_eq!(debugloc.col, Some(28));
     assert_eq!(debugloc.filename, debug_filename);
-    assert_eq!(debugloc.directory.as_ref().map(PathBuf::from).as_ref(), Some(&debug_directory));
+    assert_eq!(debugloc.directory.as_ref().map(|s| s.as_str()), Some(debug_directory));
 
     // the tenth instruction should have a different debugloc
     let debugloc = func.basic_blocks[0].instrs[9].get_debug_loc().as_ref().expect("expected this instruction to have a debugloc");
     assert_eq!(debugloc.line, 9);
     assert_eq!(debugloc.col, Some(34));
     assert_eq!(debugloc.filename, debug_filename);
-    assert_eq!(debugloc.directory.as_ref().map(PathBuf::from).as_ref(), Some(&debug_directory));
+    assert_eq!(debugloc.directory.as_ref().map(|s| s.as_str()), Some(debug_directory));
 }
 
 #[test]
