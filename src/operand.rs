@@ -1,4 +1,4 @@
-use crate::types::{TypeRef, Typed, Types};
+use crate::types::{TypeRef, Typed, Types, Type};
 use crate::{ConstantRef, Name};
 
 #[derive(PartialEq, Clone, Debug)]
@@ -61,6 +61,47 @@ impl Operand {
                     .clone(),
                 ty: ctx.types.type_from_llvm_ref(unsafe { LLVMTypeOf(operand) }),
             }
+        }
+    }
+}
+
+/**
+  An operand with the TypeRef and ConstantRef members dereferenced to be used
+  in pattern matching.
+
+  Sample usage:
+
+  ```
+  if let OperandM::ConstantOperand(Constant::Float(Float::Double(val))) = op.matchable() {
+      val
+  } else {
+      Err(Error::NonConstantInput)?
+  };
+  ```
+*/
+#[derive(PartialEq, Clone, Debug)]
+pub enum OperandM<'a> {
+    LocalOperand {
+        name: &'a Name,
+        ty: &'a Type
+    },
+    ConstantOperand(&'a Constant),
+    MetadataOperand,
+}
+
+impl Operand {
+    pub fn matchable<'a>(&'a self) -> OperandM<'a> {
+        match self {
+            Operand::LocalOperand{name, ty} => {
+                OperandM::LocalOperand {
+                    name: &name,
+                    ty: &*ty
+                }
+            }
+            Operand::ConstantOperand(c) => {
+                OperandM::ConstantOperand(&*c)
+            }
+            Operand::MetadataOperand => OperandM::MetadataOperand
         }
     }
 }
