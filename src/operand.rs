@@ -23,6 +23,27 @@ impl Typed for Operand {
     }
 }
 
+impl Operand {
+    /// Get a reference to the `Constant`, if the operand is a constant;
+    /// otherwise, returns `None`.
+    ///
+    /// This allows nested matching on `Operand`. Instead of the following code
+    /// (which doesn't compile because you can't directly match on `ConstantRef`)
+    /// ```ignore
+    /// if let Operand::ConstantOperand(Constant::Float(Float::Double(val))) = op
+    /// ```
+    /// you can write this:
+    /// ```ignore
+    /// if let Some(Constant::Float(Float::Double(val))) = op.as_constant()
+    /// ```
+    pub fn as_constant(&self) -> Option<&Constant> {
+        match self {
+            Operand::ConstantOperand(cref) => Some(&cref),
+            _ => None,
+        }
+    }
+}
+
 // ********* //
 // from_llvm //
 // ********* //
