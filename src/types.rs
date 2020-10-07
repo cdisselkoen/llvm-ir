@@ -73,7 +73,11 @@ impl Display for Type {
             Type::IntegerType { bits } => write!(f, "i{}", bits),
             Type::PointerType { pointee_type, .. } => write!(f, "{}*", pointee_type),
             Type::FPType(fpt) => write!(f, "{}", fpt),
-            Type::FuncType { result_type, param_types, is_var_arg } => {
+            Type::FuncType {
+                result_type,
+                param_types,
+                is_var_arg,
+            } => {
                 write!(f, "{} (", result_type)?;
                 for (i, param_ty) in param_types.iter().enumerate() {
                     if i == param_types.len() - 1 {
@@ -88,13 +92,18 @@ impl Display for Type {
                 write!(f, ")")?;
                 Ok(())
             },
-            Type::VectorType { element_type, num_elements } => {
-                write!(f, "<{} x {}>", num_elements, element_type)
-            },
-            Type::ArrayType { element_type, num_elements } => {
-                write!(f, "[{} x {}]", num_elements, element_type)
-            },
-            Type::StructType { element_types, is_packed } => {
+            Type::VectorType {
+                element_type,
+                num_elements,
+            } => write!(f, "<{} x {}>", num_elements, element_type),
+            Type::ArrayType {
+                element_type,
+                num_elements,
+            } => write!(f, "[{} x {}]", num_elements, element_type),
+            Type::StructType {
+                element_types,
+                is_packed,
+            } => {
                 if *is_packed {
                     write!(f, "<")?;
                 }
@@ -112,9 +121,7 @@ impl Display for Type {
                 }
                 Ok(())
             },
-            Type::NamedStructType { name } => {
-                write!(f, "%{}", name)
-            },
+            Type::NamedStructType { name } => write!(f, "%{}", name),
             Type::X86_MMXType => write!(f, "x86_mmx"),
             Type::MetadataType => write!(f, "metadata"),
             Type::LabelType => write!(f, "label"),

@@ -630,10 +630,7 @@ macro_rules! impl_binop {
         impl Display for $inst {
             fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
                 write!(f, "{} = {} {}, {}",
-                    &self.dest,
-                    $dispname,
-                    &self.operand0,
-                    &self.operand1,
+                    &self.dest, $dispname, &self.operand0, &self.operand1,
                 )?;
                 #[cfg(LLVM_VERSION_9_OR_GREATER)]
                 if self.debugloc.is_some() {
@@ -658,11 +655,7 @@ macro_rules! unop_same_type {
 
         impl Display for $inst {
             fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-                write!(f, "{} = {} {}",
-                    &self.dest,
-                    $dispname,
-                    &self.operand,
-                )?;
+                write!(f, "{} = {} {}", &self.dest, $dispname, &self.operand)?;
                 #[cfg(LLVM_VERSION_9_OR_GREATER)]
                 if self.debugloc.is_some() {
                     write!(f, " (with debugloc)")?;
@@ -682,10 +675,7 @@ macro_rules! unop_explicitly_typed {
         impl Display for $inst {
             fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
                 write!(f, "{} = {} {} to {}",
-                    &self.dest,
-                    $dispname,
-                    &self.operand,
-                    &self.to_type,
+                    &self.dest, $dispname, &self.operand, &self.to_type,
                 )?;
                 #[cfg(LLVM_VERSION_9_OR_GREATER)]
                 if self.debugloc.is_some() {
@@ -694,7 +684,7 @@ macro_rules! unop_explicitly_typed {
                 Ok(())
             }
         }
-    }
+    };
 }
 
 // Use on binops where the result type is the same as both operand types
@@ -1071,9 +1061,7 @@ impl Typed for ExtractElement {
 impl Display for ExtractElement {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{} = extractelement {}, {}",
-            &self.dest,
-            &self.vector,
-            &self.index,
+            &self.dest, &self.vector, &self.index,
         )?;
         #[cfg(LLVM_VERSION_9_OR_GREATER)]
         if self.debugloc.is_some() {
@@ -1108,10 +1096,7 @@ impl Typed for InsertElement {
 impl Display for InsertElement {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{} = insertelement {}, {}, {}",
-            &self.dest,
-            &self.vector,
-            &self.element,
-            &self.index,
+            &self.dest, &self.vector, &self.element, &self.index,
         )?;
         #[cfg(LLVM_VERSION_9_OR_GREATER)]
         if self.debugloc.is_some() {
@@ -1161,10 +1146,7 @@ impl Typed for ShuffleVector {
 impl Display for ShuffleVector {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{} = shufflevector {}, {}, {}",
-            &self.dest,
-            &self.operand0,
-            &self.operand1,
-            &self.mask,
+            &self.dest, &self.operand0, &self.operand1, &self.mask,
         )?;
         #[cfg(LLVM_VERSION_9_OR_GREATER)]
         if self.debugloc.is_some() {
@@ -1222,7 +1204,7 @@ impl Display for ExtractValue {
             &self.aggregate,
             &self.indices.get(0).expect("ExtractValue with no indices")
         )?;
-        for idx in &self.indices[1..] {
+        for idx in &self.indices[1 ..] {
             write!(f, ", {}", idx)?;
         }
         #[cfg(LLVM_VERSION_9_OR_GREATER)]
@@ -1263,7 +1245,7 @@ impl Display for InsertValue {
             &self.element,
             &self.indices.get(0).expect("InsertValue with no indices"),
         )?;
-        for idx in &self.indices[1..] {
+        for idx in &self.indices[1 ..] {
             write!(f, ", {}", idx)?;
         }
         #[cfg(LLVM_VERSION_9_OR_GREATER)]
@@ -1349,7 +1331,11 @@ impl Display for Load {
         // it's completely redundant with the address type anyway)
         write!(f, "{} = load{}{} {}{}, align {}",
             &self.dest,
-            if self.atomicity.is_some() { " atomic" } else { "" },
+            if self.atomicity.is_some() {
+                " atomic"
+            } else {
+                ""
+            },
             if self.volatile { " volatile" } else { "" },
             &self.address,
             match &self.atomicity {
@@ -1386,7 +1372,11 @@ void_typed!(Store);
 impl Display for Store {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "store{}{} {}, {}{}, align {}",
-            if self.atomicity.is_some() { " atomic" } else { "" },
+            if self.atomicity.is_some() {
+                " atomic"
+            } else {
+                ""
+            },
             if self.volatile { " volatile" } else { "" },
             &self.value,
             &self.address,
@@ -1418,9 +1408,7 @@ void_typed!(Fence);
 
 impl Display for Fence {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "fence {}",
-            &self.atomicity,
-        )?;
+        write!(f, "fence {}", &self.atomicity)?;
         #[cfg(LLVM_VERSION_9_OR_GREATER)]
         if self.debugloc.is_some() {
             write!(f, " (with debugloc)")?;
@@ -1522,11 +1510,7 @@ impl Display for AtomicRMW {
         )?;
         #[cfg(LLVM_VERSION_10_OR_GREATER)]
         write!(f, "{} ", &self.operation)?;
-        write!(f, "{}, {} {}",
-            &self.address,
-            &self.value,
-            &self.atomicity,
-        )?;
+        write!(f, "{}, {} {}", &self.address, &self.value, &self.atomicity)?;
         #[cfg(LLVM_VERSION_9_OR_GREATER)]
         if self.debugloc.is_some() {
             write!(f, " (with debugloc)")?;
@@ -1886,10 +1870,7 @@ impl Typed for FCmp {
 impl Display for FCmp {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{} = fcmp {} {}, {}",
-            &self.dest,
-            &self.predicate,
-            &self.operand0,
-            &self.operand1,
+            &self.dest, &self.predicate, &self.operand0, &self.operand1,
         )?;
         #[cfg(LLVM_VERSION_9_OR_GREATER)]
         if self.debugloc.is_some() {
@@ -1916,14 +1897,14 @@ explicitly_typed!(Phi);
 
 impl Display for Phi {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let (first_val, first_label) = &self.incoming_values.get(0).expect("Phi with no incoming values");
+        let (first_val, first_label) = &self
+            .incoming_values
+            .get(0)
+            .expect("Phi with no incoming values");
         write!(f, "{} = phi {} [ {}, {} ]",
-            &self.dest,
-            &self.to_type,
-            first_val,
-            first_label,
+            &self.dest, &self.to_type, first_val, first_label,
         )?;
-        for (val, label) in &self.incoming_values[1..] {
+        for (val, label) in &self.incoming_values[1 ..] {
             write!(f, ", [ {}, {} ]", val, label)?;
         }
         #[cfg(LLVM_VERSION_9_OR_GREATER)]
@@ -1960,10 +1941,7 @@ impl Typed for Select {
 impl Display for Select {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{} = select {}, {}, {}",
-            &self.dest,
-            &self.condition,
-            &self.true_value,
-            &self.false_value,
+            &self.dest, &self.condition, &self.true_value, &self.false_value,
         )?;
         #[cfg(LLVM_VERSION_9_OR_GREATER)]
         if self.debugloc.is_some() {
@@ -2073,9 +2051,7 @@ impl Typed for VAArg {
 impl Display for VAArg {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{} = va_arg {}, {}",
-            &self.dest,
-            &self.arg_list,
-            &self.cur_type,
+            &self.dest, &self.arg_list, &self.cur_type,
         )?;
         #[cfg(LLVM_VERSION_9_OR_GREATER)]
         if self.debugloc.is_some() {
@@ -2146,8 +2122,7 @@ impl Typed for CatchPad {
 impl Display for CatchPad {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{} = catchpad within {} [",
-            &self.dest,
-            &self.catch_switch,
+            &self.dest, &self.catch_switch,
         )?;
         for (i, arg) in self.args.iter().enumerate() {
             if i == self.args.len() - 1 {
@@ -2189,8 +2164,7 @@ impl Typed for CleanupPad {
 impl Display for CleanupPad {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{} = cleanuppad within {} [",
-            &self.dest,
-            &self.parent_pad,
+            &self.dest, &self.parent_pad,
         )?;
         for (i, arg) in self.args.iter().enumerate() {
             if i == self.args.len() - 1 {

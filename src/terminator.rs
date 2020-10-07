@@ -316,7 +316,7 @@ impl Display for IndirectBr {
             &self.operand,
             &self.possible_dests.get(0).expect("IndirectBr with no possible dests"),
         )?;
-        for dest in &self.possible_dests[1..] {
+        for dest in &self.possible_dests[1 ..] {
             write!(f, ", label {}", dest)?;
         }
         write!(f, " ]")?;
@@ -377,7 +377,10 @@ impl Display for Invoke {
                 write!(f, "{}, ", arg)?;
             }
         }
-        write!(f, ") to label {} unwind label {}", &self.return_label, &self.exception_label)?;
+        write!(f, ") to label {} unwind label {}",
+            &self.return_label,
+            &self.exception_label,
+        )?;
         #[cfg(LLVM_VERSION_9_OR_GREATER)]
         if self.debugloc.is_some() {
             write!(f, " (with debugloc)")?;
@@ -520,7 +523,7 @@ impl Display for CatchSwitch {
             &self.parent_pad,
             &self.catch_handlers.get(0).expect("CatchSwitch with no handlers"),
         )?;
-        for handler in &self.catch_handlers[1..] {
+        for handler in &self.catch_handlers[1 ..] {
             write!(f, ", label {}", handler)?;
         }
         write!(f, " ] unwind {}",
@@ -599,7 +602,6 @@ impl Display for CallBr {
             write!(f, " (with debugloc)")?;
         }
         Ok(())
-
     }
 }
 

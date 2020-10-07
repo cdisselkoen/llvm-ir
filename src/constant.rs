@@ -261,9 +261,7 @@ impl Display for Constant {
                                 write!(f, "i{} {}", bits, *value)
                             }
                         },
-                        _ => {
-                            write!(f, "i{} {}", bits, value)
-                        },
+                        _ => write!(f, "i{} {}", bits, value),
                     }
                 }
             },
@@ -299,7 +297,7 @@ impl Display for Constant {
                 }
                 write!(f, " ]")?;
                 Ok(())
-            }
+            },
             Constant::Vector(v) => {
                 write!(f, "< ")?;
                 for (i, elt) in v.iter().enumerate() {
@@ -312,12 +310,8 @@ impl Display for Constant {
                 write!(f, " >")?;
                 Ok(())
             },
-            Constant::Undef(ty) => {
-                write!(f, "{} undef", ty)
-            },
-            Constant::BlockAddress => {
-                write!(f, "blockaddr")
-            },
+            Constant::Undef(ty) => write!(f, "{} undef", ty),
+            Constant::BlockAddress => write!(f, "blockaddr"),
             Constant::GlobalReference { name, ty } => {
                 let name = match name {
                     Name::Name(n) => n,
@@ -539,7 +533,9 @@ macro_rules! unop_explicitly_typed {
 
         impl Display for $expr {
             fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-                write!(f, "{} ({} to {})", $dispname, &self.get_operand(), &self.to_type)
+                write!(f, "{} ({} to {})",
+                    $dispname, &self.get_operand(), &self.to_type,
+                )
             }
         }
     };
@@ -762,7 +758,9 @@ impl Typed for InsertElement {
 
 impl Display for InsertElement {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "insertelement ({}, {}, {})", &self.vector, &self.element, &self.index)
+        write!(f, "insertelement ({}, {}, {})",
+            &self.vector, &self.element, &self.index,
+        )
     }
 }
 
@@ -800,7 +798,9 @@ impl Typed for ShuffleVector {
 
 impl Display for ShuffleVector {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "shufflevector ({}, {}, {})", &self.operand0, &self.operand1, &self.mask)
+        write!(f, "shufflevector ({}, {}, {})",
+            &self.operand0, &self.operand1, &self.mask,
+        )
     }
 }
 
@@ -933,7 +933,10 @@ fn gep_type<'c>(
 
 impl Display for GetElementPtr {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "getelementptr{} ({}", if self.in_bounds { " inbounds" } else { "" }, &self.address)?;
+        write!(f, "getelementptr{} ({}",
+            if self.in_bounds { " inbounds" } else { "" },
+            &self.address
+        )?;
         for idx in &self.indices {
             write!(f, ", {}", idx)?;
         }
@@ -1082,7 +1085,9 @@ impl Typed for ICmp {
 
 impl Display for ICmp {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "icmp {} ({}, {})", &self.predicate, &self.operand0, &self.operand1)
+        write!(f, "icmp {} ({}, {})",
+            &self.predicate, &self.operand0, &self.operand1,
+        )
     }
 }
 
@@ -1109,7 +1114,9 @@ impl Typed for FCmp {
 
 impl Display for FCmp {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "fcmp {} ({}, {})", &self.predicate, &self.operand0, &self.operand1)
+        write!(f, "fcmp {} ({}, {})",
+            &self.predicate, &self.operand0, &self.operand1,
+        )
     }
 }
 
@@ -1132,7 +1139,9 @@ impl Typed for Select {
 
 impl Display for Select {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "select ({}, {}, {})", &self.condition, &self.true_value, &self.false_value)
+        write!(f, "select ({}, {}, {})",
+            &self.condition, &self.true_value, &self.false_value,
+        )
     }
 }
 
