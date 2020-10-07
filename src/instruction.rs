@@ -8,7 +8,7 @@ use crate::predicates::*;
 use crate::types::{NamedStructDef, Type, TypeRef, Typed, Types};
 use either::Either;
 use std::convert::TryFrom;
-use std::fmt::Debug;
+use std::fmt::{self, Debug, Display};
 
 /// Non-terminator instructions.
 #[derive(PartialEq, Clone, Debug)]
@@ -473,6 +473,68 @@ impl Instruction {
     }
 }
 
+impl Display for Instruction {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Instruction::Add(i) => write!(f, "{}", i),
+            Instruction::Sub(i) => write!(f, "{}", i),
+            Instruction::Mul(i) => write!(f, "{}", i),
+            Instruction::UDiv(i) => write!(f, "{}", i),
+            Instruction::SDiv(i) => write!(f, "{}", i),
+            Instruction::URem(i) => write!(f, "{}", i),
+            Instruction::SRem(i) => write!(f, "{}", i),
+            Instruction::And(i) => write!(f, "{}", i),
+            Instruction::Or(i) => write!(f, "{}", i),
+            Instruction::Xor(i) => write!(f, "{}", i),
+            Instruction::Shl(i) => write!(f, "{}", i),
+            Instruction::LShr(i) => write!(f, "{}", i),
+            Instruction::AShr(i) => write!(f, "{}", i),
+            Instruction::FAdd(i) => write!(f, "{}", i),
+            Instruction::FSub(i) => write!(f, "{}", i),
+            Instruction::FMul(i) => write!(f, "{}", i),
+            Instruction::FDiv(i) => write!(f, "{}", i),
+            Instruction::FRem(i) => write!(f, "{}", i),
+            Instruction::FNeg(i) => write!(f, "{}", i),
+            Instruction::ExtractElement(i) => write!(f, "{}", i),
+            Instruction::InsertElement(i) => write!(f, "{}", i),
+            Instruction::ShuffleVector(i) => write!(f, "{}", i),
+            Instruction::ExtractValue(i) => write!(f, "{}", i),
+            Instruction::InsertValue(i) => write!(f, "{}", i),
+            Instruction::Alloca(i) => write!(f, "{}", i),
+            Instruction::Load(i) => write!(f, "{}", i),
+            Instruction::Store(i) => write!(f, "{}", i),
+            Instruction::Fence(i) => write!(f, "{}", i),
+            Instruction::CmpXchg(i) => write!(f, "{}", i),
+            Instruction::AtomicRMW(i) => write!(f, "{}", i),
+            Instruction::GetElementPtr(i) => write!(f, "{}", i),
+            Instruction::Trunc(i) => write!(f, "{}", i),
+            Instruction::ZExt(i) => write!(f, "{}", i),
+            Instruction::SExt(i) => write!(f, "{}", i),
+            Instruction::FPTrunc(i) => write!(f, "{}", i),
+            Instruction::FPExt(i) => write!(f, "{}", i),
+            Instruction::FPToUI(i) => write!(f, "{}", i),
+            Instruction::FPToSI(i) => write!(f, "{}", i),
+            Instruction::UIToFP(i) => write!(f, "{}", i),
+            Instruction::SIToFP(i) => write!(f, "{}", i),
+            Instruction::PtrToInt(i) => write!(f, "{}", i),
+            Instruction::IntToPtr(i) => write!(f, "{}", i),
+            Instruction::BitCast(i) => write!(f, "{}", i),
+            Instruction::AddrSpaceCast(i) => write!(f, "{}", i),
+            Instruction::ICmp(i) => write!(f, "{}", i),
+            Instruction::FCmp(i) => write!(f, "{}", i),
+            Instruction::Phi(i) => write!(f, "{}", i),
+            Instruction::Select(i) => write!(f, "{}", i),
+            #[cfg(LLVM_VERSION_10_OR_GREATER)]
+            Instruction::Freeze(i) => write!(f, "{}", i),
+            Instruction::Call(i) => write!(f, "{}", i),
+            Instruction::VAArg(i) => write!(f, "{}", i),
+            Instruction::LandingPad(i) => write!(f, "{}", i),
+            Instruction::CatchPad(i) => write!(f, "{}", i),
+            Instruction::CleanupPad(i) => write!(f, "{}", i),
+        }
+    }
+}
+
 macro_rules! impl_inst {
     ($inst:ty, $id:ident) => {
         impl From<$inst> for Instruction {
@@ -518,6 +580,9 @@ macro_rules! impl_hasresult {
     };
 }
 
+// impls which are shared by all UnaryOps.
+// If possible, prefer `unop_same_type!` or `unop_explicitly_typed!`, which
+// provide additional impls
 macro_rules! impl_unop {
     ($inst:ty) => {
         impl_hasresult!($inst);
@@ -530,8 +595,11 @@ macro_rules! impl_unop {
     };
 }
 
+// impls which are shared by all BinaryOps.
+// If possible, prefer `binop_same_type!` or `binop_left_type!`, which
+// provide additional impls
 macro_rules! impl_binop {
-    ($inst:ty, $id:ident) => {
+    ($inst:ty, $id:ident, $dispname:expr) => {
         impl_hasresult!($inst);
 
         impl BinaryOp for $inst {
@@ -558,23 +626,82 @@ macro_rules! impl_binop {
                 }
             }
         }
-    };
-}
 
-// Use on unops where the result type is the same as the operand type
-macro_rules! unop_same_type {
-    ($inst:ty) => {
-        impl Typed for $inst {
-            fn get_type(&self, types: &Types) -> TypeRef {
-                types.type_of(self.get_operand())
+        impl Display for $inst {
+            fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                write!(f, "{} = {} {}, {}",
+                    &self.dest,
+                    $dispname,
+                    &self.operand0,
+                    &self.operand1,
+                )?;
+                #[cfg(LLVM_VERSION_9_OR_GREATER)]
+                if self.debugloc.is_some() {
+                    write!(f, " (with debugloc)")?;
+                }
+                Ok(())
             }
         }
     };
 }
 
+// Use on unops where the result type is the same as the operand type
+macro_rules! unop_same_type {
+    ($inst:ty, $dispname:expr) => {
+        impl_unop!($inst);
+
+        impl Typed for $inst {
+            fn get_type(&self, types: &Types) -> TypeRef {
+                types.type_of(self.get_operand())
+            }
+        }
+
+        impl Display for $inst {
+            fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                write!(f, "{} = {} {}",
+                    &self.dest,
+                    $dispname,
+                    &self.operand,
+                )?;
+                #[cfg(LLVM_VERSION_9_OR_GREATER)]
+                if self.debugloc.is_some() {
+                    write!(f, " (with debugloc)")?;
+                }
+                Ok(())
+            }
+        }
+    };
+}
+
+// Use on unops with a `to_type` field which indicates the result type
+macro_rules! unop_explicitly_typed {
+    ($inst:ty, $dispname:expr) => {
+        impl_unop!($inst);
+        explicitly_typed!($inst);
+
+        impl Display for $inst {
+            fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                write!(f, "{} = {} {} to {}",
+                    &self.dest,
+                    $dispname,
+                    &self.operand,
+                    &self.to_type,
+                )?;
+                #[cfg(LLVM_VERSION_9_OR_GREATER)]
+                if self.debugloc.is_some() {
+                    write!(f, " (with debugloc)")?;
+                }
+                Ok(())
+            }
+        }
+    }
+}
+
 // Use on binops where the result type is the same as both operand types
 macro_rules! binop_same_type {
-    ($inst:ty) => {
+    ($inst:ty, $id:ident, $dispname:expr) => {
+        impl_binop!($inst, $id, $dispname);
+
         impl Typed for $inst {
             fn get_type(&self, types: &Types) -> TypeRef {
                 let ty = types.type_of(self.get_operand0());
@@ -587,7 +714,9 @@ macro_rules! binop_same_type {
 
 // Use on binops where the result type is the same as the first operand type
 macro_rules! binop_left_type {
-    ($inst:ty) => {
+    ($inst:ty, $id:ident, $dispname:expr) => {
+        impl_binop!($inst, $id, $dispname);
+
         impl Typed for $inst {
             fn get_type(&self, types: &Types) -> TypeRef {
                 types.type_of(self.get_operand0())
@@ -631,8 +760,7 @@ pub struct Add {
 }
 
 impl_inst!(Add, Add);
-impl_binop!(Add, Add);
-binop_same_type!(Add);
+binop_same_type!(Add, Add, "add");
 
 /// See [LLVM 10 docs on the 'sub' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#sub-instruction)
 #[derive(PartialEq, Clone, Debug)]
@@ -648,8 +776,7 @@ pub struct Sub {
 }
 
 impl_inst!(Sub, Sub);
-impl_binop!(Sub, Sub);
-binop_same_type!(Sub);
+binop_same_type!(Sub, Sub, "sub");
 
 /// See [LLVM 10 docs on the 'mul' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#mul-instruction)
 #[derive(PartialEq, Clone, Debug)]
@@ -665,8 +792,7 @@ pub struct Mul {
 }
 
 impl_inst!(Mul, Mul);
-impl_binop!(Mul, Mul);
-binop_same_type!(Mul);
+binop_same_type!(Mul, Mul, "mul");
 
 /// See [LLVM 10 docs on the 'udiv' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#udiv-instruction)
 #[derive(PartialEq, Clone, Debug)]
@@ -681,8 +807,7 @@ pub struct UDiv {
 }
 
 impl_inst!(UDiv, UDiv);
-impl_binop!(UDiv, UDiv);
-binop_same_type!(UDiv);
+binop_same_type!(UDiv, UDiv, "udiv");
 
 /// See [LLVM 10 docs on the 'sdiv' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#sdiv-instruction)
 #[derive(PartialEq, Clone, Debug)]
@@ -697,8 +822,7 @@ pub struct SDiv {
 }
 
 impl_inst!(SDiv, SDiv);
-impl_binop!(SDiv, SDiv);
-binop_same_type!(SDiv);
+binop_same_type!(SDiv, SDiv, "sdiv");
 
 /// See [LLVM 10 docs on the 'urem' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#urem-instruction)
 #[derive(PartialEq, Clone, Debug)]
@@ -712,8 +836,7 @@ pub struct URem {
 }
 
 impl_inst!(URem, URem);
-impl_binop!(URem, URem);
-binop_same_type!(URem);
+binop_same_type!(URem, URem, "urem");
 
 /// See [LLVM 10 docs on the 'srem' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#srem-instruction)
 #[derive(PartialEq, Clone, Debug)]
@@ -727,8 +850,7 @@ pub struct SRem {
 }
 
 impl_inst!(SRem, SRem);
-impl_binop!(SRem, SRem);
-binop_same_type!(SRem);
+binop_same_type!(SRem, SRem, "srem");
 
 /// Bitwise logical and.
 /// See [LLVM 10 docs on the 'and' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#and-instruction)
@@ -743,8 +865,7 @@ pub struct And {
 }
 
 impl_inst!(And, And);
-impl_binop!(And, And);
-binop_same_type!(And);
+binop_same_type!(And, And, "and");
 
 /// Bitwise logical inclusive or.
 /// See [LLVM 10 docs on the 'or' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#or-instruction)
@@ -759,8 +880,7 @@ pub struct Or {
 }
 
 impl_inst!(Or, Or);
-impl_binop!(Or, Or);
-binop_same_type!(Or);
+binop_same_type!(Or, Or, "or");
 
 /// Bitwise logical exclusive or.
 /// See [LLVM 10 docs on the 'xor' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#xor-instruction)
@@ -775,8 +895,7 @@ pub struct Xor {
 }
 
 impl_inst!(Xor, Xor);
-impl_binop!(Xor, Xor);
-binop_same_type!(Xor);
+binop_same_type!(Xor, Xor, "xor");
 
 /// Shift left.
 /// See [LLVM 10 docs on the 'shl' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#shl-instruction)
@@ -793,8 +912,7 @@ pub struct Shl {
 }
 
 impl_inst!(Shl, Shl);
-impl_binop!(Shl, Shl);
-binop_left_type!(Shl);
+binop_left_type!(Shl, Shl, "shl");
 
 /// Logical shift right.
 /// See [LLVM 10 docs on the 'lshr' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#lshr-instruction)
@@ -810,8 +928,7 @@ pub struct LShr {
 }
 
 impl_inst!(LShr, LShr);
-impl_binop!(LShr, LShr);
-binop_left_type!(LShr);
+binop_left_type!(LShr, LShr, "lshr");
 
 /// Arithmetic shift right.
 /// See [LLVM 10 docs on the 'ashr' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#ashr-instruction)
@@ -827,8 +944,7 @@ pub struct AShr {
 }
 
 impl_inst!(AShr, AShr);
-impl_binop!(AShr, AShr);
-binop_left_type!(AShr);
+binop_left_type!(AShr, AShr, "ashr");
 
 /// Floating-point add.
 /// See [LLVM 10 docs on the 'fadd' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#fadd-instruction)
@@ -844,8 +960,7 @@ pub struct FAdd {
 }
 
 impl_inst!(FAdd, FAdd);
-impl_binop!(FAdd, FAdd);
-binop_same_type!(FAdd);
+binop_same_type!(FAdd, FAdd, "fadd");
 
 /// Floating-point sub.
 /// See [LLVM 10 docs on the 'fsub' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#fsub-instruction)
@@ -861,8 +976,7 @@ pub struct FSub {
 }
 
 impl_inst!(FSub, FSub);
-impl_binop!(FSub, FSub);
-binop_same_type!(FSub);
+binop_same_type!(FSub, FSub, "fsub");
 
 /// Floating-point multiply.
 /// See [LLVM 10 docs on the 'fmul' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#fmul-instruction)
@@ -878,8 +992,7 @@ pub struct FMul {
 }
 
 impl_inst!(FMul, FMul);
-impl_binop!(FMul, FMul);
-binop_same_type!(FMul);
+binop_same_type!(FMul, FMul, "fmul");
 
 /// Floating-point divide.
 /// See [LLVM 10 docs on the 'fdiv' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#fdiv-instruction)
@@ -895,8 +1008,7 @@ pub struct FDiv {
 }
 
 impl_inst!(FDiv, FDiv);
-impl_binop!(FDiv, FDiv);
-binop_same_type!(FDiv);
+binop_same_type!(FDiv, FDiv, "fdiv");
 
 /// Floating-point remainder.
 /// See [LLVM 10 docs on the 'frem' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#frem-instruction)
@@ -912,8 +1024,7 @@ pub struct FRem {
 }
 
 impl_inst!(FRem, FRem);
-impl_binop!(FRem, FRem);
-binop_same_type!(FRem);
+binop_same_type!(FRem, FRem, "frem");
 
 /// Floating-point unary negation.
 /// See [LLVM 10 docs on the 'fneg' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#fneg-instruction)
@@ -928,8 +1039,7 @@ pub struct FNeg {
 }
 
 impl_inst!(FNeg, FNeg);
-impl_unop!(FNeg);
-unop_same_type!(FNeg);
+unop_same_type!(FNeg, "fneg");
 
 /// Get an element from a vector at a specified index.
 /// See [LLVM 10 docs on the 'extractelement' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#extractelement-instruction)
@@ -958,6 +1068,21 @@ impl Typed for ExtractElement {
     }
 }
 
+impl Display for ExtractElement {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{} = extractelement {}, {}",
+            &self.dest,
+            &self.vector,
+            &self.index,
+        )?;
+        #[cfg(LLVM_VERSION_9_OR_GREATER)]
+        if self.debugloc.is_some() {
+            write!(f, " (with debugloc)")?;
+        }
+        Ok(())
+    }
+}
+
 /// Insert an element into a vector at a specified index.
 /// See [LLVM 10 docs on the 'insertelement' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#insertelement-instruction)
 #[derive(PartialEq, Clone, Debug)]
@@ -977,6 +1102,22 @@ impl_hasresult!(InsertElement);
 impl Typed for InsertElement {
     fn get_type(&self, types: &Types) -> TypeRef {
         types.type_of(&self.vector)
+    }
+}
+
+impl Display for InsertElement {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{} = insertelement {}, {}, {}",
+            &self.dest,
+            &self.vector,
+            &self.element,
+            &self.index,
+        )?;
+        #[cfg(LLVM_VERSION_9_OR_GREATER)]
+        if self.debugloc.is_some() {
+            write!(f, " (with debugloc)")?;
+        }
+        Ok(())
     }
 }
 
@@ -1014,6 +1155,22 @@ impl Typed for ShuffleVector {
                 ty
             ),
         }
+    }
+}
+
+impl Display for ShuffleVector {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{} = shufflevector {}, {}, {}",
+            &self.dest,
+            &self.operand0,
+            &self.operand1,
+            &self.mask,
+        )?;
+        #[cfg(LLVM_VERSION_9_OR_GREATER)]
+        if self.debugloc.is_some() {
+            write!(f, " (with debugloc)")?;
+        }
+        Ok(())
     }
 }
 
@@ -1058,6 +1215,24 @@ fn ev_type(cur_type: TypeRef, mut indices: impl Iterator<Item = u32>) -> TypeRef
     }
 }
 
+impl Display for ExtractValue {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{} = extractvalue {}, {}",
+            &self.dest,
+            &self.aggregate,
+            &self.indices.get(0).expect("ExtractValue with no indices")
+        )?;
+        for idx in &self.indices[1..] {
+            write!(f, ", {}", idx)?;
+        }
+        #[cfg(LLVM_VERSION_9_OR_GREATER)]
+        if self.debugloc.is_some() {
+            write!(f, " (with debugloc)")?;
+        }
+        Ok(())
+    }
+}
+
 /// Insert a value into a member field of an aggregate (struct or array) type.
 /// See [LLVM 10 docs on the 'insertvalue' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#insertvalue-instruction)
 #[derive(PartialEq, Clone, Debug)]
@@ -1080,6 +1255,25 @@ impl Typed for InsertValue {
     }
 }
 
+impl Display for InsertValue {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{} = insertvalue {}, {}, {}",
+            &self.dest,
+            &self.aggregate,
+            &self.element,
+            &self.indices.get(0).expect("InsertValue with no indices"),
+        )?;
+        for idx in &self.indices[1..] {
+            write!(f, ", {}", idx)?;
+        }
+        #[cfg(LLVM_VERSION_9_OR_GREATER)]
+        if self.debugloc.is_some() {
+            write!(f, " (with debugloc)")?;
+        }
+        Ok(())
+    }
+}
+
 /// Allocate memory on the stack.
 /// See [LLVM 10 docs on the 'alloca' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#alloca-instruction)
 #[derive(PartialEq, Clone, Debug)]
@@ -1099,6 +1293,26 @@ impl_hasresult!(Alloca);
 impl Typed for Alloca {
     fn get_type(&self, types: &Types) -> TypeRef {
         types.pointer_to(self.allocated_type.clone())
+    }
+}
+
+impl Display for Alloca {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{} = alloca {}{}, align {}",
+            &self.dest,
+            &self.allocated_type,
+            if let Some(Constant::Int { value: 1, .. }) = self.num_elements.as_constant() {
+                "".into()
+            } else {
+                format!(", {}", &self.num_elements)
+            },
+            &self.alignment,
+        )?;
+        #[cfg(LLVM_VERSION_9_OR_GREATER)]
+        if self.debugloc.is_some() {
+            write!(f, " (with debugloc)")?;
+        }
+        Ok(())
     }
 }
 
@@ -1128,6 +1342,30 @@ impl Typed for Load {
     }
 }
 
+impl Display for Load {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        // we differ from the LLVM IR text syntax here because we don't include
+        // the destination type (that's a little hard to get for us here, and
+        // it's completely redundant with the address type anyway)
+        write!(f, "{} = load{}{} {}{}, align {}",
+            &self.dest,
+            if self.atomicity.is_some() { " atomic" } else { "" },
+            if self.volatile { " volatile" } else { "" },
+            &self.address,
+            match &self.atomicity {
+                None => "".into(),
+                Some(a) => format!(" {}", a),
+            },
+            &self.alignment,
+        )?;
+        #[cfg(LLVM_VERSION_9_OR_GREATER)]
+        if self.debugloc.is_some() {
+            write!(f, " (with debugloc)")?;
+        }
+        Ok(())
+    }
+}
+
 /// Store a value to memory.
 /// See [LLVM 10 docs on the 'store' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#store-instruction)
 #[derive(PartialEq, Clone, Debug)]
@@ -1145,6 +1383,27 @@ pub struct Store {
 impl_inst!(Store, Store);
 void_typed!(Store);
 
+impl Display for Store {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "store{}{} {}, {}{}, align {}",
+            if self.atomicity.is_some() { " atomic" } else { "" },
+            if self.volatile { " volatile" } else { "" },
+            &self.value,
+            &self.address,
+            match &self.atomicity {
+                None => "".into(),
+                Some(a) => format!(" {}", a),
+            },
+            &self.alignment,
+        )?;
+        #[cfg(LLVM_VERSION_9_OR_GREATER)]
+        if self.debugloc.is_some() {
+            write!(f, " (with debugloc)")?;
+        }
+        Ok(())
+    }
+}
+
 /// See [LLVM 10 docs on the 'fence' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#fence-instruction)
 #[derive(PartialEq, Clone, Debug)]
 pub struct Fence {
@@ -1156,6 +1415,19 @@ pub struct Fence {
 
 impl_inst!(Fence, Fence);
 void_typed!(Fence);
+
+impl Display for Fence {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "fence {}",
+            &self.atomicity,
+        )?;
+        #[cfg(LLVM_VERSION_9_OR_GREATER)]
+        if self.debugloc.is_some() {
+            write!(f, " (with debugloc)")?;
+        }
+        Ok(())
+    }
+}
 
 /// Atomic compare and exchange.
 /// See [LLVM 10 docs on the 'cmpxchg' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#cmpxchg-instruction)
@@ -1188,6 +1460,29 @@ impl Typed for CmpXchg {
     }
 }
 
+impl Display for CmpXchg {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{} = cmpxchg ", &self.dest)?;
+        #[cfg(LLVM_VERSION_10_OR_GREATER)]
+        if self.weak {
+            write!(f, "weak ")?;
+        }
+        write!(f, "{}{}, {}, {} {} {}",
+            if self.volatile { "volatile " } else { "" },
+            &self.address,
+            &self.expected,
+            &self.replacement,
+            &self.atomicity,
+            &self.failure_memory_ordering,
+        )?;
+        #[cfg(LLVM_VERSION_9_OR_GREATER)]
+        if self.debugloc.is_some() {
+            write!(f, " (with debugloc)")?;
+        }
+        Ok(())
+    }
+}
+
 /// Atomic read-modify-write.
 /// See [LLVM 10 docs on the 'atomicrmw' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#atomicrmw-instruction)
 #[derive(PartialEq, Clone, Debug)]
@@ -1216,6 +1511,27 @@ impl Typed for AtomicRMW {
                 ty
             ),
         }
+    }
+}
+
+impl Display for AtomicRMW {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{} = atomicrmw {}",
+            &self.dest,
+            if self.volatile { "volatile " } else { "" },
+        )?;
+        #[cfg(LLVM_VERSION_10_OR_GREATER)]
+        write!(f, "{} ", &self.operation)?;
+        write!(f, "{}, {} {}",
+            &self.address,
+            &self.value,
+            &self.atomicity,
+        )?;
+        #[cfg(LLVM_VERSION_9_OR_GREATER)]
+        if self.debugloc.is_some() {
+            write!(f, " (with debugloc)")?;
+        }
+        Ok(())
     }
 }
 
@@ -1281,6 +1597,28 @@ fn gep_type<'o>(
     }
 }
 
+impl Display for GetElementPtr {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        // Like for `Load` (see notes there), we differ from the LLVM IR text
+        // syntax here because we don't include the destination type (that's a
+        // little hard to get for us here, and it's derivable from the other
+        // information anyway)
+        write!(f, "{} = getelementptr{} {}",
+            &self.dest,
+            if self.in_bounds { " inbounds" } else { "" },
+            &self.address,
+        )?;
+        for idx in &self.indices {
+            write!(f, ", {}", idx)?;
+        }
+        #[cfg(LLVM_VERSION_9_OR_GREATER)]
+        if self.debugloc.is_some() {
+            write!(f, " (with debugloc)")?;
+        }
+        Ok(())
+    }
+}
+
 /// Truncate.
 /// See [LLVM 10 docs on the 'trunc' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#trunc-to-instruction)
 #[derive(PartialEq, Clone, Debug)]
@@ -1294,8 +1632,7 @@ pub struct Trunc {
 }
 
 impl_inst!(Trunc, Trunc);
-impl_unop!(Trunc);
-explicitly_typed!(Trunc);
+unop_explicitly_typed!(Trunc, "trunc");
 
 /// Zero-extend.
 /// See [LLVM 10 docs on the 'zext' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#zext-to-instruction)
@@ -1310,8 +1647,7 @@ pub struct ZExt {
 }
 
 impl_inst!(ZExt, ZExt);
-impl_unop!(ZExt);
-explicitly_typed!(ZExt);
+unop_explicitly_typed!(ZExt, "zext");
 
 /// Sign-extend.
 /// See [LLVM 10 docs on the 'sext' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#sext-to-instruction)
@@ -1326,8 +1662,7 @@ pub struct SExt {
 }
 
 impl_inst!(SExt, SExt);
-impl_unop!(SExt);
-explicitly_typed!(SExt);
+unop_explicitly_typed!(SExt, "sext");
 
 /// Truncate a floating-point value.
 /// See [LLVM 10 docs on the 'fptrunc' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#fptrunc-to-instruction)
@@ -1342,8 +1677,7 @@ pub struct FPTrunc {
 }
 
 impl_inst!(FPTrunc, FPTrunc);
-impl_unop!(FPTrunc);
-explicitly_typed!(FPTrunc);
+unop_explicitly_typed!(FPTrunc, "fptrunc");
 
 /// Extend a floating-point value.
 /// See [LLVM 10 docs on the 'fpext' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#fpext-to-instruction)
@@ -1358,8 +1692,7 @@ pub struct FPExt {
 }
 
 impl_inst!(FPExt, FPExt);
-impl_unop!(FPExt);
-explicitly_typed!(FPExt);
+unop_explicitly_typed!(FPExt, "fpext");
 
 /// Convert floating-point to unsigned integer.
 /// See [LLVM 10 docs on the 'fptoui' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#fptoui-to-instruction)
@@ -1374,8 +1707,7 @@ pub struct FPToUI {
 }
 
 impl_inst!(FPToUI, FPToUI);
-impl_unop!(FPToUI);
-explicitly_typed!(FPToUI);
+unop_explicitly_typed!(FPToUI, "fptoui");
 
 /// Convert floating-point to signed integer.
 /// See [LLVM 10 docs on the 'fptosi' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#fptosi-to-instruction)
@@ -1390,8 +1722,7 @@ pub struct FPToSI {
 }
 
 impl_inst!(FPToSI, FPToSI);
-impl_unop!(FPToSI);
-explicitly_typed!(FPToSI);
+unop_explicitly_typed!(FPToSI, "fptosi");
 
 /// Convert unsigned integer to floating-point.
 /// See [LLVM 10 docs on the 'uitofp' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#uitofp-to-instruction)
@@ -1406,8 +1737,7 @@ pub struct UIToFP {
 }
 
 impl_inst!(UIToFP, UIToFP);
-impl_unop!(UIToFP);
-explicitly_typed!(UIToFP);
+unop_explicitly_typed!(UIToFP, "uitofp");
 
 /// Convert signed integer to floating-point.
 /// See [LLVM 10 docs on the 'sitofp' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#sitofp-to-instruction)
@@ -1422,8 +1752,7 @@ pub struct SIToFP {
 }
 
 impl_inst!(SIToFP, SIToFP);
-impl_unop!(SIToFP);
-explicitly_typed!(SIToFP);
+unop_explicitly_typed!(SIToFP, "sitofp");
 
 /// Convert pointer to integer.
 /// See [LLVM 10 docs on the 'ptrtoint' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#ptrtoint-to-instruction)
@@ -1438,8 +1767,7 @@ pub struct PtrToInt {
 }
 
 impl_inst!(PtrToInt, PtrToInt);
-impl_unop!(PtrToInt);
-explicitly_typed!(PtrToInt);
+unop_explicitly_typed!(PtrToInt, "ptrtoint");
 
 /// Convert integer to pointer.
 /// See [LLVM 10 docs on the 'inttoptr' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#inttoptr-to-instruction)
@@ -1454,8 +1782,7 @@ pub struct IntToPtr {
 }
 
 impl_inst!(IntToPtr, IntToPtr);
-impl_unop!(IntToPtr);
-explicitly_typed!(IntToPtr);
+unop_explicitly_typed!(IntToPtr, "inttoptr");
 
 /// Convert between types without changing any bits.
 /// See [LLVM 10 docs on the 'bitcast' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#bitcast-to-instruction)
@@ -1470,8 +1797,7 @@ pub struct BitCast {
 }
 
 impl_inst!(BitCast, BitCast);
-impl_unop!(BitCast);
-explicitly_typed!(BitCast);
+unop_explicitly_typed!(BitCast, "bitcast");
 
 /// See [LLVM 10 docs on the 'addrspacecast' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#addrspacecast-to-instruction)
 #[derive(PartialEq, Clone, Debug)]
@@ -1485,8 +1811,7 @@ pub struct AddrSpaceCast {
 }
 
 impl_inst!(AddrSpaceCast, AddrSpaceCast);
-impl_unop!(AddrSpaceCast);
-explicitly_typed!(AddrSpaceCast);
+unop_explicitly_typed!(AddrSpaceCast, "addrspacecast");
 
 /// Compare integers, pointers, or vectors of integers or pointers.
 /// See [LLVM 10 docs on the 'icmp' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#icmp-instruction)
@@ -1512,6 +1837,22 @@ impl Typed for ICmp {
             Type::VectorType { num_elements, .. } => types.vector_of(types.bool(), *num_elements),
             _ => types.bool(),
         }
+    }
+}
+
+impl Display for ICmp {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{} = icmp {} {}, {}",
+            &self.dest,
+            &self.predicate,
+            &self.operand0,
+            &self.operand1,
+        )?;
+        #[cfg(LLVM_VERSION_9_OR_GREATER)]
+        if self.debugloc.is_some() {
+            write!(f, " (with debugloc)")?;
+        }
+        Ok(())
     }
 }
 
@@ -1542,6 +1883,22 @@ impl Typed for FCmp {
     }
 }
 
+impl Display for FCmp {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{} = fcmp {} {}, {}",
+            &self.dest,
+            &self.predicate,
+            &self.operand0,
+            &self.operand1,
+        )?;
+        #[cfg(LLVM_VERSION_9_OR_GREATER)]
+        if self.debugloc.is_some() {
+            write!(f, " (with debugloc)")?;
+        }
+        Ok(())
+    }
+}
+
 /// See [LLVM 10 docs on the 'phi' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#phi-instruction)
 #[derive(PartialEq, Clone, Debug)]
 pub struct Phi {
@@ -1556,6 +1913,26 @@ pub struct Phi {
 impl_inst!(Phi, Phi);
 impl_hasresult!(Phi);
 explicitly_typed!(Phi);
+
+impl Display for Phi {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let (first_val, first_label) = &self.incoming_values.get(0).expect("Phi with no incoming values");
+        write!(f, "{} = phi {} [ {}, {} ]",
+            &self.dest,
+            &self.to_type,
+            first_val,
+            first_label,
+        )?;
+        for (val, label) in &self.incoming_values[1..] {
+            write!(f, ", [ {}, {} ]", val, label)?;
+        }
+        #[cfg(LLVM_VERSION_9_OR_GREATER)]
+        if self.debugloc.is_some() {
+            write!(f, " (with debugloc)")?;
+        }
+        Ok(())
+    }
+}
 
 /// See [LLVM 10 docs on the 'select' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#select-instruction)
 #[derive(PartialEq, Clone, Debug)]
@@ -1580,6 +1957,22 @@ impl Typed for Select {
     }
 }
 
+impl Display for Select {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{} = select {}, {}, {}",
+            &self.dest,
+            &self.condition,
+            &self.true_value,
+            &self.false_value,
+        )?;
+        #[cfg(LLVM_VERSION_9_OR_GREATER)]
+        if self.debugloc.is_some() {
+            write!(f, " (with debugloc)")?;
+        }
+        Ok(())
+    }
+}
+
 /// See [LLVM 10 docs on the `freeze` instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#freeze-instruction)
 #[cfg(LLVM_VERSION_10_OR_GREATER)]
 #[derive(PartialEq, Clone, Debug)]
@@ -1594,9 +1987,7 @@ pub struct Freeze {
 #[cfg(LLVM_VERSION_10_OR_GREATER)]
 impl_inst!(Freeze, Freeze);
 #[cfg(LLVM_VERSION_10_OR_GREATER)]
-impl_unop!(Freeze);
-#[cfg(LLVM_VERSION_10_OR_GREATER)]
-unop_same_type!(Freeze);
+unop_same_type!(Freeze, "freeze");
 
 /// Function call.
 /// See [LLVM 10 docs on the 'call' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#call-instruction)
@@ -1628,6 +2019,37 @@ impl Typed for Call {
     }
 }
 
+impl Display for Call {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        // We choose not to include all the detailed information available in
+        // the `Call` struct in this `Display` impl
+        write!(f, "{}{}call {}(",
+            match &self.dest {
+                None => "".into(),
+                Some(dest) => format!("{} = ", dest),
+            },
+            if self.is_tail_call { "tail " } else { "" },
+            match &self.function {
+                Either::Left(_) => "<inline assembly>".into(),
+                Either::Right(op) => format!("{}", op),
+            }
+        )?;
+        for (i, (arg, _)) in self.arguments.iter().enumerate() {
+            if i == self.arguments.len() - 1 {
+                write!(f, "{}", arg)?;
+            } else {
+                write!(f, "{}, ", arg)?;
+            }
+        }
+        write!(f, ")")?;
+        #[cfg(LLVM_VERSION_9_OR_GREATER)]
+        if self.debugloc.is_some() {
+            write!(f, " (with debugloc)")?;
+        }
+        Ok(())
+    }
+}
+
 /// See [LLVM 10 docs on the 'va_arg' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#va-arg-instruction)
 #[derive(PartialEq, Clone, Debug)]
 pub struct VAArg {
@@ -1645,6 +2067,21 @@ impl_hasresult!(VAArg);
 impl Typed for VAArg {
     fn get_type(&self, _types: &Types) -> TypeRef {
         self.cur_type.clone()
+    }
+}
+
+impl Display for VAArg {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{} = va_arg {}, {}",
+            &self.dest,
+            &self.arg_list,
+            &self.cur_type,
+        )?;
+        #[cfg(LLVM_VERSION_9_OR_GREATER)]
+        if self.debugloc.is_some() {
+            write!(f, " (with debugloc)")?;
+        }
+        Ok(())
     }
 }
 
@@ -1670,6 +2107,21 @@ impl Typed for LandingPad {
     }
 }
 
+impl Display for LandingPad {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{} = landingpad {}{}",
+            &self.dest,
+            &self.result_type,
+            if self.cleanup { " cleanup" } else { "" },
+        )?;
+        #[cfg(LLVM_VERSION_9_OR_GREATER)]
+        if self.debugloc.is_some() {
+            write!(f, " (with debugloc)")?;
+        }
+        Ok(())
+    }
+}
+
 /// Used for exception handling.
 /// See [LLVM 10 docs on the 'catchpad' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#catchpad-instruction)
 #[derive(PartialEq, Clone, Debug)]
@@ -1691,6 +2143,28 @@ impl Typed for CatchPad {
     }
 }
 
+impl Display for CatchPad {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{} = catchpad within {} [",
+            &self.dest,
+            &self.catch_switch,
+        )?;
+        for (i, arg) in self.args.iter().enumerate() {
+            if i == self.args.len() - 1 {
+                write!(f, "{}", arg)?;
+            } else {
+                write!(f, "{}, ", arg)?;
+            }
+        }
+        write!(f, "]")?;
+        #[cfg(LLVM_VERSION_9_OR_GREATER)]
+        if self.debugloc.is_some() {
+            write!(f, " (with debugloc)")?;
+        }
+        Ok(())
+    }
+}
+
 /// Used for exception handling.
 /// See [LLVM 10 docs on the 'cleanuppad' instruction](https://releases.llvm.org/10.0.0/docs/LangRef.html#cleanuppad-instruction)
 #[derive(PartialEq, Clone, Debug)]
@@ -1709,6 +2183,28 @@ impl_hasresult!(CleanupPad);
 impl Typed for CleanupPad {
     fn get_type(&self, types: &Types) -> TypeRef {
         types.token_type()
+    }
+}
+
+impl Display for CleanupPad {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{} = cleanuppad within {} [",
+            &self.dest,
+            &self.parent_pad,
+        )?;
+        for (i, arg) in self.args.iter().enumerate() {
+            if i == self.args.len() - 1 {
+                write!(f, "{}", arg)?;
+            } else {
+                write!(f, "{}, ", arg)?;
+            }
+        }
+        write!(f, "]")?;
+        #[cfg(LLVM_VERSION_9_OR_GREATER)]
+        if self.debugloc.is_some() {
+            write!(f, " (with debugloc)")?;
+        }
+        Ok(())
     }
 }
 
@@ -1739,6 +2235,18 @@ pub struct Atomicity {
     pub mem_ordering: MemoryOrdering,
 }
 
+impl Display for Atomicity {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}{}",
+            match self.synch_scope {
+                SynchronizationScope::SingleThread => "syncscope(\"singlethread\") ",
+                SynchronizationScope::System => "",
+            },
+            &self.mem_ordering,
+        )
+    }
+}
+
 /// See [LLVM 10 docs on Atomic Memory Ordering Constraints](https://releases.llvm.org/10.0.0/docs/LangRef.html#ordering)
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub enum SynchronizationScope {
@@ -1756,6 +2264,20 @@ pub enum MemoryOrdering {
     AcquireRelease,
     SequentiallyConsistent,
     NotAtomic, // since we only have a `MemoryOrdering` on atomic instructions, we should never need this. But empirically, some atomic instructions -- e.g. the first 'atomicrmw' instruction in our 'atomic_no_syncscope' test -- have this `MemoryOrdering`
+}
+
+impl Display for MemoryOrdering {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            MemoryOrdering::Unordered => write!(f, "unordered"),
+            MemoryOrdering::Monotonic => write!(f, "monotonic"),
+            MemoryOrdering::Acquire => write!(f, "acquire"),
+            MemoryOrdering::Release => write!(f, "release"),
+            MemoryOrdering::AcquireRelease => write!(f, "acq_rel"),
+            MemoryOrdering::SequentiallyConsistent => write!(f, "seq_cst"),
+            MemoryOrdering::NotAtomic => write!(f, "not_atomic"),
+        }
+    }
 }
 
 /// See [LLVM 10 docs on Inline Assembler Expressions](https://releases.llvm.org/10.0.0/docs/LangRef.html#inline-assembler-expressions).
@@ -1809,6 +2331,28 @@ pub enum RMWBinOp {
     FAdd,
     #[cfg(LLVM_VERSION_10_OR_GREATER)]
     FSub,
+}
+
+impl Display for RMWBinOp {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Self::Xchg => write!(f, "xchg"),
+            Self::Add => write!(f, "add"),
+            Self::Sub => write!(f, "sub"),
+            Self::And => write!(f, "and"),
+            Self::Nand => write!(f, "nand"),
+            Self::Or => write!(f, "or"),
+            Self::Xor => write!(f, "xor"),
+            Self::Max => write!(f, "max"),
+            Self::Min => write!(f, "min"),
+            Self::UMax => write!(f, "umax"),
+            Self::UMin => write!(f, "umin"),
+            #[cfg(LLVM_VERSION_10_OR_GREATER)]
+            Self::FAdd => write!(f, "fadd"),
+            #[cfg(LLVM_VERSION_10_OR_GREATER)]
+            Self::FSub => write!(f, "fsub"),
+        }
+    }
 }
 
 // --TODO this seems to be the data structure we want. But see notes on

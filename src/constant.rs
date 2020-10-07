@@ -2,6 +2,7 @@ use crate::name::Name;
 use crate::predicates::*;
 use crate::types::{FPType, NamedStructDef, Type, TypeRef, Typed, Types};
 use std::convert::TryFrom;
+use std::fmt::{self, Display};
 use std::ops::Deref;
 use std::sync::Arc;
 
@@ -142,6 +143,19 @@ impl Typed for Float {
     }
 }
 
+impl Display for Float {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Float::Half => write!(f, "half"),
+            Float::Single(s) => write!(f, "float {}", s),
+            Float::Double(d) => write!(f, "double {}", d),
+            Float::Quadruple => write!(f, "quadruple"),
+            Float::X86_FP80 => write!(f, "x86_fp80"),
+            Float::PPC_FP128 => write!(f, "ppc_fp128"),
+        }
+    }
+}
+
 impl Typed for Constant {
     #[rustfmt::skip] // to keep all the branches more consistent with each other
     fn get_type(&self, types: &Types) -> TypeRef {
@@ -210,6 +224,161 @@ impl Typed for Constant {
     }
 }
 
+impl Display for Constant {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Constant::Int { bits, value } => {
+                if *bits == 1 {
+                    if *value == 0 {
+                        write!(f, "i1 false")
+                    } else {
+                        write!(f, "i1 true")
+                    }
+                } else {
+                    // for readability, use heuristic to decide whether to show as negative number or not
+                    match *bits {
+                        16 => {
+                            let signed_val = (*value & 0xFFFF) as i16;
+                            if signed_val > -1000 {
+                                write!(f, "i{} {}", bits, signed_val)
+                            } else {
+                                write!(f, "i{} {}", bits, *value)
+                            }
+                        },
+                        32 => {
+                            let signed_val = (*value & 0xFFFF_FFFF) as i32;
+                            if signed_val > -1000 {
+                                write!(f, "i{} {}", bits, signed_val)
+                            } else {
+                                write!(f, "i{} {}", bits, *value)
+                            }
+                        },
+                        64 => {
+                            let signed_val = *value as i64;
+                            if signed_val > -1000 {
+                                write!(f, "i{} {}", bits, signed_val)
+                            } else {
+                                write!(f, "i{} {}", bits, *value)
+                            }
+                        },
+                        _ => {
+                            write!(f, "i{} {}", bits, value)
+                        },
+                    }
+                }
+            },
+            Constant::Float(float) => write!(f, "{}", float),
+            Constant::Null(ty) => write!(f, "{} null", ty),
+            Constant::AggregateZero(ty) => write!(f, "{} zeroinitializer", ty),
+            Constant::Struct { values, is_packed, .. } => {
+                if *is_packed {
+                    write!(f, "<")?;
+                }
+                write!(f, "{{ ")?;
+                for (i, val) in values.iter().enumerate() {
+                    if i == values.len() - 1 {
+                        write!(f, "{}", val)?;
+                    } else {
+                        write!(f, "{}, ", val)?;
+                    }
+                }
+                write!(f, " }}")?;
+                if *is_packed {
+                    write!(f, ">")?;
+                }
+                Ok(())
+            },
+            Constant::Array { elements, .. } => {
+                write!(f, "[ ")?;
+                for (i, elt) in elements.iter().enumerate() {
+                    if i == elements.len() - 1 {
+                        write!(f, "{}", elt)?;
+                    } else {
+                        write!(f, "{}, ", elt)?;
+                    }
+                }
+                write!(f, " ]")?;
+                Ok(())
+            }
+            Constant::Vector(v) => {
+                write!(f, "< ")?;
+                for (i, elt) in v.iter().enumerate() {
+                    if i == v.len() - 1 {
+                        write!(f, "{}", elt)?;
+                    } else {
+                        write!(f, "{}, ", elt)?;
+                    }
+                }
+                write!(f, " >")?;
+                Ok(())
+            },
+            Constant::Undef(ty) => {
+                write!(f, "{} undef", ty)
+            },
+            Constant::BlockAddress => {
+                write!(f, "blockaddr")
+            },
+            Constant::GlobalReference { name, ty } => {
+                let name = match name {
+                    Name::Name(n) => n,
+                    _ => panic!("Expected global to be named, not numbered"),
+                };
+                match ty.as_ref() {
+                    Type::FuncType { .. } => {
+                        // function types: just write the name, not the type
+                        write!(f, "@{}", name)
+                    },
+                    _ => {
+                        // non-function types: typical style with the type and name
+                        write!(f, "{}* @{}", ty, name)
+                    },
+                }
+            },
+            Constant::TokenNone => write!(f, "none"),
+            Constant::Add(a) => write!(f, "{}", a),
+            Constant::Sub(s) => write!(f, "{}", s),
+            Constant::Mul(m) => write!(f, "{}", m),
+            Constant::UDiv(d) => write!(f, "{}", d),
+            Constant::SDiv(d) => write!(f, "{}", d),
+            Constant::URem(r) => write!(f, "{}", r),
+            Constant::SRem(r) => write!(f, "{}", r),
+            Constant::And(a) => write!(f, "{}", a),
+            Constant::Or(o) => write!(f, "{}", o),
+            Constant::Xor(x) => write!(f, "{}", x),
+            Constant::Shl(s) => write!(f, "{}", s),
+            Constant::LShr(l) => write!(f, "{}", l),
+            Constant::AShr(a) => write!(f, "{}", a),
+            Constant::FAdd(a) => write!(f, "{}", a),
+            Constant::FSub(s) => write!(f, "{}", s),
+            Constant::FMul(m) => write!(f, "{}", m),
+            Constant::FDiv(d) => write!(f, "{}", d),
+            Constant::FRem(r) => write!(f, "{}", r),
+            Constant::ExtractElement(e) => write!(f, "{}", e),
+            Constant::InsertElement(i) => write!(f, "{}", i),
+            Constant::ShuffleVector(s) => write!(f, "{}", s),
+            Constant::ExtractValue(e) => write!(f, "{}", e),
+            Constant::InsertValue(i) => write!(f, "{}", i),
+            Constant::GetElementPtr(g) => write!(f, "{}", g),
+            Constant::Trunc(t) => write!(f, "{}", t),
+            Constant::ZExt(z) => write!(f, "{}", z),
+            Constant::SExt(s) => write!(f, "{}", s),
+            Constant::FPTrunc(t) => write!(f, "{}", t),
+            Constant::FPExt(e) => write!(f, "{}", e),
+            Constant::FPToUI(t) => write!(f, "{}", t),
+            Constant::FPToSI(t) => write!(f, "{}", t),
+            Constant::UIToFP(t) => write!(f, "{}", t),
+            Constant::SIToFP(t) => write!(f, "{}", t),
+            Constant::PtrToInt(p) => write!(f, "{}", p),
+            Constant::IntToPtr(i) => write!(f, "{}", i),
+            Constant::BitCast(b) => write!(f, "{}", b),
+            Constant::AddrSpaceCast(a) => write!(f, "{}", a),
+            Constant::ICmp(i) => write!(f, "{}", i),
+            Constant::FCmp(c) => write!(f, "{}", c),
+            Constant::Select(s) => write!(f, "{}", s),
+        }
+    }
+}
+
 /// A `ConstantRef` is a reference to a [`Constant`](enum.Constant.html).
 /// Most importantly, it implements `AsRef<Constant>` and `Deref<Target = Constant>`.
 /// It also has a cheap `Clone` -- only the reference is cloned, not the
@@ -238,6 +407,12 @@ impl Deref for ConstantRef {
 impl Typed for ConstantRef {
     fn get_type(&self, types: &Types) -> TypeRef {
         self.as_ref().get_type(types)
+    }
+}
+
+impl Display for ConstantRef {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", &self.0)
     }
 }
 
@@ -281,6 +456,8 @@ macro_rules! impl_constexpr {
     };
 }
 
+// impls which are shared by all UnaryOps.
+// If possible, prefer `unop_explicitly_typed!`, which provides additional impls
 macro_rules! impl_unop {
     ($expr:ty) => {
         impl ConstUnaryOp for $expr {
@@ -291,8 +468,11 @@ macro_rules! impl_unop {
     };
 }
 
+// impls which are shared by all BinaryOps.
+// If possible, prefer `binop_same_type!` or `binop_left_type!`, which
+// provide additional impls
 macro_rules! impl_binop {
-    ($expr:ty) => {
+    ($expr:ty, $dispname:expr) => {
         impl ConstBinaryOp for $expr {
             fn get_operand0(&self) -> ConstantRef {
                 self.operand0.clone()
@@ -305,8 +485,11 @@ macro_rules! impl_binop {
 }
 
 // Use on binops where the result type is the same as both operand types
+// (and the Display impl doesn't need to show any more information other than the operands)
 macro_rules! binop_same_type {
-    ($expr:ty) => {
+    ($expr:ty, $dispname:expr) => {
+        impl_binop!($expr, $dispname);
+
         impl Typed for $expr {
             fn get_type(&self, types: &Types) -> TypeRef {
                 let t = types.type_of(&self.get_operand0());
@@ -314,26 +497,49 @@ macro_rules! binop_same_type {
                 t
             }
         }
-    };
-}
 
-// Use on binops where the result type is the same as the first operand type
-macro_rules! binop_left_type {
-    ($expr:ty) => {
-        impl Typed for $expr {
-            fn get_type(&self, types: &Types) -> TypeRef {
-                types.type_of(&self.get_operand0())
+        impl Display for $expr {
+            fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                write!(f, "{} ({}, {})", $dispname, &self.operand0, &self.operand1)
             }
         }
     };
 }
 
-// Use on anything that has a 'to_type' field which indicates its result type
-macro_rules! explicitly_typed {
-    ($expr:ty) => {
+// Use on binops where the result type is the same as the first operand type
+// (and the Display impl doesn't need to show any more information other than the operands)
+macro_rules! binop_left_type {
+    ($expr:ty, $dispname:expr) => {
+        impl_binop!($expr, $dispname);
+
+        impl Typed for $expr {
+            fn get_type(&self, types: &Types) -> TypeRef {
+                types.type_of(&self.get_operand0())
+            }
+        }
+
+        impl Display for $expr {
+            fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                write!(f, "{} ({}, {})", $dispname, &self.operand0, &self.operand1)
+            }
+        }
+    };
+}
+
+// Use on unops with a 'to_type' field which indicates the result type
+macro_rules! unop_explicitly_typed {
+    ($expr:ty, $dispname:expr) => {
+        impl_unop!($expr);
+
         impl Typed for $expr {
             fn get_type(&self, _types: &Types) -> TypeRef {
                 self.to_type.clone()
+            }
+        }
+
+        impl Display for $expr {
+            fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                write!(f, "{} ({} to {})", $dispname, &self.get_operand(), &self.to_type)
             }
         }
     };
@@ -348,8 +554,7 @@ pub struct Add {
 }
 
 impl_constexpr!(Add, Add);
-impl_binop!(Add);
-binop_same_type!(Add);
+binop_same_type!(Add, "add");
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct Sub {
@@ -360,8 +565,7 @@ pub struct Sub {
 }
 
 impl_constexpr!(Sub, Sub);
-impl_binop!(Sub);
-binop_same_type!(Sub);
+binop_same_type!(Sub, "sub");
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct Mul {
@@ -372,8 +576,7 @@ pub struct Mul {
 }
 
 impl_constexpr!(Mul, Mul);
-impl_binop!(Mul);
-binop_same_type!(Mul);
+binop_same_type!(Mul, "mul");
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct UDiv {
@@ -383,8 +586,7 @@ pub struct UDiv {
 }
 
 impl_constexpr!(UDiv, UDiv);
-impl_binop!(UDiv);
-binop_same_type!(UDiv);
+binop_same_type!(UDiv, "udiv");
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct SDiv {
@@ -394,8 +596,7 @@ pub struct SDiv {
 }
 
 impl_constexpr!(SDiv, SDiv);
-impl_binop!(SDiv);
-binop_same_type!(SDiv);
+binop_same_type!(SDiv, "sdiv");
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct URem {
@@ -404,8 +605,7 @@ pub struct URem {
 }
 
 impl_constexpr!(URem, URem);
-impl_binop!(URem);
-binop_same_type!(URem);
+binop_same_type!(URem, "urem");
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct SRem {
@@ -414,8 +614,7 @@ pub struct SRem {
 }
 
 impl_constexpr!(SRem, SRem);
-impl_binop!(SRem);
-binop_same_type!(SRem);
+binop_same_type!(SRem, "srem");
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct And {
@@ -424,8 +623,7 @@ pub struct And {
 }
 
 impl_constexpr!(And, And);
-impl_binop!(And);
-binop_same_type!(And);
+binop_same_type!(And, "and");
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct Or {
@@ -434,8 +632,7 @@ pub struct Or {
 }
 
 impl_constexpr!(Or, Or);
-impl_binop!(Or);
-binop_same_type!(Or);
+binop_same_type!(Or, "or");
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct Xor {
@@ -444,8 +641,7 @@ pub struct Xor {
 }
 
 impl_constexpr!(Xor, Xor);
-impl_binop!(Xor);
-binop_same_type!(Xor);
+binop_same_type!(Xor, "xor");
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct Shl {
@@ -456,8 +652,7 @@ pub struct Shl {
 }
 
 impl_constexpr!(Shl, Shl);
-impl_binop!(Shl);
-binop_left_type!(Shl);
+binop_left_type!(Shl, "shl");
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct LShr {
@@ -467,8 +662,7 @@ pub struct LShr {
 }
 
 impl_constexpr!(LShr, LShr);
-impl_binop!(LShr);
-binop_left_type!(LShr);
+binop_left_type!(LShr, "lshr");
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct AShr {
@@ -478,8 +672,7 @@ pub struct AShr {
 }
 
 impl_constexpr!(AShr, AShr);
-impl_binop!(AShr);
-binop_left_type!(AShr);
+binop_left_type!(AShr, "ashr");
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct FAdd {
@@ -488,8 +681,7 @@ pub struct FAdd {
 }
 
 impl_constexpr!(FAdd, FAdd);
-impl_binop!(FAdd);
-binop_same_type!(FAdd);
+binop_same_type!(FAdd, "fadd");
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct FSub {
@@ -498,8 +690,7 @@ pub struct FSub {
 }
 
 impl_constexpr!(FSub, FSub);
-impl_binop!(FSub);
-binop_same_type!(FSub);
+binop_same_type!(FSub, "fsub");
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct FMul {
@@ -508,8 +699,7 @@ pub struct FMul {
 }
 
 impl_constexpr!(FMul, FMul);
-impl_binop!(FMul);
-binop_same_type!(FMul);
+binop_same_type!(FMul, "fmul");
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct FDiv {
@@ -518,8 +708,7 @@ pub struct FDiv {
 }
 
 impl_constexpr!(FDiv, FDiv);
-impl_binop!(FDiv);
-binop_same_type!(FDiv);
+binop_same_type!(FDiv, "fdiv");
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct FRem {
@@ -528,8 +717,7 @@ pub struct FRem {
 }
 
 impl_constexpr!(FRem, FRem);
-impl_binop!(FRem);
-binop_same_type!(FRem);
+binop_same_type!(FRem, "frem");
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct ExtractElement {
@@ -551,6 +739,12 @@ impl Typed for ExtractElement {
     }
 }
 
+impl Display for ExtractElement {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "extractelement ({}, {})", &self.vector, &self.index)
+    }
+}
+
 #[derive(PartialEq, Clone, Debug)]
 pub struct InsertElement {
     pub vector: ConstantRef,
@@ -566,6 +760,12 @@ impl Typed for InsertElement {
     }
 }
 
+impl Display for InsertElement {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "insertelement ({}, {}, {})", &self.vector, &self.element, &self.index)
+    }
+}
+
 #[derive(PartialEq, Clone, Debug)]
 pub struct ShuffleVector {
     pub operand0: ConstantRef,
@@ -574,7 +774,7 @@ pub struct ShuffleVector {
 }
 
 impl_constexpr!(ShuffleVector, ShuffleVector);
-impl_binop!(ShuffleVector);
+impl_binop!(ShuffleVector, "shufflevector");
 
 impl Typed for ShuffleVector {
     fn get_type(&self, types: &Types) -> TypeRef {
@@ -595,6 +795,12 @@ impl Typed for ShuffleVector {
                 ty
             ),
         }
+    }
+}
+
+impl Display for ShuffleVector {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "shufflevector ({}, {}, {})", &self.operand0, &self.operand1, &self.mask)
     }
 }
 
@@ -632,6 +838,17 @@ fn ev_type(cur_type: TypeRef, mut indices: impl Iterator<Item = u32>) -> TypeRef
     }
 }
 
+impl Display for ExtractValue {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "extractvalue ({}", &self.aggregate)?;
+        for idx in &self.indices {
+            write!(f, ", {}", idx)?;
+        }
+        write!(f, ")")?;
+        Ok(())
+    }
+}
+
 #[derive(PartialEq, Clone, Debug)]
 pub struct InsertValue {
     pub aggregate: ConstantRef,
@@ -644,6 +861,17 @@ impl_constexpr!(InsertValue, InsertValue);
 impl Typed for InsertValue {
     fn get_type(&self, types: &Types) -> TypeRef {
         types.type_of(&self.aggregate)
+    }
+}
+
+impl Display for InsertValue {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "insertvalue ({}, {}", &self.aggregate, &self.element)?;
+        for idx in &self.indices {
+            write!(f, ", {}", idx)?;
+        }
+        write!(f, ")")?;
+        Ok(())
     }
 }
 
@@ -703,6 +931,17 @@ fn gep_type<'c>(
     }
 }
 
+impl Display for GetElementPtr {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "getelementptr{} ({}", if self.in_bounds { " inbounds" } else { "" }, &self.address)?;
+        for idx in &self.indices {
+            write!(f, ", {}", idx)?;
+        }
+        write!(f, ")")?;
+        Ok(())
+    }
+}
+
 #[derive(PartialEq, Clone, Debug)]
 pub struct Trunc {
     pub operand: ConstantRef,
@@ -710,8 +949,7 @@ pub struct Trunc {
 }
 
 impl_constexpr!(Trunc, Trunc);
-impl_unop!(Trunc);
-explicitly_typed!(Trunc);
+unop_explicitly_typed!(Trunc, "trunc");
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct ZExt {
@@ -720,8 +958,7 @@ pub struct ZExt {
 }
 
 impl_constexpr!(ZExt, ZExt);
-impl_unop!(ZExt);
-explicitly_typed!(ZExt);
+unop_explicitly_typed!(ZExt, "zext");
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct SExt {
@@ -730,8 +967,7 @@ pub struct SExt {
 }
 
 impl_constexpr!(SExt, SExt);
-impl_unop!(SExt);
-explicitly_typed!(SExt);
+unop_explicitly_typed!(SExt, "sext");
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct FPTrunc {
@@ -740,8 +976,7 @@ pub struct FPTrunc {
 }
 
 impl_constexpr!(FPTrunc, FPTrunc);
-impl_unop!(FPTrunc);
-explicitly_typed!(FPTrunc);
+unop_explicitly_typed!(FPTrunc, "fptrunc");
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct FPExt {
@@ -750,8 +985,7 @@ pub struct FPExt {
 }
 
 impl_constexpr!(FPExt, FPExt);
-impl_unop!(FPExt);
-explicitly_typed!(FPExt);
+unop_explicitly_typed!(FPExt, "fpext");
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct FPToUI {
@@ -760,8 +994,7 @@ pub struct FPToUI {
 }
 
 impl_constexpr!(FPToUI, FPToUI);
-impl_unop!(FPToUI);
-explicitly_typed!(FPToUI);
+unop_explicitly_typed!(FPToUI, "fptoui");
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct FPToSI {
@@ -770,8 +1003,7 @@ pub struct FPToSI {
 }
 
 impl_constexpr!(FPToSI, FPToSI);
-impl_unop!(FPToSI);
-explicitly_typed!(FPToSI);
+unop_explicitly_typed!(FPToSI, "fptosi");
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct UIToFP {
@@ -780,8 +1012,7 @@ pub struct UIToFP {
 }
 
 impl_constexpr!(UIToFP, UIToFP);
-impl_unop!(UIToFP);
-explicitly_typed!(UIToFP);
+unop_explicitly_typed!(UIToFP, "uitofp");
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct SIToFP {
@@ -790,8 +1021,7 @@ pub struct SIToFP {
 }
 
 impl_constexpr!(SIToFP, SIToFP);
-impl_unop!(SIToFP);
-explicitly_typed!(SIToFP);
+unop_explicitly_typed!(SIToFP, "sitofp");
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct PtrToInt {
@@ -800,8 +1030,7 @@ pub struct PtrToInt {
 }
 
 impl_constexpr!(PtrToInt, PtrToInt);
-impl_unop!(PtrToInt);
-explicitly_typed!(PtrToInt);
+unop_explicitly_typed!(PtrToInt, "ptrtoint");
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct IntToPtr {
@@ -810,8 +1039,7 @@ pub struct IntToPtr {
 }
 
 impl_constexpr!(IntToPtr, IntToPtr);
-impl_unop!(IntToPtr);
-explicitly_typed!(IntToPtr);
+unop_explicitly_typed!(IntToPtr, "inttoptr");
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct BitCast {
@@ -820,8 +1048,7 @@ pub struct BitCast {
 }
 
 impl_constexpr!(BitCast, BitCast);
-impl_unop!(BitCast);
-explicitly_typed!(BitCast);
+unop_explicitly_typed!(BitCast, "bitcast");
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct AddrSpaceCast {
@@ -830,8 +1057,7 @@ pub struct AddrSpaceCast {
 }
 
 impl_constexpr!(AddrSpaceCast, AddrSpaceCast);
-impl_unop!(AddrSpaceCast);
-explicitly_typed!(AddrSpaceCast);
+unop_explicitly_typed!(AddrSpaceCast, "addrspacecast");
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct ICmp {
@@ -841,7 +1067,7 @@ pub struct ICmp {
 }
 
 impl_constexpr!(ICmp, ICmp);
-impl_binop!(ICmp);
+impl_binop!(ICmp, "icmp");
 
 impl Typed for ICmp {
     fn get_type(&self, types: &Types) -> TypeRef {
@@ -854,6 +1080,12 @@ impl Typed for ICmp {
     }
 }
 
+impl Display for ICmp {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "icmp {} ({}, {})", &self.predicate, &self.operand0, &self.operand1)
+    }
+}
+
 #[derive(PartialEq, Clone, Debug)]
 pub struct FCmp {
     pub predicate: FPPredicate,
@@ -862,7 +1094,7 @@ pub struct FCmp {
 }
 
 impl_constexpr!(FCmp, FCmp);
-impl_binop!(FCmp);
+impl_binop!(FCmp, "fcmp");
 
 impl Typed for FCmp {
     fn get_type(&self, types: &Types) -> TypeRef {
@@ -872,6 +1104,12 @@ impl Typed for FCmp {
             Type::VectorType { num_elements, .. } => types.vector_of(types.bool(), *num_elements),
             _ => types.bool(),
         }
+    }
+}
+
+impl Display for FCmp {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "fcmp {} ({}, {})", &self.predicate, &self.operand0, &self.operand1)
     }
 }
 
@@ -889,6 +1127,12 @@ impl Typed for Select {
         let t = types.type_of(&self.true_value);
         debug_assert_eq!(t, types.type_of(&self.false_value));
         t
+    }
+}
+
+impl Display for Select {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "select ({}, {}, {})", &self.condition, &self.true_value, &self.false_value)
     }
 }
 

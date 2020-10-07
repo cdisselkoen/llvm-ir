@@ -47,12 +47,15 @@ fn freeze() {
     let freeze: &instruction::Freeze = &bb.instrs[6].clone().try_into().unwrap_or_else(|_| panic!("Expected a freeze, got {:?}", &bb.instrs[6]));
     assert_eq!(freeze.operand, Operand::LocalOperand { name: Name::from("op1"), ty: module.types.i32() });
     assert_eq!(freeze.dest, Name::from(31));
+    assert_eq!(&format!("{}", freeze), "%31 = freeze i32 %op1");
     let freeze: &instruction::Freeze = &bb.instrs[7].clone().try_into().unwrap_or_else(|_| panic!("Expected a freeze, got {:?}", &bb.instrs[7]));
     assert_eq!(freeze.operand, Operand::ConstantOperand(ConstantRef::new(Constant::Int { bits: 32, value: 10 })));
     assert_eq!(freeze.dest, Name::from(32));
+    assert_eq!(&format!("{}", freeze), "%32 = freeze i32 10");
     let freeze: &instruction::Freeze = &bb.instrs[9].clone().try_into().unwrap_or_else(|_| panic!("Expected a freeze, got {:?}", &bb.instrs[9]));
     assert_eq!(freeze.operand, Operand::LocalOperand { name: Name::from("vop"), ty: module.types.vector_of(module.types.i32(), 2) });
     assert_eq!(freeze.dest, Name::from(34));
+    assert_eq!(&format!("{}", freeze), "%34 = freeze <2 x i32> %vop");
 }
 
 /// LLVM 10 added the ability to get the AtomicRMW operation to the C API, so we test that functionality

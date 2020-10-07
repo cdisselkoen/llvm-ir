@@ -73,6 +73,7 @@ fn hellobc() {
             value: 0
         })))
     );
+    assert_eq!(&format!("{}", ret), "ret i32 0");
 
     #[cfg(LLVM_VERSION_9_OR_GREATER)]
     {
@@ -109,6 +110,7 @@ fn hellobcg() {
     assert_eq!(debugloc.col, Some(3));
     assert_eq!(debugloc.filename, debug_filename);
     assert_eq!(debugloc.directory.as_ref().map(|s| s.as_str()), Some(debug_directory));
+    assert_eq!(&format!("{}", ret), "ret i32 0 (with debugloc)");
 }
 
 #[test]
@@ -200,6 +202,7 @@ fn loopbc() {
     assert_eq!(alloca.alignment, 16);
     assert_eq!(module.type_of(alloca), module.types.pointer_to(allocated_type.clone()));
     assert_eq!(module.type_of(&alloca.num_elements), module.types.i32());
+    assert_eq!(&format!("{}", alloca), "%3 = alloca [10 x i32], align 16");
     let bitcast: &instruction::BitCast = &bbs[0].instrs[1]
         .clone()
         .try_into()
@@ -215,6 +218,7 @@ fn loopbc() {
     );
     assert_eq!(module.type_of(bitcast), module.types.pointer_to(module.types.i8()));
     assert_eq!(module.type_of(&bitcast.operand), module.types.pointer_to(allocated_type.clone()));
+    assert_eq!(&format!("{}", bitcast), "%4 = bitcast [10 x i32]* %3 to i8*");
     let lifetimestart: &instruction::Call =
         &bbs[0].instrs[2].clone().try_into().expect("Should be a call");
     if let Either::Right(Operand::ConstantOperand(cref)) = &lifetimestart.function {
@@ -247,6 +251,7 @@ fn loopbc() {
     assert_eq!(arg0.1, vec![]);  // should have no parameter attributes
     assert_eq!(arg1.1.len(), 1);  // should have one parameter attribute
     assert_eq!(lifetimestart.dest, None);
+    assert_eq!(&format!("{}", lifetimestart), "call @llvm.lifetime.start.p0i8(i64 40, i8* %4)");
     let memset: &instruction::Call = &bbs[0].instrs[3].clone().try_into().expect("Should be a call");
     if let Either::Right(Operand::ConstantOperand(cref)) = &memset.function {
         if let Constant::GlobalReference { ref name, ref ty } = cref.as_ref() {
@@ -276,16 +281,19 @@ fn loopbc() {
     assert_eq!(memset.arguments[2].0, Operand::ConstantOperand(ConstantRef::new(Constant::Int { bits: 64, value: 40 })));
     assert_eq!(memset.arguments[3].0, Operand::ConstantOperand(ConstantRef::new(Constant::Int { bits: 1, value: 1 })));
     assert_eq!(memset.arguments[0].1.len(), 2); // should have two parameter attributes
+    assert_eq!(&format!("{}", memset), "call @llvm.memset.p0i8.i64(i8* %4, i8 0, i64 40, i1 true)");
     let add: &instruction::Add = &bbs[0].instrs[4].clone().try_into().expect("Should be an add");
     assert_eq!(add.operand0, Operand::LocalOperand { name: Name::Number(1), ty: module.types.i32() } );
     assert_eq!(add.operand1, Operand::ConstantOperand(ConstantRef::new(Constant::Int { bits: 32, value: 0x0000_0000_FFFF_FFFF })));
     assert_eq!(add.dest, Name::Number(5));
     assert_eq!(module.type_of(add), module.types.i32());
+    assert_eq!(&format!("{}", add), "%5 = add i32 %1, i32 -1");
     let icmp: &instruction::ICmp = &bbs[0].instrs[5].clone().try_into().expect("Should be an icmp");
     assert_eq!(icmp.predicate, IntPredicate::ULT);
     assert_eq!(icmp.operand0, Operand::LocalOperand { name: Name::Number(5), ty: module.types.i32() } );
     assert_eq!(icmp.operand1, Operand::ConstantOperand(ConstantRef::new(Constant::Int { bits: 32, value: 10 })));
     assert_eq!(module.type_of(icmp), module.types.bool());
+    assert_eq!(&format!("{}", icmp), "%6 = icmp ult i32 %5, i32 10");
     let condbr: &terminator::CondBr = &bbs[0].term.clone().try_into().expect("Should be a condbr");
     assert_eq!(condbr.condition, Operand::LocalOperand { name: Name::Number(6), ty: module.types.bool() } );
     assert_eq!(condbr.true_dest, Name::Number(7));
@@ -296,6 +304,10 @@ fn loopbc() {
     };
     assert_eq!(condbr.false_dest, false_dest);
     assert_eq!(module.type_of(condbr), module.types.void());
+    assert_eq!(
+        &format!("{}", condbr),
+        &format!("br i1 %6, label %7, label %{}", if cfg!(LLVM_VERSION_9_OR_LOWER) { 22 } else { 21 }),
+    );
 
     // check details about certain instructions in basic block %7
     // not sure why LLVM 10 puts a ZExt here instead of SExt. Maybe it can prove it's equivalent?
@@ -308,10 +320,15 @@ fn loopbc() {
     assert_eq!(ext.dest, Name::Number(9));
     assert_eq!(module.type_of(ext), module.types.i64());
     #[cfg(LLVM_VERSION_9_OR_LOWER)]
+    assert_eq!(&format!("{}", ext), "%9 = sext i32 %1 to i64");
+    #[cfg(LLVM_VERSION_10_OR_GREATER)]
+    assert_eq!(&format!("{}", ext), "%9 = zext i32 %1 to i64");
+    #[cfg(LLVM_VERSION_9_OR_LOWER)]
     {
         // LLVM 10 doesn't have a Br in this function
         let br: &terminator::Br = &bbs[1].term.clone().try_into().expect("Should be a Br");
         assert_eq!(br.dest, Name::Number(10));
+        assert_eq!(&format!("{}", br), "br label %10");
     }
 
     // check details about certain instructions in basic block %10 (LLVM 9-) / %12 (LLVM 10+)
@@ -351,6 +368,10 @@ fn loopbc() {
             ),
         ]
     );
+    #[cfg(LLVM_VERSION_9_OR_LOWER)]
+    assert_eq!(&format!("{}", phi), "%11 = phi i64 [ i64 0, %7 ], [ i64 %20, %19 ]");
+    #[cfg(LLVM_VERSION_10_OR_GREATER)]
+    assert_eq!(&format!("{}", phi), "%13 = phi i64 [ i64 %19, %12 ], [ i64 1, %7 ]");
 
     let gep: &instruction::GetElementPtr =
         &bbs[2].instrs[1].clone().try_into().expect("Should be a gep");
@@ -384,6 +405,10 @@ fn loopbc() {
         ]
     );
     assert_eq!(module.type_of(gep), module.types.pointer_to(module.types.i32()));
+    #[cfg(LLVM_VERSION_9_OR_LOWER)]
+    assert_eq!(&format!("{}", gep), "%12 = getelementptr inbounds [10 x i32]* %3, i64 0, i64 %11");
+    #[cfg(LLVM_VERSION_10_OR_GREATER)]
+    assert_eq!(&format!("{}", gep), "%14 = getelementptr inbounds [10 x i32]* %3, i64 0, i64 %13");
     let store: &instruction::Store = &bbs[2].instrs[2]
         .clone()
         .try_into()
@@ -399,6 +424,10 @@ fn loopbc() {
     assert_eq!(store.alignment, 4);
     assert_eq!(module.type_of(store), module.types.void());
     assert_eq!(bbs[2].instrs[2].is_atomic(), false);
+    #[cfg(LLVM_VERSION_9_OR_LOWER)]
+    assert_eq!(&format!("{}", store), "store volatile i32 %8, i32* %12, align 4");
+    #[cfg(LLVM_VERSION_10_OR_GREATER)]
+    assert_eq!(&format!("{}", store), "store volatile i32 %8, i32* %14, align 4");
 
     // and finally other instructions of types we haven't seen yet
     let load_inst: &Instruction = if cfg!(LLVM_VERSION_9_OR_LOWER) {
@@ -413,6 +442,7 @@ fn loopbc() {
     assert_eq!(load.alignment, 4);
     assert_eq!(module.type_of(load), module.types.i32());
     assert_eq!(load_inst.is_atomic(), false);
+    assert_eq!(&format!("{}", load), "%17 = load volatile i32* %16, align 4");
     let ret: &Terminator = if cfg!(LLVM_VERSION_9_OR_LOWER) {
         &bbs[5].term
     } else {
@@ -421,6 +451,7 @@ fn loopbc() {
     let ret: &terminator::Ret = &ret.clone().try_into().expect("Should be a ret");
     assert_eq!(ret.return_operand, None);
     assert_eq!(module.type_of(ret), module.types.void());
+    assert_eq!(&format!("{}", ret), "ret void");
 }
 
 #[test]
@@ -445,12 +476,20 @@ fn switchbc() {
     assert_eq!(switch.dests[7], (ConstantRef::new(Constant::Int { bits: 32, value: 88 }), Name::Number(8)));
     assert_eq!(switch.dests[8], (ConstantRef::new(Constant::Int { bits: 32, value: 101 }), Name::Number(9)));
     assert_eq!(switch.default_dest, Name::Number(10));
+    assert_eq!(
+        &format!("{}", switch),
+        "switch i32 %0, label %10 [ i32 0, label %12; i32 1, label %2; i32 13, label %3; i32 26, label %4; i32 33, label %5; i32 142, label %6; i32 1678, label %7; i32 88, label %8; i32 101, label %9; ]",
+    );
 
     let phibb = &func
         .get_bb_by_name(&Name::Number(12))
         .expect("Failed to find bb %12");
     let phi: &instruction::Phi = &phibb.instrs[0].clone().try_into().expect("Should be a phi");
     assert_eq!(phi.incoming_values.len(), 10);
+    assert_eq!(
+        &format!("{}", phi),
+        "%13 = phi i32 [ i32 -1, %10 ], [ i32 -3, %9 ], [ i32 0, %8 ], [ i32 77, %7 ], [ i32 -33, %6 ], [ i32 1, %5 ], [ i32 -5, %4 ], [ i32 -7, %3 ], [ i32 5, %2 ], [ i32 3, %1 ]",
+    );
 }
 
 #[test]
@@ -475,15 +514,19 @@ fn variablesbc() {
     let store: &instruction::Store = &bb.instrs[2].clone().try_into().expect("Should be a store");
     assert_eq!(store.address, Operand::LocalOperand { name: Name::Number(3), ty: module.types.pointer_to(module.types.i32()) });
     assert_eq!(module.type_of(store), module.types.void());
+    assert_eq!(&format!("{}", store), "store volatile i32 %0, i32* %3, align 4");
     let load: &instruction::Load = &bb.instrs[8].clone().try_into().expect("Should be a load");
     assert_eq!(load.address, Operand::LocalOperand { name: Name::Number(4), ty: module.types.pointer_to(module.types.i32()) });
     assert_eq!(module.type_of(load), module.types.i32());
+    assert_eq!(&format!("{}", load), "%8 = load volatile i32* %4, align 4");
     let global_load: &instruction::Load = &bb.instrs[14].clone().try_into().expect("Should be a load");
     assert_eq!(global_load.address, Operand::ConstantOperand(ConstantRef::new(Constant::GlobalReference { name: Name::from("global"), ty: module.types.i32() })));
     assert_eq!(module.type_of(global_load), module.types.i32());
+    assert_eq!(&format!("{}", global_load), "%12 = load volatile i32* @global, align 4");
     let global_store: &instruction::Store = &bb.instrs[16].clone().try_into().expect("Should be a store");
     assert_eq!(global_store.address, Operand::ConstantOperand(ConstantRef::new(Constant::GlobalReference { name: Name::from("global"), ty: module.types.i32() })));
     assert_eq!(module.type_of(global_store), module.types.void());
+    assert_eq!(&format!("{}", global_store), "store volatile i32 %13, i32* @global, align 4");
 }
 
 // this test relates to the version of the file compiled with debuginfo
@@ -572,10 +615,13 @@ fn rustbc() {
     let startbb = func.get_bb_by_name(&Name::from("start")).expect("Failed to find bb 'start'");
     let alloca_iter: &instruction::Alloca = &startbb.instrs[5].clone().try_into().expect("Should be an alloca");
     assert_eq!(alloca_iter.dest, Name::from("iter"));
+    assert_eq!(&format!("{}", alloca_iter), "%iter = alloca { i64*, i64* }, align 8");
     let alloca_sum: &instruction::Alloca = &startbb.instrs[6].clone().try_into().expect("Should be an alloca");
     assert_eq!(alloca_sum.dest, Name::from("sum"));
+    assert_eq!(&format!("{}", alloca_sum), "%sum = alloca i64, align 8");
     let store: &instruction::Store = &startbb.instrs[7].clone().try_into().expect("Should be a store");
     assert_eq!(store.address, Operand::LocalOperand { name: Name::from("sum"), ty: module.types.pointer_to(module.types.i64()) });
+    assert_eq!(&format!("{}", store), "store i64 0, i64* %sum, align 8");
     let call: &instruction::Call = &startbb.instrs[8].clone().try_into().expect("Should be a call");
     let param_type = module.types.pointer_to(module.types.named_struct("alloc::vec::Vec<isize>").unwrap());
     let ret_type = module.types.struct_of(vec![
@@ -612,6 +658,10 @@ fn rustbc() {
         ty: param_type,
     });
     assert_eq!(call.dest, Some(Name::Number(0)));
+    assert_eq!(
+        &format!("{}", call),
+        "%0 = call @_ZN68_$LT$alloc..vec..Vec$LT$T$GT$$u20$as$u20$core..ops..deref..Deref$GT$5deref17h378128d7d9378466E(%alloc::vec::Vec<isize>* %v)",
+    );
 
     #[cfg(LLVM_VERSION_9_OR_GREATER)]
     {
@@ -653,11 +703,16 @@ fn rustbcg() {
     assert_eq!(store_debugloc.col, Some(18));
     assert_eq!(store_debugloc.filename, debug_filename);
     assert_eq!(debugloc.directory.as_ref().map(|s| s.as_str()), Some(debug_directory));
+    assert_eq!(&format!("{}", startbb.instrs[31]), "store i64 0, i64* %sum, align 8 (with debugloc)");
     let call_debugloc = startbb.instrs[33].get_debug_loc().as_ref().expect("Expected this call to have a debugloc");
     assert_eq!(call_debugloc.line, 5);
     assert_eq!(call_debugloc.col, Some(13));
     assert_eq!(call_debugloc.filename, debug_filename);
     assert_eq!(debugloc.directory.as_ref().map(|s| s.as_str()), Some(debug_directory));
+    assert_eq!(
+        &format!("{}", startbb.instrs[33]),
+        "%4 = call @_ZN68_$LT$alloc..vec..Vec$LT$T$GT$$u20$as$u20$core..ops..deref..Deref$GT$5deref17h378128d7d9378466E(%alloc::vec::Vec<isize>* %3) (with debugloc)",
+    );
 }
 
 #[test]
@@ -727,6 +782,7 @@ fn simple_linked_list() {
             alloca.allocated_type
         );
     }
+    assert_eq!(&format!("{}", alloca), "%3 = alloca %struct.SimpleLinkedList, align 8");
 
     let struct_name: String = "struct.SomeOpaqueStruct".into();
     let structty = module
@@ -792,6 +848,10 @@ fn simple_linked_list_g() {
     assert_eq!(debugloc.col, Some(28));
     assert_eq!(debugloc.filename, debug_filename);
     assert_eq!(debugloc.directory.as_ref().map(|s| s.as_str()), Some(debug_directory));
+    assert_eq!(
+        &format!("{}", func.basic_blocks[0].instrs[7]),
+        "call @llvm.dbg.declare(<metadata>, <metadata>, <metadata>) (with debugloc)",
+    );
 
     // the tenth instruction should have a different debugloc
     let debugloc = func.basic_blocks[0].instrs[9].get_debug_loc().as_ref().expect("expected this instruction to have a debugloc");
@@ -799,6 +859,10 @@ fn simple_linked_list_g() {
     assert_eq!(debugloc.col, Some(34));
     assert_eq!(debugloc.filename, debug_filename);
     assert_eq!(debugloc.directory.as_ref().map(|s| s.as_str()), Some(debug_directory));
+    assert_eq!(
+        &format!("{}", func.basic_blocks[0].instrs[9]),
+        "%8 = getelementptr inbounds %struct.SimpleLinkedList* %3, i32 0, i32 0 (with debugloc)",
+    );
 }
 
 #[test]
@@ -919,6 +983,8 @@ fn indirectly_recursive_type() {
             alloca_b.allocated_type
         );
     }
+    assert_eq!(&format!("{}", alloca_a), "%3 = alloca %struct.NodeA, align 8");
+    assert_eq!(&format!("{}", alloca_b), "%4 = alloca %struct.NodeB, align 8");
 }
 
 #[test]
