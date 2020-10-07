@@ -1280,16 +1280,15 @@ impl Typed for Alloca {
 
 impl Display for Alloca {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{} = alloca {}{}, align {}",
-            &self.dest,
-            &self.allocated_type,
-            if let Some(Constant::Int { value: 1, .. }) = self.num_elements.as_constant() {
-                "".into()
-            } else {
-                format!(", {}", &self.num_elements)
-            },
-            &self.alignment,
+        write!(f, "{} = alloca {}",
+            &self.dest, &self.allocated_type,
         )?;
+        if let Some(Constant::Int { value: 1, .. }) = self.num_elements.as_constant() {
+            // omit num_elements
+        } else {
+            write!(f, ", {}", &self.num_elements)?;
+        }
+        write!(f, ", align {}", &self.alignment)?;
         #[cfg(LLVM_VERSION_9_OR_GREATER)]
         if self.debugloc.is_some() {
             write!(f, " (with debugloc)")?;
@@ -1329,21 +1328,18 @@ impl Display for Load {
         // we differ from the LLVM IR text syntax here because we don't include
         // the destination type (that's a little hard to get for us here, and
         // it's completely redundant with the address type anyway)
-        write!(f, "{} = load{}{} {}{}, align {}",
-            &self.dest,
-            if self.atomicity.is_some() {
-                " atomic"
-            } else {
-                ""
-            },
-            if self.volatile { " volatile" } else { "" },
-            &self.address,
-            match &self.atomicity {
-                None => "".into(),
-                Some(a) => format!(" {}", a),
-            },
-            &self.alignment,
-        )?;
+        write!(f, "{} = load ", &self.dest)?;
+        if self.atomicity.is_some() {
+            write!(f, "atomic ")?;
+        }
+        if self.volatile {
+            write!(f, "volatile ")?;
+        }
+        write!(f, "{}", &self.address)?;
+        if let Some(a) = &self.atomicity {
+            write!(f, " {}", a)?;
+        }
+        write!(f, ", align {}", &self.alignment)?;
         #[cfg(LLVM_VERSION_9_OR_GREATER)]
         if self.debugloc.is_some() {
             write!(f, " (with debugloc)")?;
@@ -1371,21 +1367,18 @@ void_typed!(Store);
 
 impl Display for Store {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "store{}{} {}, {}{}, align {}",
-            if self.atomicity.is_some() {
-                " atomic"
-            } else {
-                ""
-            },
-            if self.volatile { " volatile" } else { "" },
-            &self.value,
-            &self.address,
-            match &self.atomicity {
-                None => "".into(),
-                Some(a) => format!(" {}", a),
-            },
-            &self.alignment,
-        )?;
+        write!(f, "store ")?;
+        if self.atomicity.is_some() {
+            write!(f, "atomic ")?;
+        }
+        if self.volatile {
+            write!(f, "volatile ")?;
+        }
+        write!(f, "{}, {}", &self.value, &self.address)?;
+        if let Some(a) = &self.atomicity {
+            write!(f, " {}", a)?;
+        }
+        write!(f, ", align {}", &self.alignment)?;
         #[cfg(LLVM_VERSION_9_OR_GREATER)]
         if self.debugloc.is_some() {
             write!(f, " (with debugloc)")?;
@@ -1455,8 +1448,10 @@ impl Display for CmpXchg {
         if self.weak {
             write!(f, "weak ")?;
         }
-        write!(f, "{}{}, {}, {} {} {}",
-            if self.volatile { "volatile " } else { "" },
+        if self.volatile {
+            write!(f, "volatile ")?;
+        }
+        write!(f, "{}, {}, {} {} {}",
             &self.address,
             &self.expected,
             &self.replacement,
@@ -1504,10 +1499,10 @@ impl Typed for AtomicRMW {
 
 impl Display for AtomicRMW {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{} = atomicrmw {}",
-            &self.dest,
-            if self.volatile { "volatile " } else { "" },
-        )?;
+        write!(f, "{} = atomicrmw ", &self.dest)?;
+        if self.volatile {
+            write!(f, "volatile ")?;
+        }
         #[cfg(LLVM_VERSION_10_OR_GREATER)]
         write!(f, "{} ", &self.operation)?;
         write!(f, "{}, {} {}", &self.address, &self.value, &self.atomicity)?;
@@ -1587,11 +1582,11 @@ impl Display for GetElementPtr {
         // syntax here because we don't include the destination type (that's a
         // little hard to get for us here, and it's derivable from the other
         // information anyway)
-        write!(f, "{} = getelementptr{} {}",
-            &self.dest,
-            if self.in_bounds { " inbounds" } else { "" },
-            &self.address,
-        )?;
+        write!(f, "{} = getelementptr ", &self.dest)?;
+        if self.in_bounds {
+            write!(f, "inbounds ")?;
+        }
+        write!(f, "{}", &self.address)?;
         for idx in &self.indices {
             write!(f, ", {}", idx)?;
         }
@@ -2001,12 +1996,13 @@ impl Display for Call {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         // We choose not to include all the detailed information available in
         // the `Call` struct in this `Display` impl
-        write!(f, "{}{}call {}(",
-            match &self.dest {
-                None => "".into(),
-                Some(dest) => format!("{} = ", dest),
-            },
-            if self.is_tail_call { "tail " } else { "" },
+        if let Some(dest) = &self.dest {
+            write!(f, "{} = ", dest)?;
+        }
+        if self.is_tail_call {
+            write!(f, "tail ")?;
+        }
+        write!(f, "call {}(",
             match &self.function {
                 Either::Left(_) => "<inline assembly>".into(),
                 Either::Right(op) => format!("{}", op),
@@ -2085,11 +2081,10 @@ impl Typed for LandingPad {
 
 impl Display for LandingPad {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{} = landingpad {}{}",
-            &self.dest,
-            &self.result_type,
-            if self.cleanup { " cleanup" } else { "" },
-        )?;
+        write!(f, "{} = landingpad {}", &self.dest, &self.result_type)?;
+        if self.cleanup {
+            write!(f, " cleanup")?;
+        }
         #[cfg(LLVM_VERSION_9_OR_GREATER)]
         if self.debugloc.is_some() {
             write!(f, " (with debugloc)")?;
@@ -2211,13 +2206,12 @@ pub struct Atomicity {
 
 impl Display for Atomicity {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}{}",
-            match self.synch_scope {
-                SynchronizationScope::SingleThread => "syncscope(\"singlethread\") ",
-                SynchronizationScope::System => "",
-            },
-            &self.mem_ordering,
-        )
+        match self.synch_scope {
+            SynchronizationScope::SingleThread => write!(f, "syncscope(\"singlethread\") "),
+            SynchronizationScope::System => Ok(()),
+        }?;
+        write!(f, "{}", &self.mem_ordering)?;
+        Ok(())
     }
 }
 
