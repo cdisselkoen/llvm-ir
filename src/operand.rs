@@ -48,12 +48,8 @@ impl Operand {
 impl Display for Operand {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Operand::LocalOperand { name, ty } => {
-                write!(f, "{} {}", ty, name)
-            },
-            Operand::ConstantOperand(cref) => {
-                write!(f, "{}", &cref)
-            },
+            Operand::LocalOperand { name, ty } => write!(f, "{} {}", ty, name),
+            Operand::ConstantOperand(cref) => write!(f, "{}", &cref),
             Operand::MetadataOperand => write!(f, "<metadata>"),
         }
     }
@@ -64,8 +60,8 @@ impl Display for Operand {
 // ********* //
 
 use crate::constant::Constant;
-use crate::llvm_sys::*;
 use crate::function::FunctionContext;
+use crate::llvm_sys::*;
 use crate::module::ModuleContext;
 use llvm_sys::LLVMValueKind;
 
