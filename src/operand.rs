@@ -1,5 +1,6 @@
 use crate::types::{TypeRef, Typed, Types};
 use crate::{ConstantRef, Name};
+use std::fmt::{self, Display};
 
 #[derive(PartialEq, Clone, Debug)]
 pub enum Operand {
@@ -40,6 +41,20 @@ impl Operand {
         match self {
             Operand::ConstantOperand(cref) => Some(&cref),
             _ => None,
+        }
+    }
+}
+
+impl Display for Operand {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Operand::LocalOperand { name, ty } => {
+                write!(f, "{} {}", ty, name)
+            },
+            Operand::ConstantOperand(cref) => {
+                write!(f, "{}", &cref)
+            },
+            Operand::MetadataOperand => write!(f, "<metadata>"),
         }
     }
 }

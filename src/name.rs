@@ -49,7 +49,7 @@ impl From<usize> for Name {
 impl fmt::Display for Name {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Name::Name(s) => write!(f, "{:?}", s),
+            Name::Name(s) => write!(f, "%{}", s),
             Name::Number(n) => write!(f, "%{}", n),
         }
     }

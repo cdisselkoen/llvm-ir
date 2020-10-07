@@ -153,6 +153,16 @@ fn DILocation_implicit_code_extra_checks() {
     assert_eq!(invoke.arguments[1].0, Operand::ConstantOperand(ConstantRef::new(Constant::Int { bits: 32, value: 0 })));
     assert_eq!(invoke.return_label, Name::from("invoke.cont"));
     assert_eq!(invoke.exception_label, Name::from("lpad"));
+    #[cfg(LLVM_VERSION_8_OR_LOWER)]
+    assert_eq!(
+        &format!("{}", invoke),
+        "%0 = invoke @_ZN1A3fooEi(%struct.A* %a, i32 0) to label %invoke.cont unwind label %lpad",
+    );
+    #[cfg(LLVM_VERSION_9_OR_GREATER)]
+    assert_eq!(
+        &format!("{}", invoke),
+        "%0 = invoke @_ZN1A3fooEi(%struct.A* %a, i32 0) to label %invoke.cont unwind label %lpad (with debugloc)",
+    );
 
     // For the rest of the function, our numbered variables are one-off the
     // numbers in the .ll file in the LLVM repo.
@@ -160,8 +170,9 @@ fn DILocation_implicit_code_extra_checks() {
     // first 'landingpad' instruction, while we number it %1.
     // The discrepancy is because we assign %0 to be the result of the invoke
     // terminator in the entry block. Although this particular .ll file doesn't
-    // assign the result of the invoke, the LLVM 8 docs on 'invoke' -- and in
-    // particular the examples -- are clear that 'invoke' does produce a result.
+    // assign the result of the invoke, the LLVM 8/9/10 docs on 'invoke' -- and
+    // in particular the examples -- are clear that 'invoke' does produce a
+    // result.
 
     let lpad = func
         .get_bb_by_name(&Name::from("lpad"))
@@ -178,6 +189,10 @@ fn DILocation_implicit_code_extra_checks() {
     assert_eq!(landingpad.clauses.len(), 1);
     assert_eq!(landingpad.cleanup, false);
     assert_eq!(landingpad.dest, Name::Number(1));
+    #[cfg(LLVM_VERSION_8_OR_LOWER)]
+    assert_eq!(&format!("{}", landingpad), "%1 = landingpad { i8*, i32 }");
+    #[cfg(LLVM_VERSION_9_OR_GREATER)]
+    assert_eq!(&format!("{}", landingpad), "%1 = landingpad { i8*, i32 } (with debugloc)");
     let eval: &instruction::ExtractValue = &lpad.instrs[1]
         .clone()
         .try_into()
@@ -192,6 +207,10 @@ fn DILocation_implicit_code_extra_checks() {
     assert_eq!(eval.indices.len(), 1);
     assert_eq!(eval.indices[0], 0);
     assert_eq!(eval.dest, Name::Number(2));
+    #[cfg(LLVM_VERSION_8_OR_LOWER)]
+    assert_eq!(&format!("{}", eval), "%2 = extractvalue { i8*, i32 } %1, 0");
+    #[cfg(LLVM_VERSION_9_OR_GREATER)]
+    assert_eq!(&format!("{}", eval), "%2 = extractvalue { i8*, i32 } %1, 0 (with debugloc)");
 
     // From this point on, our numbers are off by 2 instead of 1, due to
     // numbering the invoke terminator in the 'catch' block.
@@ -207,6 +226,10 @@ fn DILocation_implicit_code_extra_checks() {
     assert_eq!(landingpad.result_type, expected_landingpad_resultty);
     assert_eq!(landingpad.clauses.len(), 0);
     assert_eq!(landingpad.cleanup, true);
+    #[cfg(LLVM_VERSION_8_OR_LOWER)]
+    assert_eq!(&format!("{}", landingpad), "%10 = landingpad { i8*, i32 } cleanup");
+    #[cfg(LLVM_VERSION_9_OR_GREATER)]
+    assert_eq!(&format!("{}", landingpad), "%10 = landingpad { i8*, i32 } cleanup (with debugloc)");
     let eval: &instruction::ExtractValue = &lpad1.instrs[3]
         .clone()
         .try_into()
@@ -221,15 +244,23 @@ fn DILocation_implicit_code_extra_checks() {
     assert_eq!(eval.indices.len(), 1);
     assert_eq!(eval.indices[0], 1);
     assert_eq!(eval.dest, Name::Number(12));
+    #[cfg(LLVM_VERSION_8_OR_LOWER)]
+    assert_eq!(&format!("{}", eval), "%12 = extractvalue { i8*, i32 } %10, 1");
+    #[cfg(LLVM_VERSION_9_OR_GREATER)]
+    assert_eq!(&format!("{}", eval), "%12 = extractvalue { i8*, i32 } %10, 1 (with debugloc)");
 
     let trycont = func
         .get_bb_by_name(&Name::from("try.cont"))
         .expect("Failed to find trycont bb");
-    let _: &terminator::Unreachable = &trycont
+    let u: &terminator::Unreachable = &trycont
         .term
         .clone()
         .try_into()
         .unwrap_or_else(|_| panic!("Expected an unreachable, got {:?}", &trycont.term));
+    #[cfg(LLVM_VERSION_8_OR_LOWER)]
+    assert_eq!(&format!("{}", u), "unreachable");
+    #[cfg(LLVM_VERSION_9_OR_GREATER)]
+    assert_eq!(&format!("{}", u), "unreachable (with debugloc)");
 
     let ehresume = func
         .get_bb_by_name(&Name::from("eh.resume"))
@@ -252,6 +283,10 @@ fn DILocation_implicit_code_extra_checks() {
     assert_eq!(ival.indices.len(), 1);
     assert_eq!(ival.indices[0], 0);
     assert_eq!(ival.dest, Name::from("lpad.val"));
+    #[cfg(LLVM_VERSION_8_OR_LOWER)]
+    assert_eq!(&format!("{}", ival), "%lpad.val = insertvalue { i8*, i32 } undef, i8* %exn4, 0");
+    #[cfg(LLVM_VERSION_9_OR_GREATER)]
+    assert_eq!(&format!("{}", ival), "%lpad.val = insertvalue { i8*, i32 } undef, i8* %exn4, 0 (with debugloc)");
     let ival2: &instruction::InsertValue = &ehresume.instrs[3]
         .clone()
         .try_into()
@@ -273,6 +308,10 @@ fn DILocation_implicit_code_extra_checks() {
     assert_eq!(ival2.indices.len(), 1);
     assert_eq!(ival2.indices[0], 1);
     assert_eq!(ival2.dest, Name::from("lpad.val6"));
+    #[cfg(LLVM_VERSION_8_OR_LOWER)]
+    assert_eq!(&format!("{}", ival2), "%lpad.val6 = insertvalue { i8*, i32 } %lpad.val, i32 %sel5, 1");
+    #[cfg(LLVM_VERSION_9_OR_GREATER)]
+    assert_eq!(&format!("{}", ival2), "%lpad.val6 = insertvalue { i8*, i32 } %lpad.val, i32 %sel5, 1 (with debugloc)");
     let resume: &terminator::Resume = &ehresume
         .term
         .clone()
@@ -285,6 +324,10 @@ fn DILocation_implicit_code_extra_checks() {
             ty: expected_landingpad_resultty.clone()
         }
     );
+    #[cfg(LLVM_VERSION_8_OR_LOWER)]
+    assert_eq!(&format!("{}", resume), "resume { i8*, i32 } %lpad.val6");
+    #[cfg(LLVM_VERSION_9_OR_GREATER)]
+    assert_eq!(&format!("{}", resume), "resume { i8*, i32 } %lpad.val6 (with debugloc)");
 }
 
 #[test]
@@ -304,9 +347,14 @@ fn atomics() {
     assert_eq!(cmpxchg.volatile, false);
     assert_eq!(cmpxchg.atomicity, Atomicity { synch_scope: SynchronizationScope::System, mem_ordering: MemoryOrdering::Monotonic });
     assert_eq!(cmpxchg.failure_memory_ordering, MemoryOrdering::Monotonic);
+    assert_eq!(&format!("{}", cmpxchg), "%cmpxchg.0 = cmpxchg i32* %word, i32 0, i32 4 monotonic monotonic");
     let atomicrmw: &instruction::AtomicRMW = &bb.instrs[8].clone().try_into().unwrap_or_else(|_| panic!("Expected an atomicrmw, got {:?}", &bb.instrs[8]));
     assert_eq!(atomicrmw.address, Operand::LocalOperand { name: Name::from("word"), ty: module.types.pointer_to(module.types.i32()) });
     assert_eq!(atomicrmw.value, Operand::ConstantOperand(ConstantRef::new(Constant::Int { bits: 32, value: 12 })));
     assert_eq!(atomicrmw.dest, Name::from("atomicrmw.xchg"));
     assert_eq!(module.type_of(atomicrmw), module.types.i32());
+    #[cfg(LLVM_VERSION_9_OR_LOWER)]
+    assert_eq!(&format!("{}", atomicrmw), "%atomicrmw.xchg = atomicrmw i32* %word, i32 12 not_atomic"); // I'm not sure why it's not_atomic for LLVM 9 and lower, but monotonic for LLVM 10+
+    #[cfg(LLVM_VERSION_10_OR_GREATER)]
+    assert_eq!(&format!("{}", atomicrmw), "%atomicrmw.xchg = atomicrmw xchg i32* %word, i32 12 monotonic");
 }

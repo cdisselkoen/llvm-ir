@@ -43,4 +43,8 @@ fn callbr_parsing() {
     let callbr: &terminator::CallBr = &bb.term.clone().try_into().unwrap_or_else(|_| panic!("Expected a callbr, got {:?}", &bb.term));
     assert!(callbr.function.is_left());
     assert_eq!(callbr.return_label, Name::from("normal"));
+    assert_eq!(
+        &format!("{}", callbr),
+        "%0 = callbr <inline assembly>(i32 %x, blockaddr) to label %normal",
+    )
 }

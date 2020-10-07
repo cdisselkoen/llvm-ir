@@ -2,6 +2,7 @@ use crate::module::AddrSpace;
 use either::Either;
 use std::borrow::Borrow;
 use std::collections::HashMap;
+use std::fmt::{self, Display};
 use std::hash::Hash;
 use std::ops::Deref;
 use std::sync::Arc;
@@ -65,6 +66,63 @@ pub enum Type {
     TokenType,
 }
 
+impl Display for Type {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Type::VoidType => write!(f, "void"),
+            Type::IntegerType { bits } => write!(f, "i{}", bits),
+            Type::PointerType { pointee_type, .. } => write!(f, "{}*", pointee_type),
+            Type::FPType(fpt) => write!(f, "{}", fpt),
+            Type::FuncType { result_type, param_types, is_var_arg } => {
+                write!(f, "{} (", result_type)?;
+                for (i, param_ty) in param_types.iter().enumerate() {
+                    if i == param_types.len() - 1 {
+                        write!(f, "{}", param_ty)?;
+                    } else {
+                        write!(f, "{}, ", param_ty)?;
+                    }
+                }
+                if *is_var_arg {
+                    write!(f, ", ...")?;
+                }
+                write!(f, ")")?;
+                Ok(())
+            },
+            Type::VectorType { element_type, num_elements } => {
+                write!(f, "<{} x {}>", num_elements, element_type)
+            },
+            Type::ArrayType { element_type, num_elements } => {
+                write!(f, "[{} x {}]", num_elements, element_type)
+            },
+            Type::StructType { element_types, is_packed } => {
+                if *is_packed {
+                    write!(f, "<")?;
+                }
+                write!(f, "{{ ")?;
+                for (i, element_ty) in element_types.iter().enumerate() {
+                    if i == element_types.len() - 1 {
+                        write!(f, "{}", element_ty)?;
+                    } else {
+                        write!(f, "{}, ", element_ty)?;
+                    }
+                }
+                write!(f, " }}")?;
+                if *is_packed {
+                    write!(f, ">")?;
+                }
+                Ok(())
+            },
+            Type::NamedStructType { name } => {
+                write!(f, "%{}", name)
+            },
+            Type::X86_MMXType => write!(f, "x86_mmx"),
+            Type::MetadataType => write!(f, "metadata"),
+            Type::LabelType => write!(f, "label"),
+            Type::TokenType => write!(f, "token"),
+        }
+    }
+}
+
 /// See [LLVM 10 docs on Floating-Point Types](https://releases.llvm.org/10.0.0/docs/LangRef.html#floating-point-types)
 #[derive(PartialEq, Eq, Clone, Copy, Debug, Hash)]
 #[allow(non_camel_case_types)]
@@ -80,6 +138,19 @@ pub enum FPType {
 impl From<FPType> for Type {
     fn from(fpt: FPType) -> Type {
         Type::FPType(fpt)
+    }
+}
+
+impl Display for FPType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            FPType::Half => write!(f, "half"),
+            FPType::Single => write!(f, "float"),
+            FPType::Double => write!(f, "double"),
+            FPType::FP128 => write!(f, "fp128"),
+            FPType::X86_FP80 => write!(f, "x86_fp80"),
+            FPType::PPC_FP128 => write!(f, "ppc_fp128"),
+        }
     }
 }
 
@@ -105,6 +176,12 @@ impl Deref for TypeRef {
 
     fn deref(&self) -> &Type {
         self.0.deref()
+    }
+}
+
+impl Display for TypeRef {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", &self.0)
     }
 }
 
