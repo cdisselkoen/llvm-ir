@@ -926,6 +926,64 @@
 <span id="926">926</span>
 <span id="927">927</span>
 <span id="928">928</span>
+<span id="929">929</span>
+<span id="930">930</span>
+<span id="931">931</span>
+<span id="932">932</span>
+<span id="933">933</span>
+<span id="934">934</span>
+<span id="935">935</span>
+<span id="936">936</span>
+<span id="937">937</span>
+<span id="938">938</span>
+<span id="939">939</span>
+<span id="940">940</span>
+<span id="941">941</span>
+<span id="942">942</span>
+<span id="943">943</span>
+<span id="944">944</span>
+<span id="945">945</span>
+<span id="946">946</span>
+<span id="947">947</span>
+<span id="948">948</span>
+<span id="949">949</span>
+<span id="950">950</span>
+<span id="951">951</span>
+<span id="952">952</span>
+<span id="953">953</span>
+<span id="954">954</span>
+<span id="955">955</span>
+<span id="956">956</span>
+<span id="957">957</span>
+<span id="958">958</span>
+<span id="959">959</span>
+<span id="960">960</span>
+<span id="961">961</span>
+<span id="962">962</span>
+<span id="963">963</span>
+<span id="964">964</span>
+<span id="965">965</span>
+<span id="966">966</span>
+<span id="967">967</span>
+<span id="968">968</span>
+<span id="969">969</span>
+<span id="970">970</span>
+<span id="971">971</span>
+<span id="972">972</span>
+<span id="973">973</span>
+<span id="974">974</span>
+<span id="975">975</span>
+<span id="976">976</span>
+<span id="977">977</span>
+<span id="978">978</span>
+<span id="979">979</span>
+<span id="980">980</span>
+<span id="981">981</span>
+<span id="982">982</span>
+<span id="983">983</span>
+<span id="984">984</span>
+<span id="985">985</span>
+<span id="986">986</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">module</span>::<span class="ident">AddrSpace</span>;
 <span class="kw">use</span> <span class="ident">either</span>::<span class="ident">Either</span>;
@@ -936,62 +994,64 @@
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">ops</span>::<span class="ident">Deref</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::<span class="ident">Arc</span>;
 
-<span class="doccomment">/// See [LLVM 10 docs on Type System](https://releases.llvm.org/10.0.0/docs/LangRef.html#type-system)</span>
+<span class="doccomment">/// See [LLVM 11 docs on Type System](https://releases.llvm.org/11.0.0/docs/LangRef.html#type-system)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Hash</span>)]</span>
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">non_camel_case_types</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Type</span> {
-    <span class="doccomment">/// See [LLVM 10 docs on Void Type](https://releases.llvm.org/10.0.0/docs/LangRef.html#void-type)</span>
+    <span class="doccomment">/// See [LLVM 11 docs on Void Type](https://releases.llvm.org/11.0.0/docs/LangRef.html#void-type)</span>
     <span class="ident">VoidType</span>,
-    <span class="doccomment">/// See [LLVM 10 docs on Integer Type](https://releases.llvm.org/10.0.0/docs/LangRef.html#integer-type)</span>
+    <span class="doccomment">/// See [LLVM 11 docs on Integer Type](https://releases.llvm.org/11.0.0/docs/LangRef.html#integer-type)</span>
     <span class="ident">IntegerType</span> { <span class="ident">bits</span>: <span class="ident">u32</span> },
-    <span class="doccomment">/// See [LLVM 10 docs on Pointer Type](https://releases.llvm.org/10.0.0/docs/LangRef.html#pointer-type)</span>
+    <span class="doccomment">/// See [LLVM 11 docs on Pointer Type](https://releases.llvm.org/11.0.0/docs/LangRef.html#pointer-type)</span>
     <span class="ident">PointerType</span> {
         <span class="ident">pointee_type</span>: <span class="ident">TypeRef</span>,
         <span class="ident">addr_space</span>: <span class="ident">AddrSpace</span>,
     },
-    <span class="doccomment">/// See [LLVM 10 docs on Floating-Point Types](https://releases.llvm.org/10.0.0/docs/LangRef.html#floating-point-types)</span>
+    <span class="doccomment">/// See [LLVM 11 docs on Floating-Point Types](https://releases.llvm.org/11.0.0/docs/LangRef.html#floating-point-types)</span>
     <span class="ident">FPType</span>(<span class="ident">FPType</span>),
-    <span class="doccomment">/// See [LLVM 10 docs on Function Type](https://releases.llvm.org/10.0.0/docs/LangRef.html#function-type)</span>
+    <span class="doccomment">/// See [LLVM 11 docs on Function Type](https://releases.llvm.org/11.0.0/docs/LangRef.html#function-type)</span>
     <span class="ident">FuncType</span> {
         <span class="ident">result_type</span>: <span class="ident">TypeRef</span>,
         <span class="ident">param_types</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">TypeRef</span><span class="op">&gt;</span>,
         <span class="ident">is_var_arg</span>: <span class="ident">bool</span>,
     },
     <span class="doccomment">/// Vector types (along with integer, FP, pointer, and X86_MMX types) are &quot;first class types&quot;,</span>
-    <span class="doccomment">/// which means they can be produced by instructions (see [LLVM 10 docs on First Class Types](https://releases.llvm.org/10.0.0/docs/LangRef.html#first-class-types)).</span>
-    <span class="doccomment">/// See [LLVM 10 docs on Vector Type](https://releases.llvm.org/10.0.0/docs/LangRef.html#vector-type)</span>
+    <span class="doccomment">/// which means they can be produced by instructions (see [LLVM 11 docs on First Class Types](https://releases.llvm.org/11.0.0/docs/LangRef.html#first-class-types)).</span>
+    <span class="doccomment">/// See [LLVM 11 docs on Vector Type](https://releases.llvm.org/11.0.0/docs/LangRef.html#vector-type)</span>
     <span class="ident">VectorType</span> {
         <span class="ident">element_type</span>: <span class="ident">TypeRef</span>,
         <span class="ident">num_elements</span>: <span class="ident">usize</span>,
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_11_OR_GREATER</span>)]</span>
+        <span class="ident">scalable</span>: <span class="ident">bool</span>,
     },
     <span class="doccomment">/// Struct and Array types (but not vector types) are &quot;aggregate types&quot; and cannot be produced by</span>
-    <span class="doccomment">/// a single instruction (see [LLVM 10 docs on Aggregate Types](https://releases.llvm.org/10.0.0/docs/LangRef.html#aggregate-types)).</span>
-    <span class="doccomment">/// See [LLVM 10 docs on Array Type](https://releases.llvm.org/10.0.0/docs/LangRef.html#array-type)</span>
+    <span class="doccomment">/// a single instruction (see [LLVM 11 docs on Aggregate Types](https://releases.llvm.org/11.0.0/docs/LangRef.html#aggregate-types)).</span>
+    <span class="doccomment">/// See [LLVM 11 docs on Array Type](https://releases.llvm.org/11.0.0/docs/LangRef.html#array-type)</span>
     <span class="ident">ArrayType</span> {
         <span class="ident">element_type</span>: <span class="ident">TypeRef</span>,
         <span class="ident">num_elements</span>: <span class="ident">usize</span>,
     },
     <span class="doccomment">/// The `StructType` variant is used for a &quot;literal&quot; (i.e., anonymous) structure type.</span>
-    <span class="doccomment">/// See [LLVM 10 docs on Structure Type](https://releases.llvm.org/10.0.0/docs/LangRef.html#structure-type)</span>
+    <span class="doccomment">/// See [LLVM 11 docs on Structure Type](https://releases.llvm.org/11.0.0/docs/LangRef.html#structure-type)</span>
     <span class="ident">StructType</span> {
         <span class="ident">element_types</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">TypeRef</span><span class="op">&gt;</span>,
         <span class="ident">is_packed</span>: <span class="ident">bool</span>,
     },
     <span class="doccomment">/// Named structure types. Note that these may be self-referential (i.e., recursive).</span>
-    <span class="doccomment">/// See [LLVM 10 docs on Structure Type](https://releases.llvm.org/10.0.0/docs/LangRef.html#structure-type)</span>
+    <span class="doccomment">/// See [LLVM 11 docs on Structure Type](https://releases.llvm.org/11.0.0/docs/LangRef.html#structure-type)</span>
     <span class="doccomment">/// To get the actual definition of a named structure type, use `module.types.named_struct_def()`.</span>
     <span class="ident">NamedStructType</span> {
         <span class="doccomment">/// Name of the struct type</span>
         <span class="ident">name</span>: <span class="ident">String</span>, <span class="comment">// llvm-hs-pure has Name rather than String</span>
     },
-    <span class="doccomment">/// See [LLVM 10 docs on X86_MMX Type](https://releases.llvm.org/10.0.0/docs/LangRef.html#x86-mmx-type)</span>
-    <span class="ident">X86_MMXType</span>, <span class="comment">// llvm-hs-pure doesn&#39;t have this, not sure what they do with LLVM&#39;s http://llvm.org/docs/LangRef.html#x86-mmx-type</span>
-    <span class="doccomment">/// See [LLVM 10 docs on Metadata Type](https://releases.llvm.org/10.0.0/docs/LangRef.html#metadata-type)</span>
+    <span class="doccomment">/// See [LLVM 11 docs on X86_MMX Type](https://releases.llvm.org/11.0.0/docs/LangRef.html#x86-mmx-type)</span>
+    <span class="ident">X86_MMXType</span>,
+    <span class="doccomment">/// See [LLVM 11 docs on Metadata Type](https://releases.llvm.org/11.0.0/docs/LangRef.html#metadata-type)</span>
     <span class="ident">MetadataType</span>,
     <span class="doccomment">/// `LabelType` is the type of [`BasicBlock`](../struct.BasicBlock.html) labels.</span>
-    <span class="doccomment">/// See [LLVM 10 docs on Label Type](https://releases.llvm.org/10.0.0/docs/LangRef.html#label-type)</span>
+    <span class="doccomment">/// See [LLVM 11 docs on Label Type](https://releases.llvm.org/11.0.0/docs/LangRef.html#label-type)</span>
     <span class="ident">LabelType</span>,
-    <span class="doccomment">/// See [LLVM 10 docs on Token Type](https://releases.llvm.org/10.0.0/docs/LangRef.html#token-type)</span>
+    <span class="doccomment">/// See [LLVM 11 docs on Token Type](https://releases.llvm.org/11.0.0/docs/LangRef.html#token-type)</span>
     <span class="ident">TokenType</span>,
 }
 
@@ -1024,7 +1084,18 @@
             <span class="ident">Type</span>::<span class="ident">VectorType</span> {
                 <span class="ident">element_type</span>,
                 <span class="ident">num_elements</span>,
-            } <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;&lt;{} x {}&gt;&quot;</span>, <span class="ident">num_elements</span>, <span class="ident">element_type</span>),
+                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_11_OR_GREATER</span>)]</span>
+                <span class="ident">scalable</span>,
+            } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_11_OR_GREATER</span>)]</span>
+                <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">scalable</span> {
+                    <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;&lt;vscale x {} x {}&gt;&quot;</span>, <span class="ident">num_elements</span>, <span class="ident">element_type</span>)
+                } <span class="kw">else</span> {
+                    <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;&lt;{} x {}&gt;&quot;</span>, <span class="ident">num_elements</span>, <span class="ident">element_type</span>)
+                }
+                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_10_OR_LOWER</span>)]</span>
+                <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;&lt;{} x {}&gt;&quot;</span>, <span class="ident">num_elements</span>, <span class="ident">element_type</span>)
+            },
             <span class="ident">Type</span>::<span class="ident">ArrayType</span> {
                 <span class="ident">element_type</span>,
                 <span class="ident">num_elements</span>,
@@ -1059,11 +1130,13 @@
     }
 }
 
-<span class="doccomment">/// See [LLVM 10 docs on Floating-Point Types](https://releases.llvm.org/10.0.0/docs/LangRef.html#floating-point-types)</span>
+<span class="doccomment">/// See [LLVM 11 docs on Floating-Point Types](https://releases.llvm.org/11.0.0/docs/LangRef.html#floating-point-types)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>, <span class="ident">Hash</span>)]</span>
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">non_camel_case_types</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">FPType</span> {
     <span class="ident">Half</span>,
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_11_OR_GREATER</span>)]</span>
+    <span class="ident">BFloat</span>,
     <span class="ident">Single</span>,
     <span class="ident">Double</span>,
     <span class="ident">FP128</span>,
@@ -1081,6 +1154,8 @@
     <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
         <span class="kw">match</span> <span class="self">self</span> {
             <span class="ident">FPType</span>::<span class="ident">Half</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;half&quot;</span>),
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_11_OR_GREATER</span>)]</span>
+            <span class="ident">FPType</span>::<span class="ident">BFloat</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;bfloat&quot;</span>),
             <span class="ident">FPType</span>::<span class="ident">Single</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;float&quot;</span>),
             <span class="ident">FPType</span>::<span class="ident">Double</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;double&quot;</span>),
             <span class="ident">FPType</span>::<span class="ident">FP128</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;fp128&quot;</span>),
@@ -1179,8 +1254,8 @@
     <span class="ident">fp_types</span>: <span class="ident">TypeCache</span><span class="op">&lt;</span><span class="ident">FPType</span><span class="op">&gt;</span>,
     <span class="doccomment">/// Map of `(result_type, param_types, is_var_arg)` to the corresponding `Type::FunctionType`</span>
     <span class="ident">func_types</span>: <span class="ident">TypeCache</span><span class="op">&lt;</span>(<span class="ident">TypeRef</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">TypeRef</span><span class="op">&gt;</span>, <span class="ident">bool</span>)<span class="op">&gt;</span>,
-    <span class="doccomment">/// Map of (element type, #elements) to the corresponding `Type::VectorType`</span>
-    <span class="ident">vec_types</span>: <span class="ident">TypeCache</span><span class="op">&lt;</span>(<span class="ident">TypeRef</span>, <span class="ident">usize</span>)<span class="op">&gt;</span>,
+    <span class="doccomment">/// Map of (element type, #elements, scalable) to the corresponding `Type::VectorType`</span>
+    <span class="ident">vec_types</span>: <span class="ident">TypeCache</span><span class="op">&lt;</span>(<span class="ident">TypeRef</span>, <span class="ident">usize</span>, <span class="ident">bool</span>)<span class="op">&gt;</span>,
     <span class="doccomment">/// Map of (element type, #elements) to the corresponding `Type::ArrayType`</span>
     <span class="ident">arr_types</span>: <span class="ident">TypeCache</span><span class="op">&lt;</span>(<span class="ident">TypeRef</span>, <span class="ident">usize</span>)<span class="op">&gt;</span>,
     <span class="doccomment">/// Map of `(element_types, is_packed)` to the corresponding `Type::StructType`</span>
@@ -1336,9 +1411,20 @@
     }
 
     <span class="doccomment">/// Get a vector type</span>
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_11_OR_GREATER</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">vector_of</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">element_type</span>: <span class="ident">TypeRef</span>, <span class="ident">num_elements</span>: <span class="ident">usize</span>, <span class="ident">scalable</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TypeRef</span> {
+        <span class="self">self</span>.<span class="ident">vec_types</span>
+            .<span class="ident">lookup_or_insert</span>((<span class="ident">element_type</span>.<span class="ident">clone</span>(), <span class="ident">num_elements</span>, <span class="ident">scalable</span>), <span class="op">|</span><span class="op">|</span> <span class="ident">Type</span>::<span class="ident">VectorType</span> {
+                <span class="ident">element_type</span>,
+                <span class="ident">num_elements</span>,
+                <span class="ident">scalable</span>,
+            })
+    }
+    <span class="doccomment">/// Get a vector type</span>
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_10_OR_LOWER</span>)]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">vector_of</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">element_type</span>: <span class="ident">TypeRef</span>, <span class="ident">num_elements</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TypeRef</span> {
         <span class="self">self</span>.<span class="ident">vec_types</span>
-            .<span class="ident">lookup_or_insert</span>((<span class="ident">element_type</span>.<span class="ident">clone</span>(), <span class="ident">num_elements</span>), <span class="op">|</span><span class="op">|</span> <span class="ident">Type</span>::<span class="ident">VectorType</span> {
+            .<span class="ident">lookup_or_insert</span>((<span class="ident">element_type</span>.<span class="ident">clone</span>(), <span class="ident">num_elements</span>, <span class="bool-val">false</span>), <span class="op">|</span><span class="op">|</span> <span class="ident">Type</span>::<span class="ident">VectorType</span> {
                 <span class="ident">element_type</span>,
                 <span class="ident">num_elements</span>,
             })
@@ -1421,7 +1507,7 @@
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Hash</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">NamedStructDef</span> {
-    <span class="doccomment">/// An opaque struct type; see [LLVM 10 docs on Opaque Structure Types](https://releases.llvm.org/10.0.0/docs/LangRef.html#t-opaque).</span>
+    <span class="doccomment">/// An opaque struct type; see [LLVM 11 docs on Opaque Structure Types](https://releases.llvm.org/11.0.0/docs/LangRef.html#t-opaque).</span>
     <span class="ident">Opaque</span>,
     <span class="doccomment">/// A struct type with a definition. The `TypeRef` here is guaranteed to be to a `StructType` variant.</span>
     <span class="ident">Defined</span>(<span class="ident">TypeRef</span>),
@@ -1452,8 +1538,9 @@
     <span class="ident">fp_types</span>: <span class="ident">TypeCache</span><span class="op">&lt;</span><span class="ident">FPType</span><span class="op">&gt;</span>,
     <span class="doccomment">/// Map of `(result_type, param_types, is_var_arg)` to the corresponding `Type::FunctionType`</span>
     <span class="ident">func_types</span>: <span class="ident">TypeCache</span><span class="op">&lt;</span>(<span class="ident">TypeRef</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">TypeRef</span><span class="op">&gt;</span>, <span class="ident">bool</span>)<span class="op">&gt;</span>,
-    <span class="doccomment">/// Map of (element type, #elements) to the corresponding `Type::VectorType`</span>
-    <span class="ident">vec_types</span>: <span class="ident">TypeCache</span><span class="op">&lt;</span>(<span class="ident">TypeRef</span>, <span class="ident">usize</span>)<span class="op">&gt;</span>,
+    <span class="doccomment">/// Map of (element type, #elements, scalable) to the corresponding `Type::VectorType`.</span>
+    <span class="doccomment">/// For LLVM 10 and lower, `scalable` is always `false`.</span>
+    <span class="ident">vec_types</span>: <span class="ident">TypeCache</span><span class="op">&lt;</span>(<span class="ident">TypeRef</span>, <span class="ident">usize</span>, <span class="ident">bool</span>)<span class="op">&gt;</span>,
     <span class="doccomment">/// Map of (element type, #elements) to the corresponding `Type::ArrayType`</span>
     <span class="ident">arr_types</span>: <span class="ident">TypeCache</span><span class="op">&lt;</span>(<span class="ident">TypeRef</span>, <span class="ident">usize</span>)<span class="op">&gt;</span>,
     <span class="doccomment">/// Map of `(element_types, is_packed)` to the corresponding `Type::StructType`</span>
@@ -1568,9 +1655,22 @@
     }
 
     <span class="doccomment">/// Get a vector type</span>
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_11_OR_GREATER</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">vector_of</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">element_type</span>: <span class="ident">TypeRef</span>, <span class="ident">num_elements</span>: <span class="ident">usize</span>, <span class="ident">scalable</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TypeRef</span> {
+        <span class="self">self</span>.<span class="ident">vec_types</span>
+            .<span class="ident">lookup</span>(<span class="kw-2">&amp;</span>(<span class="ident">element_type</span>.<span class="ident">clone</span>(), <span class="ident">num_elements</span>, <span class="ident">scalable</span>))
+            .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> {
+                <span class="ident">TypeRef</span>::<span class="ident">new</span>(<span class="ident">Type</span>::<span class="ident">VectorType</span> {
+                    <span class="ident">element_type</span>,
+                    <span class="ident">num_elements</span>,
+                    <span class="ident">scalable</span>,
+                })
+            })
+    }
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_10_OR_LOWER</span>)]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">vector_of</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">element_type</span>: <span class="ident">TypeRef</span>, <span class="ident">num_elements</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TypeRef</span> {
         <span class="self">self</span>.<span class="ident">vec_types</span>
-            .<span class="ident">lookup</span>(<span class="kw-2">&amp;</span>(<span class="ident">element_type</span>.<span class="ident">clone</span>(), <span class="ident">num_elements</span>))
+            .<span class="ident">lookup</span>(<span class="kw-2">&amp;</span>(<span class="ident">element_type</span>.<span class="ident">clone</span>(), <span class="ident">num_elements</span>, <span class="bool-val">false</span>))
             .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> {
                 <span class="ident">TypeRef</span>::<span class="ident">new</span>(<span class="ident">Type</span>::<span class="ident">VectorType</span> {
                     <span class="ident">element_type</span>,
@@ -1660,6 +1760,11 @@
             <span class="ident">Type</span>::<span class="ident">FuncType</span> { <span class="ident">result_type</span>, <span class="ident">param_types</span>, <span class="ident">is_var_arg</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="self">self</span>.<span class="ident">func_type</span>(<span class="ident">result_type</span>.<span class="ident">clone</span>(), <span class="ident">param_types</span>.<span class="ident">clone</span>(), <span class="kw-2">*</span><span class="ident">is_var_arg</span>)
             },
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_11_OR_GREATER</span>)]</span>
+            <span class="ident">Type</span>::<span class="ident">VectorType</span> { <span class="ident">element_type</span>, <span class="ident">num_elements</span>, <span class="ident">scalable</span> } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="self">self</span>.<span class="ident">vector_of</span>(<span class="ident">element_type</span>.<span class="ident">clone</span>(), <span class="kw-2">*</span><span class="ident">num_elements</span>, <span class="kw-2">*</span><span class="ident">scalable</span>)
+            },
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_10_OR_LOWER</span>)]</span>
             <span class="ident">Type</span>::<span class="ident">VectorType</span> { <span class="ident">element_type</span>, <span class="ident">num_elements</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="self">self</span>.<span class="ident">vector_of</span>(<span class="ident">element_type</span>.<span class="ident">clone</span>(), <span class="kw-2">*</span><span class="ident">num_elements</span>)
             },
@@ -1762,7 +1867,16 @@
             },
             <span class="ident">LLVMTypeKind</span>::<span class="ident">LLVMVectorTypeKind</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">element_type</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">type_from_llvm_ref</span>(<span class="kw">unsafe</span> { <span class="ident">LLVMGetElementType</span>(<span class="ident">ty</span>) });
-                <span class="self">self</span>.<span class="ident">vector_of</span>(<span class="ident">element_type</span>, <span class="kw">unsafe</span> { <span class="ident">LLVMGetVectorSize</span>(<span class="ident">ty</span>) <span class="kw">as</span> <span class="ident">usize</span> })
+                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_11_OR_GREATER</span>)]</span>
+                <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">vector_of</span>(<span class="ident">element_type</span>, <span class="kw">unsafe</span> { <span class="ident">LLVMGetVectorSize</span>(<span class="ident">ty</span>) <span class="kw">as</span> <span class="ident">usize</span> }, <span class="bool-val">false</span>);
+                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_10_OR_LOWER</span>)]</span>
+                <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">vector_of</span>(<span class="ident">element_type</span>, <span class="kw">unsafe</span> { <span class="ident">LLVMGetVectorSize</span>(<span class="ident">ty</span>) <span class="kw">as</span> <span class="ident">usize</span> });
+                <span class="ident">ret</span>
+            },
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_11_OR_GREATER</span>)]</span>
+            <span class="ident">LLVMTypeKind</span>::<span class="ident">LLVMScalableVectorTypeKind</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">let</span> <span class="ident">element_type</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">type_from_llvm_ref</span>(<span class="kw">unsafe</span> { <span class="ident">LLVMGetElementType</span>(<span class="ident">ty</span>) });
+                <span class="self">self</span>.<span class="ident">vector_of</span>(<span class="ident">element_type</span>, <span class="kw">unsafe</span> { <span class="ident">LLVMGetVectorSize</span>(<span class="ident">ty</span>) <span class="kw">as</span> <span class="ident">usize</span> }, <span class="bool-val">true</span>)
             },
             <span class="ident">LLVMTypeKind</span>::<span class="ident">LLVMStructTypeKind</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">unsafe</span> { <span class="ident">LLVMIsLiteralStruct</span>(<span class="ident">ty</span>) } <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
@@ -1819,6 +1933,8 @@
                 )
             },
             <span class="ident">LLVMTypeKind</span>::<span class="ident">LLVMHalfTypeKind</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">fp</span>(<span class="ident">FPType</span>::<span class="ident">Half</span>),
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_11_OR_GREATER</span>)]</span>
+            <span class="ident">LLVMTypeKind</span>::<span class="ident">LLVMBFloatTypeKind</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">fp</span>(<span class="ident">FPType</span>::<span class="ident">BFloat</span>),
             <span class="ident">LLVMTypeKind</span>::<span class="ident">LLVMFloatTypeKind</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">fp</span>(<span class="ident">FPType</span>::<span class="ident">Single</span>),
             <span class="ident">LLVMTypeKind</span>::<span class="ident">LLVMDoubleTypeKind</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">fp</span>(<span class="ident">FPType</span>::<span class="ident">Double</span>),
             <span class="ident">LLVMTypeKind</span>::<span class="ident">LLVMFP128TypeKind</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">fp</span>(<span class="ident">FPType</span>::<span class="ident">FP128</span>),

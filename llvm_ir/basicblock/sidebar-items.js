@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["BasicBlock","A `BasicBlock` is a sequence of zero or more non-terminator instructions followed by a single terminator instruction which ends the block. Basic blocks are discussed in the LLVM 10 docs on Functions"]]});
+initSidebarItems({"struct":[["BasicBlock","A `BasicBlock` is a sequence of zero or more non-terminator instructions followed by a single terminator instruction which ends the block. Basic blocks are discussed in the LLVM 11 docs on Functions"]]});
