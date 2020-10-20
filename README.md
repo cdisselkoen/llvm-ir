@@ -73,6 +73,12 @@ or of course you can generate local documentation with `cargo doc --open`.
 The documentation includes links to relevant parts of the LLVM documentation
 when appropriate.
 
+Note that some data structures differ slightly depending on your choice of
+LLVM version. The docs.rs documentation is generated with the `llvm-11`
+feature; for other LLVM versions, you can get appropriate documentation with
+`cargo doc --features=llvm-<x> --open` where `<x>` is the LLVM version you're
+using.
+
 ## Compatibility
 Starting with `llvm-ir` 0.7.0, LLVM versions are selected by a Cargo feature
 flag. This means that a single crate version can be used for any supported
