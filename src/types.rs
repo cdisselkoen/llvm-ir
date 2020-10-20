@@ -7,62 +7,64 @@ use std::hash::Hash;
 use std::ops::Deref;
 use std::sync::Arc;
 
-/// See [LLVM 10 docs on Type System](https://releases.llvm.org/10.0.0/docs/LangRef.html#type-system)
+/// See [LLVM 11 docs on Type System](https://releases.llvm.org/11.0.0/docs/LangRef.html#type-system)
 #[derive(PartialEq, Eq, Clone, Debug, Hash)]
 #[allow(non_camel_case_types)]
 pub enum Type {
-    /// See [LLVM 10 docs on Void Type](https://releases.llvm.org/10.0.0/docs/LangRef.html#void-type)
+    /// See [LLVM 11 docs on Void Type](https://releases.llvm.org/11.0.0/docs/LangRef.html#void-type)
     VoidType,
-    /// See [LLVM 10 docs on Integer Type](https://releases.llvm.org/10.0.0/docs/LangRef.html#integer-type)
+    /// See [LLVM 11 docs on Integer Type](https://releases.llvm.org/11.0.0/docs/LangRef.html#integer-type)
     IntegerType { bits: u32 },
-    /// See [LLVM 10 docs on Pointer Type](https://releases.llvm.org/10.0.0/docs/LangRef.html#pointer-type)
+    /// See [LLVM 11 docs on Pointer Type](https://releases.llvm.org/11.0.0/docs/LangRef.html#pointer-type)
     PointerType {
         pointee_type: TypeRef,
         addr_space: AddrSpace,
     },
-    /// See [LLVM 10 docs on Floating-Point Types](https://releases.llvm.org/10.0.0/docs/LangRef.html#floating-point-types)
+    /// See [LLVM 11 docs on Floating-Point Types](https://releases.llvm.org/11.0.0/docs/LangRef.html#floating-point-types)
     FPType(FPType),
-    /// See [LLVM 10 docs on Function Type](https://releases.llvm.org/10.0.0/docs/LangRef.html#function-type)
+    /// See [LLVM 11 docs on Function Type](https://releases.llvm.org/11.0.0/docs/LangRef.html#function-type)
     FuncType {
         result_type: TypeRef,
         param_types: Vec<TypeRef>,
         is_var_arg: bool,
     },
     /// Vector types (along with integer, FP, pointer, and X86_MMX types) are "first class types",
-    /// which means they can be produced by instructions (see [LLVM 10 docs on First Class Types](https://releases.llvm.org/10.0.0/docs/LangRef.html#first-class-types)).
-    /// See [LLVM 10 docs on Vector Type](https://releases.llvm.org/10.0.0/docs/LangRef.html#vector-type)
+    /// which means they can be produced by instructions (see [LLVM 11 docs on First Class Types](https://releases.llvm.org/11.0.0/docs/LangRef.html#first-class-types)).
+    /// See [LLVM 11 docs on Vector Type](https://releases.llvm.org/11.0.0/docs/LangRef.html#vector-type)
     VectorType {
         element_type: TypeRef,
         num_elements: usize,
+        #[cfg(LLVM_VERSION_11_OR_GREATER)]
+        scalable: bool,
     },
     /// Struct and Array types (but not vector types) are "aggregate types" and cannot be produced by
-    /// a single instruction (see [LLVM 10 docs on Aggregate Types](https://releases.llvm.org/10.0.0/docs/LangRef.html#aggregate-types)).
-    /// See [LLVM 10 docs on Array Type](https://releases.llvm.org/10.0.0/docs/LangRef.html#array-type)
+    /// a single instruction (see [LLVM 11 docs on Aggregate Types](https://releases.llvm.org/11.0.0/docs/LangRef.html#aggregate-types)).
+    /// See [LLVM 11 docs on Array Type](https://releases.llvm.org/11.0.0/docs/LangRef.html#array-type)
     ArrayType {
         element_type: TypeRef,
         num_elements: usize,
     },
     /// The `StructType` variant is used for a "literal" (i.e., anonymous) structure type.
-    /// See [LLVM 10 docs on Structure Type](https://releases.llvm.org/10.0.0/docs/LangRef.html#structure-type)
+    /// See [LLVM 11 docs on Structure Type](https://releases.llvm.org/11.0.0/docs/LangRef.html#structure-type)
     StructType {
         element_types: Vec<TypeRef>,
         is_packed: bool,
     },
     /// Named structure types. Note that these may be self-referential (i.e., recursive).
-    /// See [LLVM 10 docs on Structure Type](https://releases.llvm.org/10.0.0/docs/LangRef.html#structure-type)
+    /// See [LLVM 11 docs on Structure Type](https://releases.llvm.org/11.0.0/docs/LangRef.html#structure-type)
     /// To get the actual definition of a named structure type, use `module.types.named_struct_def()`.
     NamedStructType {
         /// Name of the struct type
         name: String, // llvm-hs-pure has Name rather than String
     },
-    /// See [LLVM 10 docs on X86_MMX Type](https://releases.llvm.org/10.0.0/docs/LangRef.html#x86-mmx-type)
-    X86_MMXType, // llvm-hs-pure doesn't have this, not sure what they do with LLVM's http://llvm.org/docs/LangRef.html#x86-mmx-type
-    /// See [LLVM 10 docs on Metadata Type](https://releases.llvm.org/10.0.0/docs/LangRef.html#metadata-type)
+    /// See [LLVM 11 docs on X86_MMX Type](https://releases.llvm.org/11.0.0/docs/LangRef.html#x86-mmx-type)
+    X86_MMXType,
+    /// See [LLVM 11 docs on Metadata Type](https://releases.llvm.org/11.0.0/docs/LangRef.html#metadata-type)
     MetadataType,
     /// `LabelType` is the type of [`BasicBlock`](../struct.BasicBlock.html) labels.
-    /// See [LLVM 10 docs on Label Type](https://releases.llvm.org/10.0.0/docs/LangRef.html#label-type)
+    /// See [LLVM 11 docs on Label Type](https://releases.llvm.org/11.0.0/docs/LangRef.html#label-type)
     LabelType,
-    /// See [LLVM 10 docs on Token Type](https://releases.llvm.org/10.0.0/docs/LangRef.html#token-type)
+    /// See [LLVM 11 docs on Token Type](https://releases.llvm.org/11.0.0/docs/LangRef.html#token-type)
     TokenType,
 }
 
@@ -95,7 +97,18 @@ impl Display for Type {
             Type::VectorType {
                 element_type,
                 num_elements,
-            } => write!(f, "<{} x {}>", num_elements, element_type),
+                #[cfg(LLVM_VERSION_11_OR_GREATER)]
+                scalable,
+            } => {
+                #[cfg(LLVM_VERSION_11_OR_GREATER)]
+                if *scalable {
+                    write!(f, "<vscale x {} x {}>", num_elements, element_type)
+                } else {
+                    write!(f, "<{} x {}>", num_elements, element_type)
+                }
+                #[cfg(LLVM_VERSION_10_OR_LOWER)]
+                write!(f, "<{} x {}>", num_elements, element_type)
+            },
             Type::ArrayType {
                 element_type,
                 num_elements,
@@ -130,11 +143,13 @@ impl Display for Type {
     }
 }
 
-/// See [LLVM 10 docs on Floating-Point Types](https://releases.llvm.org/10.0.0/docs/LangRef.html#floating-point-types)
+/// See [LLVM 11 docs on Floating-Point Types](https://releases.llvm.org/11.0.0/docs/LangRef.html#floating-point-types)
 #[derive(PartialEq, Eq, Clone, Copy, Debug, Hash)]
 #[allow(non_camel_case_types)]
 pub enum FPType {
     Half,
+    #[cfg(LLVM_VERSION_11_OR_GREATER)]
+    BFloat,
     Single,
     Double,
     FP128,
@@ -152,6 +167,8 @@ impl Display for FPType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             FPType::Half => write!(f, "half"),
+            #[cfg(LLVM_VERSION_11_OR_GREATER)]
+            FPType::BFloat => write!(f, "bfloat"),
             FPType::Single => write!(f, "float"),
             FPType::Double => write!(f, "double"),
             FPType::FP128 => write!(f, "fp128"),
@@ -250,8 +267,8 @@ pub(crate) struct TypesBuilder {
     fp_types: TypeCache<FPType>,
     /// Map of `(result_type, param_types, is_var_arg)` to the corresponding `Type::FunctionType`
     func_types: TypeCache<(TypeRef, Vec<TypeRef>, bool)>,
-    /// Map of (element type, #elements) to the corresponding `Type::VectorType`
-    vec_types: TypeCache<(TypeRef, usize)>,
+    /// Map of (element type, #elements, scalable) to the corresponding `Type::VectorType`
+    vec_types: TypeCache<(TypeRef, usize, bool)>,
     /// Map of (element type, #elements) to the corresponding `Type::ArrayType`
     arr_types: TypeCache<(TypeRef, usize)>,
     /// Map of `(element_types, is_packed)` to the corresponding `Type::StructType`
@@ -407,9 +424,20 @@ impl TypesBuilder {
     }
 
     /// Get a vector type
+    #[cfg(LLVM_VERSION_11_OR_GREATER)]
+    pub fn vector_of(&mut self, element_type: TypeRef, num_elements: usize, scalable: bool) -> TypeRef {
+        self.vec_types
+            .lookup_or_insert((element_type.clone(), num_elements, scalable), || Type::VectorType {
+                element_type,
+                num_elements,
+                scalable,
+            })
+    }
+    /// Get a vector type
+    #[cfg(LLVM_VERSION_10_OR_LOWER)]
     pub fn vector_of(&mut self, element_type: TypeRef, num_elements: usize) -> TypeRef {
         self.vec_types
-            .lookup_or_insert((element_type.clone(), num_elements), || Type::VectorType {
+            .lookup_or_insert((element_type.clone(), num_elements, false), || Type::VectorType {
                 element_type,
                 num_elements,
             })
@@ -492,7 +520,7 @@ impl TypesBuilder {
 
 #[derive(Clone, Debug, Hash)]
 pub enum NamedStructDef {
-    /// An opaque struct type; see [LLVM 10 docs on Opaque Structure Types](https://releases.llvm.org/10.0.0/docs/LangRef.html#t-opaque).
+    /// An opaque struct type; see [LLVM 11 docs on Opaque Structure Types](https://releases.llvm.org/11.0.0/docs/LangRef.html#t-opaque).
     Opaque,
     /// A struct type with a definition. The `TypeRef` here is guaranteed to be to a `StructType` variant.
     Defined(TypeRef),
@@ -523,8 +551,9 @@ pub struct Types {
     fp_types: TypeCache<FPType>,
     /// Map of `(result_type, param_types, is_var_arg)` to the corresponding `Type::FunctionType`
     func_types: TypeCache<(TypeRef, Vec<TypeRef>, bool)>,
-    /// Map of (element type, #elements) to the corresponding `Type::VectorType`
-    vec_types: TypeCache<(TypeRef, usize)>,
+    /// Map of (element type, #elements, scalable) to the corresponding `Type::VectorType`.
+    /// For LLVM 10 and lower, `scalable` is always `false`.
+    vec_types: TypeCache<(TypeRef, usize, bool)>,
     /// Map of (element type, #elements) to the corresponding `Type::ArrayType`
     arr_types: TypeCache<(TypeRef, usize)>,
     /// Map of `(element_types, is_packed)` to the corresponding `Type::StructType`
@@ -639,9 +668,22 @@ impl Types {
     }
 
     /// Get a vector type
+    #[cfg(LLVM_VERSION_11_OR_GREATER)]
+    pub fn vector_of(&self, element_type: TypeRef, num_elements: usize, scalable: bool) -> TypeRef {
+        self.vec_types
+            .lookup(&(element_type.clone(), num_elements, scalable))
+            .unwrap_or_else(|| {
+                TypeRef::new(Type::VectorType {
+                    element_type,
+                    num_elements,
+                    scalable,
+                })
+            })
+    }
+    #[cfg(LLVM_VERSION_10_OR_LOWER)]
     pub fn vector_of(&self, element_type: TypeRef, num_elements: usize) -> TypeRef {
         self.vec_types
-            .lookup(&(element_type.clone(), num_elements))
+            .lookup(&(element_type.clone(), num_elements, false))
             .unwrap_or_else(|| {
                 TypeRef::new(Type::VectorType {
                     element_type,
@@ -731,6 +773,11 @@ impl Types {
             Type::FuncType { result_type, param_types, is_var_arg } => {
                 self.func_type(result_type.clone(), param_types.clone(), *is_var_arg)
             },
+            #[cfg(LLVM_VERSION_11_OR_GREATER)]
+            Type::VectorType { element_type, num_elements, scalable } => {
+                self.vector_of(element_type.clone(), *num_elements, *scalable)
+            },
+            #[cfg(LLVM_VERSION_10_OR_LOWER)]
             Type::VectorType { element_type, num_elements } => {
                 self.vector_of(element_type.clone(), *num_elements)
             },
@@ -833,7 +880,16 @@ impl TypesBuilder {
             },
             LLVMTypeKind::LLVMVectorTypeKind => {
                 let element_type = self.type_from_llvm_ref(unsafe { LLVMGetElementType(ty) });
-                self.vector_of(element_type, unsafe { LLVMGetVectorSize(ty) as usize })
+                #[cfg(LLVM_VERSION_11_OR_GREATER)]
+                let ret = self.vector_of(element_type, unsafe { LLVMGetVectorSize(ty) as usize }, false);
+                #[cfg(LLVM_VERSION_10_OR_LOWER)]
+                let ret = self.vector_of(element_type, unsafe { LLVMGetVectorSize(ty) as usize });
+                ret
+            },
+            #[cfg(LLVM_VERSION_11_OR_GREATER)]
+            LLVMTypeKind::LLVMScalableVectorTypeKind => {
+                let element_type = self.type_from_llvm_ref(unsafe { LLVMGetElementType(ty) });
+                self.vector_of(element_type, unsafe { LLVMGetVectorSize(ty) as usize }, true)
             },
             LLVMTypeKind::LLVMStructTypeKind => {
                 let name = if unsafe { LLVMIsLiteralStruct(ty) } != 0 {
@@ -890,6 +946,8 @@ impl TypesBuilder {
                 )
             },
             LLVMTypeKind::LLVMHalfTypeKind => self.fp(FPType::Half),
+            #[cfg(LLVM_VERSION_11_OR_GREATER)]
+            LLVMTypeKind::LLVMBFloatTypeKind => self.fp(FPType::BFloat),
             LLVMTypeKind::LLVMFloatTypeKind => self.fp(FPType::Single),
             LLVMTypeKind::LLVMDoubleTypeKind => self.fp(FPType::Double),
             LLVMTypeKind::LLVMFP128TypeKind => self.fp(FPType::FP128),

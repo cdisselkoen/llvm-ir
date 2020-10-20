@@ -1,7 +1,4 @@
 fn main() {
-    // This code mostly lifted from the build.rs in llvm-sys-featured
-    // Allows us to use the LLVM_VERSION_9_OR_GREATER etc configs ourselves
-
     let mut versions = vec![];
     if cfg!(feature = "llvm-8") {
         versions.push(8);
@@ -11,6 +8,9 @@ fn main() {
     }
     if cfg!(feature = "llvm-10") {
         versions.push(10);
+    }
+    if cfg!(feature = "llvm-11") {
+        versions.push(11);
     }
     let selected_version = match versions.len() {
         0 => panic!("llvm-ir: Please select an LLVM version using a Cargo feature."),
@@ -25,6 +25,12 @@ fn main() {
     }
     if selected_version >= 10 {
         println!("cargo:rustc-cfg=LLVM_VERSION_10_OR_GREATER");
+    }
+    if selected_version >= 11 {
+        println!("cargo:rustc-cfg=LLVM_VERSION_11_OR_GREATER");
+    }
+    if selected_version <= 10 {
+        println!("cargo:rustc-cfg=LLVM_VERSION_10_OR_LOWER");
     }
     if selected_version <= 9 {
         println!("cargo:rustc-cfg=LLVM_VERSION_9_OR_LOWER");

@@ -8,26 +8,26 @@ use crate::types::{FPType, Type, TypeRef, Typed, Types, TypesBuilder};
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::Path;
 
-/// See [LLVM 10 docs on Module Structure](https://releases.llvm.org/10.0.0/docs/LangRef.html#module-structure)
+/// See [LLVM 11 docs on Module Structure](https://releases.llvm.org/11.0.0/docs/LangRef.html#module-structure)
 #[derive(Clone)]
 pub struct Module {
     /// The name of the module
     pub name: String,
-    /// See [LLVM 10 docs on Source Filename](https://releases.llvm.org/10.0.0/docs/LangRef.html#source-filename)
+    /// See [LLVM 11 docs on Source Filename](https://releases.llvm.org/11.0.0/docs/LangRef.html#source-filename)
     pub source_file_name: String,
-    /// See [LLVM 10 docs on Data Layout](https://releases.llvm.org/10.0.0/docs/LangRef.html#data-layout)
+    /// See [LLVM 11 docs on Data Layout](https://releases.llvm.org/11.0.0/docs/LangRef.html#data-layout)
     pub data_layout: DataLayout,
-    /// See [LLVM 10 docs on Target Triple](https://releases.llvm.org/10.0.0/docs/LangRef.html#target-triple)
+    /// See [LLVM 11 docs on Target Triple](https://releases.llvm.org/11.0.0/docs/LangRef.html#target-triple)
     pub target_triple: Option<String>,
     /// Functions which are defined (not just declared) in this `Module`.
-    /// See [LLVM 10 docs on Functions](https://releases.llvm.org/10.0.0/docs/LangRef.html#functions)
+    /// See [LLVM 11 docs on Functions](https://releases.llvm.org/11.0.0/docs/LangRef.html#functions)
     pub functions: Vec<Function>,
-    /// See [LLVM 10 docs on Global Variables](https://releases.llvm.org/10.0.0/docs/LangRef.html#global-variables)
+    /// See [LLVM 11 docs on Global Variables](https://releases.llvm.org/11.0.0/docs/LangRef.html#global-variables)
     pub global_vars: Vec<GlobalVariable>,
-    /// See [LLVM 10 docs on Global Aliases](https://releases.llvm.org/10.0.0/docs/LangRef.html#aliases)
+    /// See [LLVM 11 docs on Global Aliases](https://releases.llvm.org/11.0.0/docs/LangRef.html#aliases)
     pub global_aliases: Vec<GlobalAlias>,
     // --TODO not yet implemented-- pub function_attribute_groups: Vec<FunctionAttributeGroup>,
-    /// See [LLVM 10 docs on Module-Level Inline Assembly](https://releases.llvm.org/10.0.0/docs/LangRef.html#moduleasm)
+    /// See [LLVM 11 docs on Module-Level Inline Assembly](https://releases.llvm.org/11.0.0/docs/LangRef.html#moduleasm)
     pub inline_assembly: String,
     // --TODO not yet implemented-- pub metadata_nodes: Vec<(MetadataNodeID, MetadataNode)>,
     // --TODO not yet implemented-- pub named_metadatas: Vec<NamedMetadata>,
@@ -99,7 +99,7 @@ impl Module {
     }
 }
 
-/// See [LLVM 10 docs on Global Variables](https://releases.llvm.org/10.0.0/docs/LangRef.html#global-variables)
+/// See [LLVM 11 docs on Global Variables](https://releases.llvm.org/11.0.0/docs/LangRef.html#global-variables)
 #[derive(PartialEq, Clone, Debug)]
 pub struct GlobalVariable {
     pub name: Name,
@@ -133,7 +133,7 @@ impl HasDebugLoc for GlobalVariable {
     }
 }
 
-/// See [LLVM 10 docs on Global Aliases](https://releases.llvm.org/10.0.0/docs/LangRef.html#aliases)
+/// See [LLVM 11 docs on Global Aliases](https://releases.llvm.org/11.0.0/docs/LangRef.html#aliases)
 #[derive(PartialEq, Clone, Debug)]
 pub struct GlobalAlias {
     pub name: Name,
@@ -159,7 +159,7 @@ pub enum UnnamedAddr {
     Global,
 }
 
-/// See [LLVM 10 docs on Linkage Types](https://releases.llvm.org/10.0.0/docs/LangRef.html#linkage)
+/// See [LLVM 11 docs on Linkage Types](https://releases.llvm.org/11.0.0/docs/LangRef.html#linkage)
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub enum Linkage {
     Private,
@@ -181,7 +181,7 @@ pub enum Linkage {
     LinkerPrivateWeak,
 }
 
-/// See [LLVM 10 docs on Visibility Styles](https://releases.llvm.org/10.0.0/docs/LangRef.html#visibility-styles)
+/// See [LLVM 11 docs on Visibility Styles](https://releases.llvm.org/11.0.0/docs/LangRef.html#visibility-styles)
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub enum Visibility {
     Default,
@@ -189,7 +189,7 @@ pub enum Visibility {
     Protected,
 }
 
-/// See [LLVM 10 docs on DLL Storage Classes](https://releases.llvm.org/10.0.0/docs/LangRef.html#dllstorageclass)
+/// See [LLVM 11 docs on DLL Storage Classes](https://releases.llvm.org/11.0.0/docs/LangRef.html#dllstorageclass)
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub enum DLLStorageClass {
     Default,
@@ -197,7 +197,7 @@ pub enum DLLStorageClass {
     Export,
 }
 
-/// See [LLVM 10 docs on Thread Local Storage Models](https://releases.llvm.org/10.0.0/docs/LangRef.html#thread-local-storage-models)
+/// See [LLVM 11 docs on Thread Local Storage Models](https://releases.llvm.org/11.0.0/docs/LangRef.html#thread-local-storage-models)
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub enum ThreadLocalMode {
     NotThreadLocal,
@@ -207,10 +207,10 @@ pub enum ThreadLocalMode {
     LocalExec,
 }
 
-/// For discussion of address spaces, see [LLVM 10 docs on Pointer Type](https://releases.llvm.org/10.0.0/docs/LangRef.html#pointer-type)
+/// For discussion of address spaces, see [LLVM 11 docs on Pointer Type](https://releases.llvm.org/11.0.0/docs/LangRef.html#pointer-type)
 pub type AddrSpace = u32;
 
-/// See [LLVM 10 docs on Attribute Groups](https://releases.llvm.org/10.0.0/docs/LangRef.html#attribute-groups)
+/// See [LLVM 11 docs on Attribute Groups](https://releases.llvm.org/11.0.0/docs/LangRef.html#attribute-groups)
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct FunctionAttributeGroup {
     pub group_id: GroupID,
@@ -218,7 +218,7 @@ pub struct FunctionAttributeGroup {
 }
 
 /* --TODO not yet implemented: metadata
-/// See [LLVM 10 docs on Named Metadata](https://releases.llvm.org/10.0.0/docs/LangRef.html#named-metadata)
+/// See [LLVM 11 docs on Named Metadata](https://releases.llvm.org/11.0.0/docs/LangRef.html#named-metadata)
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct NamedMetadata {
     pub name: String,
@@ -226,7 +226,7 @@ pub struct NamedMetadata {
 }
 */
 
-/// See [LLVM 10 docs on Comdats](https://releases.llvm.org/10.0.0/docs/LangRef.html#langref-comdats)
+/// See [LLVM 11 docs on Comdats](https://releases.llvm.org/11.0.0/docs/LangRef.html#langref-comdats)
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct Comdat {
     pub name: String,
@@ -242,7 +242,7 @@ pub enum SelectionKind {
     SameSize,
 }
 
-/// See [LLVM 10 docs on Data Layout](https://releases.llvm.org/10.0.0/docs/LangRef.html#data-layout)
+/// See [LLVM 11 docs on Data Layout](https://releases.llvm.org/11.0.0/docs/LangRef.html#data-layout)
 #[derive(Clone, Debug)]
 pub struct DataLayout {
     /// The data layout in string form, as described in the Data Layout docs linked above
@@ -283,7 +283,7 @@ pub enum Endianness {
 }
 
 /// Alignment details for a type.
-/// See [LLVM 10 docs on Data Layout](https://releases.llvm.org/10.0.0/docs/LangRef.html#data-layout)
+/// See [LLVM 11 docs on Data Layout](https://releases.llvm.org/11.0.0/docs/LangRef.html#data-layout)
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct Alignment {
     /// Minimum alignment (in bits) per the ABI
@@ -293,7 +293,7 @@ pub struct Alignment {
 }
 
 /// Alignment details for function pointers.
-/// See [LLVM 10 docs on Data Layout](https://releases.llvm.org/10.0.0/docs/LangRef.html#data-layout)
+/// See [LLVM 11 docs on Data Layout](https://releases.llvm.org/11.0.0/docs/LangRef.html#data-layout)
 #[cfg(LLVM_VERSION_9_OR_GREATER)]
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct FunctionPtrAlignment {
@@ -305,7 +305,7 @@ pub struct FunctionPtrAlignment {
 }
 
 /// Layout details for pointers (other than function pointers).
-/// See [LLVM 10 docs on Data Layout](https://releases.llvm.org/10.0.0/docs/LangRef.html#data-layout)
+/// See [LLVM 11 docs on Data Layout](https://releases.llvm.org/11.0.0/docs/LangRef.html#data-layout)
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct PointerLayout {
     /// Size of a pointer in bits
@@ -317,7 +317,7 @@ pub struct PointerLayout {
 }
 
 /// Alignment for various types in memory.
-/// See [LLVM 10 docs on Data Layout](https://releases.llvm.org/10.0.0/docs/LangRef.html#data-layout)
+/// See [LLVM 11 docs on Data Layout](https://releases.llvm.org/11.0.0/docs/LangRef.html#data-layout)
 #[derive(Clone, Debug)]
 pub struct Alignments {
     /// Explicit alignments for various sizes of integers (in bits). Sizes not
@@ -347,7 +347,7 @@ impl Alignments {
     pub fn type_alignment(&self, ty: &Type) -> &Alignment {
         match ty {
             Type::IntegerType { bits } => self.int_alignment(*bits),
-            Type::VectorType { element_type, num_elements } => {
+            Type::VectorType { element_type, num_elements, .. } => {
                 let element_size_bits = match element_type.as_ref() {
                     Type::IntegerType { bits } => *bits,
                     Type::FPType(fpt) => Self::fpt_size(*fpt),
@@ -452,6 +452,8 @@ impl Alignments {
     fn fpt_size(fpt: FPType) -> u32 {
         match fpt {
             FPType::Half => 16,
+            #[cfg(LLVM_VERSION_11_OR_GREATER)]
+            FPType::BFloat => 16,
             FPType::Single => 32,
             FPType::Double => 64,
             FPType::FP128 => 128,
@@ -461,7 +463,7 @@ impl Alignments {
     }
 }
 
-/// See [LLVM 10 docs on Data Layout](https://releases.llvm.org/10.0.0/docs/LangRef.html#data-layout)
+/// See [LLVM 11 docs on Data Layout](https://releases.llvm.org/11.0.0/docs/LangRef.html#data-layout)
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub enum Mangling {
     ELF,
@@ -469,6 +471,8 @@ pub enum Mangling {
     MachO,
     WindowsX86COFF,
     WindowsCOFF,
+    #[cfg(LLVM_VERSION_11_OR_GREATER)]
+    XCOFF,
 }
 
 // ********* //
@@ -959,6 +963,8 @@ impl DataLayout {
                     "o" => Mangling::MachO,
                     "x" => Mangling::WindowsX86COFF,
                     "w" => Mangling::WindowsCOFF,
+                    #[cfg(LLVM_VERSION_11_OR_GREATER)]
+                    "a" => Mangling::XCOFF,
                     _ => panic!("datalayout 'm': Unknown mangling {:?}", second_chunk),
                 };
                 assert!(chunks.next().is_none(), "datalayout 'm': Too many chunks");

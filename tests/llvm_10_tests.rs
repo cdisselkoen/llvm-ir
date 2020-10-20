@@ -53,7 +53,16 @@ fn freeze() {
     assert_eq!(freeze.dest, Name::from(32));
     assert_eq!(&format!("{}", freeze), "%32 = freeze i32 10");
     let freeze: &instruction::Freeze = &bb.instrs[9].clone().try_into().unwrap_or_else(|_| panic!("Expected a freeze, got {:?}", &bb.instrs[9]));
-    assert_eq!(freeze.operand, Operand::LocalOperand { name: Name::from("vop"), ty: module.types.vector_of(module.types.i32(), 2) });
+    #[cfg(LLVM_VERSION_11_OR_GREATER)]
+    assert_eq!(freeze.operand, Operand::LocalOperand {
+        name: Name::from("vop"),
+        ty: module.types.vector_of(module.types.i32(), 2, false),
+    });
+    #[cfg(LLVM_VERSION_10_OR_LOWER)]
+    assert_eq!(freeze.operand, Operand::LocalOperand {
+        name: Name::from("vop"),
+        ty: module.types.vector_of(module.types.i32(), 2),
+    });
     assert_eq!(freeze.dest, Name::from(34));
     assert_eq!(&format!("{}", freeze), "%34 = freeze <2 x i32> %vop");
 }

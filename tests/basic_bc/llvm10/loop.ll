@@ -17,22 +17,22 @@ define void @loop(i32 %0, i32 %1) local_unnamed_addr #0 {
   %8 = add nsw i32 %0, 3
   %9 = zext i32 %1 to i64
   %10 = getelementptr inbounds [10 x i32], [10 x i32]* %3, i64 0, i64 0
-  store volatile i32 %8, i32* %10, align 16, !tbaa !3
+  store volatile i32 %8, i32* %10, align 16, !tbaa !4
   %11 = icmp ugt i32 %1, 1
   br i1 %11, label %12, label %21
 
 12:                                               ; preds = %7, %12
   %13 = phi i64 [ %19, %12 ], [ 1, %7 ]
   %14 = getelementptr inbounds [10 x i32], [10 x i32]* %3, i64 0, i64 %13
-  store volatile i32 %8, i32* %14, align 4, !tbaa !3
+  store volatile i32 %8, i32* %14, align 4, !tbaa !4
   %15 = add nsw i64 %13, -1
   %16 = getelementptr inbounds [10 x i32], [10 x i32]* %3, i64 0, i64 %15
-  %17 = load volatile i32, i32* %16, align 4, !tbaa !3
+  %17 = load volatile i32, i32* %16, align 4, !tbaa !4
   %18 = add nsw i32 %17, %1
-  store volatile i32 %18, i32* %16, align 4, !tbaa !3
+  store volatile i32 %18, i32* %16, align 4, !tbaa !4
   %19 = add nuw nsw i64 %13, 1
   %20 = icmp ult i64 %19, %9
-  br i1 %20, label %12, label %21, !llvm.loop !7
+  br i1 %20, label %12, label %21, !llvm.loop !8
 
 21:                                               ; preds = %7, %12, %2
   call void @llvm.lifetime.end.p0i8(i64 40, i8* nonnull %4) #2
@@ -52,15 +52,16 @@ attributes #0 = { nounwind ssp uwtable "correctly-rounded-divide-sqrt-fp-math"="
 attributes #1 = { argmemonly nounwind willreturn }
 attributes #2 = { nounwind }
 
-!llvm.module.flags = !{!0, !1}
-!llvm.ident = !{!2}
+!llvm.module.flags = !{!0, !1, !2}
+!llvm.ident = !{!3}
 
-!0 = !{i32 1, !"wchar_size", i32 4}
-!1 = !{i32 7, !"PIC Level", i32 2}
-!2 = !{!"clang version 10.0.0 "}
-!3 = !{!4, !4, i64 0}
-!4 = !{!"int", !5, i64 0}
-!5 = !{!"omnipotent char", !6, i64 0}
-!6 = !{!"Simple C/C++ TBAA"}
-!7 = distinct !{!7, !8}
-!8 = !{!"llvm.loop.peeled.count", i32 1}
+!0 = !{i32 2, !"SDK Version", [3 x i32] [i32 10, i32 15, i32 6]}
+!1 = !{i32 1, !"wchar_size", i32 4}
+!2 = !{i32 7, !"PIC Level", i32 2}
+!3 = !{!"clang version 10.0.0 "}
+!4 = !{!5, !5, i64 0}
+!5 = !{!"int", !6, i64 0}
+!6 = !{!"omnipotent char", !7, i64 0}
+!7 = !{!"Simple C/C++ TBAA"}
+!8 = distinct !{!8, !9}
+!9 = !{!"llvm.loop.peeled.count", i32 1}
