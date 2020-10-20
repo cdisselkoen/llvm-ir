@@ -4,7 +4,7 @@ use crate::module::{Comdat, DLLStorageClass, Linkage, Visibility};
 use crate::types::{TypeRef, Typed, Types};
 use crate::{BasicBlock, ConstantRef, Name};
 
-/// See [LLVM 10 docs on Functions](https://releases.llvm.org/10.0.0/docs/LangRef.html#functions)
+/// See [LLVM 11 docs on Functions](https://releases.llvm.org/11.0.0/docs/LangRef.html#functions)
 #[derive(PartialEq, Clone, Debug)]
 pub struct Function {
     pub name: String,
@@ -21,10 +21,10 @@ pub struct Function {
     pub section: Option<String>,
     pub comdat: Option<Comdat>, // llvm-hs-pure has Option<String>, I'm not sure why
     pub alignment: u32,
-    /// See [LLVM 10 docs on Garbage Collector Strategy Names](https://releases.llvm.org/10.0.0/docs/LangRef.html#gc)
+    /// See [LLVM 11 docs on Garbage Collector Strategy Names](https://releases.llvm.org/11.0.0/docs/LangRef.html#gc)
     pub garbage_collector_name: Option<String>,
     // pub prefix: Option<ConstantRef>,  // appears to not be exposed in the LLVM C API, only the C++ API
-    /// Personalities are used for exception handling. See [LLVM 10 docs on Personality Function](https://releases.llvm.org/10.0.0/docs/LangRef.html#personalityfn)
+    /// Personalities are used for exception handling. See [LLVM 11 docs on Personality Function](https://releases.llvm.org/11.0.0/docs/LangRef.html#personalityfn)
     pub personality_function: Option<ConstantRef>,
     #[cfg(LLVM_VERSION_9_OR_GREATER)]
     pub debugloc: Option<DebugLoc>,
@@ -97,7 +97,7 @@ impl Typed for Parameter {
     }
 }
 
-/// See [LLVM 10 docs on Calling Conventions](https://releases.llvm.org/10.0.0/docs/LangRef.html#callingconv)
+/// See [LLVM 11 docs on Calling Conventions](https://releases.llvm.org/11.0.0/docs/LangRef.html#callingconv)
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
 #[allow(non_camel_case_types)]
 pub enum CallingConvention {
@@ -148,7 +148,7 @@ pub enum CallingConvention {
     Numbered(u32),
 }
 
-/// See [LLVM 10 docs on Function Attributes](https://releases.llvm.org/10.0.0/docs/LangRef.html#fnattrs)
+/// See [LLVM 11 docs on Function Attributes](https://releases.llvm.org/11.0.0/docs/LangRef.html#fnattrs)
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub enum FunctionAttribute {
     AlignStack(u64),
@@ -173,6 +173,8 @@ pub enum FunctionAttribute {
     NoFree,
     NoImplicitFloat,
     NoInline,
+    #[cfg(LLVM_VERSION_11_OR_GREATER)]
+    NoMerge,
     NonLazyBind,
     NoRedZone,
     NoReturn,
@@ -183,6 +185,8 @@ pub enum FunctionAttribute {
     #[cfg(LLVM_VERSION_9_OR_GREATER)]
     NoSync,
     NoUnwind,
+    #[cfg(LLVM_VERSION_11_OR_GREATER)]
+    NullPointerIsValid,
     OptForFuzzing,
     OptNone,
     OptSize,
@@ -210,13 +214,15 @@ pub enum FunctionAttribute {
 }
 
 /// `ParameterAttribute`s can apply to function parameters as well as function return types.
-/// See [LLVM 10 docs on Parameter Attributes](https://releases.llvm.org/10.0.0/docs/LangRef.html#paramattrs)
+/// See [LLVM 11 docs on Parameter Attributes](https://releases.llvm.org/11.0.0/docs/LangRef.html#paramattrs)
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub enum ParameterAttribute {
     ZeroExt,
     SignExt,
     InReg,
     ByVal,
+    #[cfg(LLVM_VERSION_11_OR_GREATER)]
+    Preallocated,
     InAlloca,
     SRet,
     Alignment(u64),
@@ -232,6 +238,8 @@ pub enum ParameterAttribute {
     SwiftSelf,
     SwiftError,
     ImmArg,
+    #[cfg(LLVM_VERSION_11_OR_GREATER)]
+    NoUndef,
     StringAttribute { kind: String, value: String }, // for no value, use ""
     UnknownAttribute, // this is used if we get a value not in the above list
 }
@@ -497,6 +505,8 @@ impl AttributesData {
             "nofree",
             "noimplicitfloat",
             "noinline",
+            #[cfg(LLVM_VERSION_11_OR_GREATER)]
+            "nomerge",
             "nonlazybind",
             "noredzone",
             "noreturn",
@@ -507,6 +517,8 @@ impl AttributesData {
             #[cfg(LLVM_VERSION_9_OR_GREATER)]
             "nosync",
             "nounwind",
+            #[cfg(LLVM_VERSION_11_OR_GREATER)]
+            "null_pointer_is_valid",
             "optforfuzzing",
             "optnone",
             "optsize",
@@ -543,6 +555,8 @@ impl AttributesData {
             "signext",
             "inreg",
             "byval",
+            #[cfg(LLVM_VERSION_11_OR_GREATER)]
+            "preallocated",
             "inalloca",
             "sret",
             "align",
@@ -559,6 +573,8 @@ impl AttributesData {
             "swifterror",
             #[cfg(LLVM_VERSION_9_OR_GREATER)]
             "immarg",
+            #[cfg(LLVM_VERSION_11_OR_GREATER)]
+            "noundef",
         ]
         .iter()
         .map(|&attrname| {
@@ -623,6 +639,8 @@ impl FunctionAttribute {
                 Some("nofree") => Self::NoFree,
                 Some("noimplicitfloat") => Self::NoImplicitFloat,
                 Some("noinline") => Self::NoInline,
+                #[cfg(LLVM_VERSION_11_OR_GREATER)]
+                Some("nomerge") => Self::NoMerge,
                 Some("nonlazybind") => Self::NonLazyBind,
                 Some("noredzone") => Self::NoRedZone,
                 Some("noreturn") => Self::NoReturn,
@@ -633,6 +651,8 @@ impl FunctionAttribute {
                 #[cfg(LLVM_VERSION_9_OR_GREATER)]
                 Some("nosync") => Self::NoSync,
                 Some("nounwind") => Self::NoUnwind,
+                #[cfg(LLVM_VERSION_11_OR_GREATER)]
+                Some("null_pointer_is_valid") => Self::NullPointerIsValid,
                 Some("optforfuzzing") => Self::OptForFuzzing,
                 Some("optnone") => Self::OptNone,
                 Some("optsize") => Self::OptSize,
@@ -679,6 +699,8 @@ impl ParameterAttribute {
                 Some("signext") => Self::SignExt,
                 Some("inreg") => Self::InReg,
                 Some("byval") => Self::ByVal,
+                #[cfg(LLVM_VERSION_11_OR_GREATER)]
+                Some("preallocated") => Self::Preallocated,
                 Some("inalloca") => Self::InAlloca,
                 Some("sret") => Self::SRet,
                 Some("align") => Self::Alignment(unsafe { LLVMGetEnumAttributeValue(a) }),
@@ -694,6 +716,8 @@ impl ParameterAttribute {
                 Some("swiftself") => Self::SwiftSelf,
                 Some("swifterror") => Self::SwiftError,
                 Some("immarg") => Self::ImmArg,
+                #[cfg(LLVM_VERSION_11_OR_GREATER)]
+                Some("noundef") => Self::NoUndef,
                 Some(s) => panic!("Unhandled value from lookup_param_attr: {:?}", s),
                 None => Self::UnknownAttribute,
             }

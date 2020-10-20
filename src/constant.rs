@@ -6,8 +6,8 @@ use std::fmt::{self, Display};
 use std::ops::Deref;
 use std::sync::Arc;
 
-/// See [LLVM 10 docs on Constants](https://releases.llvm.org/10.0.0/docs/LangRef.html#constants).
-/// Constants can be either values, or expressions involving other constants (see [LLVM 10 docs on Constant Expressions](https://releases.llvm.org/10.0.0/docs/LangRef.html#constant-expressions)).
+/// See [LLVM 11 docs on Constants](https://releases.llvm.org/11.0.0/docs/LangRef.html#constants).
+/// Constants can be either values, or expressions involving other constants (see [LLVM 11 docs on Constant Expressions](https://releases.llvm.org/11.0.0/docs/LangRef.html#constant-expressions)).
 #[derive(PartialEq, Clone, Debug)]
 pub enum Constant {
     Int {
@@ -31,7 +31,7 @@ pub enum Constant {
         value: u64,
     },
     Float(Float),
-    /// The `TypeRef` here must be to a `PointerType`. See [LLVM 10 docs on Simple Constants](https://releases.llvm.org/10.0.0/docs/LangRef.html#simple-constants)
+    /// The `TypeRef` here must be to a `PointerType`. See [LLVM 11 docs on Simple Constants](https://releases.llvm.org/11.0.0/docs/LangRef.html#simple-constants)
     Null(TypeRef),
     /// A zero-initialized array or struct (or scalar).
     AggregateZero(TypeRef),
@@ -45,9 +45,9 @@ pub enum Constant {
         elements: Vec<ConstantRef>,
     },
     Vector(Vec<ConstantRef>),
-    /// `Undef` can be used anywhere a constant is expected. See [LLVM 10 docs on Undefined Values](https://releases.llvm.org/10.0.0/docs/LangRef.html#undefined-values)
+    /// `Undef` can be used anywhere a constant is expected. See [LLVM 11 docs on Undefined Values](https://releases.llvm.org/11.0.0/docs/LangRef.html#undefined-values)
     Undef(TypeRef),
-    /// The address of the given (non-entry) [`BasicBlock`](../struct.BasicBlock.html). See [LLVM 10 docs on Addresses of Basic Blocks](https://releases.llvm.org/10.0.0/docs/LangRef.html#addresses-of-basic-blocks).
+    /// The address of the given (non-entry) [`BasicBlock`](../struct.BasicBlock.html). See [LLVM 11 docs on Addresses of Basic Blocks](https://releases.llvm.org/11.0.0/docs/LangRef.html#addresses-of-basic-blocks).
     /// `BlockAddress` needs more fields, but the necessary getter functions are apparently not exposed in the LLVM C API (only the C++ API)
     BlockAddress, // --TODO ideally we want BlockAddress { function: Name, block: Name },
     GlobalReference {
@@ -123,6 +123,8 @@ pub enum Constant {
 #[allow(non_camel_case_types)]
 pub enum Float {
     Half, // TODO perhaps Half(u16)
+    #[cfg(LLVM_VERSION_11_OR_GREATER)]
+    BFloat, // TODO perhaps BFloat(u16)
     Single(f32),
     Double(f64),
     Quadruple, // TODO perhaps Quadruple(u128)
@@ -134,6 +136,8 @@ impl Typed for Float {
     fn get_type(&self, types: &Types) -> TypeRef {
         types.fp(match self {
             Float::Half => FPType::Half,
+            #[cfg(LLVM_VERSION_11_OR_GREATER)]
+            Float::BFloat => FPType::BFloat,
             Float::Single(_) => FPType::Single,
             Float::Double(_) => FPType::Double,
             Float::Quadruple => FPType::FP128,
@@ -147,6 +151,8 @@ impl Display for Float {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Float::Half => write!(f, "half"),
+            #[cfg(LLVM_VERSION_11_OR_GREATER)]
+            Float::BFloat => write!(f, "bfloat"),
             Float::Single(s) => write!(f, "float {}", s),
             Float::Double(d) => write!(f, "double {}", d),
             Float::Quadruple => write!(f, "quadruple"),
@@ -172,6 +178,13 @@ impl Typed for Constant {
                 element_type.clone(),
                 elements.len(),
             ),
+            #[cfg(LLVM_VERSION_11_OR_GREATER)]
+            Constant::Vector(v) => types.vector_of(
+                types.type_of(&v[0]),
+                v.len(),
+                false, // I don't think it's possible (at least as of LLVM 11) to have a constant of scalable vector type?
+            ),
+            #[cfg(LLVM_VERSION_10_OR_LOWER)]
             Constant::Vector(v) => types.vector_of(
                 types.type_of(&v[0]),
                 v.len(),
@@ -780,6 +793,11 @@ impl Typed for ShuffleVector {
         debug_assert_eq!(ty, types.type_of(&self.operand1));
         match ty.as_ref() {
             Type::VectorType { element_type, .. } => match types.type_of(&self.mask).as_ref() {
+                #[cfg(LLVM_VERSION_11_OR_GREATER)]
+                Type::VectorType { num_elements, scalable, .. } => {
+                    types.vector_of(element_type.clone(), *num_elements, *scalable)
+                },
+                #[cfg(LLVM_VERSION_10_OR_LOWER)]
                 Type::VectorType { num_elements, .. } => {
                     types.vector_of(element_type.clone(), *num_elements)
                 },
@@ -1077,7 +1095,14 @@ impl Typed for ICmp {
         let ty = types.type_of(&self.operand0);
         debug_assert_eq!(ty, types.type_of(&self.operand1));
         match ty.as_ref() {
-            Type::VectorType { num_elements, .. } => types.vector_of(types.bool(), *num_elements),
+            #[cfg(LLVM_VERSION_11_OR_GREATER)]
+            Type::VectorType { num_elements, scalable, .. } => {
+                types.vector_of(types.bool(), *num_elements, *scalable)
+            },
+            #[cfg(LLVM_VERSION_10_OR_LOWER)]
+            Type::VectorType { num_elements, .. } => {
+                types.vector_of(types.bool(), *num_elements)
+            },
             _ => types.bool(),
         }
     }
@@ -1106,7 +1131,14 @@ impl Typed for FCmp {
         let ty = types.type_of(&self.operand0);
         debug_assert_eq!(ty, types.type_of(&self.operand1));
         match ty.as_ref() {
-            Type::VectorType { num_elements, .. } => types.vector_of(types.bool(), *num_elements),
+            #[cfg(LLVM_VERSION_11_OR_GREATER)]
+            Type::VectorType { num_elements, scalable, .. } => {
+                types.vector_of(types.bool(), *num_elements, *scalable)
+            },
+            #[cfg(LLVM_VERSION_10_OR_LOWER)]
+            Type::VectorType { num_elements, .. } => {
+                types.vector_of(types.bool(), *num_elements)
+            },
             _ => types.bool(),
         }
     }
@@ -1187,6 +1219,8 @@ impl Constant {
                 match ctx.types.type_from_llvm_ref( unsafe { LLVMTypeOf(constant) } ).as_ref() {
                     Type::FPType(fptype) => Constant::Float(match fptype {
                         FPType::Half => Float::Half,
+                        #[cfg(LLVM_VERSION_11_OR_GREATER)]
+                        FPType::BFloat => Float::BFloat,
                         FPType::Single => Float::Single( unsafe {
                             let mut b = 0;
                             let b_ptr: *mut std::os::raw::c_int = &mut b;
@@ -1393,6 +1427,7 @@ impl InsertElement {
 }
 
 impl ShuffleVector {
+    #[cfg(LLVM_VERSION_10_OR_LOWER)]
     pub(crate) fn from_llvm_ref(expr: LLVMValueRef, ctx: &mut ModuleContext) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 3);
         Self {
@@ -1400,6 +1435,14 @@ impl ShuffleVector {
             operand1: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 1) }, ctx),
             mask: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 2) }, ctx),
         }
+    }
+    #[cfg(LLVM_VERSION_11_OR_GREATER)]
+    pub(crate) fn from_llvm_ref(expr: LLVMValueRef, _ctx: &mut ModuleContext) -> Self {
+        assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 2);
+        // We currently (as of LLVM 11) have no way to get the mask of a
+        // ShuffleVector constant expression; LLVMGetMaskValue() only works for
+        // ShuffleVector instructions, not ShuffleVector constant expressions
+        panic!("Encountered a Constant::ShuffleVector, which is not supported for LLVM 11")
     }
 }
 

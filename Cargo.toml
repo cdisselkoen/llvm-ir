@@ -15,6 +15,7 @@ build = "build.rs"
 llvm-sys-80 = { package = "llvm-sys", version = "80.3.0", optional = true }
 llvm-sys-90 = { package = "llvm-sys", version = "90.2.0", optional = true }
 llvm-sys-100 = { package = "llvm-sys", version = "100.2.0", optional = true }
+llvm-sys-110 = { package = "llvm-sys", version = "110.0.0", optional = true }
 either = "1.5.2"
 log = "0.4.0"
 
@@ -27,6 +28,7 @@ env_logger = "0.6.2"
 llvm-8 = ["llvm-sys-80"]
 llvm-9 = ["llvm-sys-90"]
 llvm-10 = ["llvm-sys-100"]
+llvm-11 = ["llvm-sys-110"]
 
 # We'd like to have a "strict-versioning" feature which enables the
 # corresponding feature in llvm-sys. "strict-versioning" requires an exact
@@ -36,15 +38,17 @@ llvm-10 = ["llvm-sys-100"]
 # dependency without also activating the optional dependency.
 # (See https://github.com/rust-lang/cargo/issues/3494.)
 # This means that a declaration like the following:
-# strict-versioning = ["llvm-sys-80/strict-versioning", "llvm-sys-90/strict-versioning", "llvm-sys-100/strict-versioning"]
-# would mean that llvm-sys-80, llvm-sys-90, and llvm-sys-100 would all be
-# enabled, along with their strict-versioning features.
+# strict-versioning = ["llvm-sys-80/strict-versioning", "llvm-sys-90/strict-versioning", "llvm-sys-100/strict-versioning", "llvm-sys-110/strict-versioning"]
+# would mean that llvm-sys-80, llvm-sys-90, llvm-sys-100, and llvm-sys-110
+# would all be enabled, along with their strict-versioning features.
 # This would increase build times as we're building unnecessary crates; and
-# more importantly, it would require the user to have all three of LLVM 8, 9,
-# and 10 available on their system.
+# more importantly, it would require the user to have all four of LLVM 8, 9,
+# 10, and 11 available on their system.
 # Since previous versions of llvm-ir did have a "strict-versioning" feature, we
 # will still include a "strict-versioning" feature to avoid breaking
 # compatibility, but this feature currently has no effect.
+# Also, this feature will be removed in the next major version of llvm-ir
+# (0.8.0).
 strict-versioning = []
 
 # Instead, as a workaround, we'll have a separate strict-versioning feature for
@@ -55,7 +59,8 @@ strict-versioning = []
 llvm-8-strict = ["llvm-8", "llvm-sys-80/strict-versioning"]
 llvm-9-strict = ["llvm-9", "llvm-sys-90/strict-versioning"]
 llvm-10-strict = ["llvm-10", "llvm-sys-100/strict-versioning"]
+llvm-11-strict = ["llvm-11", "llvm-sys-110/strict-versioning"]
 
 [package.metadata.docs.rs]
-# Generate docs.rs documentation with the llvm-10 feature
-features = ["llvm-10"]
+# Generate docs.rs documentation with the llvm-11 feature
+features = ["llvm-11"]

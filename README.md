@@ -37,10 +37,11 @@ add it as a dependency in your `Cargo.toml`, selecting the feature corresponding
 to the LLVM version you want:
 ```toml
 [dependencies]
-llvm-ir = { version = "0.7.2", features = ["llvm-10"] }
+llvm-ir = { version = "0.7.2", features = ["llvm-11"] }
 ```
 
-Currently, the supported LLVM versions are `llvm-8`, `llvm-9` and `llvm-10`.
+Currently, the supported LLVM versions are `llvm-8`, `llvm-9`, `llvm-10`, and
+`llvm-11`.
 
 Then, the easiest way to get started is to parse some existing LLVM IR into
 this crate's data structures.
@@ -75,8 +76,8 @@ when appropriate.
 ## Compatibility
 Starting with `llvm-ir` 0.7.0, LLVM versions are selected by a Cargo feature
 flag. This means that a single crate version can be used for any supported
-LLVM version. Currently, the supported LLVM versions are `llvm-8`, `llvm-9`
-and `llvm-10`.
+LLVM version. Currently, the supported LLVM versions are `llvm-8`, `llvm-9`,
+`llvm-10`, and `llvm-11`.
 
 `llvm-ir` works on stable Rust, and requires Rust 1.39+.
 
@@ -129,7 +130,7 @@ but not to query the values of these flags on existing instructions.
 - contents of inline assembly functions
 - information about the clauses in the variadic `LandingPad` instruction
 - information about the operands of a `BlockAddress` constant expression
-- the ["prefix data"](https://releases.llvm.org/10.0.0/docs/LangRef.html#prefix-data)
+- the ["prefix data"](https://releases.llvm.org/11.0.0/docs/LangRef.html#prefix-data)
 associated with a function
 - the values of constant integers which are larger than 64 bits (and don't
 fit in 64 bits) -- see [#5](https://github.com/cdisselkoen/llvm-ir/issues/5)
@@ -158,6 +159,7 @@ versions, which are outlined here.
 one of the features `llvm-8`, `llvm-9`, or `llvm-10`. Previously, we had the
 `0.6.x` branch for LLVM 10, the `0.5.x` branch for LLVM 9, and didn't
 officially support LLVM 8. Now, a single release supports LLVM 8, 9, and 10.
+(Note: 0.7.3 and later also supports LLVM 11.)
 - [`FunctionAttribute`] and [`ParameterAttribute`] are now proper enums with
 descriptive variants such as `NoInline`, `StackProtect`, etc. Previously,
 attributes were opaque numeric codes which were difficult to interpret.
