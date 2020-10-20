@@ -37,10 +37,11 @@ add it as a dependency in your `Cargo.toml`, selecting the feature corresponding
 to the LLVM version you want:
 ```toml
 [dependencies]
-llvm-ir = { version = "0.7.1", features = ["llvm-10"] }
+llvm-ir = { version = "0.7.3", features = ["llvm-11"] }
 ```
 
-Currently, the supported LLVM versions are `llvm-8`, `llvm-9` and `llvm-10`.
+Currently, the supported LLVM versions are `llvm-8`, `llvm-9`, `llvm-10`, and
+`llvm-11`.
 
 Then, the easiest way to get started is to parse some existing LLVM IR into
 this crate's data structures.
@@ -75,8 +76,8 @@ when appropriate.
 ## Compatibility
 Starting with `llvm-ir` 0.7.0, LLVM versions are selected by a Cargo feature
 flag. This means that a single crate version can be used for any supported
-LLVM version. Currently, the supported LLVM versions are `llvm-8`, `llvm-9`
-and `llvm-10`.
+LLVM version. Currently, the supported LLVM versions are `llvm-8`, `llvm-9`,
+`llvm-10`, and `llvm-11`.
 
 `llvm-ir` works on stable Rust, and requires Rust 1.39+.
 
@@ -158,6 +159,7 @@ versions, which are outlined here.
 one of the features `llvm-8`, `llvm-9`, or `llvm-10`. Previously, we had the
 `0.6.x` branch for LLVM 10, the `0.5.x` branch for LLVM 9, and didn't
 officially support LLVM 8. Now, a single release supports LLVM 8, 9, and 10.
+(Note: 0.7.3 and later also supports LLVM 11.)
 - [`FunctionAttribute`] and [`ParameterAttribute`] are now proper enums with
 descriptive variants such as `NoInline`, `StackProtect`, etc. Previously,
 attributes were opaque numeric codes which were difficult to interpret.
@@ -183,23 +185,23 @@ number of breaking changes to the public interface:
 [`inkwell`]: https://github.com/TheDan64/inkwell
 [`llvm-hs-pure` Haskell package]: http://hackage.haskell.org/package/llvm-hs-pure
 [`llvm-hs` Haskell package]: http://hackage.haskell.org/package/llvm-hs
-[`Instruction`]: https://docs.rs/llvm-ir/0.7.0/llvm_ir/instruction/enum.Instruction.html
-[`Add`]: https://docs.rs/llvm-ir/0.7.0/llvm_ir/instruction/struct.Add.html
-[`Call`]: https://docs.rs/llvm-ir/0.7.0/llvm_ir/instruction/struct.Call.html
-[`Store`]: https://docs.rs/llvm-ir/0.7.0/llvm_ir/instruction/struct.Store.html
-[`BasicBlock`]: https://docs.rs/llvm-ir/0.7.0/llvm_ir/basicblock/struct.BasicBlock.html
-[`Function`]: https://docs.rs/llvm-ir/0.7.0/llvm_ir/function/struct.Function.html
-[`Module`]: https://docs.rs/llvm-ir/0.7.0/llvm_ir/module/struct.Module.html
-[`Terminator`]: https://docs.rs/llvm-ir/0.7.0/llvm_ir/terminator/enum.Terminator.html
-[`GlobalVariable`]: https://docs.rs/llvm-ir/0.7.0/llvm_ir/module/struct.GlobalVariable.html
-[`DebugLoc`]: https://docs.rs/llvm-ir/0.7.0/llvm_ir/debugloc/struct.DebugLoc.html
-[`HasDebugLoc`]: https://docs.rs/llvm-ir/0.7.0/llvm_ir/debugloc/trait.HasDebugLoc.html
-[`FunctionAttribute`]: https://docs.rs/llvm-ir/0.7.0/llvm_ir/function/enum.FunctionAttribute.html
-[`ParameterAttribute`]: https://docs.rs/llvm-ir/0.7.0/llvm_ir/function/enum.ParameterAttribute.html
-[`Type`]: https://docs.rs/llvm-ir/0.7.0/llvm_ir/types/enum.Type.html
-[`TypeRef`]: https://docs.rs/llvm-ir/0.7.0/llvm_ir/types/struct.TypeRef.html
-[`Typed`]: https://docs.rs/llvm-ir/0.7.0/llvm_ir/types/struct.TypeRef.html
-[`Constant`]: https://docs.rs/llvm-ir/0.7.0/llvm_ir/constant/enum.Constant.html
-[`ConstantRef`]: https://docs.rs/llvm-ir/0.7.0/llvm_ir/constant/struct.ConstantRef.html
-[`module.type_of()`]: https://docs.rs/llvm-ir/0.7.0/llvm_ir/module/struct.Module.html#method.type_of
-[`module.types.named_struct_def()`]: https://docs.rs/llvm-ir/0.7.0/llvm_ir/types/struct.Types.html#method.named_struct_def
+[`Instruction`]: https://docs.rs/llvm-ir/0.7.3/llvm_ir/instruction/enum.Instruction.html
+[`Add`]: https://docs.rs/llvm-ir/0.7.3/llvm_ir/instruction/struct.Add.html
+[`Call`]: https://docs.rs/llvm-ir/0.7.3/llvm_ir/instruction/struct.Call.html
+[`Store`]: https://docs.rs/llvm-ir/0.7.3/llvm_ir/instruction/struct.Store.html
+[`BasicBlock`]: https://docs.rs/llvm-ir/0.7.3/llvm_ir/basicblock/struct.BasicBlock.html
+[`Function`]: https://docs.rs/llvm-ir/0.7.3/llvm_ir/function/struct.Function.html
+[`Module`]: https://docs.rs/llvm-ir/0.7.3/llvm_ir/module/struct.Module.html
+[`Terminator`]: https://docs.rs/llvm-ir/0.7.3/llvm_ir/terminator/enum.Terminator.html
+[`GlobalVariable`]: https://docs.rs/llvm-ir/0.7.3/llvm_ir/module/struct.GlobalVariable.html
+[`DebugLoc`]: https://docs.rs/llvm-ir/0.7.3/llvm_ir/debugloc/struct.DebugLoc.html
+[`HasDebugLoc`]: https://docs.rs/llvm-ir/0.7.3/llvm_ir/debugloc/trait.HasDebugLoc.html
+[`FunctionAttribute`]: https://docs.rs/llvm-ir/0.7.3/llvm_ir/function/enum.FunctionAttribute.html
+[`ParameterAttribute`]: https://docs.rs/llvm-ir/0.7.3/llvm_ir/function/enum.ParameterAttribute.html
+[`Type`]: https://docs.rs/llvm-ir/0.7.3/llvm_ir/types/enum.Type.html
+[`TypeRef`]: https://docs.rs/llvm-ir/0.7.3/llvm_ir/types/struct.TypeRef.html
+[`Typed`]: https://docs.rs/llvm-ir/0.7.3/llvm_ir/types/struct.TypeRef.html
+[`Constant`]: https://docs.rs/llvm-ir/0.7.3/llvm_ir/constant/enum.Constant.html
+[`ConstantRef`]: https://docs.rs/llvm-ir/0.7.3/llvm_ir/constant/struct.ConstantRef.html
+[`module.type_of()`]: https://docs.rs/llvm-ir/0.7.3/llvm_ir/module/struct.Module.html#method.type_of
+[`module.types.named_struct_def()`]: https://docs.rs/llvm-ir/0.7.3/llvm_ir/types/struct.Types.html#method.named_struct_def
