@@ -736,6 +736,7 @@ macro_rules! void_typed {
     };
 }
 
+/// Integer add.
 /// See [LLVM 11 docs on the 'add' instruction](https://releases.llvm.org/11.0.0/docs/LangRef.html#add-instruction)
 #[derive(PartialEq, Clone, Debug)]
 pub struct Add {
@@ -752,6 +753,7 @@ pub struct Add {
 impl_inst!(Add, Add);
 binop_same_type!(Add, Add, "add");
 
+/// Integer subtract.
 /// See [LLVM 11 docs on the 'sub' instruction](https://releases.llvm.org/11.0.0/docs/LangRef.html#sub-instruction)
 #[derive(PartialEq, Clone, Debug)]
 pub struct Sub {
@@ -768,6 +770,7 @@ pub struct Sub {
 impl_inst!(Sub, Sub);
 binop_same_type!(Sub, Sub, "sub");
 
+/// Integer multiply.
 /// See [LLVM 11 docs on the 'mul' instruction](https://releases.llvm.org/11.0.0/docs/LangRef.html#mul-instruction)
 #[derive(PartialEq, Clone, Debug)]
 pub struct Mul {
@@ -784,6 +787,7 @@ pub struct Mul {
 impl_inst!(Mul, Mul);
 binop_same_type!(Mul, Mul, "mul");
 
+/// Unsigned integer divide.
 /// See [LLVM 11 docs on the 'udiv' instruction](https://releases.llvm.org/11.0.0/docs/LangRef.html#udiv-instruction)
 #[derive(PartialEq, Clone, Debug)]
 pub struct UDiv {
@@ -799,6 +803,7 @@ pub struct UDiv {
 impl_inst!(UDiv, UDiv);
 binop_same_type!(UDiv, UDiv, "udiv");
 
+/// Signed integer divide.
 /// See [LLVM 11 docs on the 'sdiv' instruction](https://releases.llvm.org/11.0.0/docs/LangRef.html#sdiv-instruction)
 #[derive(PartialEq, Clone, Debug)]
 pub struct SDiv {
@@ -814,6 +819,7 @@ pub struct SDiv {
 impl_inst!(SDiv, SDiv);
 binop_same_type!(SDiv, SDiv, "sdiv");
 
+/// Unsigned integer remainder.
 /// See [LLVM 11 docs on the 'urem' instruction](https://releases.llvm.org/11.0.0/docs/LangRef.html#urem-instruction)
 #[derive(PartialEq, Clone, Debug)]
 pub struct URem {
@@ -828,6 +834,7 @@ pub struct URem {
 impl_inst!(URem, URem);
 binop_same_type!(URem, URem, "urem");
 
+/// Signed integer remainder.
 /// See [LLVM 11 docs on the 'srem' instruction](https://releases.llvm.org/11.0.0/docs/LangRef.html#srem-instruction)
 #[derive(PartialEq, Clone, Debug)]
 pub struct SRem {
@@ -952,7 +959,7 @@ pub struct FAdd {
 impl_inst!(FAdd, FAdd);
 binop_same_type!(FAdd, FAdd, "fadd");
 
-/// Floating-point sub.
+/// Floating-point subtract.
 /// See [LLVM 11 docs on the 'fsub' instruction](https://releases.llvm.org/11.0.0/docs/LangRef.html#fsub-instruction)
 #[derive(PartialEq, Clone, Debug)]
 pub struct FSub {
@@ -1106,6 +1113,7 @@ impl Display for InsertElement {
     }
 }
 
+/// Permute elements from two input vectors into a single output vector.
 /// See [LLVM 11 docs on the 'shufflevector' instruction](https://releases.llvm.org/11.0.0/docs/LangRef.html#shufflevector-instruction)
 #[derive(PartialEq, Clone, Debug)]
 pub struct ShuffleVector {
@@ -1392,6 +1400,7 @@ impl Display for Store {
     }
 }
 
+/// Memory-ordering fence.
 /// See [LLVM 11 docs on the 'fence' instruction](https://releases.llvm.org/11.0.0/docs/LangRef.html#fence-instruction)
 #[derive(PartialEq, Clone, Debug)]
 pub struct Fence {
@@ -1783,6 +1792,7 @@ pub struct BitCast {
 impl_inst!(BitCast, BitCast);
 unop_explicitly_typed!(BitCast, "bitcast");
 
+/// Convert a pointer to a different address space.
 /// See [LLVM 11 docs on the 'addrspacecast' instruction](https://releases.llvm.org/11.0.0/docs/LangRef.html#addrspacecast-to-instruction)
 #[derive(PartialEq, Clone, Debug)]
 pub struct AddrSpaceCast {
@@ -1929,6 +1939,7 @@ impl Display for Phi {
     }
 }
 
+/// Choose between two values depending on a condition.
 /// See [LLVM 11 docs on the 'select' instruction](https://releases.llvm.org/11.0.0/docs/LangRef.html#select-instruction)
 #[derive(PartialEq, Clone, Debug)]
 pub struct Select {
@@ -1965,7 +1976,8 @@ impl Display for Select {
     }
 }
 
-/// See [LLVM 11 docs on the `freeze` instruction](https://releases.llvm.org/11.0.0/docs/LangRef.html#freeze-instruction)
+/// Stop the propagation of `undef` or `poison` values.
+/// See [LLVM 11 docs on the 'freeze' instruction](https://releases.llvm.org/11.0.0/docs/LangRef.html#freeze-instruction)
 #[cfg(LLVM_VERSION_10_OR_GREATER)]
 #[derive(PartialEq, Clone, Debug)]
 pub struct Freeze {
@@ -2043,6 +2055,7 @@ impl Display for Call {
     }
 }
 
+/// Used to access variadic arguments passed to a function.
 /// See [LLVM 11 docs on the 'va_arg' instruction](https://releases.llvm.org/11.0.0/docs/LangRef.html#va-arg-instruction)
 #[derive(PartialEq, Clone, Debug)]
 pub struct VAArg {
@@ -2267,7 +2280,6 @@ impl Display for MemoryOrdering {
     }
 }
 
-/// See [LLVM 11 docs on Inline Assembler Expressions](https://releases.llvm.org/11.0.0/docs/LangRef.html#inline-assembler-expressions).
 // --TODO this seems to be the data structure we want. But see notes on
 // InlineAssembly::from_llvm_ref()
 /*
@@ -2288,7 +2300,10 @@ pub enum AssemblyDialect {
 }
 */
 // Instead we have this for now
-/// `InlineAssembly` needs more fields, but the necessary getter functions are apparently not exposed in the LLVM C API (only the C++ API)
+/// See [LLVM 11 docs on Inline Assembler Expressions](https://releases.llvm.org/11.0.0/docs/LangRef.html#inline-assembler-expressions)
+///
+/// `InlineAssembly` needs more fields, but the necessary getter functions are
+/// apparently not exposed in the LLVM C API (only the C++ API)
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct InlineAssembly {
     pub ty: TypeRef,
@@ -2352,7 +2367,10 @@ pub enum LandingPadClause {
 }
 */
 // Instead we have this for now
-/// `LandingPadClause` needs more fields, but the necessary getter functions are apparently not exposed in the LLVM C API (only the C++ API)
+/// See [LLVM 11 docs on the 'landingpad' instruction](https://releases.llvm.org/11.0.0/docs/LangRef.html#landingpad-instruction)
+///
+/// `LandingPadClause` needs more fields, but the necessary getter functions are
+/// apparently not exposed in the LLVM C API (only the C++ API)
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub struct LandingPadClause {}
 
