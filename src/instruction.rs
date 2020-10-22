@@ -2209,12 +2209,14 @@ impl Display for CleanupPad {
     }
 }
 
+/*
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub enum TailCallKind {
     Tail,
     MustTail,
     NoTail,
 }
+*/
 
 /// See [LLVM 11 docs on Fast-Math Flags](https://releases.llvm.org/11.0.0/docs/LangRef.html#fastmath)
 #[derive(PartialEq, Eq, Clone, Debug)]
