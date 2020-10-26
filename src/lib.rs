@@ -3,7 +3,7 @@
 // it was especially necessary when the docs.rs docs weren't working for any
 // llvm-sys consumers; now that we have docs.rs as the official docs, I'm not
 // sure if this is necessary or helpful anymore
-#![doc(html_root_url = "https://docs.rs/llvm-ir/0.7.3")]
+#![doc(html_root_url = "https://docs.rs/llvm-ir/0.7.4")]
 
 #[macro_use]
 mod from_llvm;

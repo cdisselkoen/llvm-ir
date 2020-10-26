@@ -37,7 +37,7 @@ add it as a dependency in your `Cargo.toml`, selecting the feature corresponding
 to the LLVM version you want:
 ```toml
 [dependencies]
-llvm-ir = { version = "0.7.3", features = ["llvm-11"] }
+llvm-ir = { version = "0.7.4", features = ["llvm-11"] }
 ```
 
 Currently, the supported LLVM versions are `llvm-8`, `llvm-9`, `llvm-10`, and
@@ -191,23 +191,23 @@ number of breaking changes to the public interface:
 [`inkwell`]: https://github.com/TheDan64/inkwell
 [`llvm-hs-pure` Haskell package]: http://hackage.haskell.org/package/llvm-hs-pure
 [`llvm-hs` Haskell package]: http://hackage.haskell.org/package/llvm-hs
-[`Instruction`]: https://docs.rs/llvm-ir/0.7.3/llvm_ir/instruction/enum.Instruction.html
-[`Add`]: https://docs.rs/llvm-ir/0.7.3/llvm_ir/instruction/struct.Add.html
-[`Call`]: https://docs.rs/llvm-ir/0.7.3/llvm_ir/instruction/struct.Call.html
-[`Store`]: https://docs.rs/llvm-ir/0.7.3/llvm_ir/instruction/struct.Store.html
-[`BasicBlock`]: https://docs.rs/llvm-ir/0.7.3/llvm_ir/basicblock/struct.BasicBlock.html
-[`Function`]: https://docs.rs/llvm-ir/0.7.3/llvm_ir/function/struct.Function.html
-[`Module`]: https://docs.rs/llvm-ir/0.7.3/llvm_ir/module/struct.Module.html
-[`Terminator`]: https://docs.rs/llvm-ir/0.7.3/llvm_ir/terminator/enum.Terminator.html
-[`GlobalVariable`]: https://docs.rs/llvm-ir/0.7.3/llvm_ir/module/struct.GlobalVariable.html
-[`DebugLoc`]: https://docs.rs/llvm-ir/0.7.3/llvm_ir/debugloc/struct.DebugLoc.html
-[`HasDebugLoc`]: https://docs.rs/llvm-ir/0.7.3/llvm_ir/debugloc/trait.HasDebugLoc.html
-[`FunctionAttribute`]: https://docs.rs/llvm-ir/0.7.3/llvm_ir/function/enum.FunctionAttribute.html
-[`ParameterAttribute`]: https://docs.rs/llvm-ir/0.7.3/llvm_ir/function/enum.ParameterAttribute.html
-[`Type`]: https://docs.rs/llvm-ir/0.7.3/llvm_ir/types/enum.Type.html
-[`TypeRef`]: https://docs.rs/llvm-ir/0.7.3/llvm_ir/types/struct.TypeRef.html
-[`Typed`]: https://docs.rs/llvm-ir/0.7.3/llvm_ir/types/struct.TypeRef.html
-[`Constant`]: https://docs.rs/llvm-ir/0.7.3/llvm_ir/constant/enum.Constant.html
-[`ConstantRef`]: https://docs.rs/llvm-ir/0.7.3/llvm_ir/constant/struct.ConstantRef.html
-[`module.type_of()`]: https://docs.rs/llvm-ir/0.7.3/llvm_ir/module/struct.Module.html#method.type_of
-[`module.types.named_struct_def()`]: https://docs.rs/llvm-ir/0.7.3/llvm_ir/types/struct.Types.html#method.named_struct_def
+[`Instruction`]: https://docs.rs/llvm-ir/0.7.4/llvm_ir/instruction/enum.Instruction.html
+[`Add`]: https://docs.rs/llvm-ir/0.7.4/llvm_ir/instruction/struct.Add.html
+[`Call`]: https://docs.rs/llvm-ir/0.7.4/llvm_ir/instruction/struct.Call.html
+[`Store`]: https://docs.rs/llvm-ir/0.7.4/llvm_ir/instruction/struct.Store.html
+[`BasicBlock`]: https://docs.rs/llvm-ir/0.7.4/llvm_ir/basicblock/struct.BasicBlock.html
+[`Function`]: https://docs.rs/llvm-ir/0.7.4/llvm_ir/function/struct.Function.html
+[`Module`]: https://docs.rs/llvm-ir/0.7.4/llvm_ir/module/struct.Module.html
+[`Terminator`]: https://docs.rs/llvm-ir/0.7.4/llvm_ir/terminator/enum.Terminator.html
+[`GlobalVariable`]: https://docs.rs/llvm-ir/0.7.4/llvm_ir/module/struct.GlobalVariable.html
+[`DebugLoc`]: https://docs.rs/llvm-ir/0.7.4/llvm_ir/debugloc/struct.DebugLoc.html
+[`HasDebugLoc`]: https://docs.rs/llvm-ir/0.7.4/llvm_ir/debugloc/trait.HasDebugLoc.html
+[`FunctionAttribute`]: https://docs.rs/llvm-ir/0.7.4/llvm_ir/function/enum.FunctionAttribute.html
+[`ParameterAttribute`]: https://docs.rs/llvm-ir/0.7.4/llvm_ir/function/enum.ParameterAttribute.html
+[`Type`]: https://docs.rs/llvm-ir/0.7.4/llvm_ir/types/enum.Type.html
+[`TypeRef`]: https://docs.rs/llvm-ir/0.7.4/llvm_ir/types/struct.TypeRef.html
+[`Typed`]: https://docs.rs/llvm-ir/0.7.4/llvm_ir/types/struct.TypeRef.html
+[`Constant`]: https://docs.rs/llvm-ir/0.7.4/llvm_ir/constant/enum.Constant.html
+[`ConstantRef`]: https://docs.rs/llvm-ir/0.7.4/llvm_ir/constant/struct.ConstantRef.html
+[`module.type_of()`]: https://docs.rs/llvm-ir/0.7.4/llvm_ir/module/struct.Module.html#method.type_of
+[`module.types.named_struct_def()`]: https://docs.rs/llvm-ir/0.7.4/llvm_ir/types/struct.Types.html#method.named_struct_def
