@@ -63,5 +63,5 @@ llvm-10-strict = ["llvm-10", "llvm-sys-100/strict-versioning"]
 llvm-11-strict = ["llvm-11", "llvm-sys-110/strict-versioning"]
 
 [package.metadata.docs.rs]
-# Generate docs.rs documentation with the llvm-11 feature
-features = ["llvm-11"]
+# Generate docs.rs documentation with the llvm-10 feature
+features = ["llvm-10"]
