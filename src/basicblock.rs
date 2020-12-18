@@ -20,7 +20,7 @@ impl BasicBlock {
             name,
             instrs: vec![],
             term: Terminator::Unreachable(Unreachable {
-                #[cfg(LLVM_VERSION_9_OR_GREATER)]
+                #[cfg(feature="llvm-9-or-greater")]
                 debugloc: None,
             }),
         }
@@ -113,7 +113,7 @@ fn term_needs_name(term: LLVMValueRef) -> bool {
     match unsafe { LLVMGetInstructionOpcode(term) } {
         LLVMOpcode::LLVMInvoke => true,
         LLVMOpcode::LLVMCatchSwitch => true,
-        #[cfg(LLVM_VERSION_9_OR_GREATER)]
+        #[cfg(feature="llvm-9-or-greater")]
         LLVMOpcode::LLVMCallBr => true,
         _ => false, // all other terminators have no result (destination) and thus don't need names
     }
