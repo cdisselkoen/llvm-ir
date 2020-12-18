@@ -1,5 +1,5 @@
 use crate::constant::ConstantRef;
-#[cfg(LLVM_VERSION_9_OR_GREATER)]
+#[cfg(feature="llvm-9-or-greater")]
 use crate::debugloc::*;
 use crate::function::{Function, FunctionAttribute, GroupID};
 use crate::llvm_sys::*;
@@ -115,7 +115,7 @@ pub struct GlobalVariable {
     pub section: Option<String>,
     pub comdat: Option<Comdat>, // llvm-hs-pure has Option<String> for some reason
     pub alignment: u32,
-    #[cfg(LLVM_VERSION_9_OR_GREATER)]
+    #[cfg(feature="llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: Vec<(String, MetadataRef<MetadataNode>)>,
 }
@@ -126,7 +126,7 @@ impl Typed for GlobalVariable {
     }
 }
 
-#[cfg(LLVM_VERSION_9_OR_GREATER)]
+#[cfg(feature="llvm-9-or-greater")]
 impl HasDebugLoc for GlobalVariable {
     fn get_debug_loc(&self) -> &Option<DebugLoc> {
         &self.debugloc
@@ -294,7 +294,7 @@ pub struct Alignment {
 
 /// Alignment details for function pointers.
 /// See [LLVM 11 docs on Data Layout](https://releases.llvm.org/11.0.0/docs/LangRef.html#data-layout)
-#[cfg(LLVM_VERSION_9_OR_GREATER)]
+#[cfg(feature="llvm-9-or-greater")]
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct FunctionPtrAlignment {
     /// If `true`, function pointer alignment is independent of function alignment.
@@ -333,10 +333,10 @@ pub struct Alignments {
     /// Alignment for aggregate types (structs, arrays)
     agg_alignment: Alignment,
     /// Alignment for function pointers
-    #[cfg(LLVM_VERSION_9_OR_GREATER)]
+    #[cfg(feature="llvm-9-or-greater")]
     fptr_alignment: FunctionPtrAlignment,
     /// Alignment for function pointers, as an `Alignment`
-    #[cfg(LLVM_VERSION_9_OR_GREATER)]
+    #[cfg(feature="llvm-9-or-greater")]
     fptr_alignment_as_alignment: Alignment,
     /// Layout details for (non-function-pointer) pointers, by address space
     pointer_layouts: HashMap<AddrSpace, PointerLayout>,
@@ -363,7 +363,7 @@ impl Alignments {
                 pointee_type,
                 addr_space,
             } => match pointee_type.as_ref() {
-                #[cfg(LLVM_VERSION_9_OR_GREATER)]
+                #[cfg(feature="llvm-9-or-greater")]
                 Type::FuncType { .. } => &self.fptr_alignment_as_alignment,
                 _ => &self.ptr_alignment(*addr_space).alignment,
             },
@@ -432,7 +432,7 @@ impl Alignments {
     }
 
     /// Alignment of function pointers
-    #[cfg(LLVM_VERSION_9_OR_GREATER)]
+    #[cfg(feature="llvm-9-or-greater")]
     pub fn fptr_alignment(&self) -> &FunctionPtrAlignment {
         &self.fptr_alignment
     }
@@ -452,7 +452,7 @@ impl Alignments {
     fn fpt_size(fpt: FPType) -> u32 {
         match fpt {
             FPType::Half => 16,
-            #[cfg(LLVM_VERSION_11_OR_GREATER)]
+            #[cfg(feature="llvm-11-or-greater")]
             FPType::BFloat => 16,
             FPType::Single => 32,
             FPType::Double => 64,
@@ -471,7 +471,7 @@ pub enum Mangling {
     MachO,
     WindowsX86COFF,
     WindowsCOFF,
-    #[cfg(LLVM_VERSION_11_OR_GREATER)]
+    #[cfg(feature="llvm-11-or-greater")]
     XCOFF,
 }
 
@@ -612,7 +612,7 @@ impl GlobalVariable {
                 }
             },
             alignment: unsafe { LLVMGetAlignment(global) },
-            #[cfg(LLVM_VERSION_9_OR_GREATER)]
+            #[cfg(feature="llvm-9-or-greater")]
             debugloc: DebugLoc::from_llvm_no_col(global),
             // metadata: unimplemented!("metadata"),
         }
@@ -917,11 +917,11 @@ impl DataLayout {
                 assert!(chunks.next().is_none(), "datalayout 'a': Too many chunks");
                 data_layout.alignments.agg_alignment = Alignment { abi, pref };
             } else if spec.starts_with("Fi") {
-                #[cfg(LLVM_VERSION_8_OR_LOWER)]
+                #[cfg(feature="llvm-8-or-lower")]
                 {
                     panic!("datalayout: Unknown spec {:?}", spec);
                 }
-                #[cfg(LLVM_VERSION_9_OR_GREATER)]
+                #[cfg(feature="llvm-9-or-greater")]
                 {
                     let abi: u32 = spec[2 ..]
                         .parse()
@@ -934,11 +934,11 @@ impl DataLayout {
                         Alignment { abi, pref: abi };
                 }
             } else if spec.starts_with("Fn") {
-                #[cfg(LLVM_VERSION_8_OR_LOWER)]
+                #[cfg(feature="llvm-8-or-lower")]
                 {
                     panic!("datalayout: Unknown spec {:?}", spec);
                 }
-                #[cfg(LLVM_VERSION_9_OR_GREATER)]
+                #[cfg(feature="llvm-9-or-greater")]
                 {
                     let abi: u32 = spec[2 ..]
                         .parse()
@@ -963,7 +963,7 @@ impl DataLayout {
                     "o" => Mangling::MachO,
                     "x" => Mangling::WindowsX86COFF,
                     "w" => Mangling::WindowsCOFF,
-                    #[cfg(LLVM_VERSION_11_OR_GREATER)]
+                    #[cfg(feature="llvm-11-or-greater")]
                     "a" => Mangling::XCOFF,
                     _ => panic!("datalayout 'm': Unknown mangling {:?}", second_chunk),
                 };
@@ -1040,13 +1040,13 @@ impl Default for Alignments {
             /// Alignment for aggregate types (structs, arrays)
             agg_alignment: Alignment { abi: 0, pref: 64 },
             /// Alignment for function pointers
-            #[cfg(LLVM_VERSION_9_OR_GREATER)]
+            #[cfg(feature="llvm-9-or-greater")]
             fptr_alignment: FunctionPtrAlignment {
                 independent: true,
                 abi: 64,
             },
             /// Alignment for function pointers, as an `Alignment`
-            #[cfg(LLVM_VERSION_9_OR_GREATER)]
+            #[cfg(feature="llvm-9-or-greater")]
             fptr_alignment_as_alignment: Alignment { abi: 64, pref: 64 },
             /// Layout details for (non-function-pointer) pointers, by address space
             pointer_layouts: vec![(

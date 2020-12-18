@@ -1,4 +1,4 @@
-#![cfg(LLVM_VERSION_10_OR_GREATER)]
+#![cfg(feature="llvm-10-or-greater")]
 
 //! These tests simply ensure that we can parse all of the `.bc` files in LLVM 10's `test/Bitcode` directory without crashing.
 //! We only include the `.bc` files which are new or have changed since LLVM 9 (older ones are covered in llvm_9_tests.rs or llvm_8_tests.rs).
@@ -53,12 +53,12 @@ fn freeze() {
     assert_eq!(freeze.dest, Name::from(32));
     assert_eq!(&format!("{}", freeze), "%32 = freeze i32 10");
     let freeze: &instruction::Freeze = &bb.instrs[9].clone().try_into().unwrap_or_else(|_| panic!("Expected a freeze, got {:?}", &bb.instrs[9]));
-    #[cfg(LLVM_VERSION_11_OR_GREATER)]
+    #[cfg(feature="llvm-11-or-greater")]
     assert_eq!(freeze.operand, Operand::LocalOperand {
         name: Name::from("vop"),
         ty: module.types.vector_of(module.types.i32(), 2, false),
     });
-    #[cfg(LLVM_VERSION_10_OR_LOWER)]
+    #[cfg(feature="llvm-10-or-lower")]
     assert_eq!(freeze.operand, Operand::LocalOperand {
         name: Name::from("vop"),
         ty: module.types.vector_of(module.types.i32(), 2),

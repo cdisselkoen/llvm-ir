@@ -34,7 +34,7 @@ pub enum Type {
     VectorType {
         element_type: TypeRef,
         num_elements: usize,
-        #[cfg(LLVM_VERSION_11_OR_GREATER)]
+        #[cfg(feature="llvm-11-or-greater")]
         scalable: bool,
     },
     /// Struct and Array types (but not vector types) are "aggregate types" and cannot be produced by
@@ -97,16 +97,16 @@ impl Display for Type {
             Type::VectorType {
                 element_type,
                 num_elements,
-                #[cfg(LLVM_VERSION_11_OR_GREATER)]
+                #[cfg(feature="llvm-11-or-greater")]
                 scalable,
             } => {
-                #[cfg(LLVM_VERSION_11_OR_GREATER)]
+                #[cfg(feature="llvm-11-or-greater")]
                 if *scalable {
                     write!(f, "<vscale x {} x {}>", num_elements, element_type)
                 } else {
                     write!(f, "<{} x {}>", num_elements, element_type)
                 }
-                #[cfg(LLVM_VERSION_10_OR_LOWER)]
+                #[cfg(feature="llvm-10-or-lower")]
                 write!(f, "<{} x {}>", num_elements, element_type)
             },
             Type::ArrayType {
@@ -148,7 +148,7 @@ impl Display for Type {
 #[allow(non_camel_case_types)]
 pub enum FPType {
     Half,
-    #[cfg(LLVM_VERSION_11_OR_GREATER)]
+    #[cfg(feature="llvm-11-or-greater")]
     BFloat,
     Single,
     Double,
@@ -167,7 +167,7 @@ impl Display for FPType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             FPType::Half => write!(f, "half"),
-            #[cfg(LLVM_VERSION_11_OR_GREATER)]
+            #[cfg(feature="llvm-11-or-greater")]
             FPType::BFloat => write!(f, "bfloat"),
             FPType::Single => write!(f, "float"),
             FPType::Double => write!(f, "double"),
@@ -424,7 +424,7 @@ impl TypesBuilder {
     }
 
     /// Get a vector type
-    #[cfg(LLVM_VERSION_11_OR_GREATER)]
+    #[cfg(feature="llvm-11-or-greater")]
     pub fn vector_of(&mut self, element_type: TypeRef, num_elements: usize, scalable: bool) -> TypeRef {
         self.vec_types
             .lookup_or_insert((element_type.clone(), num_elements, scalable), || Type::VectorType {
@@ -434,7 +434,7 @@ impl TypesBuilder {
             })
     }
     /// Get a vector type
-    #[cfg(LLVM_VERSION_10_OR_LOWER)]
+    #[cfg(feature="llvm-10-or-lower")]
     pub fn vector_of(&mut self, element_type: TypeRef, num_elements: usize) -> TypeRef {
         self.vec_types
             .lookup_or_insert((element_type.clone(), num_elements, false), || Type::VectorType {
@@ -668,7 +668,7 @@ impl Types {
     }
 
     /// Get a vector type
-    #[cfg(LLVM_VERSION_11_OR_GREATER)]
+    #[cfg(feature="llvm-11-or-greater")]
     pub fn vector_of(&self, element_type: TypeRef, num_elements: usize, scalable: bool) -> TypeRef {
         self.vec_types
             .lookup(&(element_type.clone(), num_elements, scalable))
@@ -680,7 +680,7 @@ impl Types {
                 })
             })
     }
-    #[cfg(LLVM_VERSION_10_OR_LOWER)]
+    #[cfg(feature="llvm-10-or-lower")]
     pub fn vector_of(&self, element_type: TypeRef, num_elements: usize) -> TypeRef {
         self.vec_types
             .lookup(&(element_type.clone(), num_elements, false))
@@ -773,11 +773,11 @@ impl Types {
             Type::FuncType { result_type, param_types, is_var_arg } => {
                 self.func_type(result_type.clone(), param_types.clone(), *is_var_arg)
             },
-            #[cfg(LLVM_VERSION_11_OR_GREATER)]
+            #[cfg(feature="llvm-11-or-greater")]
             Type::VectorType { element_type, num_elements, scalable } => {
                 self.vector_of(element_type.clone(), *num_elements, *scalable)
             },
-            #[cfg(LLVM_VERSION_10_OR_LOWER)]
+            #[cfg(feature="llvm-10-or-lower")]
             Type::VectorType { element_type, num_elements } => {
                 self.vector_of(element_type.clone(), *num_elements)
             },
@@ -880,13 +880,13 @@ impl TypesBuilder {
             },
             LLVMTypeKind::LLVMVectorTypeKind => {
                 let element_type = self.type_from_llvm_ref(unsafe { LLVMGetElementType(ty) });
-                #[cfg(LLVM_VERSION_11_OR_GREATER)]
+                #[cfg(feature="llvm-11-or-greater")]
                 let ret = self.vector_of(element_type, unsafe { LLVMGetVectorSize(ty) as usize }, false);
-                #[cfg(LLVM_VERSION_10_OR_LOWER)]
+                #[cfg(feature="llvm-10-or-lower")]
                 let ret = self.vector_of(element_type, unsafe { LLVMGetVectorSize(ty) as usize });
                 ret
             },
-            #[cfg(LLVM_VERSION_11_OR_GREATER)]
+            #[cfg(feature="llvm-11-or-greater")]
             LLVMTypeKind::LLVMScalableVectorTypeKind => {
                 let element_type = self.type_from_llvm_ref(unsafe { LLVMGetElementType(ty) });
                 self.vector_of(element_type, unsafe { LLVMGetVectorSize(ty) as usize }, true)
@@ -946,7 +946,7 @@ impl TypesBuilder {
                 )
             },
             LLVMTypeKind::LLVMHalfTypeKind => self.fp(FPType::Half),
-            #[cfg(LLVM_VERSION_11_OR_GREATER)]
+            #[cfg(feature="llvm-11-or-greater")]
             LLVMTypeKind::LLVMBFloatTypeKind => self.fp(FPType::BFloat),
             LLVMTypeKind::LLVMFloatTypeKind => self.fp(FPType::Single),
             LLVMTypeKind::LLVMDoubleTypeKind => self.fp(FPType::Double),

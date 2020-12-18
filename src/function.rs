@@ -1,4 +1,4 @@
-#[cfg(LLVM_VERSION_9_OR_GREATER)]
+#[cfg(feature="llvm-9-or-greater")]
 use crate::debugloc::{DebugLoc, HasDebugLoc};
 use crate::module::{Comdat, DLLStorageClass, Linkage, Visibility};
 use crate::types::{TypeRef, Typed, Types};
@@ -26,7 +26,7 @@ pub struct Function {
     // pub prefix: Option<ConstantRef>,  // appears to not be exposed in the LLVM C API, only the C++ API
     /// Personalities are used for exception handling. See [LLVM 11 docs on Personality Function](https://releases.llvm.org/11.0.0/docs/LangRef.html#personalityfn)
     pub personality_function: Option<ConstantRef>,
-    #[cfg(LLVM_VERSION_9_OR_GREATER)]
+    #[cfg(feature="llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: Vec<(String, MetadataRef<MetadataNode>)>,
 }
@@ -41,7 +41,7 @@ impl Typed for Function {
     }
 }
 
-#[cfg(LLVM_VERSION_9_OR_GREATER)]
+#[cfg(feature="llvm-9-or-greater")]
 impl HasDebugLoc for Function {
     fn get_debug_loc(&self) -> &Option<DebugLoc> {
         &self.debugloc
@@ -78,7 +78,7 @@ impl Function {
             alignment: 4,
             garbage_collector_name: None,
             personality_function: None,
-            #[cfg(LLVM_VERSION_9_OR_GREATER)]
+            #[cfg(feature="llvm-9-or-greater")]
             debugloc: None,
         }
     }
@@ -169,23 +169,23 @@ pub enum FunctionAttribute {
     NoBuiltin,
     NoCFCheck,
     NoDuplicate,
-    #[cfg(LLVM_VERSION_9_OR_GREATER)]
+    #[cfg(feature="llvm-9-or-greater")]
     NoFree,
     NoImplicitFloat,
     NoInline,
-    #[cfg(LLVM_VERSION_11_OR_GREATER)]
+    #[cfg(feature="llvm-11-or-greater")]
     NoMerge,
     NonLazyBind,
     NoRedZone,
     NoReturn,
     NoRecurse,
-    #[cfg(LLVM_VERSION_9_OR_GREATER)]
+    #[cfg(feature="llvm-9-or-greater")]
     WillReturn,
     ReturnsTwice,
-    #[cfg(LLVM_VERSION_9_OR_GREATER)]
+    #[cfg(feature="llvm-9-or-greater")]
     NoSync,
     NoUnwind,
-    #[cfg(LLVM_VERSION_11_OR_GREATER)]
+    #[cfg(feature="llvm-11-or-greater")]
     NullPointerIsValid,
     OptForFuzzing,
     OptNone,
@@ -199,7 +199,7 @@ pub enum FunctionAttribute {
     SanitizeMemory,
     SanitizeThread,
     SanitizeHWAddress,
-    #[cfg(LLVM_VERSION_9_OR_GREATER)]
+    #[cfg(feature="llvm-9-or-greater")]
     SanitizeMemTag,
     ShadowCallStack,
     SpeculativeLoadHardening,
@@ -221,14 +221,14 @@ pub enum ParameterAttribute {
     SignExt,
     InReg,
     ByVal,
-    #[cfg(LLVM_VERSION_11_OR_GREATER)]
+    #[cfg(feature="llvm-11-or-greater")]
     Preallocated,
     InAlloca,
     SRet,
     Alignment(u64),
     NoAlias,
     NoCapture,
-    #[cfg(LLVM_VERSION_9_OR_GREATER)]
+    #[cfg(feature="llvm-9-or-greater")]
     NoFree,
     Nest,
     Returned,
@@ -238,7 +238,7 @@ pub enum ParameterAttribute {
     SwiftSelf,
     SwiftError,
     ImmArg,
-    #[cfg(LLVM_VERSION_11_OR_GREATER)]
+    #[cfg(feature="llvm-11-or-greater")]
     NoUndef,
     StringAttribute { kind: String, value: String }, // for no value, use ""
     UnknownAttribute, // this is used if we get a value not in the above list
@@ -418,7 +418,7 @@ impl Function {
                     None
                 }
             },
-            #[cfg(LLVM_VERSION_9_OR_GREATER)]
+            #[cfg(feature="llvm-9-or-greater")]
             debugloc: DebugLoc::from_llvm_no_col(func),
             // metadata: unimplemented!("Function.metadata"),
         }
@@ -501,23 +501,23 @@ impl AttributesData {
             "nobuiltin",
             "nocf_check",
             "noduplicate",
-            #[cfg(LLVM_VERSION_9_OR_GREATER)]
+            #[cfg(feature="llvm-9-or-greater")]
             "nofree",
             "noimplicitfloat",
             "noinline",
-            #[cfg(LLVM_VERSION_11_OR_GREATER)]
+            #[cfg(feature="llvm-11-or-greater")]
             "nomerge",
             "nonlazybind",
             "noredzone",
             "noreturn",
             "norecurse",
-            #[cfg(LLVM_VERSION_9_OR_GREATER)]
+            #[cfg(feature="llvm-9-or-greater")]
             "willreturn",
             "returns_twice",
-            #[cfg(LLVM_VERSION_9_OR_GREATER)]
+            #[cfg(feature="llvm-9-or-greater")]
             "nosync",
             "nounwind",
-            #[cfg(LLVM_VERSION_11_OR_GREATER)]
+            #[cfg(feature="llvm-11-or-greater")]
             "null_pointer_is_valid",
             "optforfuzzing",
             "optnone",
@@ -531,7 +531,7 @@ impl AttributesData {
             "sanitize_memory",
             "sanitize_thread",
             "sanitize_hwaddress",
-            #[cfg(LLVM_VERSION_9_OR_GREATER)]
+            #[cfg(feature="llvm-9-or-greater")]
             "sanitize_memtag",
             "shadowcallstack",
             "speculative_load_hardening",
@@ -555,14 +555,14 @@ impl AttributesData {
             "signext",
             "inreg",
             "byval",
-            #[cfg(LLVM_VERSION_11_OR_GREATER)]
+            #[cfg(feature="llvm-11-or-greater")]
             "preallocated",
             "inalloca",
             "sret",
             "align",
             "noalias",
             "nocapture",
-            #[cfg(LLVM_VERSION_9_OR_GREATER)]
+            #[cfg(feature="llvm-9-or-greater")]
             "nofree",
             "nest",
             "returned",
@@ -571,9 +571,9 @@ impl AttributesData {
             "dereferenceable_or_null",
             "swiftself",
             "swifterror",
-            #[cfg(LLVM_VERSION_9_OR_GREATER)]
+            #[cfg(feature="llvm-9-or-greater")]
             "immarg",
-            #[cfg(LLVM_VERSION_11_OR_GREATER)]
+            #[cfg(feature="llvm-11-or-greater")]
             "noundef",
         ]
         .iter()
@@ -635,23 +635,23 @@ impl FunctionAttribute {
                 Some("nobuiltin") => Self::NoBuiltin,
                 Some("nocf_check") => Self::NoCFCheck,
                 Some("noduplicate") => Self::NoDuplicate,
-                #[cfg(LLVM_VERSION_9_OR_GREATER)]
+                #[cfg(feature="llvm-9-or-greater")]
                 Some("nofree") => Self::NoFree,
                 Some("noimplicitfloat") => Self::NoImplicitFloat,
                 Some("noinline") => Self::NoInline,
-                #[cfg(LLVM_VERSION_11_OR_GREATER)]
+                #[cfg(feature="llvm-11-or-greater")]
                 Some("nomerge") => Self::NoMerge,
                 Some("nonlazybind") => Self::NonLazyBind,
                 Some("noredzone") => Self::NoRedZone,
                 Some("noreturn") => Self::NoReturn,
                 Some("norecurse") => Self::NoRecurse,
-                #[cfg(LLVM_VERSION_9_OR_GREATER)]
+                #[cfg(feature="llvm-9-or-greater")]
                 Some("willreturn") => Self::WillReturn,
                 Some("returns_twice") => Self::ReturnsTwice,
-                #[cfg(LLVM_VERSION_9_OR_GREATER)]
+                #[cfg(feature="llvm-9-or-greater")]
                 Some("nosync") => Self::NoSync,
                 Some("nounwind") => Self::NoUnwind,
-                #[cfg(LLVM_VERSION_11_OR_GREATER)]
+                #[cfg(feature="llvm-11-or-greater")]
                 Some("null_pointer_is_valid") => Self::NullPointerIsValid,
                 Some("optforfuzzing") => Self::OptForFuzzing,
                 Some("optnone") => Self::OptNone,
@@ -665,7 +665,7 @@ impl FunctionAttribute {
                 Some("sanitize_memory") => Self::SanitizeMemory,
                 Some("sanitize_thread") => Self::SanitizeThread,
                 Some("sanitize_hwaddress") => Self::SanitizeHWAddress,
-                #[cfg(LLVM_VERSION_9_OR_GREATER)]
+                #[cfg(feature="llvm-9-or-greater")]
                 Some("sanitize_memtag") => Self::SanitizeMemTag,
                 Some("shadowcallstack") => Self::ShadowCallStack,
                 Some("speculative_load_hardening") => Self::SpeculativeLoadHardening,
@@ -699,14 +699,14 @@ impl ParameterAttribute {
                 Some("signext") => Self::SignExt,
                 Some("inreg") => Self::InReg,
                 Some("byval") => Self::ByVal,
-                #[cfg(LLVM_VERSION_11_OR_GREATER)]
+                #[cfg(feature="llvm-11-or-greater")]
                 Some("preallocated") => Self::Preallocated,
                 Some("inalloca") => Self::InAlloca,
                 Some("sret") => Self::SRet,
                 Some("align") => Self::Alignment(unsafe { LLVMGetEnumAttributeValue(a) }),
                 Some("noalias") => Self::NoAlias,
                 Some("nocapture") => Self::NoCapture,
-                #[cfg(LLVM_VERSION_9_OR_GREATER)]
+                #[cfg(feature="llvm-9-or-greater")]
                 Some("nofree") => Self::NoFree,
                 Some("nest") => Self::Nest,
                 Some("returned") => Self::Returned,
@@ -716,7 +716,7 @@ impl ParameterAttribute {
                 Some("swiftself") => Self::SwiftSelf,
                 Some("swifterror") => Self::SwiftError,
                 Some("immarg") => Self::ImmArg,
-                #[cfg(LLVM_VERSION_11_OR_GREATER)]
+                #[cfg(feature="llvm-11-or-greater")]
                 Some("noundef") => Self::NoUndef,
                 Some(s) => panic!("Unhandled value from lookup_param_attr: {:?}", s),
                 None => Self::UnknownAttribute,

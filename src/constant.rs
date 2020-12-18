@@ -123,7 +123,7 @@ pub enum Constant {
 #[allow(non_camel_case_types)]
 pub enum Float {
     Half, // TODO perhaps Half(u16)
-    #[cfg(LLVM_VERSION_11_OR_GREATER)]
+    #[cfg(feature="llvm-11-or-greater")]
     BFloat, // TODO perhaps BFloat(u16)
     Single(f32),
     Double(f64),
@@ -136,7 +136,7 @@ impl Typed for Float {
     fn get_type(&self, types: &Types) -> TypeRef {
         types.fp(match self {
             Float::Half => FPType::Half,
-            #[cfg(LLVM_VERSION_11_OR_GREATER)]
+            #[cfg(feature="llvm-11-or-greater")]
             Float::BFloat => FPType::BFloat,
             Float::Single(_) => FPType::Single,
             Float::Double(_) => FPType::Double,
@@ -151,7 +151,7 @@ impl Display for Float {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Float::Half => write!(f, "half"),
-            #[cfg(LLVM_VERSION_11_OR_GREATER)]
+            #[cfg(feature="llvm-11-or-greater")]
             Float::BFloat => write!(f, "bfloat"),
             Float::Single(s) => write!(f, "float {}", s),
             Float::Double(d) => write!(f, "double {}", d),
@@ -178,13 +178,13 @@ impl Typed for Constant {
                 element_type.clone(),
                 elements.len(),
             ),
-            #[cfg(LLVM_VERSION_11_OR_GREATER)]
+            #[cfg(feature="llvm-11-or-greater")]
             Constant::Vector(v) => types.vector_of(
                 types.type_of(&v[0]),
                 v.len(),
                 false, // I don't think it's possible (at least as of LLVM 11) to have a constant of scalable vector type?
             ),
-            #[cfg(LLVM_VERSION_10_OR_LOWER)]
+            #[cfg(feature="llvm-10-or-lower")]
             Constant::Vector(v) => types.vector_of(
                 types.type_of(&v[0]),
                 v.len(),
@@ -793,11 +793,11 @@ impl Typed for ShuffleVector {
         debug_assert_eq!(ty, types.type_of(&self.operand1));
         match ty.as_ref() {
             Type::VectorType { element_type, .. } => match types.type_of(&self.mask).as_ref() {
-                #[cfg(LLVM_VERSION_11_OR_GREATER)]
+                #[cfg(feature="llvm-11-or-greater")]
                 Type::VectorType { num_elements, scalable, .. } => {
                     types.vector_of(element_type.clone(), *num_elements, *scalable)
                 },
-                #[cfg(LLVM_VERSION_10_OR_LOWER)]
+                #[cfg(feature="llvm-10-or-lower")]
                 Type::VectorType { num_elements, .. } => {
                     types.vector_of(element_type.clone(), *num_elements)
                 },
@@ -1095,11 +1095,11 @@ impl Typed for ICmp {
         let ty = types.type_of(&self.operand0);
         debug_assert_eq!(ty, types.type_of(&self.operand1));
         match ty.as_ref() {
-            #[cfg(LLVM_VERSION_11_OR_GREATER)]
+            #[cfg(feature="llvm-11-or-greater")]
             Type::VectorType { num_elements, scalable, .. } => {
                 types.vector_of(types.bool(), *num_elements, *scalable)
             },
-            #[cfg(LLVM_VERSION_10_OR_LOWER)]
+            #[cfg(feature="llvm-10-or-lower")]
             Type::VectorType { num_elements, .. } => {
                 types.vector_of(types.bool(), *num_elements)
             },
@@ -1131,11 +1131,11 @@ impl Typed for FCmp {
         let ty = types.type_of(&self.operand0);
         debug_assert_eq!(ty, types.type_of(&self.operand1));
         match ty.as_ref() {
-            #[cfg(LLVM_VERSION_11_OR_GREATER)]
+            #[cfg(feature="llvm-11-or-greater")]
             Type::VectorType { num_elements, scalable, .. } => {
                 types.vector_of(types.bool(), *num_elements, *scalable)
             },
-            #[cfg(LLVM_VERSION_10_OR_LOWER)]
+            #[cfg(feature="llvm-10-or-lower")]
             Type::VectorType { num_elements, .. } => {
                 types.vector_of(types.bool(), *num_elements)
             },
@@ -1219,7 +1219,7 @@ impl Constant {
                 match ctx.types.type_from_llvm_ref( unsafe { LLVMTypeOf(constant) } ).as_ref() {
                     Type::FPType(fptype) => Constant::Float(match fptype {
                         FPType::Half => Float::Half,
-                        #[cfg(LLVM_VERSION_11_OR_GREATER)]
+                        #[cfg(feature="llvm-11-or-greater")]
                         FPType::BFloat => Float::BFloat,
                         FPType::Single => Float::Single( unsafe {
                             let mut b = 0;
@@ -1427,7 +1427,7 @@ impl InsertElement {
 }
 
 impl ShuffleVector {
-    #[cfg(LLVM_VERSION_10_OR_LOWER)]
+    #[cfg(feature="llvm-10-or-lower")]
     pub(crate) fn from_llvm_ref(expr: LLVMValueRef, ctx: &mut ModuleContext) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 3);
         Self {
@@ -1436,7 +1436,7 @@ impl ShuffleVector {
             mask: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 2) }, ctx),
         }
     }
-    #[cfg(LLVM_VERSION_11_OR_GREATER)]
+    #[cfg(feature="llvm-11-or-greater")]
     pub(crate) fn from_llvm_ref(expr: LLVMValueRef, _ctx: &mut ModuleContext) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 2);
         // We currently (as of LLVM 11) have no way to get the mask of a

@@ -1,4 +1,4 @@
-#![cfg(LLVM_VERSION_11_OR_GREATER)]
+#![cfg(feature="llvm-11-or-greater")]
 
 //! These tests simply ensure that we can parse all of the `.bc` files in LLVM 11's `test/Bitcode` directory without crashing.
 //! We only include the `.bc` files which are new or have changed since LLVM 10 (older ones are covered in other llvm_*_tests.rs).

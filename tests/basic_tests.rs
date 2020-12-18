@@ -5,7 +5,7 @@ use llvm_ir::instruction;
 use llvm_ir::module::{Alignment, Endianness, Mangling, PointerLayout};
 use llvm_ir::terminator;
 use llvm_ir::types::{FPType, NamedStructDef};
-#[cfg(LLVM_VERSION_9_OR_GREATER)]
+#[cfg(feature="llvm-9-or-greater")]
 use llvm_ir::HasDebugLoc;
 use llvm_ir::Instruction;
 use llvm_ir::IntPredicate;
@@ -79,7 +79,7 @@ fn hellobc() {
     );
     assert_eq!(&format!("{}", ret), "ret i32 0");
 
-    #[cfg(LLVM_VERSION_9_OR_GREATER)]
+    #[cfg(feature="llvm-9-or-greater")]
     {
         // this file was compiled without debuginfo, so nothing should have a debugloc
         assert_eq!(func.debugloc, None);
@@ -88,7 +88,7 @@ fn hellobc() {
 }
 
 // this test relates to the version of the file compiled with debuginfo
-#[cfg(LLVM_VERSION_9_OR_GREATER)]
+#[cfg(feature="llvm-9-or-greater")]
 #[test]
 fn hellobcg() {
     init_logging();
@@ -153,7 +153,7 @@ fn loopbc() {
 
     // get basic blocks and check their names
     // LLVM 10+ bitcode has fewer basic blocks for this function
-    #[cfg(LLVM_VERSION_9_OR_LOWER)]
+    #[cfg(feature="llvm-9-or-lower")]
     let bbs = {
         assert_eq!(func.basic_blocks.len(), 6);
         let bb2 = &func.basic_blocks[0];
@@ -187,7 +187,7 @@ fn loopbc() {
         assert_eq!(func.get_bb_by_name(&Name::Number(12)), Some(bb12));
         vec![bb2, bb7, bb12, bb21]
     };
-    #[cfg(LLVM_VERSION_11_OR_GREATER)]
+    #[cfg(feature="llvm-11-or-greater")]
     let bbs = {
         assert_eq!(func.basic_blocks.len(), 4);
         let bb2 = &func.basic_blocks[0];
@@ -316,7 +316,7 @@ fn loopbc() {
     let condbr: &terminator::CondBr = &bbs[0].term.clone().try_into().expect("Should be a condbr");
     assert_eq!(condbr.condition, Operand::LocalOperand { name: Name::Number(6), ty: module.types.bool() } );
     assert_eq!(condbr.true_dest, Name::Number(7));
-    let false_dest = if cfg!(LLVM_VERSION_9_OR_LOWER) {
+    let false_dest = if cfg!(feature="llvm-9-or-lower") {
         Name::Number(22)
     } else if cfg!(feature = "llvm-10") {
         Name::Number(21)
@@ -329,31 +329,31 @@ fn loopbc() {
         &format!("{}", condbr),
         &format!(
             "br i1 %6, label %7, label %{}",
-            if cfg!(LLVM_VERSION_9_OR_LOWER) { 22 } else if cfg!(feature = "llvm-10") { 21 } else { 24 }
+            if cfg!(feature="llvm-9-or-lower") { 22 } else if cfg!(feature = "llvm-10") { 21 } else { 24 }
         ),
     );
 
     // check details about certain instructions in basic block %7
     // not sure why LLVM 10+ puts a ZExt here instead of SExt. Maybe it can prove it's equivalent?
-    #[cfg(LLVM_VERSION_9_OR_LOWER)]
+    #[cfg(feature="llvm-9-or-lower")]
     let ext: &instruction::SExt = &bbs[1].instrs[1].clone().try_into().expect("Should be a SExt");
     #[cfg(feature = "llvm-10")]
     let ext: &instruction::ZExt = &bbs[1].instrs[1].clone().try_into().expect("Should be a ZExt");
-    #[cfg(LLVM_VERSION_11_OR_GREATER)]
+    #[cfg(feature="llvm-11-or-greater")]
     let ext: &instruction::ZExt = &bbs[1].instrs[3].clone().try_into().expect("Should be a ZExt");
-    let ext_input = if cfg!(LLVM_VERSION_10_OR_LOWER) { Name::Number(1) } else { Name::Number(10) };
-    let ext_dest = if cfg!(LLVM_VERSION_10_OR_LOWER) { Name::Number(9) } else { Name::Number(11) };
+    let ext_input = if cfg!(feature="llvm-10-or-lower") { Name::Number(1) } else { Name::Number(10) };
+    let ext_dest = if cfg!(feature="llvm-10-or-lower") { Name::Number(9) } else { Name::Number(11) };
     assert_eq!(ext.operand, Operand::LocalOperand { name: ext_input, ty: module.types.i32() } );
     assert_eq!(ext.to_type, module.types.i64());
     assert_eq!(ext.dest, ext_dest);
     assert_eq!(module.type_of(ext), module.types.i64());
-    #[cfg(LLVM_VERSION_9_OR_LOWER)]
+    #[cfg(feature="llvm-9-or-lower")]
     assert_eq!(&format!("{}", ext), "%9 = sext i32 %1 to i64");
     #[cfg(feature = "llvm-10")]
     assert_eq!(&format!("{}", ext), "%9 = zext i32 %1 to i64");
-    #[cfg(LLVM_VERSION_11_OR_GREATER)]
+    #[cfg(feature="llvm-11-or-greater")]
     assert_eq!(&format!("{}", ext), "%11 = zext i32 %10 to i64");
-    #[cfg(LLVM_VERSION_9_OR_LOWER)]
+    #[cfg(feature="llvm-9-or-lower")]
     {
         // LLVM 10+ doesn't have a Br in this function
         let br: &terminator::Br = &bbs[1].term.clone().try_into().expect("Should be a Br");
@@ -363,7 +363,7 @@ fn loopbc() {
 
     // check details about certain instructions in basic block %10 (LLVM 9-) / %12 (LLVM 10) / %14 (LLVM 11)
     let phi: &instruction::Phi = &bbs[2].instrs[0].clone().try_into().expect("Should be a Phi");
-    let phi_dest = if cfg!(LLVM_VERSION_9_OR_LOWER) {
+    let phi_dest = if cfg!(feature="llvm-9-or-lower") {
         Name::Number(11)
     } else if cfg!(feature = "llvm-10") {
         Name::Number(13)
@@ -372,7 +372,7 @@ fn loopbc() {
     };
     assert_eq!(phi.dest, phi_dest);
     assert_eq!(phi.to_type, module.types.i64());
-    #[cfg(LLVM_VERSION_9_OR_LOWER)]
+    #[cfg(feature="llvm-9-or-lower")]
     assert_eq!(
         phi.incoming_values,
         vec![
@@ -400,7 +400,7 @@ fn loopbc() {
             ),
         ]
     );
-    #[cfg(LLVM_VERSION_11_OR_GREATER)]
+    #[cfg(feature="llvm-11-or-greater")]
     assert_eq!(
         phi.incoming_values,
         vec![
@@ -414,11 +414,11 @@ fn loopbc() {
             ),
         ]
     );
-    #[cfg(LLVM_VERSION_9_OR_LOWER)]
+    #[cfg(feature="llvm-9-or-lower")]
     assert_eq!(&format!("{}", phi), "%11 = phi i64 [ i64 0, %7 ], [ i64 %20, %19 ]");
     #[cfg(feature = "llvm-10")]
     assert_eq!(&format!("{}", phi), "%13 = phi i64 [ i64 %19, %12 ], [ i64 1, %7 ]");
-    #[cfg(LLVM_VERSION_11_OR_GREATER)]
+    #[cfg(feature="llvm-11-or-greater")]
     assert_eq!(&format!("{}", phi), "%15 = phi i64 [ i64 %22, %14 ], [ i64 1, %7 ]");
 
     let gep: &instruction::GetElementPtr =
@@ -430,7 +430,7 @@ fn loopbc() {
             ty: module.types.pointer_to(allocated_type.clone())
         }
     );
-    let gep_dest = if cfg!(LLVM_VERSION_9_OR_LOWER) {
+    let gep_dest = if cfg!(feature="llvm-9-or-lower") {
         Name::Number(12)
     } else if cfg!(feature = "llvm-10") {
         Name::Number(14)
@@ -439,7 +439,7 @@ fn loopbc() {
     };
     assert_eq!(gep.dest, gep_dest);
     assert_eq!(gep.in_bounds, true);
-    let index = if cfg!(LLVM_VERSION_9_OR_LOWER) {
+    let index = if cfg!(feature="llvm-9-or-lower") {
         Name::Number(11)
     } else if cfg!(feature = "llvm-10") {
         Name::Number(13)
@@ -457,17 +457,17 @@ fn loopbc() {
         ]
     );
     assert_eq!(module.type_of(gep), module.types.pointer_to(module.types.i32()));
-    #[cfg(LLVM_VERSION_9_OR_LOWER)]
+    #[cfg(feature="llvm-9-or-lower")]
     assert_eq!(&format!("{}", gep), "%12 = getelementptr inbounds [10 x i32]* %3, i64 0, i64 %11");
     #[cfg(feature = "llvm-10")]
     assert_eq!(&format!("{}", gep), "%14 = getelementptr inbounds [10 x i32]* %3, i64 0, i64 %13");
-    #[cfg(LLVM_VERSION_11_OR_GREATER)]
+    #[cfg(feature="llvm-11-or-greater")]
     assert_eq!(&format!("{}", gep), "%16 = getelementptr inbounds [10 x i32]* %3, i64 0, i64 %15");
     let store: &instruction::Store = &bbs[2].instrs[2]
         .clone()
         .try_into()
         .expect("Should be a store");
-    let address = if cfg!(LLVM_VERSION_9_OR_LOWER) {
+    let address = if cfg!(feature="llvm-9-or-lower") {
         Name::Number(12)
     } else if cfg!(feature = "llvm-10") {
         Name::Number(14)
@@ -480,15 +480,15 @@ fn loopbc() {
     assert_eq!(store.alignment, 4);
     assert_eq!(module.type_of(store), module.types.void());
     assert_eq!(bbs[2].instrs[2].is_atomic(), false);
-    #[cfg(LLVM_VERSION_9_OR_LOWER)]
+    #[cfg(feature="llvm-9-or-lower")]
     assert_eq!(&format!("{}", store), "store volatile i32 %8, i32* %12, align 4");
     #[cfg(feature = "llvm-10")]
     assert_eq!(&format!("{}", store), "store volatile i32 %8, i32* %14, align 4");
-    #[cfg(LLVM_VERSION_11_OR_GREATER)]
+    #[cfg(feature="llvm-11-or-greater")]
     assert_eq!(&format!("{}", store), "store volatile i32 %8, i32* %16, align 4");
 
     // and finally other instructions of types we haven't seen yet
-    let load_inst: &Instruction = if cfg!(LLVM_VERSION_9_OR_LOWER) {
+    let load_inst: &Instruction = if cfg!(feature="llvm-9-or-lower") {
         &bbs[3].instrs[2]
     } else if cfg!(feature = "llvm-10") {
         &bbs[2].instrs[5]
@@ -496,25 +496,25 @@ fn loopbc() {
         &bbs[2].instrs[6]
     };
     let load: &instruction::Load = &load_inst.clone().try_into().expect("Should be a load");
-    let load_addr = if cfg!(LLVM_VERSION_10_OR_LOWER) {
+    let load_addr = if cfg!(feature="llvm-10-or-lower") {
         Name::Number(16)
     } else {
         Name::Number(19)
     };
     assert_eq!(load.address, Operand::LocalOperand { name: load_addr, ty: module.types.pointer_to(module.types.i32()) });
-    #[cfg(LLVM_VERSION_10_OR_LOWER)]
+    #[cfg(feature="llvm-10-or-lower")]
     assert_eq!(load.dest, Name::Number(17));
-    #[cfg(LLVM_VERSION_11_OR_GREATER)]
+    #[cfg(feature="llvm-11-or-greater")]
     assert_eq!(load.dest, Name::Number(20));
     assert_eq!(load.volatile, true);
     assert_eq!(load.alignment, 4);
     assert_eq!(module.type_of(load), module.types.i32());
     assert_eq!(load_inst.is_atomic(), false);
-    #[cfg(LLVM_VERSION_10_OR_LOWER)]
+    #[cfg(feature="llvm-10-or-lower")]
     assert_eq!(&format!("{}", load), "%17 = load volatile i32* %16, align 4");
-    #[cfg(LLVM_VERSION_11_OR_GREATER)]
+    #[cfg(feature="llvm-11-or-greater")]
     assert_eq!(&format!("{}", load), "%20 = load volatile i32* %19, align 4");
-    let ret: &Terminator = if cfg!(LLVM_VERSION_9_OR_LOWER) {
+    let ret: &Terminator = if cfg!(feature="llvm-9-or-lower") {
         &bbs[5].term
     } else {
         &bbs[3].term
@@ -575,7 +575,7 @@ fn variablesbc() {
     assert_eq!(var.ty, module.types.pointer_to(module.types.i32()));
     assert_eq!(var.initializer, Some(ConstantRef::new(Constant::Int { bits: 32, value: 5 })));
     assert_eq!(var.alignment, 4);
-    #[cfg(LLVM_VERSION_9_OR_GREATER)]
+    #[cfg(feature="llvm-9-or-greater")]
     assert!(var.get_debug_loc().is_none());  // this file was compiled without debuginfo
 
     assert_eq!(module.functions.len(), 1);
@@ -601,7 +601,7 @@ fn variablesbc() {
 }
 
 // this test relates to the version of the file compiled with debuginfo
-#[cfg(LLVM_VERSION_9_OR_GREATER)]
+#[cfg(feature="llvm-9-or-greater")]
 #[test]
 fn variablesbcg() {
     init_logging();
@@ -632,12 +632,12 @@ fn issue4() {
     let func = &module.functions[0];
 
     // not part of issue 4 proper, but let's check that we have the correct number of function attributes
-    let expected_num_function_attributes = if cfg!(LLVM_VERSION_8_OR_LOWER) {
+    let expected_num_function_attributes = if cfg!(feature="llvm-8-or-lower") {
         // LLVM 8 doesn't have the attribute "nofree"
         21
     } else if cfg!(feature = "llvm-9") {
         22
-    } else if cfg!(LLVM_VERSION_10_OR_GREATER) {
+    } else if cfg!(feature="llvm-10-or-greater") {
         // LLVM 10+ seems to have combined the two attributes
         // "no-frame-pointer-elim=true" and "no-frame-pointer-elim-non-leaf"
         // into a single attribute, "frame-pointer=all"
@@ -648,7 +648,7 @@ fn issue4() {
     assert_eq!(func.function_attributes.len(), expected_num_function_attributes,
         "Expected {} function attributes but have {}: {:?}", expected_num_function_attributes, func.function_attributes.len(), func.function_attributes);
     // and that all but 6 of them are StringAttributes (5 of them for LLVM 8)
-    let expected_num_enum_attrs = if cfg!(LLVM_VERSION_8_OR_LOWER) {
+    let expected_num_enum_attrs = if cfg!(feature="llvm-8-or-lower") {
         5 // missing "nofree"
     } else {
         6
@@ -659,9 +659,9 @@ fn issue4() {
     // now check that the first parameter has 3 attributes (4 in LLVM 11) and the second parameter has 0
     assert_eq!(func.parameters.len(), 2);
     let first_param_attrs = &func.parameters[0].attributes;
-    #[cfg(LLVM_VERSION_10_OR_LOWER)]
+    #[cfg(feature="llvm-10-or-lower")]
     assert_eq!(first_param_attrs.len(), 3);
-    #[cfg(LLVM_VERSION_11_OR_GREATER)]
+    #[cfg(feature="llvm-11-or-greater")]
     assert_eq!(first_param_attrs.len(), 4);
     let second_param_attrs = &func.parameters[1].attributes;
     assert_eq!(second_param_attrs.len(), 0);
@@ -737,7 +737,7 @@ fn rustbc() {
         "%0 = call @_ZN68_$LT$alloc..vec..Vec$LT$T$GT$$u20$as$u20$core..ops..deref..Deref$GT$5deref17h378128d7d9378466E(%alloc::vec::Vec<isize>* %v)",
     );
 
-    #[cfg(LLVM_VERSION_9_OR_GREATER)]
+    #[cfg(feature="llvm-9-or-greater")]
     {
         // this file was compiled without debuginfo, so nothing should have a debugloc
         assert!(func.get_debug_loc().is_none());
@@ -749,7 +749,7 @@ fn rustbc() {
 }
 
 // this test relates to the version of the file compiled with debuginfo
-#[cfg(LLVM_VERSION_9_OR_GREATER)]
+#[cfg(feature="llvm-9-or-greater")]
 #[test]
 fn rustbcg() {
     init_logging();
@@ -895,7 +895,7 @@ fn simple_linked_list() {
 }
 
 // this test relates to the version of the file compiled with debuginfo
-#[cfg(LLVM_VERSION_9_OR_GREATER)]
+#[cfg(feature="llvm-9-or-greater")]
 #[test]
 fn simple_linked_list_g() {
     init_logging();
@@ -1116,9 +1116,9 @@ fn param_and_func_attributes() {
     assert_eq!(f.parameters.len(), 1);
     let param = &f.parameters[0];
     assert_eq!(param.attributes.len(), 1);
-    #[cfg(LLVM_VERSION_8_OR_LOWER)]
+    #[cfg(feature="llvm-8-or-lower")]
     assert_eq!(param.attributes[0], ParameterAttribute::ByVal);
-    #[cfg(LLVM_VERSION_9_OR_GREATER)]
+    #[cfg(feature="llvm-9-or-greater")]
     assert_eq!(param.attributes[0], ParameterAttribute::UnknownAttribute); // not sure why we're getting UnknownAttribute here with LLVM 9+, but we'll let it pass for now
     let f = module.get_func_by_name("f.param.inalloca").unwrap();
     assert_eq!(f.parameters.len(), 1);
@@ -1275,7 +1275,7 @@ fn param_and_func_attributes() {
     assert_eq!(f.function_attributes[0], FunctionAttribute::StrictFP);
 }
 
-#[cfg(LLVM_VERSION_11_OR_GREATER)]
+#[cfg(feature="llvm-11-or-greater")]
 #[test]
 fn float_types() {
     init_logging();
@@ -1320,7 +1320,7 @@ fn datalayouts() {
     let module = Module::from_bc_path(&path).expect("Failed to parse module");
     let data_layout = &module.data_layout;
 
-    #[cfg(LLVM_VERSION_10_OR_GREATER)] {
+    #[cfg(feature="llvm-10-or-greater")] {
         assert_eq!(&data_layout.layout_str, "e-m:o-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128");
         assert_eq!(&data_layout.endianness, &Endianness::LittleEndian);
         assert_eq!(&data_layout.mangling, &Some(Mangling::MachO));
@@ -1338,7 +1338,7 @@ fn datalayouts() {
         assert_eq!(data_layout.native_int_widths.as_ref().unwrap().iter().copied().sorted().collect::<Vec<_>>(), vec![8, 16, 32, 64]);
         assert_eq!(data_layout.stack_alignment, Some(128));
     }
-    #[cfg(LLVM_VERSION_9_OR_LOWER)] {
+    #[cfg(feature="llvm-9-or-lower")] {
         assert_eq!(&data_layout.layout_str, "e-m:o-i64:64-f80:128-n8:16:32:64-S128");
         assert_eq!(&data_layout.endianness, &Endianness::LittleEndian);
         assert_eq!(&data_layout.mangling, &Some(Mangling::MachO));
