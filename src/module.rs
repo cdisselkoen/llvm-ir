@@ -1,5 +1,5 @@
 use crate::constant::ConstantRef;
-#[cfg(LLVM_VERSION_9_OR_GREATER)]
+#[cfg(feature="llvm-9-or-greater")]
 use crate::debugloc::*;
 use crate::function::{Function, FunctionAttribute, GroupID};
 use crate::llvm_sys::*;
@@ -114,7 +114,7 @@ pub struct GlobalVariable {
     pub section: Option<String>,
     pub comdat: Option<Comdat>, // llvm-hs-pure has Option<String> for some reason
     pub alignment: u32,
-    #[cfg(LLVM_VERSION_9_OR_GREATER)]
+    #[cfg(feature="llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: Vec<(String, MetadataRef<MetadataNode>)>,
 }
@@ -125,7 +125,7 @@ impl Typed for GlobalVariable {
     }
 }
 
-#[cfg(LLVM_VERSION_9_OR_GREATER)]
+#[cfg(feature="llvm-9-or-greater")]
 impl HasDebugLoc for GlobalVariable {
     fn get_debug_loc(&self) -> &Option<DebugLoc> {
         &self.debugloc
@@ -266,7 +266,7 @@ pub enum Mangling {
     MIPS,
     MachO,
     WindowsCOFF,
-    #[cfg(LLVM_VERSION_11_OR_GREATER)]
+    #[cfg(feature="llvm-11-or-greater")]
     XCOFF,
 }
 
@@ -423,7 +423,7 @@ impl GlobalVariable {
                 }
             },
             alignment: unsafe { LLVMGetAlignment(global) },
-            #[cfg(LLVM_VERSION_9_OR_GREATER)]
+            #[cfg(feature="llvm-9-or-greater")]
             debugloc: DebugLoc::from_llvm_no_col(global),
             // metadata: unimplemented!("metadata"),
         }

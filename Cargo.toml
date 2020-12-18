@@ -25,10 +25,23 @@ env_logger = "0.6.2"
 [features]
 # Select the LLVM version to be compatible with.
 # You _must_ enable exactly one of the following features.
-llvm-8 = ["llvm-sys-80"]
-llvm-9 = ["llvm-sys-90"]
-llvm-10 = ["llvm-sys-100"]
-llvm-11 = ["llvm-sys-110"]
+llvm-8 = ["llvm-sys-80", "llvm-8-or-lower", "llvm-8-or-greater"]
+llvm-9 = ["llvm-sys-90", "llvm-9-or-lower", "llvm-9-or-greater"]
+llvm-10 = ["llvm-sys-100", "llvm-10-or-lower", "llvm-10-or-greater"]
+llvm-11 = ["llvm-sys-110", "llvm-11-or-lower", "llvm-11-or-greater"]
+
+# For convenience, these automatically-enabled features allow us to avoid
+# checking complex combinations of features all the time. they are not meant to
+# be manually enabled, use the above llvm-x features instead
+llvm-8-or-greater = []
+llvm-9-or-greater = ["llvm-8-or-greater"]
+llvm-10-or-greater = ["llvm-9-or-greater"]
+llvm-11-or-greater = ["llvm-10-or-greater"]
+
+llvm-8-or-lower = ["llvm-9-or-lower"]
+llvm-9-or-lower = ["llvm-10-or-lower"]
+llvm-10-or-lower = ["llvm-11-or-lower"]
+llvm-11-or-lower = []
 
 # We'd like to have a "strict-versioning" feature which enables the
 # corresponding feature in llvm-sys. "strict-versioning" requires an exact
