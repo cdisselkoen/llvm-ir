@@ -805,6 +805,12 @@ impl Types {
     pub fn blank_for_testing() -> Self {
         TypesBuilder::new().build()
     }
+
+    pub fn add_named_struct_def(&mut self, name: String, ty: NamedStructDef) {
+        self.named_struct_defs.insert(name.clone(), ty.clone());
+
+        self.named_struct_types.map.insert(name.clone(), TypeRef::new(Type::NamedStructType { name }));
+    }
 }
 
 #[derive(Clone, Debug)]
