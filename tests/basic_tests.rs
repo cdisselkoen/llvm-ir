@@ -684,7 +684,7 @@ fn rustbc() {
     assert_eq!(func.parameters[2].name, Name::from("v"));
     assert_eq!(func.parameters[0].ty, module.types.i64());
     assert_eq!(func.parameters[1].ty, module.types.i64());
-    assert_eq!(func.parameters[2].ty, module.types.pointer_to(module.types.named_struct("alloc::vec::Vec<isize>").unwrap()));
+    assert_eq!(func.parameters[2].ty, module.types.pointer_to(module.types.named_struct("alloc::vec::Vec<isize>")));
 
     let startbb = func.get_bb_by_name(&Name::from("start")).expect("Failed to find bb 'start'");
     let alloca_iter: &instruction::Alloca = &startbb.instrs[5].clone().try_into().expect("Should be an alloca");
@@ -697,7 +697,7 @@ fn rustbc() {
     assert_eq!(store.address, Operand::LocalOperand { name: Name::from("sum"), ty: module.types.pointer_to(module.types.i64()) });
     assert_eq!(&format!("{}", store), "store i64 0, i64* %sum, align 8");
     let call: &instruction::Call = &startbb.instrs[8].clone().try_into().expect("Should be a call");
-    let param_type = module.types.pointer_to(module.types.named_struct("alloc::vec::Vec<isize>").unwrap());
+    let param_type = module.types.pointer_to(module.types.named_struct("alloc::vec::Vec<isize>"));
     let ret_type = module.types.struct_of(vec![
         module.types.pointer_to(module.types.array_of(module.types.i64(), 0)),
         module.types.i64(),
@@ -796,15 +796,7 @@ fn simple_linked_list() {
     let module = Module::from_bc_path(&path).expect("Failed to parse module");
 
     let struct_name: String = "struct.SimpleLinkedList".into();
-    let structty = module
-        .types
-        .named_struct(&struct_name)
-        .unwrap_or_else(|| {
-            panic!(
-                "Failed to find {} in module.types; have names {:?}",
-                struct_name, module.types.all_struct_names().collect::<Vec<_>>()
-            )
-        });
+    let structty = module.types.named_struct(&struct_name);
     match structty.as_ref() {
         Type::NamedStructType { name } => {
             assert_eq!(name, &struct_name);
@@ -812,7 +804,10 @@ fn simple_linked_list() {
         ty => panic!("Expected {} to be NamedStructType, but got {:?}", struct_name, ty),
     }
     let structty_inner = match module.types.named_struct_def(&struct_name) {
-        None => panic!("Failed to find {} with module.types.named_struct_def()", struct_name),
+        None => panic!(
+            "Failed to find {} with module.types.named_struct_def(); have names {:?}",
+            struct_name, module.types.all_struct_names().collect::<Vec<_>>()
+        ),
         Some(NamedStructDef::Opaque) => panic!("{} should not be an opaque type", struct_name),
         Some(NamedStructDef::Defined(ty)) => ty,
     };
@@ -859,15 +854,7 @@ fn simple_linked_list() {
     assert_eq!(&format!("{}", alloca), "%3 = alloca %struct.SimpleLinkedList, align 8");
 
     let struct_name: String = "struct.SomeOpaqueStruct".into();
-    let structty = module
-        .types
-        .named_struct(&struct_name)
-        .unwrap_or_else(|| {
-            panic!(
-                "Failed to find {} in module.types; have names {:?}",
-                struct_name, module.types.all_struct_names().collect::<Vec<_>>()
-            )
-        });
+    let structty = module.types.named_struct(&struct_name);
     match structty.as_ref() {
         Type::NamedStructType { name } => {
             assert_eq!(name, &struct_name);
@@ -875,7 +862,10 @@ fn simple_linked_list() {
         ty => panic!("Expected {} to be a NamedStructType, but got {:?}", struct_name, ty),
     }
     match module.types.named_struct_def(&struct_name) {
-        None => panic!("Failed to find {} with module.types.named_struct_def()", struct_name),
+        None => panic!(
+            "Failed to find {} with module.types.named_struct_def(); have names {:?}",
+            struct_name, module.types.all_struct_names().collect::<Vec<_>>()
+        ),
         Some(NamedStructDef::Opaque) => (),
         Some(NamedStructDef::Defined(def)) => panic!("{} should be an opaque type; got def {:?}", struct_name, def),
     }
@@ -946,15 +936,7 @@ fn indirectly_recursive_type() {
     let module = Module::from_bc_path(&path).expect("Failed to parse module");
 
     let struct_name_a: String = "struct.NodeA".into();
-    let aty = module
-        .types
-        .named_struct(&struct_name_a)
-        .unwrap_or_else(|| {
-            panic!(
-                "Failed to find {} in module.types; have names {:?}",
-                struct_name_a, module.types.all_struct_names().collect::<Vec<_>>()
-            )
-        });
+    let aty = module.types.named_struct(&struct_name_a);
     match aty.as_ref() {
         Type::NamedStructType { name } => {
             assert_eq!(name, &struct_name_a);
@@ -962,20 +944,15 @@ fn indirectly_recursive_type() {
         ty => panic!("Expected {} to be a NamedStructType, but got {:?}", struct_name_a, ty),
     }
     let aty_inner = match module.types.named_struct_def(&struct_name_a) {
-        None => panic!("Failed to find {} with module.types.named_struct_def()", &struct_name_a),
+        None => panic!(
+            "Failed to find {} with module.types.named_struct_def(); have names {:?}",
+            struct_name_a, module.types.all_struct_names().collect::<Vec<_>>()
+        ),
         Some(NamedStructDef::Opaque) => panic!("{} should not be an opaque type", &struct_name_a),
         Some(NamedStructDef::Defined(ty)) => ty,
     };
     let struct_name_b: String = "struct.NodeB".into();
-    let bty = module
-        .types
-        .named_struct(&struct_name_b)
-        .unwrap_or_else(|| {
-            panic!(
-                "Failed to find {} in module.types; have names {:?}",
-                struct_name_b, module.types.all_struct_names().collect::<Vec<_>>()
-            )
-        });
+    let bty = module.types.named_struct(&struct_name_b);
     match bty.as_ref() {
         Type::NamedStructType { name } => {
             assert_eq!(name, &struct_name_b);
@@ -983,7 +960,10 @@ fn indirectly_recursive_type() {
         ty => panic!("Expected {} to be a NamedStructType, but got {:?}", struct_name_b, ty),
     }
     let bty_inner = match module.types.named_struct_def(&struct_name_b) {
-        None => panic!("Failed to find {} with module.types.named_struct_def()", &struct_name_b),
+        None => panic!(
+            "Failed to find {} with module.types.named_struct_def(); have names {:?}",
+            struct_name_b, module.types.all_struct_names().collect::<Vec<_>>()
+        ),
         Some(NamedStructDef::Opaque) => panic!("{} should not be an opaque type", &struct_name_b),
         Some(NamedStructDef::Defined(ty)) => ty,
     };
