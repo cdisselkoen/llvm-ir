@@ -716,14 +716,14 @@ impl Types {
             })
     }
 
-    /// Get the `TypeRef` for the struct with the given `name`, or
-    /// `None` if there is no struct by that name.
+    /// Get the `TypeRef` for the struct with the given `name`.
     ///
     /// Note that this gives a `NamedStructType`.
     /// To get the actual _definition_ of a named struct (the `NamedStructDef`),
     /// use `named_struct_def()`.
-    pub fn named_struct(&self, name: &str) -> Option<TypeRef> {
+    pub fn named_struct(&self, name: &str) -> TypeRef {
         self.named_struct_types.lookup(name)
+            .unwrap_or_else(|| TypeRef::new(Type::NamedStructType { name: name.into() }))
     }
 
     /// Get the `NamedStructDef` for the struct with the given `name`, or
@@ -738,6 +738,28 @@ impl Types {
     /// Get the names of all the named structs
     pub fn all_struct_names(&self) -> impl Iterator<Item = &String> {
         self.named_struct_defs.keys()
+    }
+
+    /// Add the given `NamedStructDef` as the definition of the struct with the given `name`.
+    ///
+    /// Panics if that name already had a definition.
+    pub fn add_named_struct_def(&mut self, name: String, def: NamedStructDef) {
+        match self.named_struct_defs.entry(name) {
+            Entry::Occupied(_) => {
+                panic!("Trying to redefine named struct");
+            },
+            Entry::Vacant(ventry) => {
+                ventry.insert(def);
+            },
+        }
+    }
+
+    /// Remove the definition of the struct with the given `name`.
+    ///
+    /// Returns `true` if the definition was removed, or `false` if no definition
+    /// existed.
+    pub fn remove_named_struct_def(&mut self, name: &str) -> bool {
+        self.named_struct_defs.remove(name).is_some()
     }
 
     /// Get the X86_MMX type
@@ -787,9 +809,7 @@ impl Types {
             Type::StructType { element_types, is_packed } => {
                 self.struct_of(element_types.clone(), *is_packed)
             },
-            Type::NamedStructType { name  } => {
-                self.named_struct(name).unwrap_or_else(|| TypeRef::new(Type::NamedStructType { name: name.clone() }))
-            },
+            Type::NamedStructType { name  } => self.named_struct(name),
             Type::X86_MMXType => self.x86_mmx(),
             Type::MetadataType => self.metadata_type(),
             Type::LabelType => self.label_type(),
