@@ -16,12 +16,12 @@ llvm-sys-80 = { package = "llvm-sys", version = "80.3.0", optional = true }
 llvm-sys-90 = { package = "llvm-sys", version = "90.2.0", optional = true }
 llvm-sys-100 = { package = "llvm-sys", version = "100.2.0", optional = true }
 llvm-sys-110 = { package = "llvm-sys", version = "110.0.0", optional = true }
-either = "1.5.2"
+either = "1.6"
 log = "0.4.0"
 
 [dev-dependencies]
-env_logger = "0.6.2"
-itertools = "0.9"
+env_logger = "0.8"
+itertools = "0.10"
 
 [features]
 # Select the LLVM version to be compatible with.
@@ -31,9 +31,10 @@ llvm-9 = ["llvm-sys-90", "llvm-9-or-lower", "llvm-9-or-greater"]
 llvm-10 = ["llvm-sys-100", "llvm-10-or-lower", "llvm-10-or-greater"]
 llvm-11 = ["llvm-sys-110", "llvm-11-or-lower", "llvm-11-or-greater"]
 
+###
 # For convenience, these automatically-enabled features allow us to avoid
-# checking complex combinations of features all the time. they are not meant to
-# be manually enabled, use the above llvm-x features instead
+# checking complex combinations of features all the time. They are not meant to
+# be manually enabled; use the above llvm-x features instead
 llvm-8-or-greater = []
 llvm-9-or-greater = ["llvm-8-or-greater"]
 llvm-10-or-greater = ["llvm-9-or-greater"]
@@ -43,6 +44,7 @@ llvm-8-or-lower = ["llvm-9-or-lower"]
 llvm-9-or-lower = ["llvm-10-or-lower"]
 llvm-10-or-lower = ["llvm-11-or-lower"]
 llvm-11-or-lower = []
+###
 
 # We'd like to have a "strict-versioning" feature which enables the
 # corresponding feature in llvm-sys. "strict-versioning" requires an exact
