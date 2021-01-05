@@ -85,7 +85,8 @@ flag. This means that a single crate version can be used for any supported
 LLVM version. Currently, the supported LLVM versions are `llvm-8`, `llvm-9`,
 `llvm-10`, and `llvm-11`.
 
-`llvm-ir` works on stable Rust, and requires Rust 1.39+.
+`llvm-ir` works on stable Rust, and requires Rust 1.43+. (LLVM 11 users need
+Rust 1.44+ instead, due to the dependencies of [`llvm-sys`] for LLVM 11.)
 
 ## Development/Debugging
 For development or debugging, you may want LLVM text-format (`*.ll`) files in
@@ -165,7 +166,7 @@ versions, which are outlined here.
 one of the features `llvm-8`, `llvm-9`, or `llvm-10`. Previously, we had the
 `0.6.x` branch for LLVM 10, the `0.5.x` branch for LLVM 9, and didn't
 officially support LLVM 8. Now, a single release supports LLVM 8, 9, and 10.
-(Note: 0.7.3 and later also supports LLVM 11.)
+  - (Note: 0.7.3 and later also supports LLVM 11.)
 - [`FunctionAttribute`] and [`ParameterAttribute`] are now proper enums with
 descriptive variants such as `NoInline`, `StackProtect`, etc. Previously,
 attributes were opaque numeric codes which were difficult to interpret.
@@ -186,6 +187,7 @@ number of breaking changes to the public interface:
   [`module.types.named_struct_def()`] to get the definition for any named
   struct type in the module.
 - The required Rust version increased from 1.36+ to 1.39+.
+  - (Note: 0.7.2 increased the required Rust version again, to 1.43+.)
 
 [`llvm-sys`]: https://crates.io/crates/llvm-sys
 [`inkwell`]: https://github.com/TheDan64/inkwell
