@@ -4,7 +4,7 @@ use crate::module::{Comdat, DLLStorageClass, Linkage, Visibility};
 use crate::types::{TypeRef, Typed, Types};
 use crate::{BasicBlock, ConstantRef, Name};
 
-/// See [LLVM 11 docs on Functions](https://releases.llvm.org/11.0.0/docs/LangRef.html#functions)
+/// See [LLVM 12 docs on Functions](https://releases.llvm.org/12.0.0/docs/LangRef.html#functions)
 #[derive(PartialEq, Clone, Debug)]
 pub struct Function {
     pub name: String,
@@ -21,10 +21,10 @@ pub struct Function {
     pub section: Option<String>,
     pub comdat: Option<Comdat>, // llvm-hs-pure has Option<String>, I'm not sure why
     pub alignment: u32,
-    /// See [LLVM 11 docs on Garbage Collector Strategy Names](https://releases.llvm.org/11.0.0/docs/LangRef.html#gc)
+    /// See [LLVM 12 docs on Garbage Collector Strategy Names](https://releases.llvm.org/12.0.0/docs/LangRef.html#gc)
     pub garbage_collector_name: Option<String>,
     // pub prefix: Option<ConstantRef>,  // appears to not be exposed in the LLVM C API, only the C++ API
-    /// Personalities are used for exception handling. See [LLVM 11 docs on Personality Function](https://releases.llvm.org/11.0.0/docs/LangRef.html#personalityfn)
+    /// Personalities are used for exception handling. See [LLVM 12 docs on Personality Function](https://releases.llvm.org/12.0.0/docs/LangRef.html#personalityfn)
     pub personality_function: Option<ConstantRef>,
     #[cfg(feature="llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
@@ -97,7 +97,7 @@ impl Typed for Parameter {
     }
 }
 
-/// See [LLVM 11 docs on Calling Conventions](https://releases.llvm.org/11.0.0/docs/LangRef.html#callingconv)
+/// See [LLVM 12 docs on Calling Conventions](https://releases.llvm.org/12.0.0/docs/LangRef.html#callingconv)
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
 #[allow(non_camel_case_types)]
 pub enum CallingConvention {
@@ -148,7 +148,7 @@ pub enum CallingConvention {
     Numbered(u32),
 }
 
-/// See [LLVM 11 docs on Function Attributes](https://releases.llvm.org/11.0.0/docs/LangRef.html#fnattrs)
+/// See [LLVM 12 docs on Function Attributes](https://releases.llvm.org/12.0.0/docs/LangRef.html#fnattrs)
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub enum FunctionAttribute {
     AlignStack(u64),
@@ -214,17 +214,23 @@ pub enum FunctionAttribute {
 }
 
 /// `ParameterAttribute`s can apply to function parameters as well as function return types.
-/// See [LLVM 11 docs on Parameter Attributes](https://releases.llvm.org/11.0.0/docs/LangRef.html#paramattrs)
+/// See [LLVM 12 docs on Parameter Attributes](https://releases.llvm.org/12.0.0/docs/LangRef.html#paramattrs)
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub enum ParameterAttribute {
     ZeroExt,
     SignExt,
     InReg,
+    #[cfg(feature="llvm-11-or-lower")]
     ByVal,
+    #[cfg(feature="llvm-12-or-greater")]
+    ByVal(u64),
     #[cfg(feature="llvm-11-or-greater")]
     Preallocated,
     InAlloca,
+    #[cfg(feature="llvm-11-or-lower")]
     SRet,
+    #[cfg(feature="llvm-12-or-greater")]
+    SRet(u64),
     Alignment(u64),
     NoAlias,
     NoCapture,
@@ -676,7 +682,10 @@ impl FunctionAttribute {
                 Some("strictfp") => Self::StrictFP,
                 Some("uwtable") => Self::UWTable,
                 Some(s) => panic!("Unhandled value from lookup_function_attr: {:?}", s),
-                None => Self::UnknownAttribute,
+                None => {
+                    debug!("unknown enum function attr {}", kind);
+                    Self::UnknownAttribute
+                }
             }
         } else if unsafe { LLVMIsStringAttribute(a) } != 0 {
             Self::StringAttribute {
@@ -698,11 +707,17 @@ impl ParameterAttribute {
                 Some("zeroext") => Self::ZeroExt,
                 Some("signext") => Self::SignExt,
                 Some("inreg") => Self::InReg,
+                #[cfg(feature="llvm-11-or-lower")]
                 Some("byval") => Self::ByVal,
+                #[cfg(feature="llvm-12-or-greater")]
+                Some("byval") => Self::ByVal(unsafe { LLVMGetEnumAttributeValue(a) }),
                 #[cfg(feature="llvm-11-or-greater")]
                 Some("preallocated") => Self::Preallocated,
                 Some("inalloca") => Self::InAlloca,
+                #[cfg(feature="llvm-11-or-lower")]
                 Some("sret") => Self::SRet,
+                #[cfg(feature="llvm-12-or-greater")]
+                Some("sret") => Self::SRet(unsafe { LLVMGetEnumAttributeValue(a) }),
                 Some("align") => Self::Alignment(unsafe { LLVMGetEnumAttributeValue(a) }),
                 Some("noalias") => Self::NoAlias,
                 Some("nocapture") => Self::NoCapture,
@@ -719,7 +734,10 @@ impl ParameterAttribute {
                 #[cfg(feature="llvm-11-or-greater")]
                 Some("noundef") => Self::NoUndef,
                 Some(s) => panic!("Unhandled value from lookup_param_attr: {:?}", s),
-                None => Self::UnknownAttribute,
+                None => {
+                    debug!("unknown enum param attr {}", kind);
+                    Self::UnknownAttribute
+                }
             }
         } else if unsafe { LLVMIsStringAttribute(a) } != 0 {
             Self::StringAttribute {

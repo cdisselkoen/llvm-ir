@@ -6,8 +6,8 @@ use std::fmt::{self, Display};
 use std::ops::Deref;
 use std::sync::Arc;
 
-/// See [LLVM 11 docs on Constants](https://releases.llvm.org/11.0.0/docs/LangRef.html#constants).
-/// Constants can be either values, or expressions involving other constants (see [LLVM 11 docs on Constant Expressions](https://releases.llvm.org/11.0.0/docs/LangRef.html#constant-expressions)).
+/// See [LLVM 12 docs on Constants](https://releases.llvm.org/12.0.0/docs/LangRef.html#constants).
+/// Constants can be either values, or expressions involving other constants (see [LLVM 12 docs on Constant Expressions](https://releases.llvm.org/12.0.0/docs/LangRef.html#constant-expressions)).
 #[derive(PartialEq, Clone, Debug)]
 pub enum Constant {
     Int {
@@ -31,7 +31,7 @@ pub enum Constant {
         value: u64,
     },
     Float(Float),
-    /// The `TypeRef` here must be to a `PointerType`. See [LLVM 11 docs on Simple Constants](https://releases.llvm.org/11.0.0/docs/LangRef.html#simple-constants)
+    /// The `TypeRef` here must be to a `PointerType`. See [LLVM 12 docs on Simple Constants](https://releases.llvm.org/12.0.0/docs/LangRef.html#simple-constants)
     Null(TypeRef),
     /// A zero-initialized array or struct (or scalar).
     AggregateZero(TypeRef),
@@ -45,9 +45,12 @@ pub enum Constant {
         elements: Vec<ConstantRef>,
     },
     Vector(Vec<ConstantRef>),
-    /// `Undef` can be used anywhere a constant is expected. See [LLVM 11 docs on Undefined Values](https://releases.llvm.org/11.0.0/docs/LangRef.html#undefined-values)
+    /// `Undef` can be used anywhere a constant is expected. See [LLVM 12 docs on Undefined Values](https://releases.llvm.org/12.0.0/docs/LangRef.html#undefined-values)
     Undef(TypeRef),
-    /// The address of the given (non-entry) [`BasicBlock`](../struct.BasicBlock.html). See [LLVM 11 docs on Addresses of Basic Blocks](https://releases.llvm.org/11.0.0/docs/LangRef.html#addresses-of-basic-blocks).
+    /// See [LLVM 12 docs on Poison Values](https://releases.llvm.org/12.0.0/docs/LangRef.html#undefined-values)
+    #[cfg(feature="llvm-12-or-greater")]
+    Poison(TypeRef),
+    /// The address of the given (non-entry) [`BasicBlock`](../struct.BasicBlock.html). See [LLVM 12 docs on Addresses of Basic Blocks](https://releases.llvm.org/12.0.0/docs/LangRef.html#addresses-of-basic-blocks).
     /// `BlockAddress` needs more fields, but the necessary getter functions are apparently not exposed in the LLVM C API (only the C++ API)
     BlockAddress, // --TODO ideally we want BlockAddress { function: Name, block: Name },
     GlobalReference {
@@ -190,6 +193,8 @@ impl Typed for Constant {
                 v.len(),
             ),
             Constant::Undef(t) => t.clone(),
+            #[cfg(feature="llvm-12-or-greater")]
+            Constant::Poison(t) => t.clone(),
             Constant::BlockAddress { .. } => types.label_type(),
             Constant::GlobalReference { ty, .. } => types.pointer_to(ty.clone()),
             Constant::TokenNone => types.token_type(),
@@ -324,6 +329,8 @@ impl Display for Constant {
                 Ok(())
             },
             Constant::Undef(ty) => write!(f, "{} undef", ty),
+            #[cfg(feature="llvm-12-or-greater")]
+            Constant::Poison(ty) => write!(f, "{} poison", ty),
             Constant::BlockAddress => write!(f, "blockaddr"),
             Constant::GlobalReference { name, ty } => {
                 let name = match name {
@@ -1307,6 +1314,10 @@ impl Constant {
             LLVMValueKind::LLVMUndefValueValueKind => {
                 Constant::Undef(ctx.types.type_from_llvm_ref( unsafe { LLVMTypeOf(constant) } ))
             },
+            #[cfg(feature = "llvm-12-or-greater")]
+            LLVMValueKind::LLVMPoisonValueKind => {
+                Constant::Poison(ctx.types.type_from_llvm_ref( unsafe { LLVMTypeOf(constant) } ))
+            },
             LLVMValueKind::LLVMConstantTokenNoneValueKind => {
                 Constant::TokenNone
             },
@@ -1442,7 +1453,7 @@ impl ShuffleVector {
         // We currently (as of LLVM 11) have no way to get the mask of a
         // ShuffleVector constant expression; LLVMGetMaskValue() only works for
         // ShuffleVector instructions, not ShuffleVector constant expressions
-        panic!("Encountered a Constant::ShuffleVector, which is not supported for LLVM 11")
+        panic!("Encountered a Constant::ShuffleVector, which is not supported for LLVM 11+")
     }
 }
 

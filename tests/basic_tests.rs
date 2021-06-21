@@ -42,6 +42,10 @@ fn llvm_bc_dir() -> PathBuf {
 fn llvm_bc_dir() -> PathBuf {
     Path::new(BC_DIR).join("llvm11")
 }
+#[cfg(feature = "llvm-12")]
+fn llvm_bc_dir() -> PathBuf {
+    Path::new(BC_DIR).join("llvm12")
+}
 
 fn rust_bc_dir() -> PathBuf {
     Path::new(BC_DIR).join("rust")
@@ -54,7 +58,10 @@ fn hellobc() {
     let module = Module::from_bc_path(&path).expect("Failed to parse module");
     assert_eq!(&module.name, &path.to_str().unwrap());
     assert_eq!(module.source_file_name, "hello.c");
-    assert_eq!(module.target_triple, Some("x86_64-apple-macosx10.15.0".into()));
+    #[cfg(feature="llvm-10-or-lower")]
+    assert_eq!(module.target_triple, Some("x86_64-apple-macosx10.16.0".into()));
+    #[cfg(feature="llvm-11-or-greater")]
+    assert_eq!(module.target_triple, Some("x86_64-apple-macosx11.0.0".into()));
     assert_eq!(module.functions.len(), 1);
     let func = &module.functions[0];
     assert_eq!(func.name, "main");
@@ -187,7 +194,7 @@ fn loopbc() {
         assert_eq!(func.get_bb_by_name(&Name::Number(12)), Some(bb12));
         vec![bb2, bb7, bb12, bb21]
     };
-    #[cfg(feature="llvm-11-or-greater")]
+    #[cfg(feature="llvm-11")]
     let bbs = {
         assert_eq!(func.basic_blocks.len(), 4);
         let bb2 = &func.basic_blocks[0];
@@ -201,6 +208,24 @@ fn loopbc() {
         assert_eq!(func.get_bb_by_name(&Name::Number(2)), Some(bb2));
         assert_eq!(func.get_bb_by_name(&Name::Number(14)), Some(bb14));
         vec![bb2, bb7, bb14, bb24]
+    };
+    #[cfg(feature="llvm-12-or-greater")]
+    let bbs = {
+        assert_eq!(func.basic_blocks.len(), 8); // LLVM 12+ seems to do some unrolling in this example that previous LLVMs didn't
+        let bb2 = &func.basic_blocks[0];
+        let bb7 = &func.basic_blocks[1];
+        let bb12 = &func.basic_blocks[2];
+        let bb17 = &func.basic_blocks[3];
+        let bb19 = &func.basic_blocks[4];
+        let bb47 = &func.basic_blocks[7];
+        // actually have 8 BBs, but we only use the first five and the last one
+        assert_eq!(bb2.name, Name::Number(2));
+        assert_eq!(bb7.name, Name::Number(7));
+        assert_eq!(bb12.name, Name::Number(12));
+        assert_eq!(bb17.name, Name::Number(17));
+        assert_eq!(bb19.name, Name::Number(19));
+        assert_eq!(bb47.name, Name::Number(47));
+        vec![bb2, bb7, bb12, bb17, bb19, bb47]
     };
 
     // check details about the instructions in basic block %2
@@ -320,8 +345,10 @@ fn loopbc() {
         Name::Number(22)
     } else if cfg!(feature = "llvm-10") {
         Name::Number(21)
-    } else {
+    } else if cfg!(feature = "llvm-11") {
         Name::Number(24)
+    } else {
+        Name::Number(47)
     };
     assert_eq!(condbr.false_dest, false_dest);
     assert_eq!(module.type_of(condbr), module.types.void());
@@ -329,20 +356,26 @@ fn loopbc() {
         &format!("{}", condbr),
         &format!(
             "br i1 %6, label %7, label %{}",
-            if cfg!(feature="llvm-9-or-lower") { 22 } else if cfg!(feature = "llvm-10") { 21 } else { 24 }
+            if cfg!(feature="llvm-9-or-lower") { 22 }
+            else if cfg!(feature = "llvm-10") { 21 }
+            else if cfg!(feature = "llvm-11") { 24 }
+            else { 47 }
         ),
     );
 
     // check details about certain instructions in basic block %7
     // not sure why LLVM 10+ puts a ZExt here instead of SExt. Maybe it can prove it's equivalent?
+    // in LLVM 12, the ZExt is in a different block
     #[cfg(feature="llvm-9-or-lower")]
     let ext: &instruction::SExt = &bbs[1].instrs[1].clone().try_into().expect("Should be a SExt");
     #[cfg(feature = "llvm-10")]
     let ext: &instruction::ZExt = &bbs[1].instrs[1].clone().try_into().expect("Should be a ZExt");
-    #[cfg(feature="llvm-11-or-greater")]
+    #[cfg(feature="llvm-11")]
     let ext: &instruction::ZExt = &bbs[1].instrs[3].clone().try_into().expect("Should be a ZExt");
+    #[cfg(feature="llvm-12-or-greater")]
+    let ext: &instruction::ZExt = &bbs[2].instrs[0].clone().try_into().expect("Should be a ZExt");
     let ext_input = if cfg!(feature="llvm-10-or-lower") { Name::Number(1) } else { Name::Number(10) };
-    let ext_dest = if cfg!(feature="llvm-10-or-lower") { Name::Number(9) } else { Name::Number(11) };
+    let ext_dest = if cfg!(feature="llvm-10-or-lower") { Name::Number(9) } else if cfg!(feature="llvm-11") { Name::Number(11) } else { Name::Number(13) };
     assert_eq!(ext.operand, Operand::LocalOperand { name: ext_input, ty: module.types.i32() } );
     assert_eq!(ext.to_type, module.types.i64());
     assert_eq!(ext.dest, ext_dest);
@@ -351,24 +384,37 @@ fn loopbc() {
     assert_eq!(&format!("{}", ext), "%9 = sext i32 %1 to i64");
     #[cfg(feature = "llvm-10")]
     assert_eq!(&format!("{}", ext), "%9 = zext i32 %1 to i64");
-    #[cfg(feature="llvm-11-or-greater")]
+    #[cfg(feature="llvm-11")]
     assert_eq!(&format!("{}", ext), "%11 = zext i32 %10 to i64");
+    #[cfg(feature="llvm-12-or-greater")]
+    assert_eq!(&format!("{}", ext), "%13 = zext i32 %10 to i64");
     #[cfg(feature="llvm-9-or-lower")]
     {
-        // LLVM 10+ doesn't have a Br in this function
+        // LLVM 10 and 11 don't have a Br in this function
         let br: &terminator::Br = &bbs[1].term.clone().try_into().expect("Should be a Br");
         assert_eq!(br.dest, Name::Number(10));
         assert_eq!(&format!("{}", br), "br label %10");
     }
+    #[cfg(feature="llvm-12-or-greater")]
+    {
+        let br: &terminator::Br = &bbs[3].term.clone().try_into().expect("Should be a Br");
+        assert_eq!(br.dest, Name::Number(19));
+        assert_eq!(&format!("{}", br), "br label %19");
+    }
 
-    // check details about certain instructions in basic block %10 (LLVM 9-) / %12 (LLVM 10) / %14 (LLVM 11)
+    // check details about certain instructions in basic block %10 (LLVM 9-) / %12 (LLVM 10) / %14 (LLVM 11) / %19 (LLVM 12)
+    #[cfg(feature="llvm-11-or-lower")]
     let phi: &instruction::Phi = &bbs[2].instrs[0].clone().try_into().expect("Should be a Phi");
+    #[cfg(feature="llvm-12-or-greater")]
+    let phi: &instruction::Phi = &bbs[4].instrs[0].clone().try_into().expect("Should be a Phi");
     let phi_dest = if cfg!(feature="llvm-9-or-lower") {
         Name::Number(11)
     } else if cfg!(feature = "llvm-10") {
         Name::Number(13)
-    } else {
+    } else if cfg!(feature = "llvm-11") {
         Name::Number(15)
+    } else {
+        Name::Number(20)
     };
     assert_eq!(phi.dest, phi_dest);
     assert_eq!(phi.to_type, module.types.i64());
@@ -400,7 +446,7 @@ fn loopbc() {
             ),
         ]
     );
-    #[cfg(feature="llvm-11-or-greater")]
+    #[cfg(feature="llvm-11")]
     assert_eq!(
         phi.incoming_values,
         vec![
@@ -414,15 +460,35 @@ fn loopbc() {
             ),
         ]
     );
+    #[cfg(feature="llvm-12-or-greater")]
+    assert_eq!(
+        phi.incoming_values,
+        vec![
+            (
+                Operand::ConstantOperand(ConstantRef::new(Constant::Int { bits: 64, value: 1 })),
+                Name::Number(17)
+            ),
+            (
+                Operand::LocalOperand { name: Name::Number(34), ty: module.types.i64() },
+                Name::Number(19)
+            ),
+        ]
+    );
     #[cfg(feature="llvm-9-or-lower")]
     assert_eq!(&format!("{}", phi), "%11 = phi i64 [ i64 0, %7 ], [ i64 %20, %19 ]");
     #[cfg(feature = "llvm-10")]
     assert_eq!(&format!("{}", phi), "%13 = phi i64 [ i64 %19, %12 ], [ i64 1, %7 ]");
-    #[cfg(feature="llvm-11-or-greater")]
+    #[cfg(feature="llvm-11")]
     assert_eq!(&format!("{}", phi), "%15 = phi i64 [ i64 %22, %14 ], [ i64 1, %7 ]");
+    #[cfg(feature="llvm-12-or-greater")]
+    assert_eq!(&format!("{}", phi), "%20 = phi i64 [ i64 1, %17 ], [ i64 %34, %19 ]");
 
+    #[cfg(feature="llvm-11-or-lower")]
     let gep: &instruction::GetElementPtr =
         &bbs[2].instrs[1].clone().try_into().expect("Should be a gep");
+    #[cfg(feature="llvm-12-or-greater")]
+    let gep: &instruction::GetElementPtr =
+        &bbs[4].instrs[2].clone().try_into().expect("Should be a gep");
     assert_eq!(
         gep.address,
         Operand::LocalOperand {
@@ -434,8 +500,10 @@ fn loopbc() {
         Name::Number(12)
     } else if cfg!(feature = "llvm-10") {
         Name::Number(14)
-    } else {
+    } else if cfg!(feature = "llvm-11") {
         Name::Number(16)
+    } else {
+        Name::Number(22)
     };
     assert_eq!(gep.dest, gep_dest);
     assert_eq!(gep.in_bounds, true);
@@ -443,8 +511,10 @@ fn loopbc() {
         Name::Number(11)
     } else if cfg!(feature = "llvm-10") {
         Name::Number(13)
-    } else {
+    } else if cfg!(feature = "llvm-11") {
         Name::Number(15)
+    } else {
+        Name::Number(20)
     };
     assert_eq!(
         gep.indices,
@@ -461,63 +531,80 @@ fn loopbc() {
     assert_eq!(&format!("{}", gep), "%12 = getelementptr inbounds [10 x i32]* %3, i64 0, i64 %11");
     #[cfg(feature = "llvm-10")]
     assert_eq!(&format!("{}", gep), "%14 = getelementptr inbounds [10 x i32]* %3, i64 0, i64 %13");
-    #[cfg(feature="llvm-11-or-greater")]
+    #[cfg(feature="llvm-11")]
     assert_eq!(&format!("{}", gep), "%16 = getelementptr inbounds [10 x i32]* %3, i64 0, i64 %15");
-    let store: &instruction::Store = &bbs[2].instrs[2]
-        .clone()
-        .try_into()
-        .expect("Should be a store");
+    #[cfg(feature="llvm-12-or-greater")]
+    assert_eq!(&format!("{}", gep), "%22 = getelementptr inbounds [10 x i32]* %3, i64 0, i64 %20");
+    #[cfg(feature="llvm-11-or-lower")]
+    let store_inst = &bbs[2].instrs[2];
+    #[cfg(feature="llvm-12-or-greater")]
+    let store_inst = &bbs[4].instrs[3];
+    let store: &instruction::Store = &store_inst.clone().try_into().expect("Should be a store");
     let address = if cfg!(feature="llvm-9-or-lower") {
         Name::Number(12)
     } else if cfg!(feature = "llvm-10") {
         Name::Number(14)
-    } else {
+    } else if cfg!(feature = "llvm-11") {
         Name::Number(16)
+    } else {
+        Name::Number(22)
     };
     assert_eq!(store.address, Operand::LocalOperand { name: address, ty: module.types.pointer_to(module.types.i32()) });
     assert_eq!(store.value, Operand::LocalOperand { name: Name::Number(8), ty: module.types.i32() });
     assert_eq!(store.volatile, true);
     assert_eq!(store.alignment, 4);
     assert_eq!(module.type_of(store), module.types.void());
-    assert_eq!(bbs[2].instrs[2].is_atomic(), false);
+    assert_eq!(store_inst.is_atomic(), false);
     #[cfg(feature="llvm-9-or-lower")]
     assert_eq!(&format!("{}", store), "store volatile i32 %8, i32* %12, align 4");
     #[cfg(feature = "llvm-10")]
     assert_eq!(&format!("{}", store), "store volatile i32 %8, i32* %14, align 4");
-    #[cfg(feature="llvm-11-or-greater")]
+    #[cfg(feature="llvm-11")]
     assert_eq!(&format!("{}", store), "store volatile i32 %8, i32* %16, align 4");
+    #[cfg(feature="llvm-12-or-greater")]
+    assert_eq!(&format!("{}", store), "store volatile i32 %8, i32* %22, align 4");
 
     // and finally other instructions of types we haven't seen yet
     let load_inst: &Instruction = if cfg!(feature="llvm-9-or-lower") {
         &bbs[3].instrs[2]
     } else if cfg!(feature = "llvm-10") {
         &bbs[2].instrs[5]
-    } else {
+    } else if cfg!(feature = "llvm-11") {
         &bbs[2].instrs[6]
+    } else {
+        &bbs[4].instrs[7]
     };
     let load: &instruction::Load = &load_inst.clone().try_into().expect("Should be a load");
     let load_addr = if cfg!(feature="llvm-10-or-lower") {
         Name::Number(16)
-    } else {
+    } else if cfg!(feature="llvm-11") {
         Name::Number(19)
+    } else {
+        Name::Number(25)
     };
     assert_eq!(load.address, Operand::LocalOperand { name: load_addr, ty: module.types.pointer_to(module.types.i32()) });
     #[cfg(feature="llvm-10-or-lower")]
     assert_eq!(load.dest, Name::Number(17));
-    #[cfg(feature="llvm-11-or-greater")]
+    #[cfg(feature="llvm-11")]
     assert_eq!(load.dest, Name::Number(20));
+    #[cfg(feature="llvm-12-or-greater")]
+    assert_eq!(load.dest, Name::Number(26));
     assert_eq!(load.volatile, true);
     assert_eq!(load.alignment, 4);
     assert_eq!(module.type_of(load), module.types.i32());
     assert_eq!(load_inst.is_atomic(), false);
     #[cfg(feature="llvm-10-or-lower")]
     assert_eq!(&format!("{}", load), "%17 = load volatile i32* %16, align 4");
-    #[cfg(feature="llvm-11-or-greater")]
+    #[cfg(feature="llvm-11")]
     assert_eq!(&format!("{}", load), "%20 = load volatile i32* %19, align 4");
+    #[cfg(feature="llvm-12")]
+    assert_eq!(&format!("{}", load), "%26 = load volatile i32* %25, align 4");
     let ret: &Terminator = if cfg!(feature="llvm-9-or-lower") {
         &bbs[5].term
-    } else {
+    } else if cfg!(feature="llvm-10") || cfg!(feature="llvm-11") {
         &bbs[3].term
+    } else {
+        &bbs[5].term
     };
     let ret: &terminator::Ret = &ret.clone().try_into().expect("Should be a ret");
     assert_eq!(ret.return_operand, None);
@@ -637,26 +724,31 @@ fn issue4() {
         21
     } else if cfg!(feature = "llvm-9") {
         22
-    } else if cfg!(feature="llvm-10-or-greater") {
+    } else if cfg!(feature="llvm-10") || cfg!(feature="llvm-11") {
         // LLVM 10+ seems to have combined the two attributes
         // "no-frame-pointer-elim=true" and "no-frame-pointer-elim-non-leaf"
         // into a single attribute, "frame-pointer=all"
         21
+    } else if cfg!(feature="llvm-12") {
+        // LLVM 12+ adds "willreturn"
+        22
     } else {
         panic!("Shouldn't reach this")
     };
     assert_eq!(func.function_attributes.len(), expected_num_function_attributes,
         "Expected {} function attributes but have {}: {:?}", expected_num_function_attributes, func.function_attributes.len(), func.function_attributes);
-    // and that all but 6 of them are StringAttributes (5 of them for LLVM 8)
+    // and that all but 6 of them are StringAttributes (5 of them for LLVM 8; 7 for LLVM 12+)
     let expected_num_enum_attrs = if cfg!(feature="llvm-8-or-lower") {
         5 // missing "nofree"
-    } else {
+    } else if cfg!(feature="llvm-9") || cfg!(feature="llvm-10") || cfg!(feature="llvm-11") {
         6
+    } else {
+        7 // adds "willreturn"
     };
     let string_attrs = func.function_attributes.iter().filter(|attr| if let FunctionAttribute::StringAttribute { .. } = attr { true } else { false });
     assert_eq!(string_attrs.count(), expected_num_function_attributes - expected_num_enum_attrs);
 
-    // now check that the first parameter has 3 attributes (4 in LLVM 11) and the second parameter has 0
+    // now check that the first parameter has 3 attributes (4 in LLVM 11+) and the second parameter has 0
     assert_eq!(func.parameters.len(), 2);
     let first_param_attrs = &func.parameters[0].attributes;
     #[cfg(feature="llvm-10-or-lower")]
@@ -667,7 +759,15 @@ fn issue4() {
     assert_eq!(second_param_attrs.len(), 0);
 
     // and that one of the parameter attributes is SRet
-    assert!(first_param_attrs.iter().any(|attr| attr == &ParameterAttribute::SRet));
+    #[cfg(feature="llvm-11-or-lower")]
+    let is_sret = |attr: &ParameterAttribute| { match attr { ParameterAttribute::SRet => true, _ => false }};
+    #[cfg(feature="llvm-12-or-greater")]
+    // in LLVM 12, SRet is neither an enum nor a string attribute, according to
+    // `LLVMIsEnumAttribute` and `LLVMIsStringAttribute` in the C API.  The C
+    // API doesn't have functions to get info about attributes which are neither
+    // enum nor string.
+    let is_sret = |attr: &ParameterAttribute| { match attr { ParameterAttribute::UnknownAttribute => true, _ => false }};
+    assert!(first_param_attrs.iter().any(is_sret));
 }
 
 #[test]
@@ -1109,7 +1209,14 @@ fn param_and_func_attributes() {
     assert_eq!(f.parameters.len(), 1);
     let param = &f.parameters[0];
     assert_eq!(param.attributes.len(), 1);
+    #[cfg(feature="llvm-11-or-lower")]
     assert_eq!(param.attributes[0], ParameterAttribute::SRet);
+    #[cfg(feature="llvm-12-or-greater")]
+    // in LLVM 12, SRet is neither an enum nor a string attribute, according to
+    // `LLVMIsEnumAttribute` and `LLVMIsStringAttribute` in the C API.  The C
+    // API doesn't have functions to get info about attributes which are neither
+    // enum nor string.
+    assert_eq!(param.attributes[0], ParameterAttribute::UnknownAttribute);
     let f = module.get_func_by_name("f.param.noalias").unwrap();
     assert_eq!(f.parameters.len(), 1);
     let param = &f.parameters[0];

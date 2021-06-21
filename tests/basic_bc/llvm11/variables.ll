@@ -1,7 +1,7 @@
 ; ModuleID = 'variables.c'
 source_filename = "variables.c"
 target datalayout = "e-m:o-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128"
-target triple = "x86_64-apple-macosx10.15.0"
+target triple = "x86_64-apple-macosx11.0.0"
 
 @global = global i32 5, align 4
 
@@ -53,7 +53,7 @@ attributes #3 = { allocsize(0) }
 
 !0 = !{i32 1, !"wchar_size", i32 4}
 !1 = !{i32 7, !"PIC Level", i32 2}
-!2 = !{!"clang version 11.0.0"}
+!2 = !{!"clang version 11.1.0"}
 !3 = !{!4, !4, i64 0}
 !4 = !{!"int", !5, i64 0}
 !5 = !{!"omnipotent char", !6, i64 0}
