@@ -1,4 +1,7 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `src/function.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>function.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css"><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../llvm_ir/index.html'><div class='logo-container'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/function.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>function.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
+<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../llvm_ir/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
+                <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -732,14 +735,32 @@
 <span id="732">732</span>
 <span id="733">733</span>
 <span id="734">734</span>
+<span id="735">735</span>
+<span id="736">736</span>
+<span id="737">737</span>
+<span id="738">738</span>
+<span id="739">739</span>
+<span id="740">740</span>
+<span id="741">741</span>
+<span id="742">742</span>
+<span id="743">743</span>
+<span id="744">744</span>
+<span id="745">745</span>
+<span id="746">746</span>
+<span id="747">747</span>
+<span id="748">748</span>
+<span id="749">749</span>
+<span id="750">750</span>
+<span id="751">751</span>
+<span id="752">752</span>
 </pre><div class="example-wrap"><pre class="rust ">
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">debugloc</span>::{<span class="ident">DebugLoc</span>, <span class="ident">HasDebugLoc</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">module</span>::{<span class="ident">Comdat</span>, <span class="ident">DLLStorageClass</span>, <span class="ident">Linkage</span>, <span class="ident">Visibility</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::{<span class="ident">TypeRef</span>, <span class="ident">Typed</span>, <span class="ident">Types</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">BasicBlock</span>, <span class="ident">ConstantRef</span>, <span class="ident">Name</span>};
 
-<span class="doccomment">/// See [LLVM 11 docs on Functions](https://releases.llvm.org/11.0.0/docs/LangRef.html#functions)</span>
+<span class="doccomment">/// See [LLVM 12 docs on Functions](https://releases.llvm.org/12.0.0/docs/LangRef.html#functions)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Function</span> {
     <span class="kw">pub</span> <span class="ident">name</span>: <span class="ident">String</span>,
@@ -756,12 +777,12 @@
     <span class="kw">pub</span> <span class="ident">section</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">comdat</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Comdat</span><span class="op">&gt;</span>, <span class="comment">// llvm-hs-pure has Option&lt;String&gt;, I&#39;m not sure why</span>
     <span class="kw">pub</span> <span class="ident">alignment</span>: <span class="ident">u32</span>,
-    <span class="doccomment">/// See [LLVM 11 docs on Garbage Collector Strategy Names](https://releases.llvm.org/11.0.0/docs/LangRef.html#gc)</span>
+    <span class="doccomment">/// See [LLVM 12 docs on Garbage Collector Strategy Names](https://releases.llvm.org/12.0.0/docs/LangRef.html#gc)</span>
     <span class="kw">pub</span> <span class="ident">garbage_collector_name</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
     <span class="comment">// pub prefix: Option&lt;ConstantRef&gt;,  // appears to not be exposed in the LLVM C API, only the C++ API</span>
-    <span class="doccomment">/// Personalities are used for exception handling. See [LLVM 11 docs on Personality Function](https://releases.llvm.org/11.0.0/docs/LangRef.html#personalityfn)</span>
+    <span class="doccomment">/// Personalities are used for exception handling. See [LLVM 12 docs on Personality Function](https://releases.llvm.org/12.0.0/docs/LangRef.html#personalityfn)</span>
     <span class="kw">pub</span> <span class="ident">personality_function</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ConstantRef</span><span class="op">&gt;</span>,
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
     <span class="kw">pub</span> <span class="ident">debugloc</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DebugLoc</span><span class="op">&gt;</span>,
     <span class="comment">// --TODO not yet implemented-- pub metadata: Vec&lt;(String, MetadataRef&lt;MetadataNode&gt;)&gt;,</span>
 }
@@ -776,7 +797,7 @@
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
 <span class="kw">impl</span> <span class="ident">HasDebugLoc</span> <span class="kw">for</span> <span class="ident">Function</span> {
     <span class="kw">fn</span> <span class="ident">get_debug_loc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DebugLoc</span><span class="op">&gt;</span> {
         <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">debugloc</span>
@@ -813,7 +834,7 @@
             <span class="ident">alignment</span>: <span class="number">4</span>,
             <span class="ident">garbage_collector_name</span>: <span class="prelude-val">None</span>,
             <span class="ident">personality_function</span>: <span class="prelude-val">None</span>,
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
             <span class="ident">debugloc</span>: <span class="prelude-val">None</span>,
         }
     }
@@ -832,7 +853,7 @@
     }
 }
 
-<span class="doccomment">/// See [LLVM 11 docs on Calling Conventions](https://releases.llvm.org/11.0.0/docs/LangRef.html#callingconv)</span>
+<span class="doccomment">/// See [LLVM 12 docs on Calling Conventions](https://releases.llvm.org/12.0.0/docs/LangRef.html#callingconv)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>)]</span>
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">non_camel_case_types</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">CallingConvention</span> {
@@ -883,7 +904,7 @@
     <span class="ident">Numbered</span>(<span class="ident">u32</span>),
 }
 
-<span class="doccomment">/// See [LLVM 11 docs on Function Attributes](https://releases.llvm.org/11.0.0/docs/LangRef.html#fnattrs)</span>
+<span class="doccomment">/// See [LLVM 12 docs on Function Attributes](https://releases.llvm.org/12.0.0/docs/LangRef.html#fnattrs)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">FunctionAttribute</span> {
     <span class="ident">AlignStack</span>(<span class="ident">u64</span>),
@@ -904,23 +925,23 @@
     <span class="ident">NoBuiltin</span>,
     <span class="ident">NoCFCheck</span>,
     <span class="ident">NoDuplicate</span>,
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
     <span class="ident">NoFree</span>,
     <span class="ident">NoImplicitFloat</span>,
     <span class="ident">NoInline</span>,
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_11_OR_GREATER</span>)]</span>
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-11-or-greater&quot;</span>)]</span>
     <span class="ident">NoMerge</span>,
     <span class="ident">NonLazyBind</span>,
     <span class="ident">NoRedZone</span>,
     <span class="ident">NoReturn</span>,
     <span class="ident">NoRecurse</span>,
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
     <span class="ident">WillReturn</span>,
     <span class="ident">ReturnsTwice</span>,
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
     <span class="ident">NoSync</span>,
     <span class="ident">NoUnwind</span>,
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_11_OR_GREATER</span>)]</span>
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-11-or-greater&quot;</span>)]</span>
     <span class="ident">NullPointerIsValid</span>,
     <span class="ident">OptForFuzzing</span>,
     <span class="ident">OptNone</span>,
@@ -934,7 +955,7 @@
     <span class="ident">SanitizeMemory</span>,
     <span class="ident">SanitizeThread</span>,
     <span class="ident">SanitizeHWAddress</span>,
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
     <span class="ident">SanitizeMemTag</span>,
     <span class="ident">ShadowCallStack</span>,
     <span class="ident">SpeculativeLoadHardening</span>,
@@ -949,21 +970,27 @@
 }
 
 <span class="doccomment">/// `ParameterAttribute`s can apply to function parameters as well as function return types.</span>
-<span class="doccomment">/// See [LLVM 11 docs on Parameter Attributes](https://releases.llvm.org/11.0.0/docs/LangRef.html#paramattrs)</span>
+<span class="doccomment">/// See [LLVM 12 docs on Parameter Attributes](https://releases.llvm.org/12.0.0/docs/LangRef.html#paramattrs)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ParameterAttribute</span> {
     <span class="ident">ZeroExt</span>,
     <span class="ident">SignExt</span>,
     <span class="ident">InReg</span>,
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-11-or-lower&quot;</span>)]</span>
     <span class="ident">ByVal</span>,
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_11_OR_GREATER</span>)]</span>
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-12-or-greater&quot;</span>)]</span>
+    <span class="ident">ByVal</span>(<span class="ident">u64</span>),
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-11-or-greater&quot;</span>)]</span>
     <span class="ident">Preallocated</span>,
     <span class="ident">InAlloca</span>,
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-11-or-lower&quot;</span>)]</span>
     <span class="ident">SRet</span>,
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-12-or-greater&quot;</span>)]</span>
+    <span class="ident">SRet</span>(<span class="ident">u64</span>),
     <span class="ident">Alignment</span>(<span class="ident">u64</span>),
     <span class="ident">NoAlias</span>,
     <span class="ident">NoCapture</span>,
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
     <span class="ident">NoFree</span>,
     <span class="ident">Nest</span>,
     <span class="ident">Returned</span>,
@@ -973,7 +1000,7 @@
     <span class="ident">SwiftSelf</span>,
     <span class="ident">SwiftError</span>,
     <span class="ident">ImmArg</span>,
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_11_OR_GREATER</span>)]</span>
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-11-or-greater&quot;</span>)]</span>
     <span class="ident">NoUndef</span>,
     <span class="ident">StringAttribute</span> { <span class="ident">kind</span>: <span class="ident">String</span>, <span class="ident">value</span>: <span class="ident">String</span> }, <span class="comment">// for no value, use &quot;&quot;</span>
     <span class="ident">UnknownAttribute</span>, <span class="comment">// this is used if we get a value not in the above list</span>
@@ -1153,7 +1180,7 @@
                     <span class="prelude-val">None</span>
                 }
             },
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
             <span class="ident">debugloc</span>: <span class="ident">DebugLoc</span>::<span class="ident">from_llvm_no_col</span>(<span class="ident">func</span>),
             <span class="comment">// metadata: unimplemented!(&quot;Function.metadata&quot;),</span>
         }
@@ -1236,23 +1263,23 @@
             <span class="string">&quot;nobuiltin&quot;</span>,
             <span class="string">&quot;nocf_check&quot;</span>,
             <span class="string">&quot;noduplicate&quot;</span>,
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
             <span class="string">&quot;nofree&quot;</span>,
             <span class="string">&quot;noimplicitfloat&quot;</span>,
             <span class="string">&quot;noinline&quot;</span>,
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_11_OR_GREATER</span>)]</span>
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-11-or-greater&quot;</span>)]</span>
             <span class="string">&quot;nomerge&quot;</span>,
             <span class="string">&quot;nonlazybind&quot;</span>,
             <span class="string">&quot;noredzone&quot;</span>,
             <span class="string">&quot;noreturn&quot;</span>,
             <span class="string">&quot;norecurse&quot;</span>,
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
             <span class="string">&quot;willreturn&quot;</span>,
             <span class="string">&quot;returns_twice&quot;</span>,
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
             <span class="string">&quot;nosync&quot;</span>,
             <span class="string">&quot;nounwind&quot;</span>,
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_11_OR_GREATER</span>)]</span>
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-11-or-greater&quot;</span>)]</span>
             <span class="string">&quot;null_pointer_is_valid&quot;</span>,
             <span class="string">&quot;optforfuzzing&quot;</span>,
             <span class="string">&quot;optnone&quot;</span>,
@@ -1266,7 +1293,7 @@
             <span class="string">&quot;sanitize_memory&quot;</span>,
             <span class="string">&quot;sanitize_thread&quot;</span>,
             <span class="string">&quot;sanitize_hwaddress&quot;</span>,
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
             <span class="string">&quot;sanitize_memtag&quot;</span>,
             <span class="string">&quot;shadowcallstack&quot;</span>,
             <span class="string">&quot;speculative_load_hardening&quot;</span>,
@@ -1290,14 +1317,14 @@
             <span class="string">&quot;signext&quot;</span>,
             <span class="string">&quot;inreg&quot;</span>,
             <span class="string">&quot;byval&quot;</span>,
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_11_OR_GREATER</span>)]</span>
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-11-or-greater&quot;</span>)]</span>
             <span class="string">&quot;preallocated&quot;</span>,
             <span class="string">&quot;inalloca&quot;</span>,
             <span class="string">&quot;sret&quot;</span>,
             <span class="string">&quot;align&quot;</span>,
             <span class="string">&quot;noalias&quot;</span>,
             <span class="string">&quot;nocapture&quot;</span>,
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
             <span class="string">&quot;nofree&quot;</span>,
             <span class="string">&quot;nest&quot;</span>,
             <span class="string">&quot;returned&quot;</span>,
@@ -1306,9 +1333,9 @@
             <span class="string">&quot;dereferenceable_or_null&quot;</span>,
             <span class="string">&quot;swiftself&quot;</span>,
             <span class="string">&quot;swifterror&quot;</span>,
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
             <span class="string">&quot;immarg&quot;</span>,
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_11_OR_GREATER</span>)]</span>
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-11-or-greater&quot;</span>)]</span>
             <span class="string">&quot;noundef&quot;</span>,
         ]
         .<span class="ident">iter</span>()
@@ -1370,23 +1397,23 @@
                 <span class="prelude-val">Some</span>(<span class="string">&quot;nobuiltin&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">NoBuiltin</span>,
                 <span class="prelude-val">Some</span>(<span class="string">&quot;nocf_check&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">NoCFCheck</span>,
                 <span class="prelude-val">Some</span>(<span class="string">&quot;noduplicate&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">NoDuplicate</span>,
-                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
                 <span class="prelude-val">Some</span>(<span class="string">&quot;nofree&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">NoFree</span>,
                 <span class="prelude-val">Some</span>(<span class="string">&quot;noimplicitfloat&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">NoImplicitFloat</span>,
                 <span class="prelude-val">Some</span>(<span class="string">&quot;noinline&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">NoInline</span>,
-                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_11_OR_GREATER</span>)]</span>
+                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-11-or-greater&quot;</span>)]</span>
                 <span class="prelude-val">Some</span>(<span class="string">&quot;nomerge&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">NoMerge</span>,
                 <span class="prelude-val">Some</span>(<span class="string">&quot;nonlazybind&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">NonLazyBind</span>,
                 <span class="prelude-val">Some</span>(<span class="string">&quot;noredzone&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">NoRedZone</span>,
                 <span class="prelude-val">Some</span>(<span class="string">&quot;noreturn&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">NoReturn</span>,
                 <span class="prelude-val">Some</span>(<span class="string">&quot;norecurse&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">NoRecurse</span>,
-                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
                 <span class="prelude-val">Some</span>(<span class="string">&quot;willreturn&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">WillReturn</span>,
                 <span class="prelude-val">Some</span>(<span class="string">&quot;returns_twice&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">ReturnsTwice</span>,
-                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
                 <span class="prelude-val">Some</span>(<span class="string">&quot;nosync&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">NoSync</span>,
                 <span class="prelude-val">Some</span>(<span class="string">&quot;nounwind&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">NoUnwind</span>,
-                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_11_OR_GREATER</span>)]</span>
+                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-11-or-greater&quot;</span>)]</span>
                 <span class="prelude-val">Some</span>(<span class="string">&quot;null_pointer_is_valid&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">NullPointerIsValid</span>,
                 <span class="prelude-val">Some</span>(<span class="string">&quot;optforfuzzing&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">OptForFuzzing</span>,
                 <span class="prelude-val">Some</span>(<span class="string">&quot;optnone&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">OptNone</span>,
@@ -1400,7 +1427,7 @@
                 <span class="prelude-val">Some</span>(<span class="string">&quot;sanitize_memory&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">SanitizeMemory</span>,
                 <span class="prelude-val">Some</span>(<span class="string">&quot;sanitize_thread&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">SanitizeThread</span>,
                 <span class="prelude-val">Some</span>(<span class="string">&quot;sanitize_hwaddress&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">SanitizeHWAddress</span>,
-                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
                 <span class="prelude-val">Some</span>(<span class="string">&quot;sanitize_memtag&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">SanitizeMemTag</span>,
                 <span class="prelude-val">Some</span>(<span class="string">&quot;shadowcallstack&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">ShadowCallStack</span>,
                 <span class="prelude-val">Some</span>(<span class="string">&quot;speculative_load_hardening&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">SpeculativeLoadHardening</span>,
@@ -1411,7 +1438,10 @@
                 <span class="prelude-val">Some</span>(<span class="string">&quot;strictfp&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">StrictFP</span>,
                 <span class="prelude-val">Some</span>(<span class="string">&quot;uwtable&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">UWTable</span>,
                 <span class="prelude-val">Some</span>(<span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Unhandled value from lookup_function_attr: {:?}&quot;</span>, <span class="ident">s</span>),
-                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">UnknownAttribute</span>,
+                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;unknown enum function attr {}&quot;</span>, <span class="ident">kind</span>);
+                    <span class="self">Self</span>::<span class="ident">UnknownAttribute</span>
+                }
             }
         } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">unsafe</span> { <span class="ident">LLVMIsStringAttribute</span>(<span class="ident">a</span>) } <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
             <span class="self">Self</span>::<span class="ident">StringAttribute</span> {
@@ -1433,15 +1463,21 @@
                 <span class="prelude-val">Some</span>(<span class="string">&quot;zeroext&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">ZeroExt</span>,
                 <span class="prelude-val">Some</span>(<span class="string">&quot;signext&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">SignExt</span>,
                 <span class="prelude-val">Some</span>(<span class="string">&quot;inreg&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">InReg</span>,
+                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-11-or-lower&quot;</span>)]</span>
                 <span class="prelude-val">Some</span>(<span class="string">&quot;byval&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">ByVal</span>,
-                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_11_OR_GREATER</span>)]</span>
+                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-12-or-greater&quot;</span>)]</span>
+                <span class="prelude-val">Some</span>(<span class="string">&quot;byval&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">ByVal</span>(<span class="kw">unsafe</span> { <span class="ident">LLVMGetEnumAttributeValue</span>(<span class="ident">a</span>) }),
+                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-11-or-greater&quot;</span>)]</span>
                 <span class="prelude-val">Some</span>(<span class="string">&quot;preallocated&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Preallocated</span>,
                 <span class="prelude-val">Some</span>(<span class="string">&quot;inalloca&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">InAlloca</span>,
+                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-11-or-lower&quot;</span>)]</span>
                 <span class="prelude-val">Some</span>(<span class="string">&quot;sret&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">SRet</span>,
+                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-12-or-greater&quot;</span>)]</span>
+                <span class="prelude-val">Some</span>(<span class="string">&quot;sret&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">SRet</span>(<span class="kw">unsafe</span> { <span class="ident">LLVMGetEnumAttributeValue</span>(<span class="ident">a</span>) }),
                 <span class="prelude-val">Some</span>(<span class="string">&quot;align&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Alignment</span>(<span class="kw">unsafe</span> { <span class="ident">LLVMGetEnumAttributeValue</span>(<span class="ident">a</span>) }),
                 <span class="prelude-val">Some</span>(<span class="string">&quot;noalias&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">NoAlias</span>,
                 <span class="prelude-val">Some</span>(<span class="string">&quot;nocapture&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">NoCapture</span>,
-                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
                 <span class="prelude-val">Some</span>(<span class="string">&quot;nofree&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">NoFree</span>,
                 <span class="prelude-val">Some</span>(<span class="string">&quot;nest&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Nest</span>,
                 <span class="prelude-val">Some</span>(<span class="string">&quot;returned&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Returned</span>,
@@ -1451,10 +1487,13 @@
                 <span class="prelude-val">Some</span>(<span class="string">&quot;swiftself&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">SwiftSelf</span>,
                 <span class="prelude-val">Some</span>(<span class="string">&quot;swifterror&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">SwiftError</span>,
                 <span class="prelude-val">Some</span>(<span class="string">&quot;immarg&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">ImmArg</span>,
-                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_11_OR_GREATER</span>)]</span>
+                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-11-or-greater&quot;</span>)]</span>
                 <span class="prelude-val">Some</span>(<span class="string">&quot;noundef&quot;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">NoUndef</span>,
                 <span class="prelude-val">Some</span>(<span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Unhandled value from lookup_param_attr: {:?}&quot;</span>, <span class="ident">s</span>),
-                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">UnknownAttribute</span>,
+                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;unknown enum param attr {}&quot;</span>, <span class="ident">kind</span>);
+                    <span class="self">Self</span>::<span class="ident">UnknownAttribute</span>
+                }
             }
         } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">unsafe</span> { <span class="ident">LLVMIsStringAttribute</span>(<span class="ident">a</span>) } <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
             <span class="self">Self</span>::<span class="ident">StringAttribute</span> {
@@ -1468,4 +1507,5 @@
     }
 }
 </pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "llvm_ir";</script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>
+</section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="llvm_ir"></div>
+    <script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>

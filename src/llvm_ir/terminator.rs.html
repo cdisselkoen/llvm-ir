@@ -1,4 +1,7 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `src/terminator.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>terminator.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css"><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../llvm_ir/index.html'><div class='logo-container'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/terminator.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>terminator.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
+<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../llvm_ir/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
+                <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -988,7 +991,7 @@
 <span id="988">988</span>
 <span id="989">989</span>
 </pre><div class="example-wrap"><pre class="rust ">
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">debugloc</span>::{<span class="ident">DebugLoc</span>, <span class="ident">HasDebugLoc</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">function</span>::{<span class="ident">CallingConvention</span>, <span class="ident">FunctionAttribute</span>, <span class="ident">ParameterAttribute</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">instruction</span>::{<span class="ident">HasResult</span>, <span class="ident">InlineAssembly</span>};
@@ -999,7 +1002,7 @@
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fmt</span>::{<span class="self">self</span>, <span class="ident">Display</span>};
 
 <span class="doccomment">/// Terminator instructions end a basic block.</span>
-<span class="doccomment">/// See [LLVM 11 docs on Terminator Instructions](https://releases.llvm.org/11.0.0/docs/LangRef.html#terminator-instructions)</span>
+<span class="doccomment">/// See [LLVM 12 docs on Terminator Instructions](https://releases.llvm.org/12.0.0/docs/LangRef.html#terminator-instructions)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Terminator</span> {
     <span class="ident">Ret</span>(<span class="ident">Ret</span>),
@@ -1013,7 +1016,7 @@
     <span class="ident">CleanupRet</span>(<span class="ident">CleanupRet</span>),
     <span class="ident">CatchRet</span>(<span class="ident">CatchRet</span>),
     <span class="ident">CatchSwitch</span>(<span class="ident">CatchSwitch</span>),
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
     <span class="ident">CallBr</span>(<span class="ident">CallBr</span>),
 }
 
@@ -1022,7 +1025,7 @@
 <span class="doccomment">/// For instance, a [`Ret`](struct.Ret.html) instruction has void type even if</span>
 <span class="doccomment">/// the function returns a non-void value; we do not store the result of a `Ret`</span>
 <span class="doccomment">/// instruction using something like `%3 = ret i32 %2`.</span>
-<span class="doccomment">/// See [LLVM 11 docs on Terminator Instructions](https://releases.llvm.org/11.0.0/docs/LangRef.html#terminator-instructions)</span>
+<span class="doccomment">/// See [LLVM 12 docs on Terminator Instructions](https://releases.llvm.org/12.0.0/docs/LangRef.html#terminator-instructions)</span>
 <span class="kw">impl</span> <span class="ident">Typed</span> <span class="kw">for</span> <span class="ident">Terminator</span> {
     <span class="kw">fn</span> <span class="ident">get_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">types</span>: <span class="kw-2">&amp;</span><span class="ident">Types</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TypeRef</span> {
         <span class="kw">match</span> <span class="self">self</span> {
@@ -1037,13 +1040,13 @@
             <span class="ident">Terminator</span>::<span class="ident">CleanupRet</span>(<span class="ident">t</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">types</span>.<span class="ident">type_of</span>(<span class="ident">t</span>),
             <span class="ident">Terminator</span>::<span class="ident">CatchRet</span>(<span class="ident">t</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">types</span>.<span class="ident">type_of</span>(<span class="ident">t</span>),
             <span class="ident">Terminator</span>::<span class="ident">CatchSwitch</span>(<span class="ident">t</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">types</span>.<span class="ident">type_of</span>(<span class="ident">t</span>),
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
             <span class="ident">Terminator</span>::<span class="ident">CallBr</span>(<span class="ident">t</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">types</span>.<span class="ident">type_of</span>(<span class="ident">t</span>),
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
 <span class="kw">impl</span> <span class="ident">HasDebugLoc</span> <span class="kw">for</span> <span class="ident">Terminator</span> {
     <span class="kw">fn</span> <span class="ident">get_debug_loc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DebugLoc</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span> {
@@ -1058,7 +1061,7 @@
             <span class="ident">Terminator</span>::<span class="ident">CleanupRet</span>(<span class="ident">t</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">t</span>.<span class="ident">get_debug_loc</span>(),
             <span class="ident">Terminator</span>::<span class="ident">CatchRet</span>(<span class="ident">t</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">t</span>.<span class="ident">get_debug_loc</span>(),
             <span class="ident">Terminator</span>::<span class="ident">CatchSwitch</span>(<span class="ident">t</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">t</span>.<span class="ident">get_debug_loc</span>(),
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
             <span class="ident">Terminator</span>::<span class="ident">CallBr</span>(<span class="ident">t</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">t</span>.<span class="ident">get_debug_loc</span>(),
         }
     }
@@ -1078,7 +1081,7 @@
             <span class="ident">Terminator</span>::<span class="ident">CleanupRet</span>(<span class="ident">t</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">t</span>),
             <span class="ident">Terminator</span>::<span class="ident">CatchRet</span>(<span class="ident">t</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">t</span>),
             <span class="ident">Terminator</span>::<span class="ident">CatchSwitch</span>(<span class="ident">t</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">t</span>),
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
             <span class="ident">Terminator</span>::<span class="ident">CallBr</span>(<span class="ident">t</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">t</span>),
         }
     }
@@ -1099,7 +1102,7 @@ impl Terminator {
             Terminator::CleanupRet(t) =&gt; &amp;t.metadata,
             Terminator::CatchRet(t) =&gt; &amp;t.metadata,
             Terminator::CatchSwitch(t) =&gt; &amp;t.metadata,
-            #[cfg(LLVM_VERSION_9_OR_GREATER)]
+            #[cfg(feature=&quot;llvm-9-or-greater&quot;)]
             Terminator::CallBr(t) =&gt; &amp;t.metadata,
         }
     }
@@ -1124,7 +1127,7 @@ impl Terminator {
             }
         }
 
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
         <span class="kw">impl</span> <span class="ident">HasDebugLoc</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">term</span> {
             <span class="kw">fn</span> <span class="ident">get_debug_loc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DebugLoc</span><span class="op">&gt;</span> {
                 <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">debugloc</span>
@@ -1161,12 +1164,12 @@ impl Terminator {
     };
 }
 
-<span class="doccomment">/// See [LLVM 11 docs on the &#39;ret&#39; instruction](https://releases.llvm.org/11.0.0/docs/LangRef.html#ret-instruction)</span>
+<span class="doccomment">/// See [LLVM 12 docs on the &#39;ret&#39; instruction](https://releases.llvm.org/12.0.0/docs/LangRef.html#ret-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Ret</span> {
     <span class="doccomment">/// The value being returned, or `None` if returning void.</span>
     <span class="kw">pub</span> <span class="ident">return_operand</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Operand</span><span class="op">&gt;</span>,
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
     <span class="kw">pub</span> <span class="ident">debugloc</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DebugLoc</span><span class="op">&gt;</span>,
     <span class="comment">// --TODO not yet implemented-- pub metadata: InstructionMetadata,</span>
 }
@@ -1182,7 +1185,7 @@ impl Terminator {
                 <span class="prelude-val">Some</span>(<span class="ident">op</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">op</span>),
             },
         )<span class="question-mark">?</span>;
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">debugloc</span>.<span class="ident">is_some</span>() {
             <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot; (with debugloc)&quot;</span>)<span class="question-mark">?</span>;
         }
@@ -1190,14 +1193,14 @@ impl Terminator {
     }
 }
 
-<span class="doccomment">/// See [LLVM 11 docs on the &#39;br&#39; instruction](https://releases.llvm.org/11.0.0/docs/LangRef.html#br-instruction).</span>
+<span class="doccomment">/// See [LLVM 12 docs on the &#39;br&#39; instruction](https://releases.llvm.org/12.0.0/docs/LangRef.html#br-instruction).</span>
 <span class="doccomment">/// The LLVM &#39;br&#39; instruction has both conditional and unconditional variants, which we separate -- this is</span>
 <span class="doccomment">/// the unconditional variant, while the conditional variant is [`CondBr`](struct.CondBr.html).</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Br</span> {
     <span class="doccomment">/// The [`Name`](../enum.Name.html) of the [`BasicBlock`](../struct.BasicBlock.html) destination.</span>
     <span class="kw">pub</span> <span class="ident">dest</span>: <span class="ident">Name</span>,
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
     <span class="kw">pub</span> <span class="ident">debugloc</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DebugLoc</span><span class="op">&gt;</span>,
     <span class="comment">// --TODO not yet implemented-- pub metadata: InstructionMetadata,</span>
 }
@@ -1208,7 +1211,7 @@ impl Terminator {
 <span class="kw">impl</span> <span class="ident">Display</span> <span class="kw">for</span> <span class="ident">Br</span> {
     <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
         <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;br label {}&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">dest</span>)<span class="question-mark">?</span>;
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">debugloc</span>.<span class="ident">is_some</span>() {
             <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot; (with debugloc)&quot;</span>)<span class="question-mark">?</span>;
         }
@@ -1216,7 +1219,7 @@ impl Terminator {
     }
 }
 
-<span class="doccomment">/// See [LLVM 11 docs on the &#39;br&#39; instruction](https://releases.llvm.org/11.0.0/docs/LangRef.html#br-instruction).</span>
+<span class="doccomment">/// See [LLVM 12 docs on the &#39;br&#39; instruction](https://releases.llvm.org/12.0.0/docs/LangRef.html#br-instruction).</span>
 <span class="doccomment">/// The LLVM &#39;br&#39; instruction has both conditional and unconditional variants, which we separate -- this is</span>
 <span class="doccomment">/// the conditional variant, while the unconditional variant is [`Br`](struct.Br.html).</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
@@ -1227,7 +1230,7 @@ impl Terminator {
     <span class="kw">pub</span> <span class="ident">true_dest</span>: <span class="ident">Name</span>,
     <span class="doccomment">/// The [`Name`](../enum.Name.html) of the [`BasicBlock`](../struct.BasicBlock.html) destination if the `condition` is false.</span>
     <span class="kw">pub</span> <span class="ident">false_dest</span>: <span class="ident">Name</span>,
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
     <span class="kw">pub</span> <span class="ident">debugloc</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DebugLoc</span><span class="op">&gt;</span>,
     <span class="comment">// --TODO not yet implemented-- pub metadata: InstructionMetadata,</span>
 }
@@ -1242,7 +1245,7 @@ impl Terminator {
             <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">true_dest</span>,
             <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">false_dest</span>,
         )<span class="question-mark">?</span>;
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">debugloc</span>.<span class="ident">is_some</span>() {
             <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot; (with debugloc)&quot;</span>)<span class="question-mark">?</span>;
         }
@@ -1250,13 +1253,13 @@ impl Terminator {
     }
 }
 
-<span class="doccomment">/// See [LLVM 11 docs on the &#39;switch&#39; instruction](https://releases.llvm.org/11.0.0/docs/LangRef.html#switch-instruction)</span>
+<span class="doccomment">/// See [LLVM 12 docs on the &#39;switch&#39; instruction](https://releases.llvm.org/12.0.0/docs/LangRef.html#switch-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Switch</span> {
     <span class="kw">pub</span> <span class="ident">operand</span>: <span class="ident">Operand</span>,
     <span class="kw">pub</span> <span class="ident">dests</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">ConstantRef</span>, <span class="ident">Name</span>)<span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">default_dest</span>: <span class="ident">Name</span>,
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
     <span class="kw">pub</span> <span class="ident">debugloc</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DebugLoc</span><span class="op">&gt;</span>,
     <span class="comment">// --TODO not yet implemented-- pub metadata: InstructionMetadata,</span>
 }
@@ -1274,7 +1277,7 @@ impl Terminator {
             <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{}, label {}; &quot;</span>, <span class="ident">val</span>, <span class="ident">label</span>)<span class="question-mark">?</span>;
         }
         <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;]&quot;</span>)<span class="question-mark">?</span>;
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">debugloc</span>.<span class="ident">is_some</span>() {
             <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot; (with debugloc)&quot;</span>)<span class="question-mark">?</span>;
         }
@@ -1282,7 +1285,7 @@ impl Terminator {
     }
 }
 
-<span class="doccomment">/// See [LLVM 11 docs on the &#39;indirectbr&#39; instruction](https://releases.llvm.org/11.0.0/docs/LangRef.html#indirectbr-instruction)</span>
+<span class="doccomment">/// See [LLVM 12 docs on the &#39;indirectbr&#39; instruction](https://releases.llvm.org/12.0.0/docs/LangRef.html#indirectbr-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">IndirectBr</span> {
     <span class="doccomment">/// Address to jump to (must be derived from a [`Constant::BlockAddress`](../enum.Constant.html))</span>
@@ -1292,7 +1295,7 @@ impl Terminator {
     <span class="doccomment">/// [`BasicBlock`](../struct.BasicBlock.html)s in the current function;</span>
     <span class="doccomment">/// `IndirectBr` cannot be used to jump between functions.</span>
     <span class="kw">pub</span> <span class="ident">possible_dests</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Name</span><span class="op">&gt;</span>,
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
     <span class="kw">pub</span> <span class="ident">debugloc</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DebugLoc</span><span class="op">&gt;</span>,
     <span class="comment">// --TODO not yet implemented-- pub metadata: InstructionMetadata,</span>
 }
@@ -1310,7 +1313,7 @@ impl Terminator {
             <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;, label {}&quot;</span>, <span class="ident">dest</span>)<span class="question-mark">?</span>;
         }
         <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot; ]&quot;</span>)<span class="question-mark">?</span>;
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">debugloc</span>.<span class="ident">is_some</span>() {
             <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot; (with debugloc)&quot;</span>)<span class="question-mark">?</span>;
         }
@@ -1318,7 +1321,7 @@ impl Terminator {
     }
 }
 
-<span class="doccomment">/// See [LLVM 11 docs on the &#39;invoke&#39; instruction](https://releases.llvm.org/11.0.0/docs/LangRef.html#invoke-instruction)</span>
+<span class="doccomment">/// See [LLVM 12 docs on the &#39;invoke&#39; instruction](https://releases.llvm.org/12.0.0/docs/LangRef.html#invoke-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Invoke</span> {
     <span class="kw">pub</span> <span class="ident">function</span>: <span class="ident">Either</span><span class="op">&lt;</span><span class="ident">InlineAssembly</span>, <span class="ident">Operand</span><span class="op">&gt;</span>,
@@ -1329,7 +1332,7 @@ impl Terminator {
     <span class="kw">pub</span> <span class="ident">exception_label</span>: <span class="ident">Name</span>, <span class="comment">// Should be the name of a basic block. If the callee returns with &#39;resume&#39; or another exception-handling mechanism, control flow resumes here.</span>
     <span class="kw">pub</span> <span class="ident">function_attributes</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">FunctionAttribute</span><span class="op">&gt;</span>, <span class="comment">// llvm-hs has the equivalent of Vec&lt;Either&lt;GroupID, FunctionAttribute&gt;&gt;, but I&#39;m not sure how the GroupID option comes up</span>
     <span class="kw">pub</span> <span class="ident">calling_convention</span>: <span class="ident">CallingConvention</span>,
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
     <span class="kw">pub</span> <span class="ident">debugloc</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DebugLoc</span><span class="op">&gt;</span>,
     <span class="comment">// --TODO not yet implemented-- pub metadata: InstructionMetadata,</span>
 }
@@ -1371,7 +1374,7 @@ impl Terminator {
             <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">return_label</span>,
             <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">exception_label</span>,
         )<span class="question-mark">?</span>;
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">debugloc</span>.<span class="ident">is_some</span>() {
             <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot; (with debugloc)&quot;</span>)<span class="question-mark">?</span>;
         }
@@ -1379,11 +1382,11 @@ impl Terminator {
     }
 }
 
-<span class="doccomment">/// See [LLVM 11 docs on the &#39;resume&#39; instruction](https://releases.llvm.org/11.0.0/docs/LangRef.html#resume-instruction)</span>
+<span class="doccomment">/// See [LLVM 12 docs on the &#39;resume&#39; instruction](https://releases.llvm.org/12.0.0/docs/LangRef.html#resume-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Resume</span> {
     <span class="kw">pub</span> <span class="ident">operand</span>: <span class="ident">Operand</span>,
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
     <span class="kw">pub</span> <span class="ident">debugloc</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DebugLoc</span><span class="op">&gt;</span>,
     <span class="comment">// --TODO not yet implemented-- pub metadata: InstructionMetadata,</span>
 }
@@ -1394,7 +1397,7 @@ impl Terminator {
 <span class="kw">impl</span> <span class="ident">Display</span> <span class="kw">for</span> <span class="ident">Resume</span> {
     <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
         <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;resume {}&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">operand</span>)<span class="question-mark">?</span>;
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">debugloc</span>.<span class="ident">is_some</span>() {
             <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot; (with debugloc)&quot;</span>)<span class="question-mark">?</span>;
         }
@@ -1402,10 +1405,10 @@ impl Terminator {
     }
 }
 
-<span class="doccomment">/// See [LLVM 11 docs on the &#39;unreachable&#39; instruction](https://releases.llvm.org/11.0.0/docs/LangRef.html#unreachable-instruction)</span>
+<span class="doccomment">/// See [LLVM 12 docs on the &#39;unreachable&#39; instruction](https://releases.llvm.org/12.0.0/docs/LangRef.html#unreachable-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Unreachable</span> {
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
     <span class="kw">pub</span> <span class="ident">debugloc</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DebugLoc</span><span class="op">&gt;</span>,
     <span class="comment">// --TODO not yet implemented-- pub metadata: InstructionMetadata,</span>
 }
@@ -1416,7 +1419,7 @@ impl Terminator {
 <span class="kw">impl</span> <span class="ident">Display</span> <span class="kw">for</span> <span class="ident">Unreachable</span> {
     <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
         <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;unreachable&quot;</span>)<span class="question-mark">?</span>;
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">debugloc</span>.<span class="ident">is_some</span>() {
             <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot; (with debugloc)&quot;</span>)<span class="question-mark">?</span>;
         }
@@ -1424,13 +1427,13 @@ impl Terminator {
     }
 }
 
-<span class="doccomment">/// See [LLVM 11 docs on the &#39;cleanupret&#39; instruction](https://releases.llvm.org/11.0.0/docs/LangRef.html#cleanupret-instruction)</span>
+<span class="doccomment">/// See [LLVM 12 docs on the &#39;cleanupret&#39; instruction](https://releases.llvm.org/12.0.0/docs/LangRef.html#cleanupret-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CleanupRet</span> {
     <span class="kw">pub</span> <span class="ident">cleanup_pad</span>: <span class="ident">Operand</span>,
     <span class="doccomment">/// `None` here indicates &#39;unwind to caller&#39;</span>
     <span class="kw">pub</span> <span class="ident">unwind_dest</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Name</span><span class="op">&gt;</span>,
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
     <span class="kw">pub</span> <span class="ident">debugloc</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DebugLoc</span><span class="op">&gt;</span>,
     <span class="comment">// --TODO not yet implemented-- pub metadata: InstructionMetadata,</span>
 }
@@ -1447,7 +1450,7 @@ impl Terminator {
                 <span class="prelude-val">Some</span>(<span class="ident">dest</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;label {}&quot;</span>, <span class="ident">dest</span>),
             },
         )<span class="question-mark">?</span>;
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">debugloc</span>.<span class="ident">is_some</span>() {
             <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot; (with debugloc)&quot;</span>)<span class="question-mark">?</span>;
         }
@@ -1455,12 +1458,12 @@ impl Terminator {
     }
 }
 
-<span class="doccomment">/// See [LLVM 11 docs on the &#39;catchret&#39; instruction](https://releases.llvm.org/11.0.0/docs/LangRef.html#catchret-instruction)</span>
+<span class="doccomment">/// See [LLVM 12 docs on the &#39;catchret&#39; instruction](https://releases.llvm.org/12.0.0/docs/LangRef.html#catchret-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CatchRet</span> {
     <span class="kw">pub</span> <span class="ident">catch_pad</span>: <span class="ident">Operand</span>,
     <span class="kw">pub</span> <span class="ident">successor</span>: <span class="ident">Name</span>,
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
     <span class="kw">pub</span> <span class="ident">debugloc</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DebugLoc</span><span class="op">&gt;</span>,
     <span class="comment">// --TODO not yet implemented-- pub metadata: InstructionMetadata,</span>
 }
@@ -1474,7 +1477,7 @@ impl Terminator {
             <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">catch_pad</span>,
             <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">successor</span>,
         )<span class="question-mark">?</span>;
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">debugloc</span>.<span class="ident">is_some</span>() {
             <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot; (with debugloc)&quot;</span>)<span class="question-mark">?</span>;
         }
@@ -1482,7 +1485,7 @@ impl Terminator {
     }
 }
 
-<span class="doccomment">/// See [LLVM 11 docs on the &#39;catchswitch&#39; instruction](https://releases.llvm.org/11.0.0/docs/LangRef.html#catchswitch-instruction)</span>
+<span class="doccomment">/// See [LLVM 12 docs on the &#39;catchswitch&#39; instruction](https://releases.llvm.org/12.0.0/docs/LangRef.html#catchswitch-instruction)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CatchSwitch</span> {
     <span class="kw">pub</span> <span class="ident">parent_pad</span>: <span class="ident">Operand</span>,
@@ -1491,7 +1494,7 @@ impl Terminator {
     <span class="doccomment">/// `None` here indicates &#39;unwind to caller&#39;</span>
     <span class="kw">pub</span> <span class="ident">default_unwind_dest</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Name</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">result</span>: <span class="ident">Name</span>,
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
     <span class="kw">pub</span> <span class="ident">debugloc</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DebugLoc</span><span class="op">&gt;</span>,
     <span class="comment">// --TODO not yet implemented-- pub metadata: InstructionMetadata,</span>
 }
@@ -1522,7 +1525,7 @@ impl Terminator {
                 <span class="prelude-val">Some</span>(<span class="ident">dest</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;label {}&quot;</span>, <span class="ident">dest</span>),
             },
         )<span class="question-mark">?</span>;
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">debugloc</span>.<span class="ident">is_some</span>() {
             <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot; (with debugloc)&quot;</span>)<span class="question-mark">?</span>;
         }
@@ -1530,8 +1533,8 @@ impl Terminator {
     }
 }
 
-<span class="doccomment">/// See [LLVM 11 docs on the &#39;callbr&#39; instruction](https://releases.llvm.org/11.0.0/docs/LangRef.html#callbr-instruction)</span>
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+<span class="doccomment">/// See [LLVM 12 docs on the &#39;callbr&#39; instruction](https://releases.llvm.org/12.0.0/docs/LangRef.html#callbr-instruction)</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CallBr</span> {
     <span class="kw">pub</span> <span class="ident">function</span>: <span class="ident">Either</span><span class="op">&lt;</span><span class="ident">InlineAssembly</span>, <span class="ident">Operand</span><span class="op">&gt;</span>,
@@ -1543,17 +1546,17 @@ impl Terminator {
     <span class="kw">pub</span> <span class="ident">other_labels</span>: (), <span class="comment">//Vec&lt;Name&gt;, // Should be names of basic blocks. The callee may use an inline-asm &#39;goto&#39; to resume control flow at one of these places.</span>
     <span class="kw">pub</span> <span class="ident">function_attributes</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">FunctionAttribute</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">calling_convention</span>: <span class="ident">CallingConvention</span>,
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
     <span class="kw">pub</span> <span class="ident">debugloc</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DebugLoc</span><span class="op">&gt;</span>,
     <span class="comment">// --TODO not yet implemented-- pub metadata: InstructionMetadata,</span>
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
 <span class="macro">impl_term</span><span class="macro">!</span>(<span class="ident">CallBr</span>, <span class="ident">CallBr</span>);
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
 <span class="macro">impl_hasresult</span><span class="macro">!</span>(<span class="ident">CallBr</span>);
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
 <span class="kw">impl</span> <span class="ident">Typed</span> <span class="kw">for</span> <span class="ident">CallBr</span> {
     <span class="kw">fn</span> <span class="ident">get_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">types</span>: <span class="kw-2">&amp;</span><span class="ident">Types</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TypeRef</span> {
         <span class="kw">match</span> <span class="ident">types</span>.<span class="ident">type_of</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">function</span>).<span class="ident">as_ref</span>() {
@@ -1566,7 +1569,7 @@ impl Terminator {
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
 <span class="kw">impl</span> <span class="ident">Display</span> <span class="kw">for</span> <span class="ident">CallBr</span> {
     <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
         <span class="comment">// Like with `Call` and `Invoke, we choose not to include all the</span>
@@ -1587,7 +1590,7 @@ impl Terminator {
             }
         }
         <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;) to label {}&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">return_label</span>)<span class="question-mark">?</span>;
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">debugloc</span>.<span class="ident">is_some</span>() {
             <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot; (with debugloc)&quot;</span>)<span class="question-mark">?</span>;
         }
@@ -1648,7 +1651,7 @@ impl Terminator {
             <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMCatchSwitch</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">Terminator</span>::<span class="ident">CatchSwitch</span>(<span class="ident">CatchSwitch</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">term</span>, <span class="ident">ctx</span>, <span class="ident">func_ctx</span>))
             },
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
             <span class="ident">LLVMOpcode</span>::<span class="ident">LLVMCallBr</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">Terminator</span>::<span class="ident">CallBr</span>(<span class="ident">CallBr</span>::<span class="ident">from_llvm_ref</span>(<span class="ident">term</span>, <span class="ident">ctx</span>, <span class="ident">func_ctx</span>))
             },
@@ -1676,7 +1679,7 @@ impl Terminator {
                 )),
                 <span class="ident">n</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Ret instruction with {} operands&quot;</span>, <span class="ident">n</span>),
             },
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
             <span class="ident">debugloc</span>: <span class="ident">DebugLoc</span>::<span class="ident">from_llvm_with_col</span>(<span class="ident">term</span>),
             <span class="comment">// metadata: InstructionMetadata::from_llvm_inst(term),</span>
         }
@@ -1692,7 +1695,7 @@ impl Terminator {
                 .<span class="ident">get</span>(<span class="kw">unsafe</span> { <span class="kw-2">&amp;</span><span class="ident">op_to_bb</span>(<span class="ident">LLVMGetOperand</span>(<span class="ident">term</span>, <span class="number">0</span>)) })
                 .<span class="ident">expect</span>(<span class="string">&quot;Failed to find destination bb in map&quot;</span>)
                 .<span class="ident">clone</span>(),
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
             <span class="ident">debugloc</span>: <span class="ident">DebugLoc</span>::<span class="ident">from_llvm_with_col</span>(<span class="ident">term</span>),
             <span class="comment">// metadata: InstructionMetadata::from_llvm_inst(term),</span>
         }
@@ -1718,7 +1721,7 @@ impl Terminator {
                 .<span class="ident">get</span>(<span class="kw">unsafe</span> { <span class="kw-2">&amp;</span><span class="ident">op_to_bb</span>(<span class="ident">LLVMGetOperand</span>(<span class="ident">term</span>, <span class="number">1</span>)) })
                 .<span class="ident">expect</span>(<span class="string">&quot;Failed to find false-destination in bb map&quot;</span>)
                 .<span class="ident">clone</span>(),
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
             <span class="ident">debugloc</span>: <span class="ident">DebugLoc</span>::<span class="ident">from_llvm_with_col</span>(<span class="ident">term</span>),
             <span class="comment">// metadata: InstructionMetadata::from_llvm_inst(term),</span>
         }
@@ -1754,7 +1757,7 @@ impl Terminator {
                 .<span class="ident">get</span>(<span class="kw">unsafe</span> { <span class="kw-2">&amp;</span><span class="ident">LLVMGetSwitchDefaultDest</span>(<span class="ident">term</span>) })
                 .<span class="ident">expect</span>(<span class="string">&quot;Failed to find switch default destination in map&quot;</span>)
                 .<span class="ident">clone</span>(),
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
             <span class="ident">debugloc</span>: <span class="ident">DebugLoc</span>::<span class="ident">from_llvm_with_col</span>(<span class="ident">term</span>),
             <span class="comment">// metadata: InstructionMetadata::from_llvm_inst(term),</span>
         }
@@ -1781,7 +1784,7 @@ impl Terminator {
                     })
                     .<span class="ident">collect</span>()
             },
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
             <span class="ident">debugloc</span>: <span class="ident">DebugLoc</span>::<span class="ident">from_llvm_with_col</span>(<span class="ident">term</span>),
             <span class="comment">// metadata: InstructionMetadata::from_llvm_inst(term),</span>
         }
@@ -1813,7 +1816,7 @@ impl Terminator {
                 .<span class="ident">clone</span>(),
             <span class="ident">function_attributes</span>: <span class="ident">callinfo</span>.<span class="ident">function_attributes</span>,
             <span class="ident">calling_convention</span>: <span class="ident">callinfo</span>.<span class="ident">calling_convention</span>,
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
             <span class="ident">debugloc</span>: <span class="ident">DebugLoc</span>::<span class="ident">from_llvm_with_col</span>(<span class="ident">term</span>),
             <span class="comment">// metadata: InstructionMetadata::from_llvm_inst(term),</span>
         }
@@ -1829,7 +1832,7 @@ impl Terminator {
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="kw">unsafe</span> { <span class="ident">LLVMGetNumOperands</span>(<span class="ident">term</span>) }, <span class="number">1</span>);
         <span class="self">Self</span> {
             <span class="ident">operand</span>: <span class="ident">Operand</span>::<span class="ident">from_llvm_ref</span>(<span class="kw">unsafe</span> { <span class="ident">LLVMGetOperand</span>(<span class="ident">term</span>, <span class="number">0</span>) }, <span class="ident">ctx</span>, <span class="ident">func_ctx</span>),
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
             <span class="ident">debugloc</span>: <span class="ident">DebugLoc</span>::<span class="ident">from_llvm_with_col</span>(<span class="ident">term</span>),
             <span class="comment">// metadata: InstructionMetadata::from_llvm_inst(term),</span>
         }
@@ -1840,7 +1843,7 @@ impl Terminator {
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">from_llvm_ref</span>(<span class="ident">term</span>: <span class="ident">LLVMValueRef</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="kw">unsafe</span> { <span class="ident">LLVMGetNumOperands</span>(<span class="ident">term</span>) }, <span class="number">0</span>);
         <span class="self">Self</span> {
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
             <span class="ident">debugloc</span>: <span class="ident">DebugLoc</span>::<span class="ident">from_llvm_with_col</span>(<span class="ident">term</span>),
             <span class="comment">// metadata: InstructionMetadata::from_llvm_inst(term),</span>
         }
@@ -1876,7 +1879,7 @@ impl Terminator {
                     )
                 }
             },
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
             <span class="ident">debugloc</span>: <span class="ident">DebugLoc</span>::<span class="ident">from_llvm_with_col</span>(<span class="ident">term</span>),
             <span class="comment">// metadata: InstructionMetadata::from_llvm_inst(term),</span>
         }
@@ -1896,7 +1899,7 @@ impl Terminator {
                 .<span class="ident">get</span>(<span class="kw">unsafe</span> { <span class="kw-2">&amp;</span><span class="ident">LLVMGetSuccessor</span>(<span class="ident">term</span>, <span class="number">0</span>) })
                 .<span class="ident">expect</span>(<span class="string">&quot;Failed to find CatchRet successor in map&quot;</span>)
                 .<span class="ident">clone</span>(),
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
             <span class="ident">debugloc</span>: <span class="ident">DebugLoc</span>::<span class="ident">from_llvm_with_col</span>(<span class="ident">term</span>),
             <span class="comment">// metadata: InstructionMetadata::from_llvm_inst(term),</span>
         }
@@ -1942,14 +1945,14 @@ impl Terminator {
                 }
             },
             <span class="ident">result</span>: <span class="ident">Name</span>::<span class="ident">name_or_num</span>(<span class="kw">unsafe</span> { <span class="ident">get_value_name</span>(<span class="ident">term</span>) }, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">func_ctx</span>.<span class="ident">ctr</span>),
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
             <span class="ident">debugloc</span>: <span class="ident">DebugLoc</span>::<span class="ident">from_llvm_with_col</span>(<span class="ident">term</span>),
             <span class="comment">// metadata: InstructionMetadata::from_llvm_inst(term),</span>
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
 <span class="kw">impl</span> <span class="ident">CallBr</span> {
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">from_llvm_ref</span>(
         <span class="ident">term</span>: <span class="ident">LLVMValueRef</span>,
@@ -1971,11 +1974,12 @@ impl Terminator {
             <span class="ident">other_labels</span>: (),
             <span class="ident">function_attributes</span>: <span class="ident">callinfo</span>.<span class="ident">function_attributes</span>,
             <span class="ident">calling_convention</span>: <span class="ident">callinfo</span>.<span class="ident">calling_convention</span>,
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
             <span class="ident">debugloc</span>: <span class="ident">DebugLoc</span>::<span class="ident">from_llvm_with_col</span>(<span class="ident">term</span>),
             <span class="comment">// metadata: InstructionMetadata::from_llvm_inst(term),</span>
         }
     }
 }
 </pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "llvm_ir";</script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>
+</section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="llvm_ir"></div>
+    <script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>

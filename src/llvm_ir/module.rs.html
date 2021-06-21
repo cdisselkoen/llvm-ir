@@ -1,4 +1,7 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `src/module.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>module.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css"><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../llvm_ir/index.html'><div class='logo-container'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/module.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>module.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
+<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../llvm_ir/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
+                <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -557,7 +560,7 @@
 <span id="557">557</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">constant</span>::<span class="ident">ConstantRef</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">debugloc</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">function</span>::{<span class="ident">Function</span>, <span class="ident">FunctionAttribute</span>, <span class="ident">GroupID</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">llvm_sys</span>::<span class="kw-2">*</span>;
@@ -565,26 +568,26 @@
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">types</span>::{<span class="ident">Type</span>, <span class="ident">TypeRef</span>, <span class="ident">Typed</span>, <span class="ident">Types</span>, <span class="ident">TypesBuilder</span>};
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">path</span>::<span class="ident">Path</span>;
 
-<span class="doccomment">/// See [LLVM 11 docs on Module Structure](https://releases.llvm.org/11.0.0/docs/LangRef.html#module-structure)</span>
+<span class="doccomment">/// See [LLVM 12 docs on Module Structure](https://releases.llvm.org/12.0.0/docs/LangRef.html#module-structure)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Module</span> {
     <span class="doccomment">/// The name of the module</span>
     <span class="kw">pub</span> <span class="ident">name</span>: <span class="ident">String</span>,
-    <span class="doccomment">/// See [LLVM 11 docs on Source Filename](https://releases.llvm.org/11.0.0/docs/LangRef.html#source-filename)</span>
+    <span class="doccomment">/// See [LLVM 12 docs on Source Filename](https://releases.llvm.org/12.0.0/docs/LangRef.html#source-filename)</span>
     <span class="kw">pub</span> <span class="ident">source_file_name</span>: <span class="ident">String</span>,
-    <span class="doccomment">/// See [LLVM 11 docs on Data Layout](https://releases.llvm.org/11.0.0/docs/LangRef.html#data-layout)</span>
+    <span class="doccomment">/// See [LLVM 12 docs on Data Layout](https://releases.llvm.org/12.0.0/docs/LangRef.html#data-layout)</span>
     <span class="kw">pub</span> <span class="ident">data_layout</span>: <span class="ident">String</span>, <span class="comment">// llvm-hs parses this String into Option&lt;DataLayout&gt; with a custom parser</span>
-    <span class="doccomment">/// See [LLVM 11 docs on Target Triple](https://releases.llvm.org/11.0.0/docs/LangRef.html#target-triple)</span>
+    <span class="doccomment">/// See [LLVM 12 docs on Target Triple](https://releases.llvm.org/12.0.0/docs/LangRef.html#target-triple)</span>
     <span class="kw">pub</span> <span class="ident">target_triple</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
     <span class="doccomment">/// Functions which are defined (not just declared) in this `Module`.</span>
-    <span class="doccomment">/// See [LLVM 11 docs on Functions](https://releases.llvm.org/11.0.0/docs/LangRef.html#functions)</span>
+    <span class="doccomment">/// See [LLVM 12 docs on Functions](https://releases.llvm.org/12.0.0/docs/LangRef.html#functions)</span>
     <span class="kw">pub</span> <span class="ident">functions</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Function</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// See [LLVM 11 docs on Global Variables](https://releases.llvm.org/11.0.0/docs/LangRef.html#global-variables)</span>
+    <span class="doccomment">/// See [LLVM 12 docs on Global Variables](https://releases.llvm.org/12.0.0/docs/LangRef.html#global-variables)</span>
     <span class="kw">pub</span> <span class="ident">global_vars</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">GlobalVariable</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// See [LLVM 11 docs on Global Aliases](https://releases.llvm.org/11.0.0/docs/LangRef.html#aliases)</span>
+    <span class="doccomment">/// See [LLVM 12 docs on Global Aliases](https://releases.llvm.org/12.0.0/docs/LangRef.html#aliases)</span>
     <span class="kw">pub</span> <span class="ident">global_aliases</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">GlobalAlias</span><span class="op">&gt;</span>,
     <span class="comment">// --TODO not yet implemented-- pub function_attribute_groups: Vec&lt;FunctionAttributeGroup&gt;,</span>
-    <span class="doccomment">/// See [LLVM 11 docs on Module-Level Inline Assembly](https://releases.llvm.org/11.0.0/docs/LangRef.html#moduleasm)</span>
+    <span class="doccomment">/// See [LLVM 12 docs on Module-Level Inline Assembly](https://releases.llvm.org/12.0.0/docs/LangRef.html#moduleasm)</span>
     <span class="kw">pub</span> <span class="ident">inline_assembly</span>: <span class="ident">String</span>,
     <span class="comment">// --TODO not yet implemented-- pub metadata_nodes: Vec&lt;(MetadataNodeID, MetadataNode)&gt;,</span>
     <span class="comment">// --TODO not yet implemented-- pub named_metadatas: Vec&lt;NamedMetadata&gt;,</span>
@@ -656,7 +659,7 @@
     }
 }
 
-<span class="doccomment">/// See [LLVM 11 docs on Global Variables](https://releases.llvm.org/11.0.0/docs/LangRef.html#global-variables)</span>
+<span class="doccomment">/// See [LLVM 12 docs on Global Variables](https://releases.llvm.org/12.0.0/docs/LangRef.html#global-variables)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">GlobalVariable</span> {
     <span class="kw">pub</span> <span class="ident">name</span>: <span class="ident">Name</span>,
@@ -672,7 +675,7 @@
     <span class="kw">pub</span> <span class="ident">section</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">comdat</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Comdat</span><span class="op">&gt;</span>, <span class="comment">// llvm-hs-pure has Option&lt;String&gt; for some reason</span>
     <span class="kw">pub</span> <span class="ident">alignment</span>: <span class="ident">u32</span>,
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
     <span class="kw">pub</span> <span class="ident">debugloc</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DebugLoc</span><span class="op">&gt;</span>,
     <span class="comment">// --TODO not yet implemented-- pub metadata: Vec&lt;(String, MetadataRef&lt;MetadataNode&gt;)&gt;,</span>
 }
@@ -683,14 +686,14 @@
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
 <span class="kw">impl</span> <span class="ident">HasDebugLoc</span> <span class="kw">for</span> <span class="ident">GlobalVariable</span> {
     <span class="kw">fn</span> <span class="ident">get_debug_loc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DebugLoc</span><span class="op">&gt;</span> {
         <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">debugloc</span>
     }
 }
 
-<span class="doccomment">/// See [LLVM 11 docs on Global Aliases](https://releases.llvm.org/11.0.0/docs/LangRef.html#aliases)</span>
+<span class="doccomment">/// See [LLVM 12 docs on Global Aliases](https://releases.llvm.org/12.0.0/docs/LangRef.html#aliases)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">GlobalAlias</span> {
     <span class="kw">pub</span> <span class="ident">name</span>: <span class="ident">Name</span>,
@@ -716,7 +719,7 @@
     <span class="ident">Global</span>,
 }
 
-<span class="doccomment">/// See [LLVM 11 docs on Linkage Types](https://releases.llvm.org/11.0.0/docs/LangRef.html#linkage)</span>
+<span class="doccomment">/// See [LLVM 12 docs on Linkage Types](https://releases.llvm.org/12.0.0/docs/LangRef.html#linkage)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Linkage</span> {
     <span class="ident">Private</span>,
@@ -738,7 +741,7 @@
     <span class="ident">LinkerPrivateWeak</span>,
 }
 
-<span class="doccomment">/// See [LLVM 11 docs on Visibility Styles](https://releases.llvm.org/11.0.0/docs/LangRef.html#visibility-styles)</span>
+<span class="doccomment">/// See [LLVM 12 docs on Visibility Styles](https://releases.llvm.org/12.0.0/docs/LangRef.html#visibility-styles)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Visibility</span> {
     <span class="ident">Default</span>,
@@ -746,7 +749,7 @@
     <span class="ident">Protected</span>,
 }
 
-<span class="doccomment">/// See [LLVM 11 docs on DLL Storage Classes](https://releases.llvm.org/11.0.0/docs/LangRef.html#dllstorageclass)</span>
+<span class="doccomment">/// See [LLVM 12 docs on DLL Storage Classes](https://releases.llvm.org/12.0.0/docs/LangRef.html#dllstorageclass)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">DLLStorageClass</span> {
     <span class="ident">Default</span>,
@@ -754,7 +757,7 @@
     <span class="ident">Export</span>,
 }
 
-<span class="doccomment">/// See [LLVM 11 docs on Thread Local Storage Models](https://releases.llvm.org/11.0.0/docs/LangRef.html#thread-local-storage-models)</span>
+<span class="doccomment">/// See [LLVM 12 docs on Thread Local Storage Models](https://releases.llvm.org/12.0.0/docs/LangRef.html#thread-local-storage-models)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ThreadLocalMode</span> {
     <span class="ident">NotThreadLocal</span>,
@@ -764,10 +767,10 @@
     <span class="ident">LocalExec</span>,
 }
 
-<span class="doccomment">/// For discussion of address spaces, see [LLVM 11 docs on Pointer Type](https://releases.llvm.org/11.0.0/docs/LangRef.html#pointer-type)</span>
+<span class="doccomment">/// For discussion of address spaces, see [LLVM 12 docs on Pointer Type](https://releases.llvm.org/12.0.0/docs/LangRef.html#pointer-type)</span>
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">AddrSpace</span> <span class="op">=</span> <span class="ident">u32</span>;
 
-<span class="doccomment">/// See [LLVM 11 docs on Attribute Groups](https://releases.llvm.org/11.0.0/docs/LangRef.html#attribute-groups)</span>
+<span class="doccomment">/// See [LLVM 12 docs on Attribute Groups](https://releases.llvm.org/12.0.0/docs/LangRef.html#attribute-groups)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">FunctionAttributeGroup</span> {
     <span class="kw">pub</span> <span class="ident">group_id</span>: <span class="ident">GroupID</span>,
@@ -775,7 +778,7 @@
 }
 
 <span class="comment">/* --TODO not yet implemented: metadata
-/// See [LLVM 11 docs on Named Metadata](https://releases.llvm.org/11.0.0/docs/LangRef.html#named-metadata)
+/// See [LLVM 12 docs on Named Metadata](https://releases.llvm.org/12.0.0/docs/LangRef.html#named-metadata)
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct NamedMetadata {
     pub name: String,
@@ -783,7 +786,7 @@ pub struct NamedMetadata {
 }
 */</span>
 
-<span class="doccomment">/// See [LLVM 11 docs on Comdats](https://releases.llvm.org/11.0.0/docs/LangRef.html#langref-comdats)</span>
+<span class="doccomment">/// See [LLVM 12 docs on Comdats](https://releases.llvm.org/12.0.0/docs/LangRef.html#langref-comdats)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Comdat</span> {
     <span class="kw">pub</span> <span class="ident">name</span>: <span class="ident">String</span>,
@@ -824,7 +827,7 @@ pub enum Mangling {
     MIPS,
     MachO,
     WindowsCOFF,
-    #[cfg(LLVM_VERSION_11_OR_GREATER)]
+    #[cfg(feature=&quot;llvm-11-or-greater&quot;)]
     XCOFF,
 }
 
@@ -981,7 +984,7 @@ pub enum AlignType {
                 }
             },
             <span class="ident">alignment</span>: <span class="kw">unsafe</span> { <span class="ident">LLVMGetAlignment</span>(<span class="ident">global</span>) },
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_9_OR_GREATER</span>)]</span>
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-9-or-greater&quot;</span>)]</span>
             <span class="ident">debugloc</span>: <span class="ident">DebugLoc</span>::<span class="ident">from_llvm_no_col</span>(<span class="ident">global</span>),
             <span class="comment">// metadata: unimplemented!(&quot;metadata&quot;),</span>
         }
@@ -1114,4 +1117,5 @@ impl NamedMetadata {
     }
 }
 </pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "llvm_ir";</script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>
+</section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="llvm_ir"></div>
+    <script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>

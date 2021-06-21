@@ -1,4 +1,7 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `src/constant.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>constant.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css"><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../llvm_ir/index.html'><div class='logo-container'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">   1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/constant.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>constant.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
+<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../llvm_ir/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
+                <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">   1</span>
 <span id="2">   2</span>
 <span id="3">   3</span>
 <span id="4">   4</span>
@@ -1552,6 +1555,17 @@
 <span id="1552">1552</span>
 <span id="1553">1553</span>
 <span id="1554">1554</span>
+<span id="1555">1555</span>
+<span id="1556">1556</span>
+<span id="1557">1557</span>
+<span id="1558">1558</span>
+<span id="1559">1559</span>
+<span id="1560">1560</span>
+<span id="1561">1561</span>
+<span id="1562">1562</span>
+<span id="1563">1563</span>
+<span id="1564">1564</span>
+<span id="1565">1565</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">name</span>::<span class="ident">Name</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">predicates</span>::<span class="kw-2">*</span>;
@@ -1561,8 +1575,8 @@
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">ops</span>::<span class="ident">Deref</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::<span class="ident">Arc</span>;
 
-<span class="doccomment">/// See [LLVM 11 docs on Constants](https://releases.llvm.org/11.0.0/docs/LangRef.html#constants).</span>
-<span class="doccomment">/// Constants can be either values, or expressions involving other constants (see [LLVM 11 docs on Constant Expressions](https://releases.llvm.org/11.0.0/docs/LangRef.html#constant-expressions)).</span>
+<span class="doccomment">/// See [LLVM 12 docs on Constants](https://releases.llvm.org/12.0.0/docs/LangRef.html#constants).</span>
+<span class="doccomment">/// Constants can be either values, or expressions involving other constants (see [LLVM 12 docs on Constant Expressions](https://releases.llvm.org/12.0.0/docs/LangRef.html#constant-expressions)).</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Constant</span> {
     <span class="ident">Int</span> {
@@ -1586,7 +1600,7 @@
         <span class="ident">value</span>: <span class="ident">u64</span>,
     },
     <span class="ident">Float</span>(<span class="ident">Float</span>),
-    <span class="doccomment">/// The `TypeRef` here must be to a `PointerType`. See [LLVM 11 docs on Simple Constants](https://releases.llvm.org/11.0.0/docs/LangRef.html#simple-constants)</span>
+    <span class="doccomment">/// The `TypeRef` here must be to a `PointerType`. See [LLVM 12 docs on Simple Constants](https://releases.llvm.org/12.0.0/docs/LangRef.html#simple-constants)</span>
     <span class="ident">Null</span>(<span class="ident">TypeRef</span>),
     <span class="doccomment">/// A zero-initialized array or struct (or scalar).</span>
     <span class="ident">AggregateZero</span>(<span class="ident">TypeRef</span>),
@@ -1600,9 +1614,12 @@
         <span class="ident">elements</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">ConstantRef</span><span class="op">&gt;</span>,
     },
     <span class="ident">Vector</span>(<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">ConstantRef</span><span class="op">&gt;</span>),
-    <span class="doccomment">/// `Undef` can be used anywhere a constant is expected. See [LLVM 11 docs on Undefined Values](https://releases.llvm.org/11.0.0/docs/LangRef.html#undefined-values)</span>
+    <span class="doccomment">/// `Undef` can be used anywhere a constant is expected. See [LLVM 12 docs on Undefined Values](https://releases.llvm.org/12.0.0/docs/LangRef.html#undefined-values)</span>
     <span class="ident">Undef</span>(<span class="ident">TypeRef</span>),
-    <span class="doccomment">/// The address of the given (non-entry) [`BasicBlock`](../struct.BasicBlock.html). See [LLVM 11 docs on Addresses of Basic Blocks](https://releases.llvm.org/11.0.0/docs/LangRef.html#addresses-of-basic-blocks).</span>
+    <span class="doccomment">/// See [LLVM 12 docs on Poison Values](https://releases.llvm.org/12.0.0/docs/LangRef.html#undefined-values)</span>
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-12-or-greater&quot;</span>)]</span>
+    <span class="ident">Poison</span>(<span class="ident">TypeRef</span>),
+    <span class="doccomment">/// The address of the given (non-entry) [`BasicBlock`](../struct.BasicBlock.html). See [LLVM 12 docs on Addresses of Basic Blocks](https://releases.llvm.org/12.0.0/docs/LangRef.html#addresses-of-basic-blocks).</span>
     <span class="doccomment">/// `BlockAddress` needs more fields, but the necessary getter functions are apparently not exposed in the LLVM C API (only the C++ API)</span>
     <span class="ident">BlockAddress</span>, <span class="comment">// --TODO ideally we want BlockAddress { function: Name, block: Name },</span>
     <span class="ident">GlobalReference</span> {
@@ -1678,7 +1695,7 @@
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">non_camel_case_types</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Float</span> {
     <span class="ident">Half</span>, <span class="comment">// TODO perhaps Half(u16)</span>
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_11_OR_GREATER</span>)]</span>
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-11-or-greater&quot;</span>)]</span>
     <span class="ident">BFloat</span>, <span class="comment">// TODO perhaps BFloat(u16)</span>
     <span class="ident">Single</span>(<span class="ident">f32</span>),
     <span class="ident">Double</span>(<span class="ident">f64</span>),
@@ -1691,7 +1708,7 @@
     <span class="kw">fn</span> <span class="ident">get_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">types</span>: <span class="kw-2">&amp;</span><span class="ident">Types</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TypeRef</span> {
         <span class="ident">types</span>.<span class="ident">fp</span>(<span class="kw">match</span> <span class="self">self</span> {
             <span class="ident">Float</span>::<span class="ident">Half</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">FPType</span>::<span class="ident">Half</span>,
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_11_OR_GREATER</span>)]</span>
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-11-or-greater&quot;</span>)]</span>
             <span class="ident">Float</span>::<span class="ident">BFloat</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">FPType</span>::<span class="ident">BFloat</span>,
             <span class="ident">Float</span>::<span class="ident">Single</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">FPType</span>::<span class="ident">Single</span>,
             <span class="ident">Float</span>::<span class="ident">Double</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">FPType</span>::<span class="ident">Double</span>,
@@ -1706,7 +1723,7 @@
     <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
         <span class="kw">match</span> <span class="self">self</span> {
             <span class="ident">Float</span>::<span class="ident">Half</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;half&quot;</span>),
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_11_OR_GREATER</span>)]</span>
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-11-or-greater&quot;</span>)]</span>
             <span class="ident">Float</span>::<span class="ident">BFloat</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;bfloat&quot;</span>),
             <span class="ident">Float</span>::<span class="ident">Single</span>(<span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;float {}&quot;</span>, <span class="ident">s</span>),
             <span class="ident">Float</span>::<span class="ident">Double</span>(<span class="ident">d</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;double {}&quot;</span>, <span class="ident">d</span>),
@@ -1733,18 +1750,20 @@
                 <span class="ident">element_type</span>.<span class="ident">clone</span>(),
                 <span class="ident">elements</span>.<span class="ident">len</span>(),
             ),
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_11_OR_GREATER</span>)]</span>
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-11-or-greater&quot;</span>)]</span>
             <span class="ident">Constant</span>::<span class="ident">Vector</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">types</span>.<span class="ident">vector_of</span>(
                 <span class="ident">types</span>.<span class="ident">type_of</span>(<span class="kw-2">&amp;</span><span class="ident">v</span>[<span class="number">0</span>]),
                 <span class="ident">v</span>.<span class="ident">len</span>(),
                 <span class="bool-val">false</span>, <span class="comment">// I don&#39;t think it&#39;s possible (at least as of LLVM 11) to have a constant of scalable vector type?</span>
             ),
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_10_OR_LOWER</span>)]</span>
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-10-or-lower&quot;</span>)]</span>
             <span class="ident">Constant</span>::<span class="ident">Vector</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">types</span>.<span class="ident">vector_of</span>(
                 <span class="ident">types</span>.<span class="ident">type_of</span>(<span class="kw-2">&amp;</span><span class="ident">v</span>[<span class="number">0</span>]),
                 <span class="ident">v</span>.<span class="ident">len</span>(),
             ),
             <span class="ident">Constant</span>::<span class="ident">Undef</span>(<span class="ident">t</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">t</span>.<span class="ident">clone</span>(),
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-12-or-greater&quot;</span>)]</span>
+            <span class="ident">Constant</span>::<span class="ident">Poison</span>(<span class="ident">t</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">t</span>.<span class="ident">clone</span>(),
             <span class="ident">Constant</span>::<span class="ident">BlockAddress</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">types</span>.<span class="ident">label_type</span>(),
             <span class="ident">Constant</span>::<span class="ident">GlobalReference</span> { <span class="ident">ty</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">types</span>.<span class="ident">pointer_to</span>(<span class="ident">ty</span>.<span class="ident">clone</span>()),
             <span class="ident">Constant</span>::<span class="ident">TokenNone</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">types</span>.<span class="ident">token_type</span>(),
@@ -1879,6 +1898,8 @@
                 <span class="prelude-val">Ok</span>(())
             },
             <span class="ident">Constant</span>::<span class="ident">Undef</span>(<span class="ident">ty</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{} undef&quot;</span>, <span class="ident">ty</span>),
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-12-or-greater&quot;</span>)]</span>
+            <span class="ident">Constant</span>::<span class="ident">Poison</span>(<span class="ident">ty</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;{} poison&quot;</span>, <span class="ident">ty</span>),
             <span class="ident">Constant</span>::<span class="ident">BlockAddress</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;blockaddr&quot;</span>),
             <span class="ident">Constant</span>::<span class="ident">GlobalReference</span> { <span class="ident">name</span>, <span class="ident">ty</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">name</span> {
@@ -2348,11 +2369,11 @@
         <span class="macro">debug_assert_eq</span><span class="macro">!</span>(<span class="ident">ty</span>, <span class="ident">types</span>.<span class="ident">type_of</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">operand1</span>));
         <span class="kw">match</span> <span class="ident">ty</span>.<span class="ident">as_ref</span>() {
             <span class="ident">Type</span>::<span class="ident">VectorType</span> { <span class="ident">element_type</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">types</span>.<span class="ident">type_of</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">mask</span>).<span class="ident">as_ref</span>() {
-                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_11_OR_GREATER</span>)]</span>
+                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-11-or-greater&quot;</span>)]</span>
                 <span class="ident">Type</span>::<span class="ident">VectorType</span> { <span class="ident">num_elements</span>, <span class="ident">scalable</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="ident">types</span>.<span class="ident">vector_of</span>(<span class="ident">element_type</span>.<span class="ident">clone</span>(), <span class="kw-2">*</span><span class="ident">num_elements</span>, <span class="kw-2">*</span><span class="ident">scalable</span>)
                 },
-                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_10_OR_LOWER</span>)]</span>
+                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-10-or-lower&quot;</span>)]</span>
                 <span class="ident">Type</span>::<span class="ident">VectorType</span> { <span class="ident">num_elements</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="ident">types</span>.<span class="ident">vector_of</span>(<span class="ident">element_type</span>.<span class="ident">clone</span>(), <span class="kw-2">*</span><span class="ident">num_elements</span>)
                 },
@@ -2650,11 +2671,11 @@
         <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="ident">types</span>.<span class="ident">type_of</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">operand0</span>);
         <span class="macro">debug_assert_eq</span><span class="macro">!</span>(<span class="ident">ty</span>, <span class="ident">types</span>.<span class="ident">type_of</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">operand1</span>));
         <span class="kw">match</span> <span class="ident">ty</span>.<span class="ident">as_ref</span>() {
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_11_OR_GREATER</span>)]</span>
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-11-or-greater&quot;</span>)]</span>
             <span class="ident">Type</span>::<span class="ident">VectorType</span> { <span class="ident">num_elements</span>, <span class="ident">scalable</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">types</span>.<span class="ident">vector_of</span>(<span class="ident">types</span>.<span class="ident">bool</span>(), <span class="kw-2">*</span><span class="ident">num_elements</span>, <span class="kw-2">*</span><span class="ident">scalable</span>)
             },
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_10_OR_LOWER</span>)]</span>
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-10-or-lower&quot;</span>)]</span>
             <span class="ident">Type</span>::<span class="ident">VectorType</span> { <span class="ident">num_elements</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">types</span>.<span class="ident">vector_of</span>(<span class="ident">types</span>.<span class="ident">bool</span>(), <span class="kw-2">*</span><span class="ident">num_elements</span>)
             },
@@ -2686,11 +2707,11 @@
         <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="ident">types</span>.<span class="ident">type_of</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">operand0</span>);
         <span class="macro">debug_assert_eq</span><span class="macro">!</span>(<span class="ident">ty</span>, <span class="ident">types</span>.<span class="ident">type_of</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">operand1</span>));
         <span class="kw">match</span> <span class="ident">ty</span>.<span class="ident">as_ref</span>() {
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_11_OR_GREATER</span>)]</span>
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-11-or-greater&quot;</span>)]</span>
             <span class="ident">Type</span>::<span class="ident">VectorType</span> { <span class="ident">num_elements</span>, <span class="ident">scalable</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">types</span>.<span class="ident">vector_of</span>(<span class="ident">types</span>.<span class="ident">bool</span>(), <span class="kw-2">*</span><span class="ident">num_elements</span>, <span class="kw-2">*</span><span class="ident">scalable</span>)
             },
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_10_OR_LOWER</span>)]</span>
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-10-or-lower&quot;</span>)]</span>
             <span class="ident">Type</span>::<span class="ident">VectorType</span> { <span class="ident">num_elements</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">types</span>.<span class="ident">vector_of</span>(<span class="ident">types</span>.<span class="ident">bool</span>(), <span class="kw-2">*</span><span class="ident">num_elements</span>)
             },
@@ -2774,7 +2795,7 @@
                 <span class="kw">match</span> <span class="ident">ctx</span>.<span class="ident">types</span>.<span class="ident">type_from_llvm_ref</span>( <span class="kw">unsafe</span> { <span class="ident">LLVMTypeOf</span>(<span class="ident">constant</span>) } ).<span class="ident">as_ref</span>() {
                     <span class="ident">Type</span>::<span class="ident">FPType</span>(<span class="ident">fptype</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Constant</span>::<span class="ident">Float</span>(<span class="kw">match</span> <span class="ident">fptype</span> {
                         <span class="ident">FPType</span>::<span class="ident">Half</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Float</span>::<span class="ident">Half</span>,
-                        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_11_OR_GREATER</span>)]</span>
+                        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-11-or-greater&quot;</span>)]</span>
                         <span class="ident">FPType</span>::<span class="ident">BFloat</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Float</span>::<span class="ident">BFloat</span>,
                         <span class="ident">FPType</span>::<span class="ident">Single</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Float</span>::<span class="ident">Single</span>( <span class="kw">unsafe</span> {
                             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">b</span> <span class="op">=</span> <span class="number">0</span>;
@@ -2861,6 +2882,10 @@
             },
             <span class="ident">LLVMValueKind</span>::<span class="ident">LLVMUndefValueValueKind</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">Constant</span>::<span class="ident">Undef</span>(<span class="ident">ctx</span>.<span class="ident">types</span>.<span class="ident">type_from_llvm_ref</span>( <span class="kw">unsafe</span> { <span class="ident">LLVMTypeOf</span>(<span class="ident">constant</span>) } ))
+            },
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;llvm-12-or-greater&quot;</span>)]</span>
+            <span class="ident">LLVMValueKind</span>::<span class="ident">LLVMPoisonValueKind</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">Constant</span>::<span class="ident">Poison</span>(<span class="ident">ctx</span>.<span class="ident">types</span>.<span class="ident">type_from_llvm_ref</span>( <span class="kw">unsafe</span> { <span class="ident">LLVMTypeOf</span>(<span class="ident">constant</span>) } ))
             },
             <span class="ident">LLVMValueKind</span>::<span class="ident">LLVMConstantTokenNoneValueKind</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">Constant</span>::<span class="ident">TokenNone</span>
@@ -2982,7 +3007,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">ShuffleVector</span> {
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_10_OR_LOWER</span>)]</span>
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-10-or-lower&quot;</span>)]</span>
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">from_llvm_ref</span>(<span class="ident">expr</span>: <span class="ident">LLVMValueRef</span>, <span class="ident">ctx</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ModuleContext</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="kw">unsafe</span> { <span class="ident">LLVMGetNumOperands</span>(<span class="ident">expr</span>) }, <span class="number">3</span>);
         <span class="self">Self</span> {
@@ -2991,13 +3016,13 @@
             <span class="ident">mask</span>: <span class="ident">Constant</span>::<span class="ident">from_llvm_ref</span>(<span class="kw">unsafe</span> { <span class="ident">LLVMGetOperand</span>(<span class="ident">expr</span>, <span class="number">2</span>) }, <span class="ident">ctx</span>),
         }
     }
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">LLVM_VERSION_11_OR_GREATER</span>)]</span>
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span><span class="op">=</span><span class="string">&quot;llvm-11-or-greater&quot;</span>)]</span>
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">from_llvm_ref</span>(<span class="ident">expr</span>: <span class="ident">LLVMValueRef</span>, <span class="ident">_ctx</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ModuleContext</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="kw">unsafe</span> { <span class="ident">LLVMGetNumOperands</span>(<span class="ident">expr</span>) }, <span class="number">2</span>);
         <span class="comment">// We currently (as of LLVM 11) have no way to get the mask of a</span>
         <span class="comment">// ShuffleVector constant expression; LLVMGetMaskValue() only works for</span>
         <span class="comment">// ShuffleVector instructions, not ShuffleVector constant expressions</span>
-        <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Encountered a Constant::ShuffleVector, which is not supported for LLVM 11&quot;</span>)
+        <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Encountered a Constant::ShuffleVector, which is not supported for LLVM 11+&quot;</span>)
     }
 }
 
@@ -3108,4 +3133,5 @@
     }
 }
 </pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "llvm_ir";</script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>
+</section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="llvm_ir"></div>
+    <script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>
