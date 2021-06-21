@@ -1,7 +1,7 @@
 ; ModuleID = 'loop.c'
 source_filename = "loop.c"
 target datalayout = "e-m:o-i64:64-f80:128-n8:16:32:64-S128"
-target triple = "x86_64-apple-macosx10.15.0"
+target triple = "x86_64-apple-macosx10.16.0"
 
 ; Function Attrs: nounwind ssp uwtable
 define void @loop(i32, i32) local_unnamed_addr #0 {

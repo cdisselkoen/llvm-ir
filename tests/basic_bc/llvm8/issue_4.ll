@@ -1,7 +1,7 @@
 ; ModuleID = 'issue_4.c'
 source_filename = "issue_4.c"
 target datalayout = "e-m:o-i64:64-f80:128-n8:16:32:64-S128"
-target triple = "x86_64-apple-macosx10.15.0"
+target triple = "x86_64-apple-macosx10.16.0"
 
 %struct.output = type { double, double, double }
 

@@ -1,7 +1,7 @@
 ; ModuleID = 'linkedlist.c'
 source_filename = "linkedlist.c"
 target datalayout = "e-m:o-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128"
-target triple = "x86_64-apple-macosx10.15.0"
+target triple = "x86_64-apple-macosx11.0.0"
 
 %struct.SimpleLinkedList = type { i32, %struct.SimpleLinkedList* }
 %struct.NodeA = type { i32, %struct.NodeB* }
@@ -151,4 +151,4 @@ attributes #0 = { noinline nounwind optnone ssp uwtable "correctly-rounded-divid
 
 !0 = !{i32 1, !"wchar_size", i32 4}
 !1 = !{i32 7, !"PIC Level", i32 2}
-!2 = !{!"clang version 11.0.0"}
+!2 = !{!"clang version 11.1.0"}

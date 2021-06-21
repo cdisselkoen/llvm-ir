@@ -1,13 +1,15 @@
 CLANG8=clang-8
 CLANG9=clang-9
-CLANG10=clang-10
+CLANG10=clang-10 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk
 CLANG11=clang-11
+CLANG12=clang-12
 RUSTC=rustc
 RUSTFLAGS=--crate-type=lib
 LLVMAS8=$(LLVM8PATH)/bin/llvm-as
 LLVMAS9=$(LLVM9PATH)/bin/llvm-as
 LLVMAS10=$(LLVM10PATH)/bin/llvm-as
 LLVMAS11=$(LLVM11PATH)/bin/llvm-as
+LLVMAS12=$(LLVM12PATH)/bin/llvm-as
 
 COBJS = \
 	hello.bc hello.ll hello.bc-g hello.ll-g \
@@ -27,12 +29,14 @@ all: \
 	$(patsubst %,llvm9/%,$(COBJS)) \
 	$(patsubst %,llvm10/%,$(COBJS)) \
 	$(patsubst %,llvm11/%,$(COBJS)) \
+	$(patsubst %,llvm12/%,$(COBJS)) \
 	$(patsubst %,llvm8/%,$(LLOBJS)) \
 	$(patsubst %,llvm9/%,$(LLOBJS)) \
 	$(patsubst %,llvm10/%,$(LLOBJS)) \
 	$(patsubst %,llvm11/%,$(LLOBJS)) \
+	$(patsubst %,llvm12/%,$(LLOBJS)) \
 	$(patsubst %,rust/%,$(RUSTOBJS)) \
-	llvm11/float_types.bc \
+	llvm11/float_types.bc llvm12/float_types.bc \
 
 # default to -O3 unless overridden by a more specific rule
 %: CFLAGS := -O3
@@ -49,6 +53,9 @@ llvm10/%.ll : %.c
 llvm11/%.ll : %.c
 	mkdir -p llvm11
 	$(CLANG11) $(CFLAGS) -S -emit-llvm $^ -o $@
+llvm12/%.ll : %.c
+	mkdir -p llvm12
+	$(CLANG12) $(CFLAGS) -S -emit-llvm $^ -o $@
 
 llvm8/%.bc : %.c
 	mkdir -p llvm8
@@ -62,6 +69,9 @@ llvm10/%.bc : %.c
 llvm11/%.bc : %.c
 	mkdir -p llvm11
 	$(CLANG11) $(CFLAGS) -c -emit-llvm $^ -o $@
+llvm12/%.bc : %.c
+	mkdir -p llvm12
+	$(CLANG12) $(CFLAGS) -c -emit-llvm $^ -o $@
 
 rust/%.ll : %.rs
 	mkdir -p rust
@@ -84,6 +94,9 @@ llvm10/%.ll-g : %.c
 llvm11/%.ll-g : %.c
 	mkdir -p llvm11
 	$(CLANG11) $(CFLAGS) -g -S -emit-llvm $^ -o $@
+llvm12/%.ll-g : %.c
+	mkdir -p llvm12
+	$(CLANG12) $(CFLAGS) -g -S -emit-llvm $^ -o $@
 
 llvm8/%.bc-g : %.c
 	mkdir -p llvm8
@@ -97,6 +110,9 @@ llvm10/%.bc-g : %.c
 llvm11/%.bc-g : %.c
 	mkdir -p llvm11
 	$(CLANG11) $(CFLAGS) -g -c -emit-llvm $^ -o $@
+llvm12/%.bc-g : %.c
+	mkdir -p llvm12
+	$(CLANG12) $(CFLAGS) -g -c -emit-llvm $^ -o $@
 
 rust/%.ll-g : %.rs
 	mkdir -p rust
@@ -111,6 +127,7 @@ llvm8/linkedlist.% : CFLAGS := -O0
 llvm9/linkedlist.% : CFLAGS := -O0
 llvm10/linkedlist.% : CFLAGS := -O0
 llvm11/linkedlist.% : CFLAGS := -O0
+llvm12/linkedlist.% : CFLAGS := -O0
 
 # assemble this one directly from .ll
 llvm8/param_and_func_attributes.ll.bc : param_and_func_attributes.ll
@@ -125,13 +142,20 @@ llvm10/param_and_func_attributes.ll.bc : param_and_func_attributes.ll
 llvm11/param_and_func_attributes.ll.bc : param_and_func_attributes.ll
 	mkdir -p llvm11
 	$(LLVMAS11) $< -o $@
+# use the llvm12+ version of the file for LLVM 12+
+llvm12/param_and_func_attributes.ll.bc : param_and_func_attributes_llvm12+.ll
+	mkdir -p llvm12
+	$(LLVMAS12) $< -o $@
 
-# assemble this one directly from .ll, and only for LLVM 11
+# assemble this one directly from .ll, and only for LLVM 11+
 llvm11/float_types.bc : float_types.ll
 	mkdir -p llvm11
 	$(LLVMAS11) $< -o $@
+llvm12/float_types.bc : float_types.ll
+	mkdir -p llvm12
+	$(LLVMAS12) $< -o $@
 
 .PHONY: clean
 clean:
-	-rm -rf llvm8 llvm9 llvm10 llvm11 rust
+	-rm -rf llvm8 llvm9 llvm10 llvm11 llvm12 rust
 	-find . -name "*~" | xargs rm
