@@ -1,6 +1,6 @@
 [package]
 name = "llvm-ir"
-version = "0.8.0-pre"
+version = "0.8.0"
 authors = ["Craig Disselkoen <craigdissel@gmail.com>"]
 edition = "2018"
 description = "LLVM IR in natural Rust data structures"
@@ -51,7 +51,7 @@ llvm-12-or-lower = []
 ###
 
 # We'd like to have a "strict-versioning" feature which enables the
-# corresponding feature in llvm-sys. "strict-versioning" requires an exact
+# corresponding feature in llvm-sys: i.e., requires an exact
 # match between the system LLVM version and the version selected with the above
 # features. For more information see the llvm-sys README.
 # Unfortunately, there is currently no way to enable a feature on an optional
@@ -64,13 +64,6 @@ llvm-12-or-lower = []
 # This would increase build times as we're building unnecessary crates; and
 # more importantly, it would require the user to have all of these LLVM versions
 # available on their system.
-# Since previous versions of llvm-ir did have a "strict-versioning" feature, we
-# will still include a "strict-versioning" feature to avoid breaking
-# compatibility, but this feature currently has no effect.
-# Also, this feature will be removed in the next major version of llvm-ir
-# (0.8.0).
-strict-versioning = []
-
 # Instead, as a workaround, we'll have a separate strict-versioning feature for
 # each LLVM version. This will enable the corresponding LLVM version feature,
 # and the "strict-versioning" feature on the corresponding llvm-sys dependency.
