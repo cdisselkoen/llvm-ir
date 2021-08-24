@@ -45,6 +45,7 @@ macro_rules! case {
     };
 }
 
+/// Returns the LLVM version for which `llvm-ir` was configured.
 pub fn llvm_version() -> &'static str {
     case!("llvm-8");
     case!("llvm-9");
