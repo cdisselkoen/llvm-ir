@@ -14,9 +14,9 @@ pub mod basicblock;
 pub use basicblock::BasicBlock;
 pub mod constant;
 pub use constant::{Constant, ConstantRef};
-#[cfg(feature="llvm-9-or-greater")]
+#[cfg(feature = "llvm-9-or-greater")]
 pub mod debugloc;
-#[cfg(feature="llvm-9-or-greater")]
+#[cfg(feature = "llvm-9-or-greater")]
 pub use debugloc::{DebugLoc, HasDebugLoc};
 pub mod function;
 pub use function::Function;
@@ -36,3 +36,20 @@ pub mod terminator;
 pub use terminator::Terminator;
 pub mod types;
 pub use types::{Type, TypeRef};
+
+macro_rules! case {
+    ($feature:expr) => {
+        if cfg!(feature = $feature) {
+            return $feature.strip_prefix("llvm-").unwrap();
+        }
+    };
+}
+
+pub fn llvm_version() -> &'static str {
+    case!("llvm-8");
+    case!("llvm-9");
+    case!("llvm-10");
+    case!("llvm-11");
+    case!("llvm-12");
+    unreachable!()
+}
