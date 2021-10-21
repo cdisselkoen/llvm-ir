@@ -1,0 +1,290 @@
+; ModuleID = 'linkedlist.c'
+source_filename = "linkedlist.c"
+target datalayout = "e-m:o-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-apple-macosx11.0.0"
+
+%struct.SimpleLinkedList = type { i32, %struct.SimpleLinkedList* }
+%struct.NodeA = type { i32, %struct.NodeB* }
+%struct.NodeB = type { i32, %struct.NodeA* }
+%struct.SomeOpaqueStruct = type opaque
+
+; Function Attrs: noinline nounwind optnone ssp uwtable
+define i32 @simple_linked_list(i32 %0) #0 !dbg !12 {
+  %2 = alloca i32, align 4
+  %3 = alloca %struct.SimpleLinkedList, align 8
+  %4 = alloca %struct.SimpleLinkedList, align 8
+  %5 = alloca %struct.SimpleLinkedList, align 8
+  %6 = alloca %struct.SimpleLinkedList, align 8
+  %7 = alloca %struct.SimpleLinkedList, align 8
+  store i32 %0, i32* %2, align 4
+  call void @llvm.dbg.declare(metadata i32* %2, metadata !16, metadata !DIExpression()), !dbg !17
+  call void @llvm.dbg.declare(metadata %struct.SimpleLinkedList* %3, metadata !18, metadata !DIExpression()), !dbg !24
+  %8 = getelementptr inbounds %struct.SimpleLinkedList, %struct.SimpleLinkedList* %3, i32 0, i32 0, !dbg !25
+  %9 = load i32, i32* %2, align 4, !dbg !26
+  store i32 %9, i32* %8, align 8, !dbg !25
+  %10 = getelementptr inbounds %struct.SimpleLinkedList, %struct.SimpleLinkedList* %3, i32 0, i32 1, !dbg !25
+  store %struct.SimpleLinkedList* null, %struct.SimpleLinkedList** %10, align 8, !dbg !25
+  %11 = getelementptr inbounds %struct.SimpleLinkedList, %struct.SimpleLinkedList* %3, i32 0, i32 0, !dbg !27
+  %12 = load i32, i32* %11, align 8, !dbg !28
+  %13 = add nsw i32 %12, 2, !dbg !28
+  store i32 %13, i32* %11, align 8, !dbg !28
+  call void @llvm.dbg.declare(metadata %struct.SimpleLinkedList* %4, metadata !29, metadata !DIExpression()), !dbg !30
+  %14 = getelementptr inbounds %struct.SimpleLinkedList, %struct.SimpleLinkedList* %4, i32 0, i32 0, !dbg !31
+  %15 = load i32, i32* %2, align 4, !dbg !32
+  %16 = sub nsw i32 %15, 3, !dbg !33
+  store i32 %16, i32* %14, align 8, !dbg !31
+  %17 = getelementptr inbounds %struct.SimpleLinkedList, %struct.SimpleLinkedList* %4, i32 0, i32 1, !dbg !31
+  store %struct.SimpleLinkedList* null, %struct.SimpleLinkedList** %17, align 8, !dbg !31
+  call void @llvm.dbg.declare(metadata %struct.SimpleLinkedList* %5, metadata !34, metadata !DIExpression()), !dbg !35
+  %18 = getelementptr inbounds %struct.SimpleLinkedList, %struct.SimpleLinkedList* %5, i32 0, i32 0, !dbg !36
+  %19 = load i32, i32* %2, align 4, !dbg !37
+  %20 = mul nsw i32 %19, 5, !dbg !38
+  store i32 %20, i32* %18, align 8, !dbg !36
+  %21 = getelementptr inbounds %struct.SimpleLinkedList, %struct.SimpleLinkedList* %5, i32 0, i32 1, !dbg !36
+  store %struct.SimpleLinkedList* null, %struct.SimpleLinkedList** %21, align 8, !dbg !36
+  call void @llvm.dbg.declare(metadata %struct.SimpleLinkedList* %6, metadata !39, metadata !DIExpression()), !dbg !40
+  %22 = getelementptr inbounds %struct.SimpleLinkedList, %struct.SimpleLinkedList* %6, i32 0, i32 0, !dbg !41
+  %23 = load i32, i32* %2, align 4, !dbg !42
+  %24 = sdiv i32 %23, 2, !dbg !43
+  store i32 %24, i32* %22, align 8, !dbg !41
+  %25 = getelementptr inbounds %struct.SimpleLinkedList, %struct.SimpleLinkedList* %6, i32 0, i32 1, !dbg !41
+  store %struct.SimpleLinkedList* null, %struct.SimpleLinkedList** %25, align 8, !dbg !41
+  call void @llvm.dbg.declare(metadata %struct.SimpleLinkedList* %7, metadata !44, metadata !DIExpression()), !dbg !45
+  %26 = getelementptr inbounds %struct.SimpleLinkedList, %struct.SimpleLinkedList* %7, i32 0, i32 0, !dbg !46
+  %27 = load i32, i32* %2, align 4, !dbg !47
+  %28 = sdiv i32 %27, 100, !dbg !48
+  store i32 %28, i32* %26, align 8, !dbg !46
+  %29 = getelementptr inbounds %struct.SimpleLinkedList, %struct.SimpleLinkedList* %7, i32 0, i32 1, !dbg !46
+  store %struct.SimpleLinkedList* null, %struct.SimpleLinkedList** %29, align 8, !dbg !46
+  %30 = getelementptr inbounds %struct.SimpleLinkedList, %struct.SimpleLinkedList* %3, i32 0, i32 1, !dbg !49
+  store %struct.SimpleLinkedList* %4, %struct.SimpleLinkedList** %30, align 8, !dbg !50
+  %31 = getelementptr inbounds %struct.SimpleLinkedList, %struct.SimpleLinkedList* %4, i32 0, i32 1, !dbg !51
+  store %struct.SimpleLinkedList* %5, %struct.SimpleLinkedList** %31, align 8, !dbg !52
+  %32 = getelementptr inbounds %struct.SimpleLinkedList, %struct.SimpleLinkedList* %5, i32 0, i32 1, !dbg !53
+  store %struct.SimpleLinkedList* %6, %struct.SimpleLinkedList** %32, align 8, !dbg !54
+  %33 = getelementptr inbounds %struct.SimpleLinkedList, %struct.SimpleLinkedList* %6, i32 0, i32 1, !dbg !55
+  store %struct.SimpleLinkedList* %7, %struct.SimpleLinkedList** %33, align 8, !dbg !56
+  %34 = getelementptr inbounds %struct.SimpleLinkedList, %struct.SimpleLinkedList* %7, i32 0, i32 1, !dbg !57
+  store %struct.SimpleLinkedList* %3, %struct.SimpleLinkedList** %34, align 8, !dbg !58
+  %35 = getelementptr inbounds %struct.SimpleLinkedList, %struct.SimpleLinkedList* %3, i32 0, i32 1, !dbg !59
+  %36 = load %struct.SimpleLinkedList*, %struct.SimpleLinkedList** %35, align 8, !dbg !59
+  %37 = getelementptr inbounds %struct.SimpleLinkedList, %struct.SimpleLinkedList* %36, i32 0, i32 1, !dbg !60
+  %38 = load %struct.SimpleLinkedList*, %struct.SimpleLinkedList** %37, align 8, !dbg !60
+  %39 = getelementptr inbounds %struct.SimpleLinkedList, %struct.SimpleLinkedList* %38, i32 0, i32 1, !dbg !61
+  %40 = load %struct.SimpleLinkedList*, %struct.SimpleLinkedList** %39, align 8, !dbg !61
+  %41 = getelementptr inbounds %struct.SimpleLinkedList, %struct.SimpleLinkedList* %40, i32 0, i32 1, !dbg !62
+  %42 = load %struct.SimpleLinkedList*, %struct.SimpleLinkedList** %41, align 8, !dbg !62
+  %43 = getelementptr inbounds %struct.SimpleLinkedList, %struct.SimpleLinkedList* %42, i32 0, i32 1, !dbg !63
+  %44 = load %struct.SimpleLinkedList*, %struct.SimpleLinkedList** %43, align 8, !dbg !63
+  %45 = getelementptr inbounds %struct.SimpleLinkedList, %struct.SimpleLinkedList* %44, i32 0, i32 1, !dbg !64
+  %46 = load %struct.SimpleLinkedList*, %struct.SimpleLinkedList** %45, align 8, !dbg !64
+  %47 = getelementptr inbounds %struct.SimpleLinkedList, %struct.SimpleLinkedList* %46, i32 0, i32 1, !dbg !65
+  %48 = load %struct.SimpleLinkedList*, %struct.SimpleLinkedList** %47, align 8, !dbg !65
+  %49 = getelementptr inbounds %struct.SimpleLinkedList, %struct.SimpleLinkedList* %48, i32 0, i32 1, !dbg !66
+  %50 = load %struct.SimpleLinkedList*, %struct.SimpleLinkedList** %49, align 8, !dbg !66
+  %51 = getelementptr inbounds %struct.SimpleLinkedList, %struct.SimpleLinkedList* %50, i32 0, i32 1, !dbg !67
+  %52 = load %struct.SimpleLinkedList*, %struct.SimpleLinkedList** %51, align 8, !dbg !67
+  %53 = getelementptr inbounds %struct.SimpleLinkedList, %struct.SimpleLinkedList* %52, i32 0, i32 1, !dbg !68
+  %54 = load %struct.SimpleLinkedList*, %struct.SimpleLinkedList** %53, align 8, !dbg !68
+  %55 = getelementptr inbounds %struct.SimpleLinkedList, %struct.SimpleLinkedList* %54, i32 0, i32 0, !dbg !69
+  %56 = load i32, i32* %55, align 8, !dbg !69
+  ret i32 %56, !dbg !70
+}
+
+; Function Attrs: nofree nosync nounwind readnone speculatable willreturn
+declare void @llvm.dbg.declare(metadata, metadata, metadata) #1
+
+; Function Attrs: noinline nounwind optnone ssp uwtable
+define i32 @indirectly_recursive_type(i32 %0) #0 !dbg !71 {
+  %2 = alloca i32, align 4
+  %3 = alloca %struct.NodeA, align 8
+  %4 = alloca %struct.NodeB, align 8
+  %5 = alloca %struct.NodeA, align 8
+  store i32 %0, i32* %2, align 4
+  call void @llvm.dbg.declare(metadata i32* %2, metadata !72, metadata !DIExpression()), !dbg !73
+  call void @llvm.dbg.declare(metadata %struct.NodeA* %3, metadata !74, metadata !DIExpression()), !dbg !85
+  %6 = getelementptr inbounds %struct.NodeA, %struct.NodeA* %3, i32 0, i32 0, !dbg !86
+  %7 = load i32, i32* %2, align 4, !dbg !87
+  store i32 %7, i32* %6, align 8, !dbg !86
+  %8 = getelementptr inbounds %struct.NodeA, %struct.NodeA* %3, i32 0, i32 1, !dbg !86
+  store %struct.NodeB* null, %struct.NodeB** %8, align 8, !dbg !86
+  call void @llvm.dbg.declare(metadata %struct.NodeB* %4, metadata !88, metadata !DIExpression()), !dbg !89
+  %9 = getelementptr inbounds %struct.NodeB, %struct.NodeB* %4, i32 0, i32 0, !dbg !90
+  %10 = load i32, i32* %2, align 4, !dbg !91
+  %11 = add nsw i32 %10, 3, !dbg !92
+  store i32 %11, i32* %9, align 8, !dbg !90
+  %12 = getelementptr inbounds %struct.NodeB, %struct.NodeB* %4, i32 0, i32 1, !dbg !90
+  store %struct.NodeA* null, %struct.NodeA** %12, align 8, !dbg !90
+  call void @llvm.dbg.declare(metadata %struct.NodeA* %5, metadata !93, metadata !DIExpression()), !dbg !94
+  %13 = getelementptr inbounds %struct.NodeA, %struct.NodeA* %5, i32 0, i32 0, !dbg !95
+  %14 = load i32, i32* %2, align 4, !dbg !96
+  %15 = sdiv i32 %14, 4, !dbg !97
+  store i32 %15, i32* %13, align 8, !dbg !95
+  %16 = getelementptr inbounds %struct.NodeA, %struct.NodeA* %5, i32 0, i32 1, !dbg !95
+  store %struct.NodeB* null, %struct.NodeB** %16, align 8, !dbg !95
+  %17 = getelementptr inbounds %struct.NodeA, %struct.NodeA* %3, i32 0, i32 1, !dbg !98
+  store %struct.NodeB* %4, %struct.NodeB** %17, align 8, !dbg !99
+  %18 = getelementptr inbounds %struct.NodeB, %struct.NodeB* %4, i32 0, i32 1, !dbg !100
+  store %struct.NodeA* %5, %struct.NodeA** %18, align 8, !dbg !101
+  %19 = getelementptr inbounds %struct.NodeA, %struct.NodeA* %5, i32 0, i32 1, !dbg !102
+  store %struct.NodeB* %4, %struct.NodeB** %19, align 8, !dbg !103
+  %20 = getelementptr inbounds %struct.NodeA, %struct.NodeA* %3, i32 0, i32 1, !dbg !104
+  %21 = load %struct.NodeB*, %struct.NodeB** %20, align 8, !dbg !104
+  %22 = getelementptr inbounds %struct.NodeB, %struct.NodeB* %21, i32 0, i32 1, !dbg !105
+  %23 = load %struct.NodeA*, %struct.NodeA** %22, align 8, !dbg !105
+  %24 = getelementptr inbounds %struct.NodeA, %struct.NodeA* %23, i32 0, i32 1, !dbg !106
+  %25 = load %struct.NodeB*, %struct.NodeB** %24, align 8, !dbg !106
+  %26 = getelementptr inbounds %struct.NodeB, %struct.NodeB* %25, i32 0, i32 1, !dbg !107
+  %27 = load %struct.NodeA*, %struct.NodeA** %26, align 8, !dbg !107
+  %28 = getelementptr inbounds %struct.NodeA, %struct.NodeA* %27, i32 0, i32 1, !dbg !108
+  %29 = load %struct.NodeB*, %struct.NodeB** %28, align 8, !dbg !108
+  %30 = getelementptr inbounds %struct.NodeB, %struct.NodeB* %29, i32 0, i32 1, !dbg !109
+  %31 = load %struct.NodeA*, %struct.NodeA** %30, align 8, !dbg !109
+  %32 = getelementptr inbounds %struct.NodeA, %struct.NodeA* %31, i32 0, i32 1, !dbg !110
+  %33 = load %struct.NodeB*, %struct.NodeB** %32, align 8, !dbg !110
+  %34 = getelementptr inbounds %struct.NodeB, %struct.NodeB* %33, i32 0, i32 0, !dbg !111
+  %35 = load i32, i32* %34, align 8, !dbg !111
+  ret i32 %35, !dbg !112
+}
+
+; Function Attrs: noinline nounwind optnone ssp uwtable
+define i32 @takes_opaque_struct(%struct.SomeOpaqueStruct* %0) #0 !dbg !113 {
+  %2 = alloca %struct.SomeOpaqueStruct*, align 8
+  store %struct.SomeOpaqueStruct* %0, %struct.SomeOpaqueStruct** %2, align 8
+  call void @llvm.dbg.declare(metadata %struct.SomeOpaqueStruct** %2, metadata !118, metadata !DIExpression()), !dbg !119
+  %3 = load %struct.SomeOpaqueStruct*, %struct.SomeOpaqueStruct** %2, align 8, !dbg !120
+  %4 = icmp ne %struct.SomeOpaqueStruct* %3, null, !dbg !121
+  %5 = zext i1 %4 to i32, !dbg !121
+  ret i32 %5, !dbg !122
+}
+
+attributes #0 = { noinline nounwind optnone ssp uwtable "frame-pointer"="all" "min-legal-vector-width"="0" "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-cpu"="penryn" "target-features"="+cx16,+cx8,+fxsr,+mmx,+sahf,+sse,+sse2,+sse3,+sse4.1,+ssse3,+x87" "tune-cpu"="generic" }
+attributes #1 = { nofree nosync nounwind readnone speculatable willreturn }
+
+!llvm.dbg.cu = !{!0}
+!llvm.module.flags = !{!5, !6, !7, !8, !9, !10}
+!llvm.ident = !{!11}
+
+!0 = distinct !DICompileUnit(language: DW_LANG_C99, file: !1, producer: "Homebrew clang version 13.0.0", isOptimized: false, runtimeVersion: 0, emissionKind: FullDebug, enums: !2, retainedTypes: !3, splitDebugInlining: false, nameTableKind: None, sysroot: "/Library/Developer/CommandLineTools/SDKs/MacOSX11.sdk", sdk: "MacOSX11.sdk")
+!1 = !DIFile(filename: "linkedlist.c", directory: "/Users/craig/llvm-ir/tests/basic_bc")
+!2 = !{}
+!3 = !{!4}
+!4 = !DIDerivedType(tag: DW_TAG_pointer_type, baseType: null, size: 64)
+!5 = !{i32 7, !"Dwarf Version", i32 4}
+!6 = !{i32 2, !"Debug Info Version", i32 3}
+!7 = !{i32 1, !"wchar_size", i32 4}
+!8 = !{i32 7, !"PIC Level", i32 2}
+!9 = !{i32 7, !"uwtable", i32 1}
+!10 = !{i32 7, !"frame-pointer", i32 2}
+!11 = !{!"Homebrew clang version 13.0.0"}
+!12 = distinct !DISubprogram(name: "simple_linked_list", scope: !1, file: !1, line: 8, type: !13, scopeLine: 8, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !0, retainedNodes: !2)
+!13 = !DISubroutineType(types: !14)
+!14 = !{!15, !15}
+!15 = !DIBasicType(name: "int", size: 32, encoding: DW_ATE_signed)
+!16 = !DILocalVariable(name: "x", arg: 1, scope: !12, file: !1, line: 8, type: !15)
+!17 = !DILocation(line: 8, column: 28, scope: !12)
+!18 = !DILocalVariable(name: "list", scope: !12, file: !1, line: 9, type: !19)
+!19 = distinct !DICompositeType(tag: DW_TAG_structure_type, name: "SimpleLinkedList", file: !1, line: 3, size: 128, elements: !20)
+!20 = !{!21, !22}
+!21 = !DIDerivedType(tag: DW_TAG_member, name: "val", scope: !19, file: !1, line: 4, baseType: !15, size: 32)
+!22 = !DIDerivedType(tag: DW_TAG_member, name: "next", scope: !19, file: !1, line: 5, baseType: !23, size: 64, offset: 64)
+!23 = !DIDerivedType(tag: DW_TAG_pointer_type, baseType: !19, size: 64)
+!24 = !DILocation(line: 9, column: 27, scope: !12)
+!25 = !DILocation(line: 9, column: 34, scope: !12)
+!26 = !DILocation(line: 9, column: 36, scope: !12)
+!27 = !DILocation(line: 10, column: 8, scope: !12)
+!28 = !DILocation(line: 10, column: 12, scope: !12)
+!29 = !DILocalVariable(name: "list_1", scope: !12, file: !1, line: 11, type: !19)
+!30 = !DILocation(line: 11, column: 27, scope: !12)
+!31 = !DILocation(line: 11, column: 36, scope: !12)
+!32 = !DILocation(line: 11, column: 38, scope: !12)
+!33 = !DILocation(line: 11, column: 40, scope: !12)
+!34 = !DILocalVariable(name: "list_2", scope: !12, file: !1, line: 12, type: !19)
+!35 = !DILocation(line: 12, column: 27, scope: !12)
+!36 = !DILocation(line: 12, column: 36, scope: !12)
+!37 = !DILocation(line: 12, column: 38, scope: !12)
+!38 = !DILocation(line: 12, column: 40, scope: !12)
+!39 = !DILocalVariable(name: "list_3", scope: !12, file: !1, line: 13, type: !19)
+!40 = !DILocation(line: 13, column: 27, scope: !12)
+!41 = !DILocation(line: 13, column: 36, scope: !12)
+!42 = !DILocation(line: 13, column: 38, scope: !12)
+!43 = !DILocation(line: 13, column: 40, scope: !12)
+!44 = !DILocalVariable(name: "list_4", scope: !12, file: !1, line: 14, type: !19)
+!45 = !DILocation(line: 14, column: 27, scope: !12)
+!46 = !DILocation(line: 14, column: 36, scope: !12)
+!47 = !DILocation(line: 14, column: 38, scope: !12)
+!48 = !DILocation(line: 14, column: 40, scope: !12)
+!49 = !DILocation(line: 15, column: 8, scope: !12)
+!50 = !DILocation(line: 15, column: 13, scope: !12)
+!51 = !DILocation(line: 16, column: 10, scope: !12)
+!52 = !DILocation(line: 16, column: 15, scope: !12)
+!53 = !DILocation(line: 17, column: 10, scope: !12)
+!54 = !DILocation(line: 17, column: 15, scope: !12)
+!55 = !DILocation(line: 18, column: 10, scope: !12)
+!56 = !DILocation(line: 18, column: 15, scope: !12)
+!57 = !DILocation(line: 19, column: 10, scope: !12)
+!58 = !DILocation(line: 19, column: 15, scope: !12)
+!59 = !DILocation(line: 20, column: 15, scope: !12)
+!60 = !DILocation(line: 20, column: 21, scope: !12)
+!61 = !DILocation(line: 20, column: 27, scope: !12)
+!62 = !DILocation(line: 20, column: 33, scope: !12)
+!63 = !DILocation(line: 20, column: 39, scope: !12)
+!64 = !DILocation(line: 20, column: 45, scope: !12)
+!65 = !DILocation(line: 20, column: 51, scope: !12)
+!66 = !DILocation(line: 20, column: 57, scope: !12)
+!67 = !DILocation(line: 20, column: 63, scope: !12)
+!68 = !DILocation(line: 20, column: 69, scope: !12)
+!69 = !DILocation(line: 20, column: 75, scope: !12)
+!70 = !DILocation(line: 20, column: 3, scope: !12)
+!71 = distinct !DISubprogram(name: "indirectly_recursive_type", scope: !1, file: !1, line: 35, type: !13, scopeLine: 35, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !0, retainedNodes: !2)
+!72 = !DILocalVariable(name: "x", arg: 1, scope: !71, file: !1, line: 35, type: !15)
+!73 = !DILocation(line: 35, column: 35, scope: !71)
+!74 = !DILocalVariable(name: "a", scope: !71, file: !1, line: 36, type: !75)
+!75 = distinct !DICompositeType(tag: DW_TAG_structure_type, name: "NodeA", file: !1, line: 25, size: 128, elements: !76)
+!76 = !{!77, !78}
+!77 = !DIDerivedType(tag: DW_TAG_member, name: "val", scope: !75, file: !1, line: 26, baseType: !15, size: 32)
+!78 = !DIDerivedType(tag: DW_TAG_member, name: "b", scope: !75, file: !1, line: 27, baseType: !79, size: 64, offset: 64)
+!79 = !DIDerivedType(tag: DW_TAG_pointer_type, baseType: !80, size: 64)
+!80 = distinct !DICompositeType(tag: DW_TAG_structure_type, name: "NodeB", file: !1, line: 30, size: 128, elements: !81)
+!81 = !{!82, !83}
+!82 = !DIDerivedType(tag: DW_TAG_member, name: "val", scope: !80, file: !1, line: 31, baseType: !15, size: 32)
+!83 = !DIDerivedType(tag: DW_TAG_member, name: "a", scope: !80, file: !1, line: 32, baseType: !84, size: 64, offset: 64)
+!84 = !DIDerivedType(tag: DW_TAG_pointer_type, baseType: !75, size: 64)
+!85 = !DILocation(line: 36, column: 16, scope: !71)
+!86 = !DILocation(line: 36, column: 20, scope: !71)
+!87 = !DILocation(line: 36, column: 22, scope: !71)
+!88 = !DILocalVariable(name: "b", scope: !71, file: !1, line: 37, type: !80)
+!89 = !DILocation(line: 37, column: 16, scope: !71)
+!90 = !DILocation(line: 37, column: 20, scope: !71)
+!91 = !DILocation(line: 37, column: 22, scope: !71)
+!92 = !DILocation(line: 37, column: 24, scope: !71)
+!93 = !DILocalVariable(name: "a_1", scope: !71, file: !1, line: 38, type: !75)
+!94 = !DILocation(line: 38, column: 16, scope: !71)
+!95 = !DILocation(line: 38, column: 22, scope: !71)
+!96 = !DILocation(line: 38, column: 24, scope: !71)
+!97 = !DILocation(line: 38, column: 26, scope: !71)
+!98 = !DILocation(line: 39, column: 5, scope: !71)
+!99 = !DILocation(line: 39, column: 7, scope: !71)
+!100 = !DILocation(line: 40, column: 5, scope: !71)
+!101 = !DILocation(line: 40, column: 7, scope: !71)
+!102 = !DILocation(line: 41, column: 7, scope: !71)
+!103 = !DILocation(line: 41, column: 9, scope: !71)
+!104 = !DILocation(line: 42, column: 12, scope: !71)
+!105 = !DILocation(line: 42, column: 15, scope: !71)
+!106 = !DILocation(line: 42, column: 18, scope: !71)
+!107 = !DILocation(line: 42, column: 21, scope: !71)
+!108 = !DILocation(line: 42, column: 24, scope: !71)
+!109 = !DILocation(line: 42, column: 27, scope: !71)
+!110 = !DILocation(line: 42, column: 30, scope: !71)
+!111 = !DILocation(line: 42, column: 33, scope: !71)
+!112 = !DILocation(line: 42, column: 3, scope: !71)
+!113 = distinct !DISubprogram(name: "takes_opaque_struct", scope: !1, file: !1, line: 48, type: !114, scopeLine: 48, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !0, retainedNodes: !2)
+!114 = !DISubroutineType(types: !115)
+!115 = !{!15, !116}
+!116 = !DIDerivedType(tag: DW_TAG_pointer_type, baseType: !117, size: 64)
+!117 = !DICompositeType(tag: DW_TAG_structure_type, name: "SomeOpaqueStruct", file: !1, line: 46, flags: DIFlagFwdDecl)
+!118 = !DILocalVariable(name: "s", arg: 1, scope: !113, file: !1, line: 48, type: !116)
+!119 = !DILocation(line: 48, column: 50, scope: !113)
+!120 = !DILocation(line: 49, column: 10, scope: !113)
+!121 = !DILocation(line: 49, column: 12, scope: !113)
+!122 = !DILocation(line: 49, column: 3, scope: !113)

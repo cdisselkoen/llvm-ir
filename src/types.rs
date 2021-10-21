@@ -7,30 +7,30 @@ use std::hash::Hash;
 use std::ops::Deref;
 use std::sync::Arc;
 
-/// See [LLVM 12 docs on Type System](https://releases.llvm.org/12.0.0/docs/LangRef.html#type-system)
+/// See [LLVM 12 docs on Type System](https://releases.llvm.org/13.0.0/docs/LangRef.html#type-system)
 #[derive(PartialEq, Eq, Clone, Debug, Hash)]
 #[allow(non_camel_case_types)]
 pub enum Type {
-    /// See [LLVM 12 docs on Void Type](https://releases.llvm.org/12.0.0/docs/LangRef.html#void-type)
+    /// See [LLVM 12 docs on Void Type](https://releases.llvm.org/13.0.0/docs/LangRef.html#void-type)
     VoidType,
-    /// See [LLVM 12 docs on Integer Type](https://releases.llvm.org/12.0.0/docs/LangRef.html#integer-type)
+    /// See [LLVM 12 docs on Integer Type](https://releases.llvm.org/13.0.0/docs/LangRef.html#integer-type)
     IntegerType { bits: u32 },
-    /// See [LLVM 12 docs on Pointer Type](https://releases.llvm.org/12.0.0/docs/LangRef.html#pointer-type)
+    /// See [LLVM 12 docs on Pointer Type](https://releases.llvm.org/13.0.0/docs/LangRef.html#pointer-type)
     PointerType {
         pointee_type: TypeRef,
         addr_space: AddrSpace,
     },
-    /// See [LLVM 12 docs on Floating-Point Types](https://releases.llvm.org/12.0.0/docs/LangRef.html#floating-point-types)
+    /// See [LLVM 12 docs on Floating-Point Types](https://releases.llvm.org/13.0.0/docs/LangRef.html#floating-point-types)
     FPType(FPType),
-    /// See [LLVM 12 docs on Function Type](https://releases.llvm.org/12.0.0/docs/LangRef.html#function-type)
+    /// See [LLVM 12 docs on Function Type](https://releases.llvm.org/13.0.0/docs/LangRef.html#function-type)
     FuncType {
         result_type: TypeRef,
         param_types: Vec<TypeRef>,
         is_var_arg: bool,
     },
     /// Vector types (along with integer, FP, pointer, X86_MMX, and X86_AMX types) are "first class types",
-    /// which means they can be produced by instructions (see [LLVM 12 docs on First Class Types](https://releases.llvm.org/12.0.0/docs/LangRef.html#first-class-types)).
-    /// See [LLVM 12 docs on Vector Type](https://releases.llvm.org/12.0.0/docs/LangRef.html#vector-type)
+    /// which means they can be produced by instructions (see [LLVM 12 docs on First Class Types](https://releases.llvm.org/13.0.0/docs/LangRef.html#first-class-types)).
+    /// See [LLVM 12 docs on Vector Type](https://releases.llvm.org/13.0.0/docs/LangRef.html#vector-type)
     VectorType {
         element_type: TypeRef,
         num_elements: usize,
@@ -38,37 +38,37 @@ pub enum Type {
         scalable: bool,
     },
     /// Struct and Array types (but not vector types) are "aggregate types" and cannot be produced by
-    /// a single instruction (see [LLVM 12 docs on Aggregate Types](https://releases.llvm.org/12.0.0/docs/LangRef.html#aggregate-types)).
-    /// See [LLVM 12 docs on Array Type](https://releases.llvm.org/12.0.0/docs/LangRef.html#array-type)
+    /// a single instruction (see [LLVM 12 docs on Aggregate Types](https://releases.llvm.org/13.0.0/docs/LangRef.html#aggregate-types)).
+    /// See [LLVM 12 docs on Array Type](https://releases.llvm.org/13.0.0/docs/LangRef.html#array-type)
     ArrayType {
         element_type: TypeRef,
         num_elements: usize,
     },
     /// The `StructType` variant is used for a "literal" (i.e., anonymous) structure type.
-    /// See [LLVM 12 docs on Structure Type](https://releases.llvm.org/12.0.0/docs/LangRef.html#structure-type)
+    /// See [LLVM 12 docs on Structure Type](https://releases.llvm.org/13.0.0/docs/LangRef.html#structure-type)
     StructType {
         element_types: Vec<TypeRef>,
         is_packed: bool,
     },
     /// Named structure types. Note that these may be self-referential (i.e., recursive).
-    /// See [LLVM 12 docs on Structure Type](https://releases.llvm.org/12.0.0/docs/LangRef.html#structure-type)
+    /// See [LLVM 12 docs on Structure Type](https://releases.llvm.org/13.0.0/docs/LangRef.html#structure-type)
     /// To get the actual definition of a named structure type, use `module.types.named_struct_def()`.
     NamedStructType {
         /// Name of the struct type
         name: String, // llvm-hs-pure has Name rather than String
     },
-    /// See [LLVM 12 docs on X86_MMX Type](https://releases.llvm.org/12.0.0/docs/LangRef.html#x86-mmx-type)
+    /// See [LLVM 12 docs on X86_MMX Type](https://releases.llvm.org/13.0.0/docs/LangRef.html#x86-mmx-type)
     X86_MMXType,
     // As of this writing, although X86_AMX type definitely exists in LLVM 12+,
     // it doesn't appear to be documented in the LangRef
     #[cfg(feature="llvm-12-or-greater")]
     X86_AMXType,
-    /// See [LLVM 12 docs on Metadata Type](https://releases.llvm.org/12.0.0/docs/LangRef.html#metadata-type)
+    /// See [LLVM 12 docs on Metadata Type](https://releases.llvm.org/13.0.0/docs/LangRef.html#metadata-type)
     MetadataType,
     /// `LabelType` is the type of [`BasicBlock`](../struct.BasicBlock.html) labels.
-    /// See [LLVM 12 docs on Label Type](https://releases.llvm.org/12.0.0/docs/LangRef.html#label-type)
+    /// See [LLVM 12 docs on Label Type](https://releases.llvm.org/13.0.0/docs/LangRef.html#label-type)
     LabelType,
-    /// See [LLVM 12 docs on Token Type](https://releases.llvm.org/12.0.0/docs/LangRef.html#token-type)
+    /// See [LLVM 12 docs on Token Type](https://releases.llvm.org/13.0.0/docs/LangRef.html#token-type)
     TokenType,
 }
 
@@ -149,7 +149,7 @@ impl Display for Type {
     }
 }
 
-/// See [LLVM 12 docs on Floating-Point Types](https://releases.llvm.org/12.0.0/docs/LangRef.html#floating-point-types)
+/// See [LLVM 12 docs on Floating-Point Types](https://releases.llvm.org/13.0.0/docs/LangRef.html#floating-point-types)
 #[derive(PartialEq, Eq, Clone, Copy, Debug, Hash)]
 #[allow(non_camel_case_types)]
 pub enum FPType {
@@ -539,7 +539,7 @@ impl TypesBuilder {
 
 #[derive(Clone, Debug, Hash)]
 pub enum NamedStructDef {
-    /// An opaque struct type; see [LLVM 12 docs on Opaque Structure Types](https://releases.llvm.org/12.0.0/docs/LangRef.html#t-opaque).
+    /// An opaque struct type; see [LLVM 12 docs on Opaque Structure Types](https://releases.llvm.org/13.0.0/docs/LangRef.html#t-opaque).
     Opaque,
     /// A struct type with a definition. The `TypeRef` here is guaranteed to be to a `StructType` variant.
     Defined(TypeRef),

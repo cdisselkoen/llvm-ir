@@ -40,8 +40,9 @@ to the LLVM version you want:
 llvm-ir = { version = "0.8.0", features = ["llvm-12"] }
 ```
 
-Currently, the supported LLVM versions are `llvm-8`, `llvm-9`, `llvm-10`,
-`llvm-11`, and `llvm-12`.
+The latest crates.io release (0.8.0) supports LLVM versions `llvm-8`, `llvm-9`,
+`llvm-10`, `llvm-11`, and `llvm-12`.
+The Git version you're looking at also supports `llvm-13`.
 
 Then, the easiest way to get started is to parse some existing LLVM IR into
 this crate's data structures.
@@ -74,16 +75,17 @@ The documentation includes links to relevant parts of the LLVM documentation
 when appropriate.
 
 Note that some data structures differ slightly depending on your choice of
-LLVM version. The docs.rs documentation is generated with the `llvm-12`
+LLVM version. The docs.rs documentation is generated with the `llvm-10`
 feature; for other LLVM versions, you can get appropriate documentation with
 `cargo doc --features=llvm-<x> --open` where `<x>` is the LLVM version you're
 using.
 
 ## Compatibility
 Starting with `llvm-ir` 0.7.0, LLVM versions are selected by a Cargo feature
-flag. This means that a single crate version can be used for any supported
-LLVM version. Currently, the supported LLVM versions are `llvm-8`, `llvm-9`,
-`llvm-10`, `llvm-11`, and `llvm-12`.
+flag. This means that a single crate version can be used for any supported LLVM
+version.  The latest crates.io release (0.8.0) supports LLVM versions `llvm-8`,
+`llvm-9`, `llvm-10`, `llvm-11`, and `llvm-12`, while the Git version you're
+looking at also supports `llvm-13`.
 
 `llvm-ir` works on stable Rust, and requires Rust 1.45+.
 
@@ -136,7 +138,7 @@ but not to query the values of these flags on existing instructions.
 - contents of inline assembly functions
 - information about the clauses in the variadic `LandingPad` instruction
 - information about the operands of a `BlockAddress` constant expression
-- the ["prefix data"](https://releases.llvm.org/12.0.0/docs/LangRef.html#prefix-data)
+- the ["prefix data"](https://releases.llvm.org/13.0.0/docs/LangRef.html#prefix-data)
 associated with a function
 - the values of constant integers which are larger than 64 bits (and don't
 fit in 64 bits) -- see [#5](https://github.com/cdisselkoen/llvm-ir/issues/5)
@@ -166,7 +168,7 @@ one of the features `llvm-8`, `llvm-9`, or `llvm-10`. Previously, we had the
 `0.6.x` branch for LLVM 10, the `0.5.x` branch for LLVM 9, and didn't
 officially support LLVM 8. Now, a single release supports LLVM 8, 9, and 10.
   - (Note: 0.7.3 and later also supports LLVM 11; 0.7.5 and later also supports
-    LLVM 12.)
+    LLVM 12; and the upcoming 0.8.1 release will support LLVM 13.)
 - [`FunctionAttribute`] and [`ParameterAttribute`] are now proper enums with
 descriptive variants such as `NoInline`, `StackProtect`, etc. Previously,
 attributes were opaque numeric codes which were difficult to interpret.
@@ -188,7 +190,7 @@ number of breaking changes to the public interface:
   struct type in the module.
 - The required Rust version increased from 1.36+ to 1.39+.
   - (Note: 0.7.2 increased the required Rust version again, to 1.43+;
-    and 0.8.1 increased it to 1.45+.)
+    and the upcoming 0.8.1 will increase it to 1.45+.)
 
 [`llvm-sys`]: https://crates.io/crates/llvm-sys
 [`inkwell`]: https://github.com/TheDan64/inkwell

@@ -6,8 +6,8 @@ use std::fmt::{self, Display};
 use std::ops::Deref;
 use std::sync::Arc;
 
-/// See [LLVM 12 docs on Constants](https://releases.llvm.org/12.0.0/docs/LangRef.html#constants).
-/// Constants can be either values, or expressions involving other constants (see [LLVM 12 docs on Constant Expressions](https://releases.llvm.org/12.0.0/docs/LangRef.html#constant-expressions)).
+/// See [LLVM 12 docs on Constants](https://releases.llvm.org/13.0.0/docs/LangRef.html#constants).
+/// Constants can be either values, or expressions involving other constants (see [LLVM 12 docs on Constant Expressions](https://releases.llvm.org/13.0.0/docs/LangRef.html#constant-expressions)).
 #[derive(PartialEq, Clone, Debug)]
 pub enum Constant {
     Int {
@@ -31,7 +31,7 @@ pub enum Constant {
         value: u64,
     },
     Float(Float),
-    /// The `TypeRef` here must be to a `PointerType`. See [LLVM 12 docs on Simple Constants](https://releases.llvm.org/12.0.0/docs/LangRef.html#simple-constants)
+    /// The `TypeRef` here must be to a `PointerType`. See [LLVM 12 docs on Simple Constants](https://releases.llvm.org/13.0.0/docs/LangRef.html#simple-constants)
     Null(TypeRef),
     /// A zero-initialized array or struct (or scalar).
     AggregateZero(TypeRef),
@@ -45,12 +45,12 @@ pub enum Constant {
         elements: Vec<ConstantRef>,
     },
     Vector(Vec<ConstantRef>),
-    /// `Undef` can be used anywhere a constant is expected. See [LLVM 12 docs on Undefined Values](https://releases.llvm.org/12.0.0/docs/LangRef.html#undefined-values)
+    /// `Undef` can be used anywhere a constant is expected. See [LLVM 12 docs on Undefined Values](https://releases.llvm.org/13.0.0/docs/LangRef.html#undefined-values)
     Undef(TypeRef),
-    /// See [LLVM 12 docs on Poison Values](https://releases.llvm.org/12.0.0/docs/LangRef.html#undefined-values)
+    /// See [LLVM 12 docs on Poison Values](https://releases.llvm.org/13.0.0/docs/LangRef.html#undefined-values)
     #[cfg(feature="llvm-12-or-greater")]
     Poison(TypeRef),
-    /// The address of the given (non-entry) [`BasicBlock`](../struct.BasicBlock.html). See [LLVM 12 docs on Addresses of Basic Blocks](https://releases.llvm.org/12.0.0/docs/LangRef.html#addresses-of-basic-blocks).
+    /// The address of the given (non-entry) [`BasicBlock`](../struct.BasicBlock.html). See [LLVM 12 docs on Addresses of Basic Blocks](https://releases.llvm.org/13.0.0/docs/LangRef.html#addresses-of-basic-blocks).
     /// `BlockAddress` needs more fields, but the necessary getter functions are apparently not exposed in the LLVM C API (only the C++ API)
     BlockAddress, // --TODO ideally we want BlockAddress { function: Name, block: Name },
     GlobalReference {

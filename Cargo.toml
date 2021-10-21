@@ -17,6 +17,7 @@ llvm-sys-90 = { package = "llvm-sys", version = "90.2.0", optional = true }
 llvm-sys-100 = { package = "llvm-sys", version = "100.2.0", optional = true }
 llvm-sys-110 = { package = "llvm-sys", version = "110.0.0", optional = true }
 llvm-sys-120 = { package = "llvm-sys", version = "120.2.0", optional = true }
+llvm-sys-130 = { package = "llvm-sys", version = "130.0.0", optional = true }
 either = "1.6"
 log = "0.4"
 
@@ -32,6 +33,7 @@ llvm-9 = ["llvm-sys-90", "llvm-9-or-lower", "llvm-9-or-greater"]
 llvm-10 = ["llvm-sys-100", "llvm-10-or-lower", "llvm-10-or-greater"]
 llvm-11 = ["llvm-sys-110", "llvm-11-or-lower", "llvm-11-or-greater"]
 llvm-12 = ["llvm-sys-120", "llvm-12-or-lower", "llvm-12-or-greater"]
+llvm-13 = ["llvm-sys-130", "llvm-13-or-lower", "llvm-13-or-greater"]
 
 ###
 # For convenience, these automatically-enabled features allow us to avoid
@@ -42,12 +44,14 @@ llvm-9-or-greater = ["llvm-8-or-greater"]
 llvm-10-or-greater = ["llvm-9-or-greater"]
 llvm-11-or-greater = ["llvm-10-or-greater"]
 llvm-12-or-greater = ["llvm-11-or-greater"]
+llvm-13-or-greater = ["llvm-12-or-greater"]
 
 llvm-8-or-lower = ["llvm-9-or-lower"]
 llvm-9-or-lower = ["llvm-10-or-lower"]
 llvm-10-or-lower = ["llvm-11-or-lower"]
 llvm-11-or-lower = ["llvm-12-or-lower"]
-llvm-12-or-lower = []
+llvm-12-or-lower = ["llvm-13-or-lower"]
+llvm-13-or-lower = []
 ###
 
 # We'd like to have a "strict-versioning" feature which enables the
@@ -74,6 +78,7 @@ llvm-9-strict = ["llvm-9", "llvm-sys-90/strict-versioning"]
 llvm-10-strict = ["llvm-10", "llvm-sys-100/strict-versioning"]
 llvm-11-strict = ["llvm-11", "llvm-sys-110/strict-versioning"]
 llvm-12-strict = ["llvm-12", "llvm-sys-120/strict-versioning"]
+llvm-13-strict = ["llvm-13", "llvm-sys-130/strict-versioning"]
 
 [package.metadata.docs.rs]
 # Generate docs.rs documentation with the llvm-10 feature

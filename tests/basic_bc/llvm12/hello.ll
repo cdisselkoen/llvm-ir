@@ -15,4 +15,4 @@ attributes #0 = { norecurse nounwind readnone ssp uwtable willreturn "disable-ta
 
 !0 = !{i32 1, !"wchar_size", i32 4}
 !1 = !{i32 7, !"PIC Level", i32 2}
-!2 = !{!"clang version 12.0.0"}
+!2 = !{!"Homebrew clang version 12.0.1"}

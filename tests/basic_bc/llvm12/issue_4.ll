@@ -20,7 +20,7 @@ attributes #0 = { nofree norecurse nounwind ssp uwtable willreturn writeonly "di
 
 !0 = !{i32 1, !"wchar_size", i32 4}
 !1 = !{i32 7, !"PIC Level", i32 2}
-!2 = !{!"clang version 12.0.0"}
+!2 = !{!"Homebrew clang version 12.0.1"}
 !3 = !{!4, !5, i64 0}
 !4 = !{!"output", !5, i64 0, !5, i64 8, !5, i64 16}
 !5 = !{!"double", !6, i64 0}
