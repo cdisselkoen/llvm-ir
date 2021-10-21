@@ -762,11 +762,7 @@ fn issue4() {
     #[cfg(feature="llvm-11-or-lower")]
     let is_sret = |attr: &ParameterAttribute| { match attr { ParameterAttribute::SRet => true, _ => false }};
     #[cfg(feature="llvm-12-or-greater")]
-    // in LLVM 12, SRet is neither an enum nor a string attribute, according to
-    // `LLVMIsEnumAttribute` and `LLVMIsStringAttribute` in the C API.  The C
-    // API doesn't have functions to get info about attributes which are neither
-    // enum nor string.
-    let is_sret = |attr: &ParameterAttribute| { match attr { ParameterAttribute::UnknownAttribute => true, _ => false }};
+    let is_sret = |attr: &ParameterAttribute| { match attr { ParameterAttribute::SRet(_) => true, _ => false }};
     assert!(first_param_attrs.iter().any(is_sret));
 }
 
@@ -1198,8 +1194,18 @@ fn param_and_func_attributes() {
     assert_eq!(param.attributes.len(), 1);
     #[cfg(feature="llvm-8-or-lower")]
     assert_eq!(param.attributes[0], ParameterAttribute::ByVal);
-    #[cfg(feature="llvm-9-or-greater")]
-    assert_eq!(param.attributes[0], ParameterAttribute::UnknownAttribute); // not sure why we're getting UnknownAttribute here with LLVM 9+, but we'll let it pass for now
+    #[cfg(all(feature="llvm-9-or-greater",feature="llvm-11-or-lower"))]
+    assert_eq!(param.attributes[0], ParameterAttribute::UnknownAttribute);
+    #[cfg(feature="llvm-12-or-greater")]
+    match &param.attributes[0] {
+        ParameterAttribute::ByVal(ty) => match ty.as_ref() {
+            Type::StructType { element_types, is_packed: false } => {
+                assert_eq!(element_types.len(), 2);
+            }
+            ty => panic!("Expected a StructType with is_packed=false, got {:?}", ty)
+        }
+        attr => panic!("Expected a ByVal, got {:?}", attr)
+    }
     let f = module.get_func_by_name("f.param.inalloca").unwrap();
     assert_eq!(f.parameters.len(), 1);
     let param = &f.parameters[0];
@@ -1212,11 +1218,13 @@ fn param_and_func_attributes() {
     #[cfg(feature="llvm-11-or-lower")]
     assert_eq!(param.attributes[0], ParameterAttribute::SRet);
     #[cfg(feature="llvm-12-or-greater")]
-    // in LLVM 12, SRet is neither an enum nor a string attribute, according to
-    // `LLVMIsEnumAttribute` and `LLVMIsStringAttribute` in the C API.  The C
-    // API doesn't have functions to get info about attributes which are neither
-    // enum nor string.
-    assert_eq!(param.attributes[0], ParameterAttribute::UnknownAttribute);
+    match &param.attributes[0] {
+        ParameterAttribute::SRet(ty) => match ty.as_ref() {
+            Type::IntegerType { bits: 8 } => {}
+            ty => panic!("Expected i8, got {:?}", ty)
+        }
+        attr => panic!("Expected an SRet, got {:?}", attr)
+    }
     let f = module.get_func_by_name("f.param.noalias").unwrap();
     assert_eq!(f.parameters.len(), 1);
     let param = &f.parameters[0];

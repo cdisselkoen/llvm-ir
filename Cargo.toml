@@ -16,9 +16,9 @@ llvm-sys-80 = { package = "llvm-sys", version = "80.3.0", optional = true }
 llvm-sys-90 = { package = "llvm-sys", version = "90.2.0", optional = true }
 llvm-sys-100 = { package = "llvm-sys", version = "100.2.0", optional = true }
 llvm-sys-110 = { package = "llvm-sys", version = "110.0.0", optional = true }
-llvm-sys-120 = { package = "llvm-sys", version = "120.0.0", optional = true }
+llvm-sys-120 = { package = "llvm-sys", version = "120.2.0", optional = true }
 either = "1.6"
-log = "0.4.0"
+log = "0.4"
 
 [dev-dependencies]
 env_logger = "0.8"

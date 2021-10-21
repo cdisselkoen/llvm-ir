@@ -223,14 +223,16 @@ pub enum ParameterAttribute {
     #[cfg(feature="llvm-11-or-lower")]
     ByVal,
     #[cfg(feature="llvm-12-or-greater")]
-    ByVal(u64),
-    #[cfg(feature="llvm-11-or-greater")]
+    ByVal(TypeRef),
+    #[cfg(feature="llvm-11")]
     Preallocated,
+    #[cfg(feature="llvm-12-or-greater")]
+    Preallocated(TypeRef),
     InAlloca,
     #[cfg(feature="llvm-11-or-lower")]
     SRet,
     #[cfg(feature="llvm-12-or-greater")]
-    SRet(u64),
+    SRet(TypeRef),
     Alignment(u64),
     NoAlias,
     NoCapture,
@@ -247,7 +249,9 @@ pub enum ParameterAttribute {
     #[cfg(feature="llvm-11-or-greater")]
     NoUndef,
     StringAttribute { kind: String, value: String }, // for no value, use ""
-    UnknownAttribute, // this is used if we get a value not in the above list
+    UnknownAttribute, // this is used if we get an EnumAttribute not in the above list; or, for LLVM 11 or lower, also for some TypeAttributes (due to C API limitations)
+    #[cfg(feature="llvm-12-or-greater")]
+    UnknownTypeAttribute(TypeRef), // this is used if we get a TypeAttribute not in the above list
 }
 
 pub type GroupID = usize;
@@ -260,6 +264,8 @@ use crate::constant::Constant;
 use crate::from_llvm::*;
 use crate::llvm_sys::*;
 use crate::module::ModuleContext;
+#[cfg(feature="llvm-12-or-greater")]
+use crate::types::TypesBuilder;
 use llvm_sys::comdat::*;
 use llvm_sys::{LLVMAttributeFunctionIndex, LLVMAttributeReturnIndex};
 use std::collections::HashMap;
@@ -303,7 +309,7 @@ impl Function {
                         };
                         attrs
                             .into_iter()
-                            .map(|attr| ParameterAttribute::from_llvm_ref(attr, &ctx.attrsdata))
+                            .map(|attr| ParameterAttribute::from_llvm_ref(attr, &ctx.attrsdata, #[cfg(feature="llvm-12-or-greater")] &mut ctx.types))
                             .collect()
                     },
                 })
@@ -391,7 +397,7 @@ impl Function {
                     };
                     attrs
                         .into_iter()
-                        .map(|attr| ParameterAttribute::from_llvm_ref(attr, &ctx.attrsdata))
+                        .map(|attr| ParameterAttribute::from_llvm_ref(attr, &ctx.attrsdata, #[cfg(feature="llvm-12-or-greater")] &mut ctx.types))
                         .collect()
                 } else {
                     vec![]
@@ -693,14 +699,14 @@ impl FunctionAttribute {
                 value: unsafe { get_string_attribute_value(a) },
             }
         } else {
-            debug!("Encountered an unknown attribute: neither enum nor string");
+            debug!("Encountered an unknown function attribute: neither enum nor string");
             Self::UnknownAttribute
         }
     }
 }
 
 impl ParameterAttribute {
-    pub(crate) fn from_llvm_ref(a: LLVMAttributeRef, attrsdata: &AttributesData) -> Self {
+    pub(crate) fn from_llvm_ref(a: LLVMAttributeRef, attrsdata: &AttributesData, #[cfg(feature="llvm-12-or-greater")] types: &mut TypesBuilder) -> Self {
         if unsafe { LLVMIsEnumAttribute(a) } != 0 {
             let kind = unsafe { LLVMGetEnumAttributeKind(a) };
             match attrsdata.lookup_param_attr(kind) {
@@ -709,15 +715,11 @@ impl ParameterAttribute {
                 Some("inreg") => Self::InReg,
                 #[cfg(feature="llvm-11-or-lower")]
                 Some("byval") => Self::ByVal,
-                #[cfg(feature="llvm-12-or-greater")]
-                Some("byval") => Self::ByVal(unsafe { LLVMGetEnumAttributeValue(a) }),
-                #[cfg(feature="llvm-11-or-greater")]
+                #[cfg(feature="llvm-11")]
                 Some("preallocated") => Self::Preallocated,
                 Some("inalloca") => Self::InAlloca,
                 #[cfg(feature="llvm-11-or-lower")]
                 Some("sret") => Self::SRet,
-                #[cfg(feature="llvm-12-or-greater")]
-                Some("sret") => Self::SRet(unsafe { LLVMGetEnumAttributeValue(a) }),
                 Some("align") => Self::Alignment(unsafe { LLVMGetEnumAttributeValue(a) }),
                 Some("noalias") => Self::NoAlias,
                 Some("nocapture") => Self::NoCapture,
@@ -744,9 +746,35 @@ impl ParameterAttribute {
                 kind: unsafe { get_string_attribute_kind(a) },
                 value: unsafe { get_string_attribute_value(a) },
             }
+        } else if Self::is_type_attr(a) {
+            #[cfg(feature="llvm-11-or-lower")] {
+                debug!("Encountered a type attr, which shouldn't happen on LLVM 11 or lower");
+                Self::UnknownAttribute
+            }
+            #[cfg(feature="llvm-12-or-greater")] {
+                let kind = unsafe { LLVMGetEnumAttributeKind(a) };
+                let ty = types.type_from_llvm_ref(unsafe { LLVMGetTypeAttributeValue(a) });
+                match attrsdata.lookup_param_attr(kind) {
+                    Some("byval") => Self::ByVal(ty),
+                    Some("preallocated") => Self::Preallocated(ty),
+                    Some("sret") => Self::SRet(ty),
+                    Some(s) => panic!("Unhandled value from lookup_param_attr: {:?}", s),
+                    None => {
+                        debug!("unknown type param attr {}", kind);
+                        Self::UnknownTypeAttribute(ty)
+                    }
+                }
+            }
         } else {
-            debug!("Encountered an unknown attribute: neither enum nor string");
+            debug!("Encountered an unknown parameter attribute: neither enum, string, nor type");
             Self::UnknownAttribute
         }
+    }
+
+    #[cfg(feature="llvm-11-or-lower")]
+    fn is_type_attr(_a: LLVMAttributeRef) -> bool { false }
+    #[cfg(feature="llvm-12-or-greater")]
+    fn is_type_attr(a: LLVMAttributeRef) -> bool {
+        unsafe { LLVMIsTypeAttribute(a) != 0 }
     }
 }

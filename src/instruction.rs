@@ -3084,7 +3084,7 @@ impl CallInfo {
                             };
                             attrs
                                 .into_iter()
-                                .map(|attr| ParameterAttribute::from_llvm_ref(attr, &ctx.attrsdata))
+                                .map(|attr| ParameterAttribute::from_llvm_ref(attr, &ctx.attrsdata, #[cfg(feature="llvm-12-or-greater")] &mut ctx.types))
                                 .collect()
                         };
                         (operand, attrs)
@@ -3101,7 +3101,7 @@ impl CallInfo {
                 };
                 attrs
                     .into_iter()
-                    .map(|attr| ParameterAttribute::from_llvm_ref(attr, &ctx.attrsdata))
+                    .map(|attr| ParameterAttribute::from_llvm_ref(attr, &ctx.attrsdata, #[cfg(feature="llvm-12-or-greater")] &mut ctx.types))
                     .collect()
             },
             function_attributes: {
