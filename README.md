@@ -1,7 +1,7 @@
 # llvm-ir: LLVM IR in natural Rust data structures
 
-[![Crates.io](http://meritbadge.herokuapp.com/llvm-ir)](https://crates.io/crates/llvm-ir)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/cdisselkoen/llvm-ir/master/LICENSE)
+[![crates.io](http://img.shields.io/crates/v/llvm-ir.svg)](https://crates.io/crates/llvm-ir)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/cdisselkoen/llvm-ir/main/LICENSE)
 
 `llvm-ir` seeks to provide a Rust-y representation of LLVM IR.
 It's based on the idea that an LLVM [`Instruction`] shouldn't be an opaque
