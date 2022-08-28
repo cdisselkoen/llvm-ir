@@ -3,7 +3,7 @@
 // it was especially necessary when the docs.rs docs weren't working for any
 // llvm-sys consumers; now that we have docs.rs as the official docs, I'm not
 // sure if this is necessary or helpful anymore
-#![doc(html_root_url = "https://docs.rs/llvm-ir/0.8.1")]
+#![doc(html_root_url = "https://docs.rs/llvm-ir/0.8.2")]
 
 #[macro_use]
 mod from_llvm;
@@ -53,5 +53,6 @@ pub fn llvm_version() -> &'static str {
     case!("llvm-11");
     case!("llvm-12");
     case!("llvm-13");
+    case!("llvm-14");
     unreachable!()
 }

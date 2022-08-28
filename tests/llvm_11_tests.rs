@@ -42,6 +42,7 @@ llvm_test!("tests/llvm_bc/fortranSubrangeBackward.ll.bc", fortran_subrange_backw
 llvm_test!("tests/llvm_bc/thinlto-function-summary-paramaccess.ll.bc", thinlto_function_summary_paramaccess);
 llvm_test!("tests/llvm_bc/upgrade-garbage-collection-for-objc.ll.bc", upgrade_garbage_collection_for_objc);
 llvm_test!("tests/llvm_bc/upgrade-garbage-collection-for-swift.ll.bc", upgrade_garbage_collection_for_swift);
+#[cfg(feature="llvm-13-or-lower")] // starting with LLVM 14, this file is optimized to not contain a Constant::ShuffleVector
 llvm_test_should_panic!("tests/llvm_bc/vscale-round-trip.ll.bc", vscale_round_trip, "Constant::ShuffleVector, which is not supported");
 llvm_test_should_panic!("tests/llvm_bc/vscale-shuffle.ll.bc", vscale_shuffle, "Constant::ShuffleVector, which is not supported");
 
@@ -52,9 +53,7 @@ llvm_test_should_panic!("tests/llvm_bc/vscale-shuffle.ll.bc", vscale_shuffle, "C
 // BFloat types, so we wrote our own and tested it in basic_bc.
 // That means this test file only worries about scalable vector types.
 
-use llvm_ir::{constant, instruction, terminator, Constant, ConstantRef, Name, Operand};
-use std::convert::TryInto;
-
+#[cfg(feature="llvm-13-or-lower")] // starting with LLVM 14, this file is optimized to not contain a Constant::ShuffleVector
 #[test]
 #[should_panic(expected = "Constant::ShuffleVector, which is not supported")]
 fn scalable_vector_insts() {
@@ -62,6 +61,8 @@ fn scalable_vector_insts() {
     let path = Path::new("tests/llvm_bc/vscale-round-trip.ll.bc");
     let module = Module::from_bc_path(&path).expect("Failed to parse module");
 
+    use llvm_ir::{instruction, Constant, ConstantRef, Name, Operand};
+    use std::convert::TryInto;
     let func = module
         .get_func_by_name("non_const_shufflevector")
         .expect("Failed to find function");
@@ -88,6 +89,7 @@ fn scalable_vector_insts() {
 
 }
 
+#[cfg(feature="llvm-13-or-lower")] // starting with LLVM 14, this file is optimized to not contain a Constant::ShuffleVector
 #[test]
 #[should_panic(expected = "Constant::ShuffleVector, which is not supported")]
 fn scalable_vector_consts() {
@@ -95,6 +97,8 @@ fn scalable_vector_consts() {
     let path = Path::new("tests/llvm_bc/vscale-round-trip.ll.bc");
     let module = Module::from_bc_path(&path).expect("Failed to parse module");
 
+    use llvm_ir::{constant, terminator, Constant, ConstantRef, Operand};
+    use std::convert::TryInto;
     let func = module
         .get_func_by_name("const_shufflevector")
         .expect("Failed to find function");

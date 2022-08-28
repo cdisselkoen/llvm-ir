@@ -37,11 +37,11 @@ add it as a dependency in your `Cargo.toml`, selecting the feature corresponding
 to the LLVM version you want:
 ```toml
 [dependencies]
-llvm-ir = { version = "0.8.1", features = ["llvm-13"] }
+llvm-ir = { version = "0.8.2", features = ["llvm-14"] }
 ```
 
 Currently, the supported LLVM versions are `llvm-8`, `llvm-9`, `llvm-10`,
-`llvm-11`, `llvm-12`, and `llvm-13`.
+`llvm-11`, `llvm-12`, `llvm-13`, and `llvm-14`.
 
 Then, the easiest way to get started is to parse some existing LLVM IR into
 this crate's data structures.
@@ -82,8 +82,8 @@ using.
 ## Compatibility
 Starting with `llvm-ir` 0.7.0, LLVM versions are selected by a Cargo feature
 flag. This means that a single crate version can be used for any supported LLVM
-version. Currently, `llvm-ir` supports LLVM versions 8 through 13, selected by
-feature flags `llvm-8` through `llvm-13`.
+version. Currently, `llvm-ir` supports LLVM versions 8 through 14, selected by
+feature flags `llvm-8` through `llvm-14`.
 
 `llvm-ir` works on stable Rust, and requires Rust 1.45+.
 
@@ -136,7 +136,7 @@ but not to query the values of these flags on existing instructions.
 - contents of inline assembly functions
 - information about the clauses in the variadic `LandingPad` instruction
 - information about the operands of a `BlockAddress` constant expression
-- the ["prefix data"](https://releases.llvm.org/13.0.0/docs/LangRef.html#prefix-data)
+- the ["prefix data"](https://releases.llvm.org/14.0.0/docs/LangRef.html#prefix-data)
 associated with a function
 - the values of constant integers which are larger than 64 bits (and don't
 fit in 64 bits) -- see [#5](https://github.com/cdisselkoen/llvm-ir/issues/5)
@@ -166,7 +166,8 @@ one of the features `llvm-8`, `llvm-9`, or `llvm-10`. Previously, we had the
 `0.6.x` branch for LLVM 10, the `0.5.x` branch for LLVM 9, and didn't
 officially support LLVM 8. Now, a single release supports LLVM 8, 9, and 10.
   - (Note: 0.7.3 and later also supports LLVM 11; 0.7.5 and later also supports
-    LLVM 12; and 0.8.1 and later also supports LLVM 13.)
+  LLVM 12; 0.8.1 and later also supports LLVM 13; and 0.8.2 and later also
+  supports LLVM 14.)
 - [`FunctionAttribute`] and [`ParameterAttribute`] are now proper enums with
 descriptive variants such as `NoInline`, `StackProtect`, etc. Previously,
 attributes were opaque numeric codes which were difficult to interpret.
@@ -194,23 +195,23 @@ number of breaking changes to the public interface:
 [`inkwell`]: https://github.com/TheDan64/inkwell
 [`llvm-hs-pure` Haskell package]: http://hackage.haskell.org/package/llvm-hs-pure
 [`llvm-hs` Haskell package]: http://hackage.haskell.org/package/llvm-hs
-[`Instruction`]: https://docs.rs/llvm-ir/0.8.1/llvm_ir/instruction/enum.Instruction.html
-[`Add`]: https://docs.rs/llvm-ir/0.8.1/llvm_ir/instruction/struct.Add.html
-[`Call`]: https://docs.rs/llvm-ir/0.8.1/llvm_ir/instruction/struct.Call.html
-[`Store`]: https://docs.rs/llvm-ir/0.8.1/llvm_ir/instruction/struct.Store.html
-[`BasicBlock`]: https://docs.rs/llvm-ir/0.8.1/llvm_ir/basicblock/struct.BasicBlock.html
-[`Function`]: https://docs.rs/llvm-ir/0.8.1/llvm_ir/function/struct.Function.html
-[`Module`]: https://docs.rs/llvm-ir/0.8.1/llvm_ir/module/struct.Module.html
-[`Terminator`]: https://docs.rs/llvm-ir/0.8.1/llvm_ir/terminator/enum.Terminator.html
-[`GlobalVariable`]: https://docs.rs/llvm-ir/0.8.1/llvm_ir/module/struct.GlobalVariable.html
-[`DebugLoc`]: https://docs.rs/llvm-ir/0.8.1/llvm_ir/debugloc/struct.DebugLoc.html
-[`HasDebugLoc`]: https://docs.rs/llvm-ir/0.8.1/llvm_ir/debugloc/trait.HasDebugLoc.html
-[`FunctionAttribute`]: https://docs.rs/llvm-ir/0.8.1/llvm_ir/function/enum.FunctionAttribute.html
-[`ParameterAttribute`]: https://docs.rs/llvm-ir/0.8.1/llvm_ir/function/enum.ParameterAttribute.html
-[`Type`]: https://docs.rs/llvm-ir/0.8.1/llvm_ir/types/enum.Type.html
-[`TypeRef`]: https://docs.rs/llvm-ir/0.8.1/llvm_ir/types/struct.TypeRef.html
-[`Typed`]: https://docs.rs/llvm-ir/0.8.1/llvm_ir/types/struct.TypeRef.html
-[`Constant`]: https://docs.rs/llvm-ir/0.8.1/llvm_ir/constant/enum.Constant.html
-[`ConstantRef`]: https://docs.rs/llvm-ir/0.8.1/llvm_ir/constant/struct.ConstantRef.html
-[`module.type_of()`]: https://docs.rs/llvm-ir/0.8.1/llvm_ir/module/struct.Module.html#method.type_of
-[`module.types.named_struct_def()`]: https://docs.rs/llvm-ir/0.8.1/llvm_ir/types/struct.Types.html#method.named_struct_def
+[`Instruction`]: https://docs.rs/llvm-ir/latest/llvm_ir/instruction/enum.Instruction.html
+[`Add`]: https://docs.rs/llvm-ir/latest/llvm_ir/instruction/struct.Add.html
+[`Call`]: https://docs.rs/llvm-ir/latest/llvm_ir/instruction/struct.Call.html
+[`Store`]: https://docs.rs/llvm-ir/latest/llvm_ir/instruction/struct.Store.html
+[`BasicBlock`]: https://docs.rs/llvm-ir/latest/llvm_ir/basicblock/struct.BasicBlock.html
+[`Function`]: https://docs.rs/llvm-ir/latest/llvm_ir/function/struct.Function.html
+[`Module`]: https://docs.rs/llvm-ir/latest/llvm_ir/module/struct.Module.html
+[`Terminator`]: https://docs.rs/llvm-ir/latest/llvm_ir/terminator/enum.Terminator.html
+[`GlobalVariable`]: https://docs.rs/llvm-ir/latest/llvm_ir/module/struct.GlobalVariable.html
+[`DebugLoc`]: https://docs.rs/llvm-ir/latest/llvm_ir/debugloc/struct.DebugLoc.html
+[`HasDebugLoc`]: https://docs.rs/llvm-ir/latest/llvm_ir/debugloc/trait.HasDebugLoc.html
+[`FunctionAttribute`]: https://docs.rs/llvm-ir/latest/llvm_ir/function/enum.FunctionAttribute.html
+[`ParameterAttribute`]: https://docs.rs/llvm-ir/latest/llvm_ir/function/enum.ParameterAttribute.html
+[`Type`]: https://docs.rs/llvm-ir/latest/llvm_ir/types/enum.Type.html
+[`TypeRef`]: https://docs.rs/llvm-ir/latest/llvm_ir/types/struct.TypeRef.html
+[`Typed`]: https://docs.rs/llvm-ir/latest/llvm_ir/types/struct.TypeRef.html
+[`Constant`]: https://docs.rs/llvm-ir/latest/llvm_ir/constant/enum.Constant.html
+[`ConstantRef`]: https://docs.rs/llvm-ir/latest/llvm_ir/constant/struct.ConstantRef.html
+[`module.type_of()`]: https://docs.rs/llvm-ir/latest/llvm_ir/module/struct.Module.html#method.type_of
+[`module.types.named_struct_def()`]: https://docs.rs/llvm-ir/latest/llvm_ir/types/struct.Types.html#method.named_struct_def

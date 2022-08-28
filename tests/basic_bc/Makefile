@@ -4,6 +4,7 @@ CLANG10=clang-10 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/
 CLANG11=clang-11 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk
 CLANG12=clang-12
 CLANG13=clang-13
+CLANG14=clang-14
 RUSTC=rustc
 RUSTFLAGS=--crate-type=lib
 LLVMAS8=$(LLVM8PATH)/bin/llvm-as
@@ -12,6 +13,7 @@ LLVMAS10=$(LLVM10PATH)/bin/llvm-as
 LLVMAS11=$(LLVM11PATH)/bin/llvm-as
 LLVMAS12=$(LLVM12PATH)/bin/llvm-as
 LLVMAS13=$(LLVM13PATH)/bin/llvm-as
+LLVMAS14=$(LLVM14PATH)/bin/llvm-as
 
 COBJS = \
 	hello.bc hello.ll hello.bc-g hello.ll-g \
@@ -24,6 +26,7 @@ COBJS = \
 RUSTOBJS = rust.bc rust.ll rust.bc-g rust.ll-g \
 
 LLOBJS = param_and_func_attributes.ll.bc \
+	fences.ll.bc \
 
 .PHONY: all
 all: \
@@ -33,14 +36,16 @@ all: \
 	$(patsubst %,llvm11/%,$(COBJS)) \
 	$(patsubst %,llvm12/%,$(COBJS)) \
 	$(patsubst %,llvm13/%,$(COBJS)) \
+	$(patsubst %,llvm14/%,$(COBJS)) \
 	$(patsubst %,llvm8/%,$(LLOBJS)) \
 	$(patsubst %,llvm9/%,$(LLOBJS)) \
 	$(patsubst %,llvm10/%,$(LLOBJS)) \
 	$(patsubst %,llvm11/%,$(LLOBJS)) \
 	$(patsubst %,llvm12/%,$(LLOBJS)) \
 	$(patsubst %,llvm13/%,$(LLOBJS)) \
+	$(patsubst %,llvm14/%,$(LLOBJS)) \
 	$(patsubst %,rust/%,$(RUSTOBJS)) \
-	llvm11/float_types.bc llvm12/float_types.bc llvm13/float_types.bc \
+	llvm11/float_types.bc llvm12/float_types.bc llvm13/float_types.bc llvm14/float_types.bc \
 
 # default to -O3 unless overridden by a more specific rule
 %: CFLAGS := -O3
@@ -63,6 +68,9 @@ llvm12/%.ll : %.c
 llvm13/%.ll : %.c
 	mkdir -p llvm13
 	$(CLANG13) $(CFLAGS) -S -emit-llvm $^ -o $@
+llvm14/%.ll : %.c
+	mkdir -p llvm14
+	$(CLANG14) $(CFLAGS) -S -emit-llvm $^ -o $@
 
 llvm8/%.bc : %.c
 	mkdir -p llvm8
@@ -82,6 +90,9 @@ llvm12/%.bc : %.c
 llvm13/%.bc : %.c
 	mkdir -p llvm13
 	$(CLANG13) $(CFLAGS) -c -emit-llvm $^ -o $@
+llvm14/%.bc : %.c
+	mkdir -p llvm14
+	$(CLANG14) $(CFLAGS) -c -emit-llvm $^ -o $@
 
 rust/%.ll : %.rs
 	mkdir -p rust
@@ -110,6 +121,9 @@ llvm12/%.ll-g : %.c
 llvm13/%.ll-g : %.c
 	mkdir -p llvm13
 	$(CLANG13) $(CFLAGS) -g -S -emit-llvm $^ -o $@
+llvm14/%.ll-g : %.c
+	mkdir -p llvm14
+	$(CLANG14) $(CFLAGS) -g -S -emit-llvm $^ -o $@
 
 llvm8/%.bc-g : %.c
 	mkdir -p llvm8
@@ -129,6 +143,9 @@ llvm12/%.bc-g : %.c
 llvm13/%.bc-g : %.c
 	mkdir -p llvm13
 	$(CLANG13) $(CFLAGS) -g -c -emit-llvm $^ -o $@
+llvm14/%.bc-g : %.c
+	mkdir -p llvm14
+	$(CLANG14) $(CFLAGS) -g -c -emit-llvm $^ -o $@
 
 rust/%.ll-g : %.rs
 	mkdir -p rust
@@ -145,8 +162,32 @@ llvm10/linkedlist.% : CFLAGS := -O0
 llvm11/linkedlist.% : CFLAGS := -O0
 llvm12/linkedlist.% : CFLAGS := -O0
 llvm13/linkedlist.% : CFLAGS := -O0
+llvm14/linkedlist.% : CFLAGS := -O0
 
 # assemble this one directly from .ll
+llvm8/fences.ll.bc : fences.ll
+	mkdir -p llvm8
+	$(LLVMAS8) $< -o $@
+llvm9/fences.ll.bc : fences.ll
+	mkdir -p llvm9
+	$(LLVMAS9) $< -o $@
+llvm10/fences.ll.bc : fences.ll
+	mkdir -p llvm10
+	$(LLVMAS10) $< -o $@
+llvm11/fences.ll.bc : fences.ll
+	mkdir -p llvm11
+	$(LLVMAS11) $< -o $@
+llvm12/fences.ll.bc : fences.ll
+	mkdir -p llvm12
+	$(LLVMAS12) $< -o $@
+llvm13/fences.ll.bc : fences.ll
+	mkdir -p llvm13
+	$(LLVMAS13) $< -o $@
+llvm14/fences.ll.bc : fences.ll
+	mkdir -p llvm14
+	$(LLVMAS14) $< -o $@
+
+# assemble this one directly from .ll as well
 llvm8/param_and_func_attributes.ll.bc : param_and_func_attributes.ll
 	mkdir -p llvm8
 	$(LLVMAS8) $< -o $@
@@ -167,6 +208,9 @@ llvm12/param_and_func_attributes.ll.bc : param_and_func_attributes_llvm12.ll
 llvm13/param_and_func_attributes.ll.bc : param_and_func_attributes_llvm13+.ll
 	mkdir -p llvm13
 	$(LLVMAS13) $< -o $@
+llvm14/param_and_func_attributes.ll.bc : param_and_func_attributes_llvm13+.ll
+	mkdir -p llvm14
+	$(LLVMAS14) $< -o $@
 
 # assemble this one directly from .ll, and only for LLVM 11+
 llvm11/float_types.bc : float_types.ll
@@ -178,8 +222,11 @@ llvm12/float_types.bc : float_types.ll
 llvm13/float_types.bc : float_types.ll
 	mkdir -p llvm13
 	$(LLVMAS13) $< -o $@
+llvm14/float_types.bc : float_types.ll
+	mkdir -p llvm14
+	$(LLVMAS14) $< -o $@
 
 .PHONY: clean
 clean:
-	-rm -rf llvm8 llvm9 llvm10 llvm11 llvm12 llvm13 rust
+	-rm -rf llvm8 llvm9 llvm10 llvm11 llvm12 llvm13 llvm14 rust
 	-find . -name "*~" | xargs rm
