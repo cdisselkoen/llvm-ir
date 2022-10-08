@@ -41,7 +41,7 @@ pub enum UnaryOp {
     FPToSI(super::FPToSI),
     FPToUI(super::FPToUI),
     FPTrunc(super::FPTrunc),
-    #[cfg(feature="llvm-10-or-greater")]
+    #[cfg(feature = "llvm-10-or-greater")]
     Freeze(super::Freeze),
     IntToPtr(super::IntToPtr),
     PtrToInt(super::PtrToInt),
@@ -87,7 +87,7 @@ impl From<UnaryOp> for Instruction {
             UnaryOp::FPToSI(i) => i.into(),
             UnaryOp::FPToUI(i) => i.into(),
             UnaryOp::FPTrunc(i) => i.into(),
-            #[cfg(feature="llvm-10-or-greater")]
+            #[cfg(feature = "llvm-10-or-greater")]
             UnaryOp::Freeze(i) => i.into(),
             UnaryOp::IntToPtr(i) => i.into(),
             UnaryOp::PtrToInt(i) => i.into(),
@@ -138,7 +138,7 @@ impl TryFrom<Instruction> for UnaryOp {
             Instruction::FPToSI(i) => Ok(UnaryOp::FPToSI(i)),
             Instruction::FPToUI(i) => Ok(UnaryOp::FPToUI(i)),
             Instruction::FPTrunc(i) => Ok(UnaryOp::FPTrunc(i)),
-            #[cfg(feature="llvm-10-or-greater")]
+            #[cfg(feature = "llvm-10-or-greater")]
             Instruction::Freeze(i) => Ok(UnaryOp::Freeze(i)),
             Instruction::IntToPtr(i) => Ok(UnaryOp::IntToPtr(i)),
             Instruction::PtrToInt(i) => Ok(UnaryOp::PtrToInt(i)),
@@ -187,7 +187,7 @@ impl Typed for UnaryOp {
             UnaryOp::FPToSI(i) => types.type_of(i),
             UnaryOp::FPToUI(i) => types.type_of(i),
             UnaryOp::FPTrunc(i) => types.type_of(i),
-            #[cfg(feature="llvm-10-or-greater")]
+            #[cfg(feature = "llvm-10-or-greater")]
             UnaryOp::Freeze(i) => types.type_of(i),
             UnaryOp::IntToPtr(i) => types.type_of(i),
             UnaryOp::PtrToInt(i) => types.type_of(i),
@@ -285,7 +285,7 @@ impl HasResult for UnaryOp {
             UnaryOp::FPToSI(i) => i.get_result(),
             UnaryOp::FPToUI(i) => i.get_result(),
             UnaryOp::FPTrunc(i) => i.get_result(),
-            #[cfg(feature="llvm-10-or-greater")]
+            #[cfg(feature = "llvm-10-or-greater")]
             UnaryOp::Freeze(i) => i.get_result(),
             UnaryOp::IntToPtr(i) => i.get_result(),
             UnaryOp::PtrToInt(i) => i.get_result(),
@@ -356,7 +356,7 @@ impl super::UnaryOp for UnaryOp {
             UnaryOp::FPToSI(i) => i.get_operand(),
             UnaryOp::FPToUI(i) => i.get_operand(),
             UnaryOp::FPTrunc(i) => i.get_operand(),
-            #[cfg(feature="llvm-10-or-greater")]
+            #[cfg(feature = "llvm-10-or-greater")]
             UnaryOp::Freeze(i) => i.get_operand(),
             UnaryOp::IntToPtr(i) => i.get_operand(),
             UnaryOp::PtrToInt(i) => i.get_operand(),

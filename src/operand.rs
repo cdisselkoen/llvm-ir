@@ -39,7 +39,7 @@ impl Operand {
     /// ```
     pub fn as_constant(&self) -> Option<&Constant> {
         match self {
-            Operand::ConstantOperand(cref) => Some(&cref),
+            Operand::ConstantOperand(cref) => Some(cref),
             _ => None,
         }
     }

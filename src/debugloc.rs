@@ -53,7 +53,7 @@ impl fmt::Display for DebugLoc {
             filename if !pretty_directory.is_empty() => {
                 filename.trim_start_matches(pretty_directory)
             },
-            filename => &filename,
+            filename => filename,
         };
         let pretty_column = match self.col {
             Some(col) => format!(", col {}", col),

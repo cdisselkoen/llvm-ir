@@ -16,15 +16,39 @@ macro_rules! llvm_test {
     };
 }
 
-llvm_test!("tests/llvm_bc/aggregateInstructions.3.2.ll.bc", aggregateInstructions);
-llvm_test!("tests/llvm_bc/atomic-no-syncscope.ll.bc", atomic_no_syncscope);
+llvm_test!(
+    "tests/llvm_bc/aggregateInstructions.3.2.ll.bc",
+    aggregateInstructions
+);
+llvm_test!(
+    "tests/llvm_bc/atomic-no-syncscope.ll.bc",
+    atomic_no_syncscope
+);
 llvm_test!("tests/llvm_bc/attributes-3.3.ll.bc", attributes);
-llvm_test!("tests/llvm_bc/auto_upgrade_intrinsics.bc", auto_upgrade_intrinsics);
-llvm_test!("tests/llvm_bc/avr-calling-conventions.ll.bc", avr_calling_conventions);
-llvm_test!("tests/llvm_bc/binaryFloatInstructions.3.2.ll.bc", binaryFloatInstructions);
-llvm_test!("tests/llvm_bc/binaryIntInstructions.3.2.ll.bc", binaryIntInstructions);
-llvm_test!("tests/llvm_bc/bitwiseInstructions.3.2.ll.bc", bitwiseInstructions);
-llvm_test!("tests/llvm_bc/calling-conventions.3.2.ll.bc", calling_conventions);
+llvm_test!(
+    "tests/llvm_bc/auto_upgrade_intrinsics.bc",
+    auto_upgrade_intrinsics
+);
+llvm_test!(
+    "tests/llvm_bc/avr-calling-conventions.ll.bc",
+    avr_calling_conventions
+);
+llvm_test!(
+    "tests/llvm_bc/binaryFloatInstructions.3.2.ll.bc",
+    binaryFloatInstructions
+);
+llvm_test!(
+    "tests/llvm_bc/binaryIntInstructions.3.2.ll.bc",
+    binaryIntInstructions
+);
+llvm_test!(
+    "tests/llvm_bc/bitwiseInstructions.3.2.ll.bc",
+    bitwiseInstructions
+);
+llvm_test!(
+    "tests/llvm_bc/calling-conventions.3.2.ll.bc",
+    calling_conventions
+);
 llvm_test!("tests/llvm_bc/case-ranges-3.3.ll.bc", case_ranges);
 llvm_test!("tests/llvm_bc/cmpxchg-upgrade.ll.bc", cmpxchg_upgrade);
 llvm_test!("tests/llvm_bc/cmpxchg.3.6.ll.bc", cmpxchg);
@@ -36,30 +60,72 @@ llvm_test!("tests/llvm_bc/compatibility-4.0.ll.bc", compatibility_4_0);
 llvm_test!("tests/llvm_bc/compatibility-5.0.ll.bc", compatibility_5_0);
 llvm_test!("tests/llvm_bc/compatibility-6.0.ll.bc", compatibility_6_0);
 llvm_test!("tests/llvm_bc/constantsTest.3.2.ll.bc", constantsTest);
-llvm_test!("tests/llvm_bc/conversionInstructions.3.2.ll.bc", conversionInstructions);
-llvm_test!("tests/llvm_bc/DICompileUnit-no-DWOId.ll.bc", DICompileUnit_no_DWOId);
+llvm_test!(
+    "tests/llvm_bc/conversionInstructions.3.2.ll.bc",
+    conversionInstructions
+);
+llvm_test!(
+    "tests/llvm_bc/DICompileUnit-no-DWOId.ll.bc",
+    DICompileUnit_no_DWOId
+);
 llvm_test!("tests/llvm_bc/DIExpression-4.0.ll.bc", DIExpression_4_0);
-llvm_test!("tests/llvm_bc/DIExpression-aggresult.ll.bc", DIExpression_aggresult);
+llvm_test!(
+    "tests/llvm_bc/DIExpression-aggresult.ll.bc",
+    DIExpression_aggresult
+);
 llvm_test!("tests/llvm_bc/DIExpression-deref.ll.bc", DIExpression_deref);
-llvm_test!("tests/llvm_bc/DIExpression-minus-upgrade.ll.bc", DIExpression_minus_upgrade);
-llvm_test!("tests/llvm_bc/diglobalvariable-3.8.ll.bc", diglobalvariable_3_8);
-llvm_test!("tests/llvm_bc/DIGlobalVariableExpression.ll.bc", DIGlobalVariableExpression);
-llvm_test!("tests/llvm_bc/DIGlobalVariableExpression2.ll.bc", DIGlobalVariableExpression2);
-llvm_test!("tests/llvm_bc/dilocalvariable-3.9.ll.bc", dilocalvariable_3_9);
-llvm_test!("tests/llvm_bc/DILocalVariable-explicit-tags.ll.bc", DILocalVariable_explicit_tags);
-llvm_test!("tests/llvm_bc/DILocation-implicit-code.ll.bc", DILocation_implicit_code);
+llvm_test!(
+    "tests/llvm_bc/DIExpression-minus-upgrade.ll.bc",
+    DIExpression_minus_upgrade
+);
+llvm_test!(
+    "tests/llvm_bc/diglobalvariable-3.8.ll.bc",
+    diglobalvariable_3_8
+);
+llvm_test!(
+    "tests/llvm_bc/DIGlobalVariableExpression.ll.bc",
+    DIGlobalVariableExpression
+);
+llvm_test!(
+    "tests/llvm_bc/DIGlobalVariableExpression2.ll.bc",
+    DIGlobalVariableExpression2
+);
+llvm_test!(
+    "tests/llvm_bc/dilocalvariable-3.9.ll.bc",
+    dilocalvariable_3_9
+);
+llvm_test!(
+    "tests/llvm_bc/DILocalVariable-explicit-tags.ll.bc",
+    DILocalVariable_explicit_tags
+);
+llvm_test!(
+    "tests/llvm_bc/DILocation-implicit-code.ll.bc",
+    DILocation_implicit_code
+);
 llvm_test!("tests/llvm_bc/DINamespace.ll.bc", DINamespace);
-llvm_test!("tests/llvm_bc/DISubprogram-distinct-definitions.ll.bc", DISubprogram_distinct_definitions);
+llvm_test!(
+    "tests/llvm_bc/DISubprogram-distinct-definitions.ll.bc",
+    DISubprogram_distinct_definitions
+);
 llvm_test!("tests/llvm_bc/DISubprogram-v4.ll.bc", DISubprogram_v4);
 llvm_test!("tests/llvm_bc/disubrange-v0.ll.bc", disubrange_v0);
 llvm_test!("tests/llvm_bc/dityperefs-3.8.ll.bc", dityperefs);
 llvm_test!("tests/llvm_bc/drop-debug-info.3.5.ll.bc", drop_debug_info);
-llvm_test!("tests/llvm_bc/function-local-metadata.3.5.ll.bc", function_local_metadata);
+llvm_test!(
+    "tests/llvm_bc/function-local-metadata.3.5.ll.bc",
+    function_local_metadata
+);
 llvm_test!("tests/llvm_bc/global-variables.3.2.ll.bc", global_variables);
-llvm_test!("tests/llvm_bc/highLevelStructure.3.2.ll.bc", highLevelStructure);
+llvm_test!(
+    "tests/llvm_bc/highLevelStructure.3.2.ll.bc",
+    highLevelStructure
+);
 // llvm_test!("tests/llvm_bc/invalid.ll.bc", invalid);  // we omit this .bc file because it is intentionally invalid
 llvm_test!("tests/llvm_bc/linkage-types-3.2.ll.bc", linkage_types);
-llvm_test!("tests/llvm_bc/local-linkage-default-visibility.3.4.ll.bc", local_linkage_default_visibility);
+llvm_test!(
+    "tests/llvm_bc/local-linkage-default-visibility.3.4.ll.bc",
+    local_linkage_default_visibility
+);
 llvm_test!("tests/llvm_bc/memInstructions.3.2.ll.bc", memInstructions);
 llvm_test!("tests/llvm_bc/metadata-source.ll.bc", metadata_source);
 llvm_test!("tests/llvm_bc/metadata.3.5.ll.bc", metadata);
@@ -67,30 +133,78 @@ llvm_test!("tests/llvm_bc/miscInstructions.3.2.ll.bc", miscInstructions);
 // llvm_test!("tests/llvm_bc/null-type.ll.bc", null_type);  // we omit this .bc file because it is intentionally invalid
 llvm_test!("tests/llvm_bc/old-aliases.ll.bc", old_aliases);
 // llvm_test!("tests/llvm_bc/pr18704.ll.bc", pr18704);  // we omit this .bc file because it is intentionally invalid
-llvm_test!("tests/llvm_bc/standardCIntrinsic.3.2.ll.bc", standardCIntrinsic);
-llvm_test!("tests/llvm_bc/terminatorInstructions.3.2.ll.bc", terminatorInstructions);
-llvm_test!("tests/llvm_bc/thinlto-summary-local-5.0.ll.bc", thinlto_summary_local);
-llvm_test!("tests/llvm_bc/upgrade-dbg-checksum.ll.bc", upgrade_dbg_checksum);
+llvm_test!(
+    "tests/llvm_bc/standardCIntrinsic.3.2.ll.bc",
+    standardCIntrinsic
+);
+llvm_test!(
+    "tests/llvm_bc/terminatorInstructions.3.2.ll.bc",
+    terminatorInstructions
+);
+llvm_test!(
+    "tests/llvm_bc/thinlto-summary-local-5.0.ll.bc",
+    thinlto_summary_local
+);
+llvm_test!(
+    "tests/llvm_bc/upgrade-dbg-checksum.ll.bc",
+    upgrade_dbg_checksum
+);
 llvm_test!("tests/llvm_bc/upgrade-dbg-value.ll.bc", upgrade_dbg_value);
-llvm_test!("tests/llvm_bc/upgrade-debug-info-for-profiling.ll.bc", upgrade_debug_info_for_profiling);
-llvm_test!("tests/llvm_bc/upgrade-global-ctors.ll.bc", upgrade_global_ctors);
-llvm_test!("tests/llvm_bc/upgrade-importedentity.ll.bc", upgrade_importedentity);
-llvm_test!("tests/llvm_bc/upgrade-loop-metadata.ll.bc", upgrade_loop_metadata);
-llvm_test!("tests/llvm_bc/upgrade-objcretainrelease-asm.ll.bc", upgrade_objcretainrelease_asm);
-llvm_test!("tests/llvm_bc/upgrade-objcretainrelease.ll.bc", upgrade_objcretainrelease);
-llvm_test!("tests/llvm_bc/upgrade-pointer-address-space.ll.bc", upgrade_pointer_address_space);
-llvm_test!("tests/llvm_bc/upgrade-subprogram-this.ll.bc", upgrade_subprogram_this);
+llvm_test!(
+    "tests/llvm_bc/upgrade-debug-info-for-profiling.ll.bc",
+    upgrade_debug_info_for_profiling
+);
+llvm_test!(
+    "tests/llvm_bc/upgrade-global-ctors.ll.bc",
+    upgrade_global_ctors
+);
+llvm_test!(
+    "tests/llvm_bc/upgrade-importedentity.ll.bc",
+    upgrade_importedentity
+);
+llvm_test!(
+    "tests/llvm_bc/upgrade-loop-metadata.ll.bc",
+    upgrade_loop_metadata
+);
+llvm_test!(
+    "tests/llvm_bc/upgrade-objcretainrelease-asm.ll.bc",
+    upgrade_objcretainrelease_asm
+);
+llvm_test!(
+    "tests/llvm_bc/upgrade-objcretainrelease.ll.bc",
+    upgrade_objcretainrelease
+);
+llvm_test!(
+    "tests/llvm_bc/upgrade-pointer-address-space.ll.bc",
+    upgrade_pointer_address_space
+);
+llvm_test!(
+    "tests/llvm_bc/upgrade-subprogram-this.ll.bc",
+    upgrade_subprogram_this
+);
 llvm_test!("tests/llvm_bc/upgrade-subprogram.ll.bc", upgrade_subprogram);
-llvm_test!("tests/llvm_bc/variableArgumentIntrinsic.3.2.ll.bc", variableArgumentIntrinsic);
-llvm_test!("tests/llvm_bc/vectorInstructions.3.2.ll.bc", vectorInstructions);
-llvm_test!("tests/llvm_bc/visibility-styles.3.2.ll.bc", visibility_styles);
-llvm_test!("tests/llvm_bc/weak-cmpxchg-upgrade.ll.bc", weak_cmpxchg_upgrade);
+llvm_test!(
+    "tests/llvm_bc/variableArgumentIntrinsic.3.2.ll.bc",
+    variableArgumentIntrinsic
+);
+llvm_test!(
+    "tests/llvm_bc/vectorInstructions.3.2.ll.bc",
+    vectorInstructions
+);
+llvm_test!(
+    "tests/llvm_bc/visibility-styles.3.2.ll.bc",
+    visibility_styles
+);
+llvm_test!(
+    "tests/llvm_bc/weak-cmpxchg-upgrade.ll.bc",
+    weak_cmpxchg_upgrade
+);
 llvm_test!("tests/llvm_bc/weak-macho-3.5.ll.bc", weak_macho);
 
 use either::Either;
-use llvm_ir::*;
 use llvm_ir::instruction::{Atomicity, MemoryOrdering, SynchronizationScope};
 use llvm_ir::types::NamedStructDef;
+use llvm_ir::*;
 use std::convert::TryInto;
 
 /// Additionally ensure that certain constructs were parsed correctly
@@ -130,35 +244,46 @@ fn DILocation_implicit_code_extra_checks() {
         );
     }
     assert_eq!(invoke.arguments.len(), 2);
-    if let Operand::LocalOperand { name, ty} = &invoke.arguments[0].0 {
+    if let Operand::LocalOperand { name, ty } = &invoke.arguments[0].0 {
         assert_eq!(name, &Name::from("a"));
         if let Type::PointerType { pointee_type, .. } = ty.as_ref() {
             if let Type::NamedStructType { name } = pointee_type.as_ref() {
                 match module.types.named_struct_def(name) {
                     None => panic!("Failed to find {} in module.types", name),
-                    Some(NamedStructDef::Opaque) => panic!("Didn't expect {} to be an opaque struct type", name),
+                    Some(NamedStructDef::Opaque) => {
+                        panic!("Didn't expect {} to be an opaque struct type", name)
+                    },
                     Some(NamedStructDef::Defined(ty)) => {
                         assert_eq!(ty, &module.types.struct_of(vec![module.types.i8()], false));
-                    }
+                    },
                 }
             } else {
                 panic!("Expected invoke.arguments[0].0 to be a pointer to a Type::NamedStructType; instead it was a pointer to a {:?}", **pointee_type);
             }
         } else {
-            panic!("Exected invoke.arguments[0].0 to be of PointerType; instead it was {:?}", ty.as_ref());
+            panic!(
+                "Exected invoke.arguments[0].0 to be of PointerType; instead it was {:?}",
+                ty.as_ref()
+            );
         }
     } else {
-        panic!("Expected invoke.arguments[0].0 to be a local operand; instead it was {:?}", &invoke.arguments[0].0);
+        panic!(
+            "Expected invoke.arguments[0].0 to be a local operand; instead it was {:?}",
+            &invoke.arguments[0].0
+        );
     }
-    assert_eq!(invoke.arguments[1].0, Operand::ConstantOperand(ConstantRef::new(Constant::Int { bits: 32, value: 0 })));
+    assert_eq!(
+        invoke.arguments[1].0,
+        Operand::ConstantOperand(ConstantRef::new(Constant::Int { bits: 32, value: 0 }))
+    );
     assert_eq!(invoke.return_label, Name::from("invoke.cont"));
     assert_eq!(invoke.exception_label, Name::from("lpad"));
-    #[cfg(feature="llvm-8-or-lower")]
+    #[cfg(feature = "llvm-8-or-lower")]
     assert_eq!(
         &format!("{}", invoke),
         "%0 = invoke @_ZN1A3fooEi(%struct.A* %a, i32 0) to label %invoke.cont unwind label %lpad",
     );
-    #[cfg(feature="llvm-9-or-greater")]
+    #[cfg(feature = "llvm-9-or-greater")]
     assert_eq!(
         &format!("{}", invoke),
         "%0 = invoke @_ZN1A3fooEi(%struct.A* %a, i32 0) to label %invoke.cont unwind label %lpad (with debugloc)",
@@ -182,17 +307,23 @@ fn DILocation_implicit_code_extra_checks() {
         .try_into()
         .unwrap_or_else(|_| panic!("Expected a landingpad, got {:?}", &lpad.instrs[0]));
     let expected_landingpad_resultty = module.types.struct_of(
-        vec![module.types.pointer_to(module.types.i8()), module.types.i32()],
+        vec![
+            module.types.pointer_to(module.types.i8()),
+            module.types.i32(),
+        ],
         false,
     );
     assert_eq!(landingpad.result_type, expected_landingpad_resultty);
     assert_eq!(landingpad.clauses.len(), 1);
     assert_eq!(landingpad.cleanup, false);
     assert_eq!(landingpad.dest, Name::Number(1));
-    #[cfg(feature="llvm-8-or-lower")]
+    #[cfg(feature = "llvm-8-or-lower")]
     assert_eq!(&format!("{}", landingpad), "%1 = landingpad { i8*, i32 }");
-    #[cfg(feature="llvm-9-or-greater")]
-    assert_eq!(&format!("{}", landingpad), "%1 = landingpad { i8*, i32 } (with debugloc)");
+    #[cfg(feature = "llvm-9-or-greater")]
+    assert_eq!(
+        &format!("{}", landingpad),
+        "%1 = landingpad { i8*, i32 } (with debugloc)"
+    );
     let eval: &instruction::ExtractValue = &lpad.instrs[1]
         .clone()
         .try_into()
@@ -207,10 +338,13 @@ fn DILocation_implicit_code_extra_checks() {
     assert_eq!(eval.indices.len(), 1);
     assert_eq!(eval.indices[0], 0);
     assert_eq!(eval.dest, Name::Number(2));
-    #[cfg(feature="llvm-8-or-lower")]
+    #[cfg(feature = "llvm-8-or-lower")]
     assert_eq!(&format!("{}", eval), "%2 = extractvalue { i8*, i32 } %1, 0");
-    #[cfg(feature="llvm-9-or-greater")]
-    assert_eq!(&format!("{}", eval), "%2 = extractvalue { i8*, i32 } %1, 0 (with debugloc)");
+    #[cfg(feature = "llvm-9-or-greater")]
+    assert_eq!(
+        &format!("{}", eval),
+        "%2 = extractvalue { i8*, i32 } %1, 0 (with debugloc)"
+    );
 
     // From this point on, our numbers are off by 2 instead of 1, due to
     // numbering the invoke terminator in the 'catch' block.
@@ -226,10 +360,16 @@ fn DILocation_implicit_code_extra_checks() {
     assert_eq!(landingpad.result_type, expected_landingpad_resultty);
     assert_eq!(landingpad.clauses.len(), 0);
     assert_eq!(landingpad.cleanup, true);
-    #[cfg(feature="llvm-8-or-lower")]
-    assert_eq!(&format!("{}", landingpad), "%10 = landingpad { i8*, i32 } cleanup");
-    #[cfg(feature="llvm-9-or-greater")]
-    assert_eq!(&format!("{}", landingpad), "%10 = landingpad { i8*, i32 } cleanup (with debugloc)");
+    #[cfg(feature = "llvm-8-or-lower")]
+    assert_eq!(
+        &format!("{}", landingpad),
+        "%10 = landingpad { i8*, i32 } cleanup"
+    );
+    #[cfg(feature = "llvm-9-or-greater")]
+    assert_eq!(
+        &format!("{}", landingpad),
+        "%10 = landingpad { i8*, i32 } cleanup (with debugloc)"
+    );
     let eval: &instruction::ExtractValue = &lpad1.instrs[3]
         .clone()
         .try_into()
@@ -244,10 +384,16 @@ fn DILocation_implicit_code_extra_checks() {
     assert_eq!(eval.indices.len(), 1);
     assert_eq!(eval.indices[0], 1);
     assert_eq!(eval.dest, Name::Number(12));
-    #[cfg(feature="llvm-8-or-lower")]
-    assert_eq!(&format!("{}", eval), "%12 = extractvalue { i8*, i32 } %10, 1");
-    #[cfg(feature="llvm-9-or-greater")]
-    assert_eq!(&format!("{}", eval), "%12 = extractvalue { i8*, i32 } %10, 1 (with debugloc)");
+    #[cfg(feature = "llvm-8-or-lower")]
+    assert_eq!(
+        &format!("{}", eval),
+        "%12 = extractvalue { i8*, i32 } %10, 1"
+    );
+    #[cfg(feature = "llvm-9-or-greater")]
+    assert_eq!(
+        &format!("{}", eval),
+        "%12 = extractvalue { i8*, i32 } %10, 1 (with debugloc)"
+    );
 
     let trycont = func
         .get_bb_by_name(&Name::from("try.cont"))
@@ -257,9 +403,9 @@ fn DILocation_implicit_code_extra_checks() {
         .clone()
         .try_into()
         .unwrap_or_else(|_| panic!("Expected an unreachable, got {:?}", &trycont.term));
-    #[cfg(feature="llvm-8-or-lower")]
+    #[cfg(feature = "llvm-8-or-lower")]
     assert_eq!(&format!("{}", u), "unreachable");
-    #[cfg(feature="llvm-9-or-greater")]
+    #[cfg(feature = "llvm-9-or-greater")]
     assert_eq!(&format!("{}", u), "unreachable (with debugloc)");
 
     let ehresume = func
@@ -271,7 +417,9 @@ fn DILocation_implicit_code_extra_checks() {
         .unwrap_or_else(|_| panic!("Expected an insertvalue, got {:?}", &ehresume.instrs[2]));
     assert_eq!(
         ival.aggregate,
-        Operand::ConstantOperand(ConstantRef::new(Constant::Undef(expected_landingpad_resultty.clone())))
+        Operand::ConstantOperand(ConstantRef::new(Constant::Undef(
+            expected_landingpad_resultty.clone()
+        )))
     );
     assert_eq!(
         ival.element,
@@ -283,10 +431,16 @@ fn DILocation_implicit_code_extra_checks() {
     assert_eq!(ival.indices.len(), 1);
     assert_eq!(ival.indices[0], 0);
     assert_eq!(ival.dest, Name::from("lpad.val"));
-    #[cfg(feature="llvm-8-or-lower")]
-    assert_eq!(&format!("{}", ival), "%lpad.val = insertvalue { i8*, i32 } undef, i8* %exn4, 0");
-    #[cfg(feature="llvm-9-or-greater")]
-    assert_eq!(&format!("{}", ival), "%lpad.val = insertvalue { i8*, i32 } undef, i8* %exn4, 0 (with debugloc)");
+    #[cfg(feature = "llvm-8-or-lower")]
+    assert_eq!(
+        &format!("{}", ival),
+        "%lpad.val = insertvalue { i8*, i32 } undef, i8* %exn4, 0"
+    );
+    #[cfg(feature = "llvm-9-or-greater")]
+    assert_eq!(
+        &format!("{}", ival),
+        "%lpad.val = insertvalue { i8*, i32 } undef, i8* %exn4, 0 (with debugloc)"
+    );
     let ival2: &instruction::InsertValue = &ehresume.instrs[3]
         .clone()
         .try_into()
@@ -308,10 +462,16 @@ fn DILocation_implicit_code_extra_checks() {
     assert_eq!(ival2.indices.len(), 1);
     assert_eq!(ival2.indices[0], 1);
     assert_eq!(ival2.dest, Name::from("lpad.val6"));
-    #[cfg(feature="llvm-8-or-lower")]
-    assert_eq!(&format!("{}", ival2), "%lpad.val6 = insertvalue { i8*, i32 } %lpad.val, i32 %sel5, 1");
-    #[cfg(feature="llvm-9-or-greater")]
-    assert_eq!(&format!("{}", ival2), "%lpad.val6 = insertvalue { i8*, i32 } %lpad.val, i32 %sel5, 1 (with debugloc)");
+    #[cfg(feature = "llvm-8-or-lower")]
+    assert_eq!(
+        &format!("{}", ival2),
+        "%lpad.val6 = insertvalue { i8*, i32 } %lpad.val, i32 %sel5, 1"
+    );
+    #[cfg(feature = "llvm-9-or-greater")]
+    assert_eq!(
+        &format!("{}", ival2),
+        "%lpad.val6 = insertvalue { i8*, i32 } %lpad.val, i32 %sel5, 1 (with debugloc)"
+    );
     let resume: &terminator::Resume = &ehresume
         .term
         .clone()
@@ -324,10 +484,13 @@ fn DILocation_implicit_code_extra_checks() {
             ty: expected_landingpad_resultty.clone()
         }
     );
-    #[cfg(feature="llvm-8-or-lower")]
+    #[cfg(feature = "llvm-8-or-lower")]
     assert_eq!(&format!("{}", resume), "resume { i8*, i32 } %lpad.val6");
-    #[cfg(feature="llvm-9-or-greater")]
-    assert_eq!(&format!("{}", resume), "resume { i8*, i32 } %lpad.val6 (with debugloc)");
+    #[cfg(feature = "llvm-9-or-greater")]
+    assert_eq!(
+        &format!("{}", resume),
+        "resume { i8*, i32 } %lpad.val6 (with debugloc)"
+    );
 }
 
 #[test]
@@ -339,22 +502,67 @@ fn atomics() {
         .get_func_by_name("atomics")
         .expect("Failed to find function");
     let bb = &func.basic_blocks[0];
-    let cmpxchg: &instruction::CmpXchg = &bb.instrs[0].clone().try_into().unwrap_or_else(|_| panic!("Expected a cmpxchg, got {:?}", &bb.instrs[0]));
-    assert_eq!(cmpxchg.address, Operand::LocalOperand { name: Name::from("word"), ty: module.types.pointer_to(module.types.i32()) });
-    assert_eq!(cmpxchg.expected, Operand::ConstantOperand(ConstantRef::new(Constant::Int { bits: 32, value: 0 })));
-    assert_eq!(cmpxchg.replacement, Operand::ConstantOperand(ConstantRef::new(Constant::Int { bits: 32, value: 4 })));
+    let cmpxchg: &instruction::CmpXchg = &bb.instrs[0]
+        .clone()
+        .try_into()
+        .unwrap_or_else(|_| panic!("Expected a cmpxchg, got {:?}", &bb.instrs[0]));
+    assert_eq!(
+        cmpxchg.address,
+        Operand::LocalOperand {
+            name: Name::from("word"),
+            ty: module.types.pointer_to(module.types.i32())
+        }
+    );
+    assert_eq!(
+        cmpxchg.expected,
+        Operand::ConstantOperand(ConstantRef::new(Constant::Int { bits: 32, value: 0 }))
+    );
+    assert_eq!(
+        cmpxchg.replacement,
+        Operand::ConstantOperand(ConstantRef::new(Constant::Int { bits: 32, value: 4 }))
+    );
     assert_eq!(cmpxchg.dest, Name::from("cmpxchg.0"));
     assert_eq!(cmpxchg.volatile, false);
-    assert_eq!(cmpxchg.atomicity, Atomicity { synch_scope: SynchronizationScope::System, mem_ordering: MemoryOrdering::Monotonic });
+    assert_eq!(
+        cmpxchg.atomicity,
+        Atomicity {
+            synch_scope: SynchronizationScope::System,
+            mem_ordering: MemoryOrdering::Monotonic
+        }
+    );
     assert_eq!(cmpxchg.failure_memory_ordering, MemoryOrdering::Monotonic);
-    assert_eq!(&format!("{}", cmpxchg), "%cmpxchg.0 = cmpxchg i32* %word, i32 0, i32 4 monotonic monotonic");
-    let atomicrmw: &instruction::AtomicRMW = &bb.instrs[8].clone().try_into().unwrap_or_else(|_| panic!("Expected an atomicrmw, got {:?}", &bb.instrs[8]));
-    assert_eq!(atomicrmw.address, Operand::LocalOperand { name: Name::from("word"), ty: module.types.pointer_to(module.types.i32()) });
-    assert_eq!(atomicrmw.value, Operand::ConstantOperand(ConstantRef::new(Constant::Int { bits: 32, value: 12 })));
+    assert_eq!(
+        &format!("{}", cmpxchg),
+        "%cmpxchg.0 = cmpxchg i32* %word, i32 0, i32 4 monotonic monotonic"
+    );
+    let atomicrmw: &instruction::AtomicRMW = &bb.instrs[8]
+        .clone()
+        .try_into()
+        .unwrap_or_else(|_| panic!("Expected an atomicrmw, got {:?}", &bb.instrs[8]));
+    assert_eq!(
+        atomicrmw.address,
+        Operand::LocalOperand {
+            name: Name::from("word"),
+            ty: module.types.pointer_to(module.types.i32())
+        }
+    );
+    assert_eq!(
+        atomicrmw.value,
+        Operand::ConstantOperand(ConstantRef::new(Constant::Int {
+            bits: 32,
+            value: 12
+        }))
+    );
     assert_eq!(atomicrmw.dest, Name::from("atomicrmw.xchg"));
     assert_eq!(module.type_of(atomicrmw), module.types.i32());
-    #[cfg(feature="llvm-9-or-lower")]
-    assert_eq!(&format!("{}", atomicrmw), "%atomicrmw.xchg = atomicrmw i32* %word, i32 12 not_atomic"); // I'm not sure why it's not_atomic for LLVM 9 and lower, but monotonic for LLVM 10+
-    #[cfg(feature="llvm-10-or-greater")]
-    assert_eq!(&format!("{}", atomicrmw), "%atomicrmw.xchg = atomicrmw xchg i32* %word, i32 12 monotonic");
+    #[cfg(feature = "llvm-9-or-lower")]
+    assert_eq!(
+        &format!("{}", atomicrmw),
+        "%atomicrmw.xchg = atomicrmw i32* %word, i32 12 not_atomic"
+    ); // I'm not sure why it's not_atomic for LLVM 9 and lower, but monotonic for LLVM 10+
+    #[cfg(feature = "llvm-10-or-greater")]
+    assert_eq!(
+        &format!("{}", atomicrmw),
+        "%atomicrmw.xchg = atomicrmw xchg i32* %word, i32 12 monotonic"
+    );
 }

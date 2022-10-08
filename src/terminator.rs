@@ -1,4 +1,4 @@
-#[cfg(feature="llvm-9-or-greater")]
+#[cfg(feature = "llvm-9-or-greater")]
 use crate::debugloc::{DebugLoc, HasDebugLoc};
 use crate::function::{CallingConvention, FunctionAttribute, ParameterAttribute};
 use crate::instruction::{HasResult, InlineAssembly};
@@ -23,7 +23,7 @@ pub enum Terminator {
     CleanupRet(CleanupRet),
     CatchRet(CatchRet),
     CatchSwitch(CatchSwitch),
-    #[cfg(feature="llvm-9-or-greater")]
+    #[cfg(feature = "llvm-9-or-greater")]
     CallBr(CallBr),
 }
 
@@ -47,13 +47,13 @@ impl Typed for Terminator {
             Terminator::CleanupRet(t) => types.type_of(t),
             Terminator::CatchRet(t) => types.type_of(t),
             Terminator::CatchSwitch(t) => types.type_of(t),
-            #[cfg(feature="llvm-9-or-greater")]
+            #[cfg(feature = "llvm-9-or-greater")]
             Terminator::CallBr(t) => types.type_of(t),
         }
     }
 }
 
-#[cfg(feature="llvm-9-or-greater")]
+#[cfg(feature = "llvm-9-or-greater")]
 impl HasDebugLoc for Terminator {
     fn get_debug_loc(&self) -> &Option<DebugLoc> {
         match self {
@@ -68,7 +68,7 @@ impl HasDebugLoc for Terminator {
             Terminator::CleanupRet(t) => t.get_debug_loc(),
             Terminator::CatchRet(t) => t.get_debug_loc(),
             Terminator::CatchSwitch(t) => t.get_debug_loc(),
-            #[cfg(feature="llvm-9-or-greater")]
+            #[cfg(feature = "llvm-9-or-greater")]
             Terminator::CallBr(t) => t.get_debug_loc(),
         }
     }
@@ -88,7 +88,7 @@ impl Display for Terminator {
             Terminator::CleanupRet(t) => write!(f, "{}", t),
             Terminator::CatchRet(t) => write!(f, "{}", t),
             Terminator::CatchSwitch(t) => write!(f, "{}", t),
-            #[cfg(feature="llvm-9-or-greater")]
+            #[cfg(feature = "llvm-9-or-greater")]
             Terminator::CallBr(t) => write!(f, "{}", t),
         }
     }
@@ -134,7 +134,7 @@ macro_rules! impl_term {
             }
         }
 
-        #[cfg(feature="llvm-9-or-greater")]
+        #[cfg(feature = "llvm-9-or-greater")]
         impl HasDebugLoc for $term {
             fn get_debug_loc(&self) -> &Option<DebugLoc> {
                 &self.debugloc
@@ -176,7 +176,7 @@ macro_rules! void_typed {
 pub struct Ret {
     /// The value being returned, or `None` if returning void.
     pub return_operand: Option<Operand>,
-    #[cfg(feature="llvm-9-or-greater")]
+    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -186,13 +186,15 @@ void_typed!(Ret); // technically the instruction has void type, even though the 
 
 impl Display for Ret {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "ret {}",
+        write!(
+            f,
+            "ret {}",
             match &self.return_operand {
                 None => "void".into(),
                 Some(op) => format!("{}", op),
             },
         )?;
-        #[cfg(feature="llvm-9-or-greater")]
+        #[cfg(feature = "llvm-9-or-greater")]
         if self.debugloc.is_some() {
             write!(f, " (with debugloc)")?;
         }
@@ -207,7 +209,7 @@ impl Display for Ret {
 pub struct Br {
     /// The [`Name`](../enum.Name.html) of the [`BasicBlock`](../struct.BasicBlock.html) destination.
     pub dest: Name,
-    #[cfg(feature="llvm-9-or-greater")]
+    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -218,7 +220,7 @@ void_typed!(Br);
 impl Display for Br {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "br label {}", &self.dest)?;
-        #[cfg(feature="llvm-9-or-greater")]
+        #[cfg(feature = "llvm-9-or-greater")]
         if self.debugloc.is_some() {
             write!(f, " (with debugloc)")?;
         }
@@ -237,7 +239,7 @@ pub struct CondBr {
     pub true_dest: Name,
     /// The [`Name`](../enum.Name.html) of the [`BasicBlock`](../struct.BasicBlock.html) destination if the `condition` is false.
     pub false_dest: Name,
-    #[cfg(feature="llvm-9-or-greater")]
+    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -247,12 +249,12 @@ void_typed!(CondBr);
 
 impl Display for CondBr {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "br {}, label {}, label {}",
-            &self.condition,
-            &self.true_dest,
-            &self.false_dest,
+        write!(
+            f,
+            "br {}, label {}, label {}",
+            &self.condition, &self.true_dest, &self.false_dest,
         )?;
-        #[cfg(feature="llvm-9-or-greater")]
+        #[cfg(feature = "llvm-9-or-greater")]
         if self.debugloc.is_some() {
             write!(f, " (with debugloc)")?;
         }
@@ -266,7 +268,7 @@ pub struct Switch {
     pub operand: Operand,
     pub dests: Vec<(ConstantRef, Name)>,
     pub default_dest: Name,
-    #[cfg(feature="llvm-9-or-greater")]
+    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -276,15 +278,16 @@ void_typed!(Switch);
 
 impl Display for Switch {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "switch {}, label {} [ ",
-            &self.operand,
-            &self.default_dest,
+        write!(
+            f,
+            "switch {}, label {} [ ",
+            &self.operand, &self.default_dest,
         )?;
         for (val, label) in &self.dests {
             write!(f, "{}, label {}; ", val, label)?;
         }
         write!(f, "]")?;
-        #[cfg(feature="llvm-9-or-greater")]
+        #[cfg(feature = "llvm-9-or-greater")]
         if self.debugloc.is_some() {
             write!(f, " (with debugloc)")?;
         }
@@ -302,7 +305,7 @@ pub struct IndirectBr {
     /// [`BasicBlock`](../struct.BasicBlock.html)s in the current function;
     /// `IndirectBr` cannot be used to jump between functions.
     pub possible_dests: Vec<Name>,
-    #[cfg(feature="llvm-9-or-greater")]
+    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -312,15 +315,20 @@ void_typed!(IndirectBr);
 
 impl Display for IndirectBr {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "indirectbr {}, [ label {}",
+        write!(
+            f,
+            "indirectbr {}, [ label {}",
             &self.operand,
-            &self.possible_dests.get(0).expect("IndirectBr with no possible dests"),
+            &self
+                .possible_dests
+                .get(0)
+                .expect("IndirectBr with no possible dests"),
         )?;
         for dest in &self.possible_dests[1 ..] {
             write!(f, ", label {}", dest)?;
         }
         write!(f, " ]")?;
-        #[cfg(feature="llvm-9-or-greater")]
+        #[cfg(feature = "llvm-9-or-greater")]
         if self.debugloc.is_some() {
             write!(f, " (with debugloc)")?;
         }
@@ -339,7 +347,7 @@ pub struct Invoke {
     pub exception_label: Name, // Should be the name of a basic block. If the callee returns with 'resume' or another exception-handling mechanism, control flow resumes here.
     pub function_attributes: Vec<FunctionAttribute>, // llvm-hs has the equivalent of Vec<Either<GroupID, FunctionAttribute>>, but I'm not sure how the GroupID option comes up
     pub calling_convention: CallingConvention,
-    #[cfg(feature="llvm-9-or-greater")]
+    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -363,7 +371,9 @@ impl Display for Invoke {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         // Like with `Call`, we choose not to include all the detailed
         // information available in the `Invoke` struct in this `Display` impl
-        write!(f, "{} = invoke {}(",
+        write!(
+            f,
+            "{} = invoke {}(",
             &self.result,
             match &self.function {
                 Either::Left(_) => "<inline assembly>".into(),
@@ -377,11 +387,12 @@ impl Display for Invoke {
                 write!(f, "{}, ", arg)?;
             }
         }
-        write!(f, ") to label {} unwind label {}",
-            &self.return_label,
-            &self.exception_label,
+        write!(
+            f,
+            ") to label {} unwind label {}",
+            &self.return_label, &self.exception_label,
         )?;
-        #[cfg(feature="llvm-9-or-greater")]
+        #[cfg(feature = "llvm-9-or-greater")]
         if self.debugloc.is_some() {
             write!(f, " (with debugloc)")?;
         }
@@ -393,7 +404,7 @@ impl Display for Invoke {
 #[derive(PartialEq, Clone, Debug)]
 pub struct Resume {
     pub operand: Operand,
-    #[cfg(feature="llvm-9-or-greater")]
+    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -404,7 +415,7 @@ void_typed!(Resume);
 impl Display for Resume {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "resume {}", &self.operand)?;
-        #[cfg(feature="llvm-9-or-greater")]
+        #[cfg(feature = "llvm-9-or-greater")]
         if self.debugloc.is_some() {
             write!(f, " (with debugloc)")?;
         }
@@ -415,7 +426,7 @@ impl Display for Resume {
 /// See [LLVM 14 docs on the 'unreachable' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#unreachable-instruction)
 #[derive(PartialEq, Clone, Debug)]
 pub struct Unreachable {
-    #[cfg(feature="llvm-9-or-greater")]
+    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -426,7 +437,7 @@ void_typed!(Unreachable);
 impl Display for Unreachable {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "unreachable")?;
-        #[cfg(feature="llvm-9-or-greater")]
+        #[cfg(feature = "llvm-9-or-greater")]
         if self.debugloc.is_some() {
             write!(f, " (with debugloc)")?;
         }
@@ -440,7 +451,7 @@ pub struct CleanupRet {
     pub cleanup_pad: Operand,
     /// `None` here indicates 'unwind to caller'
     pub unwind_dest: Option<Name>,
-    #[cfg(feature="llvm-9-or-greater")]
+    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -450,14 +461,16 @@ void_typed!(CleanupRet);
 
 impl Display for CleanupRet {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "cleanupret from {} unwind {}",
+        write!(
+            f,
+            "cleanupret from {} unwind {}",
             &self.cleanup_pad,
             match &self.unwind_dest {
                 None => "to caller".into(),
                 Some(dest) => format!("label {}", dest),
             },
         )?;
-        #[cfg(feature="llvm-9-or-greater")]
+        #[cfg(feature = "llvm-9-or-greater")]
         if self.debugloc.is_some() {
             write!(f, " (with debugloc)")?;
         }
@@ -470,7 +483,7 @@ impl Display for CleanupRet {
 pub struct CatchRet {
     pub catch_pad: Operand,
     pub successor: Name,
-    #[cfg(feature="llvm-9-or-greater")]
+    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -480,11 +493,12 @@ void_typed!(CatchRet);
 
 impl Display for CatchRet {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "catchret from {} to label {}",
-            &self.catch_pad,
-            &self.successor,
+        write!(
+            f,
+            "catchret from {} to label {}",
+            &self.catch_pad, &self.successor,
         )?;
-        #[cfg(feature="llvm-9-or-greater")]
+        #[cfg(feature = "llvm-9-or-greater")]
         if self.debugloc.is_some() {
             write!(f, " (with debugloc)")?;
         }
@@ -501,7 +515,7 @@ pub struct CatchSwitch {
     /// `None` here indicates 'unwind to caller'
     pub default_unwind_dest: Option<Name>,
     pub result: Name,
-    #[cfg(feature="llvm-9-or-greater")]
+    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -518,21 +532,28 @@ impl Typed for CatchSwitch {
 
 impl Display for CatchSwitch {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{} = catchswitch within {} [ label {}",
+        write!(
+            f,
+            "{} = catchswitch within {} [ label {}",
             &self.result,
             &self.parent_pad,
-            &self.catch_handlers.get(0).expect("CatchSwitch with no handlers"),
+            &self
+                .catch_handlers
+                .get(0)
+                .expect("CatchSwitch with no handlers"),
         )?;
         for handler in &self.catch_handlers[1 ..] {
             write!(f, ", label {}", handler)?;
         }
-        write!(f, " ] unwind {}",
+        write!(
+            f,
+            " ] unwind {}",
             match &self.default_unwind_dest {
                 None => "to caller".into(),
                 Some(dest) => format!("label {}", dest),
             },
         )?;
-        #[cfg(feature="llvm-9-or-greater")]
+        #[cfg(feature = "llvm-9-or-greater")]
         if self.debugloc.is_some() {
             write!(f, " (with debugloc)")?;
         }
@@ -541,7 +562,7 @@ impl Display for CatchSwitch {
 }
 
 /// See [LLVM 14 docs on the 'callbr' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#callbr-instruction)
-#[cfg(feature="llvm-9-or-greater")]
+#[cfg(feature = "llvm-9-or-greater")]
 #[derive(PartialEq, Clone, Debug)]
 pub struct CallBr {
     pub function: Either<InlineAssembly, Operand>,
@@ -553,17 +574,17 @@ pub struct CallBr {
     pub other_labels: (), //Vec<Name>, // Should be names of basic blocks. The callee may use an inline-asm 'goto' to resume control flow at one of these places.
     pub function_attributes: Vec<FunctionAttribute>,
     pub calling_convention: CallingConvention,
-    #[cfg(feature="llvm-9-or-greater")]
+    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
-#[cfg(feature="llvm-9-or-greater")]
+#[cfg(feature = "llvm-9-or-greater")]
 impl_term!(CallBr, CallBr);
-#[cfg(feature="llvm-9-or-greater")]
+#[cfg(feature = "llvm-9-or-greater")]
 impl_hasresult!(CallBr);
 
-#[cfg(feature="llvm-9-or-greater")]
+#[cfg(feature = "llvm-9-or-greater")]
 impl Typed for CallBr {
     fn get_type(&self, types: &Types) -> TypeRef {
         match types.type_of(&self.function).as_ref() {
@@ -576,13 +597,15 @@ impl Typed for CallBr {
     }
 }
 
-#[cfg(feature="llvm-9-or-greater")]
+#[cfg(feature = "llvm-9-or-greater")]
 impl Display for CallBr {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         // Like with `Call` and `Invoke, we choose not to include all the
         // detailed information available in the `CallBr` struct in this
         // `Display` impl
-        write!(f, "{} = callbr {}(",
+        write!(
+            f,
+            "{} = callbr {}(",
             &self.result,
             match &self.function {
                 Either::Left(_) => "<inline assembly>".into(),
@@ -597,7 +620,7 @@ impl Display for CallBr {
             }
         }
         write!(f, ") to label {}", &self.return_label)?;
-        #[cfg(feature="llvm-9-or-greater")]
+        #[cfg(feature = "llvm-9-or-greater")]
         if self.debugloc.is_some() {
             write!(f, " (with debugloc)")?;
         }
@@ -686,7 +709,7 @@ impl Ret {
                 )),
                 n => panic!("Ret instruction with {} operands", n),
             },
-            #[cfg(feature="llvm-9-or-greater")]
+            #[cfg(feature = "llvm-9-or-greater")]
             debugloc: DebugLoc::from_llvm_with_col(term),
             // metadata: InstructionMetadata::from_llvm_inst(term),
         }
@@ -702,7 +725,7 @@ impl Br {
                 .get(unsafe { &op_to_bb(LLVMGetOperand(term, 0)) })
                 .expect("Failed to find destination bb in map")
                 .clone(),
-            #[cfg(feature="llvm-9-or-greater")]
+            #[cfg(feature = "llvm-9-or-greater")]
             debugloc: DebugLoc::from_llvm_with_col(term),
             // metadata: InstructionMetadata::from_llvm_inst(term),
         }
@@ -728,7 +751,7 @@ impl CondBr {
                 .get(unsafe { &op_to_bb(LLVMGetOperand(term, 1)) })
                 .expect("Failed to find false-destination in bb map")
                 .clone(),
-            #[cfg(feature="llvm-9-or-greater")]
+            #[cfg(feature = "llvm-9-or-greater")]
             debugloc: DebugLoc::from_llvm_with_col(term),
             // metadata: InstructionMetadata::from_llvm_inst(term),
         }
@@ -764,7 +787,7 @@ impl Switch {
                 .get(unsafe { &LLVMGetSwitchDefaultDest(term) })
                 .expect("Failed to find switch default destination in map")
                 .clone(),
-            #[cfg(feature="llvm-9-or-greater")]
+            #[cfg(feature = "llvm-9-or-greater")]
             debugloc: DebugLoc::from_llvm_with_col(term),
             // metadata: InstructionMetadata::from_llvm_inst(term),
         }
@@ -791,7 +814,7 @@ impl IndirectBr {
                     })
                     .collect()
             },
-            #[cfg(feature="llvm-9-or-greater")]
+            #[cfg(feature = "llvm-9-or-greater")]
             debugloc: DebugLoc::from_llvm_with_col(term),
             // metadata: InstructionMetadata::from_llvm_inst(term),
         }
@@ -823,7 +846,7 @@ impl Invoke {
                 .clone(),
             function_attributes: callinfo.function_attributes,
             calling_convention: callinfo.calling_convention,
-            #[cfg(feature="llvm-9-or-greater")]
+            #[cfg(feature = "llvm-9-or-greater")]
             debugloc: DebugLoc::from_llvm_with_col(term),
             // metadata: InstructionMetadata::from_llvm_inst(term),
         }
@@ -839,7 +862,7 @@ impl Resume {
         assert_eq!(unsafe { LLVMGetNumOperands(term) }, 1);
         Self {
             operand: Operand::from_llvm_ref(unsafe { LLVMGetOperand(term, 0) }, ctx, func_ctx),
-            #[cfg(feature="llvm-9-or-greater")]
+            #[cfg(feature = "llvm-9-or-greater")]
             debugloc: DebugLoc::from_llvm_with_col(term),
             // metadata: InstructionMetadata::from_llvm_inst(term),
         }
@@ -850,7 +873,7 @@ impl Unreachable {
     pub(crate) fn from_llvm_ref(term: LLVMValueRef) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(term) }, 0);
         Self {
-            #[cfg(feature="llvm-9-or-greater")]
+            #[cfg(feature = "llvm-9-or-greater")]
             debugloc: DebugLoc::from_llvm_with_col(term),
             // metadata: InstructionMetadata::from_llvm_inst(term),
         }
@@ -886,7 +909,7 @@ impl CleanupRet {
                     )
                 }
             },
-            #[cfg(feature="llvm-9-or-greater")]
+            #[cfg(feature = "llvm-9-or-greater")]
             debugloc: DebugLoc::from_llvm_with_col(term),
             // metadata: InstructionMetadata::from_llvm_inst(term),
         }
@@ -906,7 +929,7 @@ impl CatchRet {
                 .get(unsafe { &LLVMGetSuccessor(term, 0) })
                 .expect("Failed to find CatchRet successor in map")
                 .clone(),
-            #[cfg(feature="llvm-9-or-greater")]
+            #[cfg(feature = "llvm-9-or-greater")]
             debugloc: DebugLoc::from_llvm_with_col(term),
             // metadata: InstructionMetadata::from_llvm_inst(term),
         }
@@ -952,14 +975,14 @@ impl CatchSwitch {
                 }
             },
             result: Name::name_or_num(unsafe { get_value_name(term) }, &mut func_ctx.ctr),
-            #[cfg(feature="llvm-9-or-greater")]
+            #[cfg(feature = "llvm-9-or-greater")]
             debugloc: DebugLoc::from_llvm_with_col(term),
             // metadata: InstructionMetadata::from_llvm_inst(term),
         }
     }
 }
 
-#[cfg(feature="llvm-9-or-greater")]
+#[cfg(feature = "llvm-9-or-greater")]
 impl CallBr {
     pub(crate) fn from_llvm_ref(
         term: LLVMValueRef,
@@ -981,7 +1004,7 @@ impl CallBr {
             other_labels: (),
             function_attributes: callinfo.function_attributes,
             calling_convention: callinfo.calling_convention,
-            #[cfg(feature="llvm-9-or-greater")]
+            #[cfg(feature = "llvm-9-or-greater")]
             debugloc: DebugLoc::from_llvm_with_col(term),
             // metadata: InstructionMetadata::from_llvm_inst(term),
         }

@@ -8,6 +8,7 @@
 #[macro_use]
 mod from_llvm;
 mod iterators;
+#[rustfmt::skip]
 mod llvm_sys;
 
 pub mod basicblock;

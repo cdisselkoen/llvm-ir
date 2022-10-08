@@ -20,7 +20,7 @@ impl BasicBlock {
             name,
             instrs: vec![],
             term: Terminator::Unreachable(Unreachable {
-                #[cfg(feature="llvm-9-or-greater")]
+                #[cfg(feature = "llvm-9-or-greater")]
                 debugloc: None,
             }),
         }
@@ -47,7 +47,10 @@ impl BasicBlock {
         let name = Name::name_or_num(unsafe { get_bb_name(bb) }, &mut func_ctx.ctr);
         debug_assert_eq!(
             &name,
-            func_ctx.bb_names.get(&bb).expect("Expected to find bb in func_ctx.bb_names"),
+            func_ctx
+                .bb_names
+                .get(&bb)
+                .expect("Expected to find bb in func_ctx.bb_names"),
         );
         debug!("Processing a basic block named {:?}", name);
         Self {
@@ -89,7 +92,7 @@ impl BasicBlock {
 
 // Given only the LLVMValueRef for an Instruction, determine whether it needs a name
 fn needs_name(inst: LLVMValueRef) -> bool {
-    if unsafe { get_value_name(inst) != "" } {
+    if unsafe { !get_value_name(inst).is_empty() } {
         return true; // has a string name
     }
     match unsafe { LLVMGetInstructionOpcode(inst) } {
@@ -107,13 +110,13 @@ fn needs_name(inst: LLVMValueRef) -> bool {
 
 // Given only the LLVMValueRef for a Terminator, determine whether it needs a name
 fn term_needs_name(term: LLVMValueRef) -> bool {
-    if unsafe { get_value_name(term) != "" } {
+    if unsafe { !get_value_name(term).is_empty() } {
         return true; // has a string name
     }
     match unsafe { LLVMGetInstructionOpcode(term) } {
         LLVMOpcode::LLVMInvoke => true,
         LLVMOpcode::LLVMCatchSwitch => true,
-        #[cfg(feature="llvm-9-or-greater")]
+        #[cfg(feature = "llvm-9-or-greater")]
         LLVMOpcode::LLVMCallBr => true,
         _ => false, // all other terminators have no result (destination) and thus don't need names
     }

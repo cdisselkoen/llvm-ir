@@ -18,12 +18,12 @@ pub enum Name {
 
 impl Name {
     pub(crate) fn name_or_num(s: String, ctr: &mut usize) -> Self {
-        if s != "" {
-            Name::Name(Box::new(s))
-        } else {
+        if s.is_empty() {
             let rval = Name::Number(*ctr);
             *ctr += 1;
             rval
+        } else {
+            Name::Name(Box::new(s))
         }
     }
 }

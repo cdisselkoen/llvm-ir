@@ -1,4 +1,4 @@
-#[cfg(feature="llvm-9-or-greater")]
+#[cfg(feature = "llvm-9-or-greater")]
 use crate::debugloc::{DebugLoc, HasDebugLoc};
 use crate::module::{Comdat, DLLStorageClass, Linkage, Visibility};
 use crate::types::{TypeRef, Typed, Types};
@@ -26,7 +26,7 @@ pub struct Function {
     // pub prefix: Option<ConstantRef>,  // appears to not be exposed in the LLVM C API, only the C++ API
     /// Personalities are used for exception handling. See [LLVM 14 docs on Personality Function](https://releases.llvm.org/14.0.0/docs/LangRef.html#personalityfn)
     pub personality_function: Option<ConstantRef>,
-    #[cfg(feature="llvm-9-or-greater")]
+    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: Vec<(String, MetadataRef<MetadataNode>)>,
 }
@@ -41,7 +41,7 @@ impl Typed for Function {
     }
 }
 
-#[cfg(feature="llvm-9-or-greater")]
+#[cfg(feature = "llvm-9-or-greater")]
 impl HasDebugLoc for Function {
     fn get_debug_loc(&self) -> &Option<DebugLoc> {
         &self.debugloc
@@ -51,12 +51,7 @@ impl HasDebugLoc for Function {
 impl Function {
     /// Get the `BasicBlock` having the given `Name` (if any).
     pub fn get_bb_by_name(&self, name: &Name) -> Option<&BasicBlock> {
-        for bb in self.basic_blocks.iter() {
-            if &bb.name == name {
-                return Some(bb);
-            }
-        }
-        None
+        self.basic_blocks.iter().find(|bb| &bb.name == name)
     }
 
     /// A Function instance as empty as possible, using defaults
@@ -78,7 +73,7 @@ impl Function {
             alignment: 4,
             garbage_collector_name: None,
             personality_function: None,
-            #[cfg(feature="llvm-9-or-greater")]
+            #[cfg(feature = "llvm-9-or-greater")]
             debugloc: None,
         }
     }
@@ -169,23 +164,23 @@ pub enum FunctionAttribute {
     NoBuiltin,
     NoCFCheck,
     NoDuplicate,
-    #[cfg(feature="llvm-9-or-greater")]
+    #[cfg(feature = "llvm-9-or-greater")]
     NoFree,
     NoImplicitFloat,
     NoInline,
-    #[cfg(feature="llvm-11-or-greater")]
+    #[cfg(feature = "llvm-11-or-greater")]
     NoMerge,
     NonLazyBind,
     NoRedZone,
     NoReturn,
     NoRecurse,
-    #[cfg(feature="llvm-9-or-greater")]
+    #[cfg(feature = "llvm-9-or-greater")]
     WillReturn,
     ReturnsTwice,
-    #[cfg(feature="llvm-9-or-greater")]
+    #[cfg(feature = "llvm-9-or-greater")]
     NoSync,
     NoUnwind,
-    #[cfg(feature="llvm-11-or-greater")]
+    #[cfg(feature = "llvm-11-or-greater")]
     NullPointerIsValid,
     OptForFuzzing,
     OptNone,
@@ -199,7 +194,7 @@ pub enum FunctionAttribute {
     SanitizeMemory,
     SanitizeThread,
     SanitizeHWAddress,
-    #[cfg(feature="llvm-9-or-greater")]
+    #[cfg(feature = "llvm-9-or-greater")]
     SanitizeMemTag,
     ShadowCallStack,
     SpeculativeLoadHardening,
@@ -209,7 +204,10 @@ pub enum FunctionAttribute {
     StackProtectStrong,
     StrictFP,
     UWTable,
-    StringAttribute { kind: String, value: String }, // for no value, use ""
+    StringAttribute {
+        kind: String,
+        value: String, // for no value, use ""
+    },
     UnknownAttribute, // this is used if we get a value not in the above list
 }
 
@@ -220,26 +218,26 @@ pub enum ParameterAttribute {
     ZeroExt,
     SignExt,
     InReg,
-    #[cfg(feature="llvm-11-or-lower")]
+    #[cfg(feature = "llvm-11-or-lower")]
     ByVal,
-    #[cfg(feature="llvm-12-or-greater")]
+    #[cfg(feature = "llvm-12-or-greater")]
     ByVal(TypeRef),
-    #[cfg(feature="llvm-11")]
+    #[cfg(feature = "llvm-11")]
     Preallocated,
-    #[cfg(feature="llvm-12-or-greater")]
+    #[cfg(feature = "llvm-12-or-greater")]
     Preallocated(TypeRef),
-    #[cfg(feature="llvm-12-or-lower")]
+    #[cfg(feature = "llvm-12-or-lower")]
     InAlloca,
-    #[cfg(feature="llvm-13-or-greater")]
+    #[cfg(feature = "llvm-13-or-greater")]
     InAlloca(TypeRef),
-    #[cfg(feature="llvm-11-or-lower")]
+    #[cfg(feature = "llvm-11-or-lower")]
     SRet,
-    #[cfg(feature="llvm-12-or-greater")]
+    #[cfg(feature = "llvm-12-or-greater")]
     SRet(TypeRef),
     Alignment(u64),
     NoAlias,
     NoCapture,
-    #[cfg(feature="llvm-9-or-greater")]
+    #[cfg(feature = "llvm-9-or-greater")]
     NoFree,
     Nest,
     Returned,
@@ -249,11 +247,14 @@ pub enum ParameterAttribute {
     SwiftSelf,
     SwiftError,
     ImmArg,
-    #[cfg(feature="llvm-11-or-greater")]
+    #[cfg(feature = "llvm-11-or-greater")]
     NoUndef,
-    StringAttribute { kind: String, value: String }, // for no value, use ""
+    StringAttribute {
+        kind: String,
+        value: String, // for no value, use ""
+    },
     UnknownAttribute, // this is used if we get an EnumAttribute not in the above list; or, for LLVM 11 or lower, also for some TypeAttributes (due to C API limitations)
-    #[cfg(feature="llvm-12-or-greater")]
+    #[cfg(feature = "llvm-12-or-greater")]
     UnknownTypeAttribute(TypeRef), // this is used if we get a TypeAttribute not in the above list
 }
 
@@ -267,7 +268,7 @@ use crate::constant::Constant;
 use crate::from_llvm::*;
 use crate::llvm_sys::*;
 use crate::module::ModuleContext;
-#[cfg(feature="llvm-12-or-greater")]
+#[cfg(feature = "llvm-12-or-greater")]
 use crate::types::TypesBuilder;
 use llvm_sys::comdat::*;
 use llvm_sys::{LLVMAttributeFunctionIndex, LLVMAttributeReturnIndex};
@@ -278,10 +279,12 @@ use std::ffi::CString;
 /// structures. The data here is local to a particular Function.
 pub(crate) struct FunctionContext<'a> {
     /// Map from llvm-sys basic block to its `Name`
-    #[allow(clippy::mutable_key_type)] // We use LLVMBasicBlockRef as a *const, even though it's technically a *mut
+    // We use LLVMBasicBlockRef as a *const, even though it's technically a *mut
+    #[allow(clippy::mutable_key_type)]
     pub bb_names: &'a HashMap<LLVMBasicBlockRef, Name>,
     /// Map from llvm-sys value to its `Name`
-    #[allow(clippy::mutable_key_type)] // We use LLVMValueRef as a *const, even though it's technically a *mut
+    // We use LLVMValueRef as a *const, even though it's technically a *mut
+    #[allow(clippy::mutable_key_type)]
     pub val_names: &'a HashMap<LLVMValueRef, Name>,
     /// this counter is used to number parameters, variables, and basic blocks that aren't named
     pub ctr: usize,
@@ -312,7 +315,14 @@ impl Function {
                         };
                         attrs
                             .into_iter()
-                            .map(|attr| ParameterAttribute::from_llvm_ref(attr, &ctx.attrsdata, #[cfg(feature="llvm-12-or-greater")] &mut ctx.types))
+                            .map(|attr| {
+                                ParameterAttribute::from_llvm_ref(
+                                    attr,
+                                    &ctx.attrsdata,
+                                    #[cfg(feature = "llvm-12-or-greater")]
+                                    &mut ctx.types,
+                                )
+                            })
                             .collect()
                     },
                 })
@@ -332,13 +342,15 @@ impl Function {
         let bbresults: Vec<_> = get_basic_blocks(func)
             .map(|bb| (bb, BasicBlock::first_pass_names(bb, &mut local_ctr)))
             .collect();
-        #[allow(clippy::mutable_key_type)] // We use LLVMBasicBlockRef as a *const, even though it's technically a *mut
+        // We use LLVMBasicBlockRef as a *const, even though it's technically a *mut
+        #[allow(clippy::mutable_key_type)]
         let bb_names: HashMap<LLVMBasicBlockRef, Name> = bbresults
             .iter()
             .map(|(bb, (bbname, _))| (*bb, bbname.clone()))
             .collect();
         debug!("Collected names of {} basic blocks", bb_names.len());
-        #[allow(clippy::mutable_key_type)] // We use LLVMValueRef as a *const, even though it's technically a *mut
+        // We use LLVMValueRef as a *const, even though it's technically a *mut
+        #[allow(clippy::mutable_key_type)]
         let val_names: HashMap<LLVMValueRef, Name> = bbresults
             .into_iter()
             .flat_map(|(_, (_, namepairs))| namepairs.into_iter())
@@ -400,7 +412,14 @@ impl Function {
                     };
                     attrs
                         .into_iter()
-                        .map(|attr| ParameterAttribute::from_llvm_ref(attr, &ctx.attrsdata, #[cfg(feature="llvm-12-or-greater")] &mut ctx.types))
+                        .map(|attr| {
+                            ParameterAttribute::from_llvm_ref(
+                                attr,
+                                &ctx.attrsdata,
+                                #[cfg(feature = "llvm-12-or-greater")]
+                                &mut ctx.types,
+                            )
+                        })
                         .collect()
                 } else {
                     vec![]
@@ -433,7 +452,7 @@ impl Function {
                     None
                 }
             },
-            #[cfg(feature="llvm-9-or-greater")]
+            #[cfg(feature = "llvm-9-or-greater")]
             debugloc: DebugLoc::from_llvm_no_col(func),
             // metadata: unimplemented!("Function.metadata"),
         }
@@ -516,23 +535,23 @@ impl AttributesData {
             "nobuiltin",
             "nocf_check",
             "noduplicate",
-            #[cfg(feature="llvm-9-or-greater")]
+            #[cfg(feature = "llvm-9-or-greater")]
             "nofree",
             "noimplicitfloat",
             "noinline",
-            #[cfg(feature="llvm-11-or-greater")]
+            #[cfg(feature = "llvm-11-or-greater")]
             "nomerge",
             "nonlazybind",
             "noredzone",
             "noreturn",
             "norecurse",
-            #[cfg(feature="llvm-9-or-greater")]
+            #[cfg(feature = "llvm-9-or-greater")]
             "willreturn",
             "returns_twice",
-            #[cfg(feature="llvm-9-or-greater")]
+            #[cfg(feature = "llvm-9-or-greater")]
             "nosync",
             "nounwind",
-            #[cfg(feature="llvm-11-or-greater")]
+            #[cfg(feature = "llvm-11-or-greater")]
             "null_pointer_is_valid",
             "optforfuzzing",
             "optnone",
@@ -546,7 +565,7 @@ impl AttributesData {
             "sanitize_memory",
             "sanitize_thread",
             "sanitize_hwaddress",
-            #[cfg(feature="llvm-9-or-greater")]
+            #[cfg(feature = "llvm-9-or-greater")]
             "sanitize_memtag",
             "shadowcallstack",
             "speculative_load_hardening",
@@ -570,14 +589,14 @@ impl AttributesData {
             "signext",
             "inreg",
             "byval",
-            #[cfg(feature="llvm-11-or-greater")]
+            #[cfg(feature = "llvm-11-or-greater")]
             "preallocated",
             "inalloca",
             "sret",
             "align",
             "noalias",
             "nocapture",
-            #[cfg(feature="llvm-9-or-greater")]
+            #[cfg(feature = "llvm-9-or-greater")]
             "nofree",
             "nest",
             "returned",
@@ -586,9 +605,9 @@ impl AttributesData {
             "dereferenceable_or_null",
             "swiftself",
             "swifterror",
-            #[cfg(feature="llvm-9-or-greater")]
+            #[cfg(feature = "llvm-9-or-greater")]
             "immarg",
-            #[cfg(feature="llvm-11-or-greater")]
+            #[cfg(feature = "llvm-11-or-greater")]
             "noundef",
         ]
         .iter()
@@ -650,23 +669,23 @@ impl FunctionAttribute {
                 Some("nobuiltin") => Self::NoBuiltin,
                 Some("nocf_check") => Self::NoCFCheck,
                 Some("noduplicate") => Self::NoDuplicate,
-                #[cfg(feature="llvm-9-or-greater")]
+                #[cfg(feature = "llvm-9-or-greater")]
                 Some("nofree") => Self::NoFree,
                 Some("noimplicitfloat") => Self::NoImplicitFloat,
                 Some("noinline") => Self::NoInline,
-                #[cfg(feature="llvm-11-or-greater")]
+                #[cfg(feature = "llvm-11-or-greater")]
                 Some("nomerge") => Self::NoMerge,
                 Some("nonlazybind") => Self::NonLazyBind,
                 Some("noredzone") => Self::NoRedZone,
                 Some("noreturn") => Self::NoReturn,
                 Some("norecurse") => Self::NoRecurse,
-                #[cfg(feature="llvm-9-or-greater")]
+                #[cfg(feature = "llvm-9-or-greater")]
                 Some("willreturn") => Self::WillReturn,
                 Some("returns_twice") => Self::ReturnsTwice,
-                #[cfg(feature="llvm-9-or-greater")]
+                #[cfg(feature = "llvm-9-or-greater")]
                 Some("nosync") => Self::NoSync,
                 Some("nounwind") => Self::NoUnwind,
-                #[cfg(feature="llvm-11-or-greater")]
+                #[cfg(feature = "llvm-11-or-greater")]
                 Some("null_pointer_is_valid") => Self::NullPointerIsValid,
                 Some("optforfuzzing") => Self::OptForFuzzing,
                 Some("optnone") => Self::OptNone,
@@ -680,7 +699,7 @@ impl FunctionAttribute {
                 Some("sanitize_memory") => Self::SanitizeMemory,
                 Some("sanitize_thread") => Self::SanitizeThread,
                 Some("sanitize_hwaddress") => Self::SanitizeHWAddress,
-                #[cfg(feature="llvm-9-or-greater")]
+                #[cfg(feature = "llvm-9-or-greater")]
                 Some("sanitize_memtag") => Self::SanitizeMemTag,
                 Some("shadowcallstack") => Self::ShadowCallStack,
                 Some("speculative_load_hardening") => Self::SpeculativeLoadHardening,
@@ -694,7 +713,7 @@ impl FunctionAttribute {
                 None => {
                     debug!("unknown enum function attr {}", kind);
                     Self::UnknownAttribute
-                }
+                },
             }
         } else if unsafe { LLVMIsStringAttribute(a) } != 0 {
             Self::StringAttribute {
@@ -709,41 +728,49 @@ impl FunctionAttribute {
 }
 
 impl ParameterAttribute {
-    pub(crate) fn from_llvm_ref(a: LLVMAttributeRef, attrsdata: &AttributesData, #[cfg(feature="llvm-12-or-greater")] types: &mut TypesBuilder) -> Self {
+    pub(crate) fn from_llvm_ref(
+        a: LLVMAttributeRef,
+        attrsdata: &AttributesData,
+        #[cfg(feature = "llvm-12-or-greater")] types: &mut TypesBuilder,
+    ) -> Self {
         if unsafe { LLVMIsEnumAttribute(a) } != 0 {
             let kind = unsafe { LLVMGetEnumAttributeKind(a) };
             match attrsdata.lookup_param_attr(kind) {
                 Some("zeroext") => Self::ZeroExt,
                 Some("signext") => Self::SignExt,
                 Some("inreg") => Self::InReg,
-                #[cfg(feature="llvm-11-or-lower")]
+                #[cfg(feature = "llvm-11-or-lower")]
                 Some("byval") => Self::ByVal,
-                #[cfg(feature="llvm-11")]
+                #[cfg(feature = "llvm-11")]
                 Some("preallocated") => Self::Preallocated,
-                #[cfg(feature="llvm-12-or-lower")]
+                #[cfg(feature = "llvm-12-or-lower")]
                 Some("inalloca") => Self::InAlloca,
-                #[cfg(feature="llvm-11-or-lower")]
+                #[cfg(feature = "llvm-11-or-lower")]
                 Some("sret") => Self::SRet,
                 Some("align") => Self::Alignment(unsafe { LLVMGetEnumAttributeValue(a) }),
                 Some("noalias") => Self::NoAlias,
                 Some("nocapture") => Self::NoCapture,
-                #[cfg(feature="llvm-9-or-greater")]
+                #[cfg(feature = "llvm-9-or-greater")]
                 Some("nofree") => Self::NoFree,
                 Some("nest") => Self::Nest,
                 Some("returned") => Self::Returned,
                 Some("nonnull") => Self::NonNull,
-                Some("dereferenceable") => Self::Dereferenceable(unsafe { LLVMGetEnumAttributeValue(a) }),
-                Some("dereferenceable_or_null") => Self::DereferenceableOrNull(unsafe { LLVMGetEnumAttributeValue(a) }),
+                Some("dereferenceable") => {
+                    Self::Dereferenceable(unsafe { LLVMGetEnumAttributeValue(a) })
+                },
+                Some("dereferenceable_or_null") => {
+                    Self::DereferenceableOrNull(unsafe { LLVMGetEnumAttributeValue(a) })
+                },
                 Some("swiftself") => Self::SwiftSelf,
                 Some("swifterror") => Self::SwiftError,
                 Some("immarg") => Self::ImmArg,
-                #[cfg(feature="llvm-11-or-greater")]
+                #[cfg(feature = "llvm-11-or-greater")]
                 Some("noundef") => Self::NoUndef,
                 Some(s) => panic!("Unhandled value from lookup_param_attr: {:?}", s),
                 None => {
                     debug!("unknown enum param attr {}", kind);
                     Self::UnknownAttribute
-                }
+                },
             }
         } else if unsafe { LLVMIsStringAttribute(a) } != 0 {
             Self::StringAttribute {
@@ -751,24 +778,26 @@ impl ParameterAttribute {
                 value: unsafe { get_string_attribute_value(a) },
             }
         } else if Self::is_type_attr(a) {
-            #[cfg(feature="llvm-11-or-lower")] {
+            #[cfg(feature = "llvm-11-or-lower")]
+            {
                 debug!("Encountered a type attr, which shouldn't happen on LLVM 11 or lower");
                 Self::UnknownAttribute
             }
-            #[cfg(feature="llvm-12-or-greater")] {
+            #[cfg(feature = "llvm-12-or-greater")]
+            {
                 let kind = unsafe { LLVMGetEnumAttributeKind(a) };
                 let ty = types.type_from_llvm_ref(unsafe { LLVMGetTypeAttributeValue(a) });
                 match attrsdata.lookup_param_attr(kind) {
                     Some("byval") => Self::ByVal(ty),
                     Some("preallocated") => Self::Preallocated(ty),
-                    #[cfg(feature="llvm-13-or-greater")]
+                    #[cfg(feature = "llvm-13-or-greater")]
                     Some("inalloca") => Self::InAlloca(ty),
                     Some("sret") => Self::SRet(ty),
                     Some(s) => panic!("Unhandled value from lookup_param_attr: {:?}", s),
                     None => {
                         debug!("unknown type param attr {}", kind);
                         Self::UnknownTypeAttribute(ty)
-                    }
+                    },
                 }
             }
         } else {
@@ -777,9 +806,11 @@ impl ParameterAttribute {
         }
     }
 
-    #[cfg(feature="llvm-11-or-lower")]
-    fn is_type_attr(_a: LLVMAttributeRef) -> bool { false }
-    #[cfg(feature="llvm-12-or-greater")]
+    #[cfg(feature = "llvm-11-or-lower")]
+    fn is_type_attr(_a: LLVMAttributeRef) -> bool {
+        false
+    }
+    #[cfg(feature = "llvm-12-or-greater")]
     fn is_type_attr(a: LLVMAttributeRef) -> bool {
         unsafe { LLVMIsTypeAttribute(a) != 0 }
     }

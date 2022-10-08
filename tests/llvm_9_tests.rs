@@ -1,4 +1,4 @@
-#![cfg(feature="llvm-9-or-greater")]
+#![cfg(feature = "llvm-9-or-greater")]
 
 //! These tests simply ensure that we can parse all of the `.bc` files in LLVM 9's `test/Bitcode` directory without crashing.
 //! We only include the `.bc` files which are new or have changed since LLVM 8 (older ones are covered in llvm_8_tests.rs).
@@ -22,10 +22,19 @@ macro_rules! llvm_test {
 llvm_test!("tests/llvm_bc/DISubprogram-v5.ll.bc", DISubprogram_v5);
 llvm_test!("tests/llvm_bc/callbr.ll.bc", callbr);
 //llvm_test!("tests/llvm_bc/invalid.ll.bc", invalid);  // we omit this .bc file because it is intentionally invalid.  Note that it existed in LLVM 8 but has changed; the checked-in version as of this writing is the LLVM 8 version
-llvm_test!("tests/llvm_bc/objectsize-upgrade-7.0.ll.bc", objectsize_upgrade_7_0);
+llvm_test!(
+    "tests/llvm_bc/objectsize-upgrade-7.0.ll.bc",
+    objectsize_upgrade_7_0
+);
 //llvm_test!("tests/llvm_bc/upgrade-clang-arc-use.ll.bc", upgrade_clang_arc_use);  // this file is weird because it includes an opaque struct type which is numbered, not named.  This shouldn't ever occur in real code (?), so we omit this test case
-llvm_test!("tests/llvm_bc/upgrade-global-dtors.ll.bc", upgrade_global_dtors);
-llvm_test!("tests/llvm_bc/upgrade-vecreduce-intrinsics.ll.bc", upgrade_vecreduce_intrinsics);
+llvm_test!(
+    "tests/llvm_bc/upgrade-global-dtors.ll.bc",
+    upgrade_global_dtors
+);
+llvm_test!(
+    "tests/llvm_bc/upgrade-vecreduce-intrinsics.ll.bc",
+    upgrade_vecreduce_intrinsics
+);
 
 // also ensure that certain new-to-llvm-9 constructs were parsed correctly
 use llvm_ir::{terminator, Name};
@@ -39,8 +48,14 @@ fn callbr_parsing() {
     let func = module
         .get_func_by_name("test_asm_goto")
         .expect("Failed to find function");
-    let bb = func.get_bb_by_name(&Name::from("entry")).expect("Failed to find entry bb");
-    let callbr: &terminator::CallBr = &bb.term.clone().try_into().unwrap_or_else(|_| panic!("Expected a callbr, got {:?}", &bb.term));
+    let bb = func
+        .get_bb_by_name(&Name::from("entry"))
+        .expect("Failed to find entry bb");
+    let callbr: &terminator::CallBr = &bb
+        .term
+        .clone()
+        .try_into()
+        .unwrap_or_else(|_| panic!("Expected a callbr, got {:?}", &bb.term));
     assert!(callbr.function.is_left());
     assert_eq!(callbr.return_label, Name::from("normal"));
     assert_eq!(

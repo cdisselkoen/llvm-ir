@@ -1,5 +1,5 @@
 use crate::constant::ConstantRef;
-#[cfg(feature="llvm-9-or-greater")]
+#[cfg(feature = "llvm-9-or-greater")]
 use crate::debugloc::*;
 use crate::function::{Function, FunctionAttribute, GroupID};
 use crate::llvm_sys::*;
@@ -115,7 +115,7 @@ pub struct GlobalVariable {
     pub section: Option<String>,
     pub comdat: Option<Comdat>, // llvm-hs-pure has Option<String> for some reason
     pub alignment: u32,
-    #[cfg(feature="llvm-9-or-greater")]
+    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: Vec<(String, MetadataRef<MetadataNode>)>,
 }
@@ -126,7 +126,7 @@ impl Typed for GlobalVariable {
     }
 }
 
-#[cfg(feature="llvm-9-or-greater")]
+#[cfg(feature = "llvm-9-or-greater")]
 impl HasDebugLoc for GlobalVariable {
     fn get_debug_loc(&self) -> &Option<DebugLoc> {
         &self.debugloc
@@ -268,7 +268,7 @@ pub struct DataLayout {
 impl PartialEq for DataLayout {
     fn eq(&self, other: &Self) -> bool {
         // The layout string fully specifies all the other information
-        &self.layout_str == &other.layout_str
+        self.layout_str == other.layout_str
     }
 }
 
@@ -294,7 +294,7 @@ pub struct Alignment {
 
 /// Alignment details for function pointers.
 /// See [LLVM 14 docs on Data Layout](https://releases.llvm.org/14.0.0/docs/LangRef.html#data-layout)
-#[cfg(feature="llvm-9-or-greater")]
+#[cfg(feature = "llvm-9-or-greater")]
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct FunctionPtrAlignment {
     /// If `true`, function pointer alignment is independent of function alignment.
@@ -333,10 +333,10 @@ pub struct Alignments {
     /// Alignment for aggregate types (structs, arrays)
     agg_alignment: Alignment,
     /// Alignment for function pointers
-    #[cfg(feature="llvm-9-or-greater")]
+    #[cfg(feature = "llvm-9-or-greater")]
     fptr_alignment: FunctionPtrAlignment,
     /// Alignment for function pointers, as an `Alignment`
-    #[cfg(feature="llvm-9-or-greater")]
+    #[cfg(feature = "llvm-9-or-greater")]
     fptr_alignment_as_alignment: Alignment,
     /// Layout details for (non-function-pointer) pointers, by address space
     pointer_layouts: HashMap<AddrSpace, PointerLayout>,
@@ -347,7 +347,11 @@ impl Alignments {
     pub fn type_alignment(&self, ty: &Type) -> &Alignment {
         match ty {
             Type::IntegerType { bits } => self.int_alignment(*bits),
-            Type::VectorType { element_type, num_elements, .. } => {
+            Type::VectorType {
+                element_type,
+                num_elements,
+                ..
+            } => {
                 let element_size_bits = match element_type.as_ref() {
                     Type::IntegerType { bits } => *bits,
                     Type::FPType(fpt) => Self::fpt_size(*fpt),
@@ -363,7 +367,7 @@ impl Alignments {
                 pointee_type,
                 addr_space,
             } => match pointee_type.as_ref() {
-                #[cfg(feature="llvm-9-or-greater")]
+                #[cfg(feature = "llvm-9-or-greater")]
                 Type::FuncType { .. } => &self.fptr_alignment_as_alignment,
                 _ => &self.ptr_alignment(*addr_space).alignment,
             },
@@ -378,7 +382,7 @@ impl Alignments {
             return alignment;
         }
         // Find the next largest size that has an explicit entry and use that
-        let next_largest_entry = self.int_alignments.iter().filter(|(&k, _)| k > size).next();
+        let next_largest_entry = self.int_alignments.iter().find(|(&k, _)| k > size);
         match next_largest_entry {
             Some((_, alignment)) => alignment,
             None => {
@@ -399,7 +403,7 @@ impl Alignments {
             return alignment;
         }
         // Find the next smaller size that has an explicit entry and use that
-        let next_smaller_entry = self.vec_alignments.iter().filter(|(&k, _)| k < size).next();
+        let next_smaller_entry = self.vec_alignments.iter().find(|(&k, _)| k < size);
         match next_smaller_entry {
             Some((_, alignment)) => alignment,
             None => {
@@ -432,7 +436,7 @@ impl Alignments {
     }
 
     /// Alignment of function pointers
-    #[cfg(feature="llvm-9-or-greater")]
+    #[cfg(feature = "llvm-9-or-greater")]
     pub fn fptr_alignment(&self) -> &FunctionPtrAlignment {
         &self.fptr_alignment
     }
@@ -452,7 +456,7 @@ impl Alignments {
     fn fpt_size(fpt: FPType) -> u32 {
         match fpt {
             FPType::Half => 16,
-            #[cfg(feature="llvm-11-or-greater")]
+            #[cfg(feature = "llvm-11-or-greater")]
             FPType::BFloat => 16,
             FPType::Single => 32,
             FPType::Double => 64,
@@ -471,7 +475,7 @@ pub enum Mangling {
     MachO,
     WindowsX86COFF,
     WindowsCOFF,
-    #[cfg(feature="llvm-11-or-greater")]
+    #[cfg(feature = "llvm-11-or-greater")]
     XCOFF,
 }
 
@@ -497,15 +501,18 @@ pub(crate) struct ModuleContext<'a> {
     pub types: TypesBuilder,
     pub attrsdata: AttributesData,
     /// Map from an llvm-sys constant to the corresponding llvm-ir `ConstantRef`
-    #[allow(clippy::mutable_key_type)] // We use LLVMValueRef as a *const, even though it's technically a *mut
+    // We use LLVMValueRef as a *const, even though it's technically a *mut
+    #[allow(clippy::mutable_key_type)]
     pub constants: HashMap<LLVMValueRef, ConstantRef>,
     /// Map from an llvm-sys global to its `Name`
-    #[allow(clippy::mutable_key_type)] // We use LLVMValueRef as a *const, even though it's technically a *mut
+    // We use LLVMValueRef as a *const, even though it's technically a *mut
+    #[allow(clippy::mutable_key_type)]
     pub global_names: &'a HashMap<LLVMValueRef, Name>,
 }
 
 impl<'a> ModuleContext<'a> {
-    #[allow(clippy::mutable_key_type)] // We use LLVMValueRef as a *const, even though it's technically a *mut
+    // We use LLVMValueRef as a *const, even though it's technically a *mut
+    #[allow(clippy::mutable_key_type)]
     fn new(global_names: &'a HashMap<LLVMValueRef, Name>) -> Self {
         Self {
             types: TypesBuilder::new(),
@@ -528,7 +535,8 @@ impl Module {
         // This is necessary because these structures may reference each other in a
         //   circular fashion, and we need to be able to fill in the Name of the
         //   referenced object from having only its `LLVMValueRef`.
-        #[allow(clippy::mutable_key_type)] // We use LLVMValueRef as a *const, even though it's technically a *mut
+        // We use LLVMValueRef as a *const, even though it's technically a *mut
+        #[allow(clippy::mutable_key_type)]
         let global_names: HashMap<LLVMValueRef, Name> = get_defined_functions(module)
             .chain(get_declared_functions(module))
             .chain(get_globals(module))
@@ -612,7 +620,7 @@ impl GlobalVariable {
                 }
             },
             alignment: unsafe { LLVMGetAlignment(global) },
-            #[cfg(feature="llvm-9-or-greater")]
+            #[cfg(feature = "llvm-9-or-greater")]
             debugloc: DebugLoc::from_llvm_no_col(global),
             // metadata: unimplemented!("metadata"),
         }
@@ -764,22 +772,21 @@ impl Default for DataLayout {
 impl DataLayout {
     pub(crate) fn from_module_ref(module: LLVMModuleRef) -> Self {
         let layout_str = unsafe { get_data_layout_str(module) };
-        let mut data_layout = DataLayout::default();
-        data_layout.layout_str = layout_str;
+        let mut data_layout = DataLayout { layout_str, ..Default::default() };
         for spec in data_layout.layout_str.split('-') {
             if spec == "E" {
                 data_layout.endianness = Endianness::BigEndian;
             } else if spec == "e" {
                 data_layout.endianness = Endianness::LittleEndian;
-            } else if spec.starts_with('S') {
+            } else if let Some(stripped) = spec.strip_prefix('S') {
                 data_layout.stack_alignment =
-                    Some(spec[1 ..].parse().expect("datalayout 'S': Failed to parse"));
-            } else if spec.starts_with('P') {
+                    Some(stripped.parse().expect("datalayout 'S': Failed to parse"));
+            } else if let Some(stripped) = spec.strip_prefix('P') {
                 data_layout.program_address_space =
-                    spec[1 ..].parse().expect("datalayout 'P': Failed to parse");
-            } else if spec.starts_with('A') {
+                    stripped.parse().expect("datalayout 'P': Failed to parse");
+            } else if let Some(stripped) = spec.strip_prefix('A') {
                 data_layout.alloca_address_space =
-                    spec[1 ..].parse().expect("datalayout 'A': Failed to parse");
+                    stripped.parse().expect("datalayout 'A': Failed to parse");
             } else if spec.starts_with('p') {
                 let mut chunks = spec.split(':');
                 let first_chunk = chunks.next().unwrap();
@@ -916,14 +923,14 @@ impl DataLayout {
                 };
                 assert!(chunks.next().is_none(), "datalayout 'a': Too many chunks");
                 data_layout.alignments.agg_alignment = Alignment { abi, pref };
-            } else if spec.starts_with("Fi") {
-                #[cfg(feature="llvm-8-or-lower")]
+            } else if let Some(stripped) = spec.strip_prefix("Fi") {
+                #[cfg(feature = "llvm-8-or-lower")]
                 {
                     panic!("datalayout: Unknown spec {:?}", spec);
                 }
-                #[cfg(feature="llvm-9-or-greater")]
+                #[cfg(feature = "llvm-9-or-greater")]
                 {
-                    let abi: u32 = spec[2 ..]
+                    let abi: u32 = stripped
                         .parse()
                         .expect("datalayout 'Fi': Failed to parse abi");
                     data_layout.alignments.fptr_alignment = FunctionPtrAlignment {
@@ -933,14 +940,14 @@ impl DataLayout {
                     data_layout.alignments.fptr_alignment_as_alignment =
                         Alignment { abi, pref: abi };
                 }
-            } else if spec.starts_with("Fn") {
-                #[cfg(feature="llvm-8-or-lower")]
+            } else if let Some(stripped) = spec.strip_prefix("Fn") {
+                #[cfg(feature = "llvm-8-or-lower")]
                 {
                     panic!("datalayout: Unknown spec {:?}", spec);
                 }
-                #[cfg(feature="llvm-9-or-greater")]
+                #[cfg(feature = "llvm-9-or-greater")]
                 {
-                    let abi: u32 = spec[2 ..]
+                    let abi: u32 = stripped
                         .parse()
                         .expect("datalayout 'Fn': Failed to parse abi");
                     data_layout.alignments.fptr_alignment = FunctionPtrAlignment {
@@ -963,7 +970,7 @@ impl DataLayout {
                     "o" => Mangling::MachO,
                     "x" => Mangling::WindowsX86COFF,
                     "w" => Mangling::WindowsCOFF,
-                    #[cfg(feature="llvm-11-or-greater")]
+                    #[cfg(feature = "llvm-11-or-greater")]
                     "a" => Mangling::XCOFF,
                     _ => panic!("datalayout 'm': Unknown mangling {:?}", second_chunk),
                 };
@@ -983,7 +990,7 @@ impl DataLayout {
             } else if spec.starts_with('n') {
                 let native_int_widths = data_layout
                     .native_int_widths
-                    .get_or_insert_with(|| HashSet::new());
+                    .get_or_insert_with(HashSet::new);
                 let mut chunks = spec.split(':');
                 let first_chunk = chunks.next().unwrap();
                 let size = first_chunk[1 ..]
@@ -994,7 +1001,7 @@ impl DataLayout {
                     let size = chunk.parse().expect("datalayout 'n': Failed to parse size");
                     native_int_widths.insert(size);
                 }
-            } else if spec == "" {
+            } else if spec.is_empty() {
                 // do nothing
             } else {
                 panic!("datalayout: Unknown spec {:?}", spec);
@@ -1024,7 +1031,13 @@ impl Default for Alignments {
             /// Data Layout docs.
             vec_alignments: vec![
                 (64, Alignment { abi: 64, pref: 64 }),
-                (128, Alignment { abi: 128, pref: 128 }),
+                (
+                    128,
+                    Alignment {
+                        abi: 128,
+                        pref: 128,
+                    },
+                ),
             ]
             .into_iter()
             .collect(),
@@ -1033,20 +1046,26 @@ impl Default for Alignments {
                 (16, Alignment { abi: 16, pref: 16 }),
                 (32, Alignment { abi: 32, pref: 32 }),
                 (64, Alignment { abi: 64, pref: 64 }),
-                (128, Alignment { abi: 128, pref: 128 }),
+                (
+                    128,
+                    Alignment {
+                        abi: 128,
+                        pref: 128,
+                    },
+                ),
             ]
             .into_iter()
             .collect(),
             /// Alignment for aggregate types (structs, arrays)
             agg_alignment: Alignment { abi: 0, pref: 64 },
             /// Alignment for function pointers
-            #[cfg(feature="llvm-9-or-greater")]
+            #[cfg(feature = "llvm-9-or-greater")]
             fptr_alignment: FunctionPtrAlignment {
                 independent: true,
                 abi: 64,
             },
             /// Alignment for function pointers, as an `Alignment`
-            #[cfg(feature="llvm-9-or-greater")]
+            #[cfg(feature = "llvm-9-or-greater")]
             fptr_alignment_as_alignment: Alignment { abi: 64, pref: 64 },
             /// Layout details for (non-function-pointer) pointers, by address space
             pointer_layouts: vec![(

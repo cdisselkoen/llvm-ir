@@ -34,7 +34,7 @@ pub enum Type {
     VectorType {
         element_type: TypeRef,
         num_elements: usize,
-        #[cfg(feature="llvm-11-or-greater")]
+        #[cfg(feature = "llvm-11-or-greater")]
         scalable: bool,
     },
     /// Struct and Array types (but not vector types) are "aggregate types" and cannot be produced by
@@ -61,7 +61,7 @@ pub enum Type {
     X86_MMXType,
     // As of this writing, although X86_AMX type definitely exists in LLVM 12+,
     // it doesn't appear to be documented in the LangRef
-    #[cfg(feature="llvm-12-or-greater")]
+    #[cfg(feature = "llvm-12-or-greater")]
     X86_AMXType,
     /// See [LLVM 14 docs on Metadata Type](https://releases.llvm.org/14.0.0/docs/LangRef.html#metadata-type)
     MetadataType,
@@ -101,16 +101,16 @@ impl Display for Type {
             Type::VectorType {
                 element_type,
                 num_elements,
-                #[cfg(feature="llvm-11-or-greater")]
+                #[cfg(feature = "llvm-11-or-greater")]
                 scalable,
             } => {
-                #[cfg(feature="llvm-11-or-greater")]
+                #[cfg(feature = "llvm-11-or-greater")]
                 if *scalable {
                     write!(f, "<vscale x {} x {}>", num_elements, element_type)
                 } else {
                     write!(f, "<{} x {}>", num_elements, element_type)
                 }
-                #[cfg(feature="llvm-10-or-lower")]
+                #[cfg(feature = "llvm-10-or-lower")]
                 write!(f, "<{} x {}>", num_elements, element_type)
             },
             Type::ArrayType {
@@ -140,7 +140,7 @@ impl Display for Type {
             },
             Type::NamedStructType { name } => write!(f, "%{}", name),
             Type::X86_MMXType => write!(f, "x86_mmx"),
-            #[cfg(feature="llvm-12-or-greater")]
+            #[cfg(feature = "llvm-12-or-greater")]
             Type::X86_AMXType => write!(f, "x86_amx"),
             Type::MetadataType => write!(f, "metadata"),
             Type::LabelType => write!(f, "label"),
@@ -154,7 +154,7 @@ impl Display for Type {
 #[allow(non_camel_case_types)]
 pub enum FPType {
     Half,
-    #[cfg(feature="llvm-11-or-greater")]
+    #[cfg(feature = "llvm-11-or-greater")]
     BFloat,
     Single,
     Double,
@@ -173,7 +173,7 @@ impl Display for FPType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             FPType::Half => write!(f, "half"),
-            #[cfg(feature="llvm-11-or-greater")]
+            #[cfg(feature = "llvm-11-or-greater")]
             FPType::BFloat => write!(f, "bfloat"),
             FPType::Single => write!(f, "float"),
             FPType::Double => write!(f, "double"),
@@ -236,7 +236,7 @@ impl Typed for TypeRef {
 
 impl Typed for Type {
     fn get_type(&self, types: &Types) -> TypeRef {
-        types.get_for_type(&self)
+        types.get_for_type(self)
     }
 }
 
@@ -286,7 +286,7 @@ pub(crate) struct TypesBuilder {
     /// `TypeRef` to `Type::X86_MMXType`
     x86_mmx_type: TypeRef,
     /// `TypeRef` to `Type::X86_AMXType`
-    #[cfg(feature="llvm-12-or-greater")]
+    #[cfg(feature = "llvm-12-or-greater")]
     x86_amx_type: TypeRef,
     /// `TypeRef` to `Type::MetadataType`
     metadata_type: TypeRef,
@@ -313,7 +313,7 @@ impl TypesBuilder {
             named_struct_types: TypeCache::new(),
             named_struct_defs: HashMap::new(),
             x86_mmx_type: TypeRef::new(Type::X86_MMXType),
-            #[cfg(feature="llvm-12-or-greater")]
+            #[cfg(feature = "llvm-12-or-greater")]
             x86_amx_type: TypeRef::new(Type::X86_AMXType),
             metadata_type: TypeRef::new(Type::MetadataType),
             label_type: TypeRef::new(Type::LabelType),
@@ -338,7 +338,7 @@ impl TypesBuilder {
             named_struct_types: self.named_struct_types,
             named_struct_defs: self.named_struct_defs,
             x86_mmx_type: self.x86_mmx_type,
-            #[cfg(feature="llvm-12-or-greater")]
+            #[cfg(feature = "llvm-12-or-greater")]
             x86_amx_type: self.x86_amx_type,
             metadata_type: self.metadata_type,
             label_type: self.label_type,
@@ -437,22 +437,31 @@ impl TypesBuilder {
     }
 
     /// Get a vector type
-    #[cfg(feature="llvm-11-or-greater")]
-    pub fn vector_of(&mut self, element_type: TypeRef, num_elements: usize, scalable: bool) -> TypeRef {
+    #[cfg(feature = "llvm-11-or-greater")]
+    pub fn vector_of(
+        &mut self,
+        element_type: TypeRef,
+        num_elements: usize,
+        scalable: bool,
+    ) -> TypeRef {
         self.vec_types
-            .lookup_or_insert((element_type.clone(), num_elements, scalable), || Type::VectorType {
-                element_type,
-                num_elements,
-                scalable,
+            .lookup_or_insert((element_type.clone(), num_elements, scalable), || {
+                Type::VectorType {
+                    element_type,
+                    num_elements,
+                    scalable,
+                }
             })
     }
     /// Get a vector type
-    #[cfg(feature="llvm-10-or-lower")]
+    #[cfg(feature = "llvm-10-or-lower")]
     pub fn vector_of(&mut self, element_type: TypeRef, num_elements: usize) -> TypeRef {
         self.vec_types
-            .lookup_or_insert((element_type.clone(), num_elements, false), || Type::VectorType {
-                element_type,
-                num_elements,
+            .lookup_or_insert((element_type.clone(), num_elements, false), || {
+                Type::VectorType {
+                    element_type,
+                    num_elements,
+                }
             })
     }
 
@@ -516,7 +525,7 @@ impl TypesBuilder {
     }
 
     /// Get the X86_AMX type
-    #[cfg(feature="llvm-12-or-greater")]
+    #[cfg(feature = "llvm-12-or-greater")]
     pub fn x86_amx(&self) -> TypeRef {
         self.x86_amx_type.clone()
     }
@@ -584,7 +593,7 @@ pub struct Types {
     /// `TypeRef` to `Type::X86_MMXType`
     x86_mmx_type: TypeRef,
     /// `TypeRef` to `Type::X86_AMXType`
-    #[cfg(feature="llvm-12-or-greater")]
+    #[cfg(feature = "llvm-12-or-greater")]
     x86_amx_type: TypeRef,
     /// `TypeRef` to `Type::MetadataType`
     metadata_type: TypeRef,
@@ -597,7 +606,7 @@ pub struct Types {
 impl Types {
     /// Get the type of anything that is `Typed`
     pub fn type_of<T: Typed + ?Sized>(&self, t: &T) -> TypeRef {
-        t.get_type(&self)
+        t.get_type(self)
     }
 
     /// Get the void type
@@ -690,7 +699,7 @@ impl Types {
     }
 
     /// Get a vector type
-    #[cfg(feature="llvm-11-or-greater")]
+    #[cfg(feature = "llvm-11-or-greater")]
     pub fn vector_of(&self, element_type: TypeRef, num_elements: usize, scalable: bool) -> TypeRef {
         self.vec_types
             .lookup(&(element_type.clone(), num_elements, scalable))
@@ -702,7 +711,7 @@ impl Types {
                 })
             })
     }
-    #[cfg(feature="llvm-10-or-lower")]
+    #[cfg(feature = "llvm-10-or-lower")]
     pub fn vector_of(&self, element_type: TypeRef, num_elements: usize) -> TypeRef {
         self.vec_types
             .lookup(&(element_type.clone(), num_elements, false))
@@ -744,7 +753,8 @@ impl Types {
     /// To get the actual _definition_ of a named struct (the `NamedStructDef`),
     /// use `named_struct_def()`.
     pub fn named_struct(&self, name: &str) -> TypeRef {
-        self.named_struct_types.lookup(name)
+        self.named_struct_types
+            .lookup(name)
             .unwrap_or_else(|| TypeRef::new(Type::NamedStructType { name: name.into() }))
     }
 
@@ -790,7 +800,7 @@ impl Types {
     }
 
     /// Get the X86_AMX type
-    #[cfg(feature="llvm-12-or-greater")]
+    #[cfg(feature = "llvm-12-or-greater")]
     pub fn x86_amx(&self) -> TypeRef {
         self.x86_amx_type.clone()
     }
@@ -930,16 +940,24 @@ impl TypesBuilder {
             },
             LLVMTypeKind::LLVMVectorTypeKind => {
                 let element_type = self.type_from_llvm_ref(unsafe { LLVMGetElementType(ty) });
-                #[cfg(feature="llvm-11-or-greater")]
-                let ret = self.vector_of(element_type, unsafe { LLVMGetVectorSize(ty) as usize }, false);
-                #[cfg(feature="llvm-10-or-lower")]
+                #[cfg(feature = "llvm-11-or-greater")]
+                let ret = self.vector_of(
+                    element_type,
+                    unsafe { LLVMGetVectorSize(ty) as usize },
+                    false,
+                );
+                #[cfg(feature = "llvm-10-or-lower")]
                 let ret = self.vector_of(element_type, unsafe { LLVMGetVectorSize(ty) as usize });
                 ret
             },
-            #[cfg(feature="llvm-11-or-greater")]
+            #[cfg(feature = "llvm-11-or-greater")]
             LLVMTypeKind::LLVMScalableVectorTypeKind => {
                 let element_type = self.type_from_llvm_ref(unsafe { LLVMGetElementType(ty) });
-                self.vector_of(element_type, unsafe { LLVMGetVectorSize(ty) as usize }, true)
+                self.vector_of(
+                    element_type,
+                    unsafe { LLVMGetVectorSize(ty) as usize },
+                    true,
+                )
             },
             LLVMTypeKind::LLVMStructTypeKind => {
                 let name = if unsafe { LLVMIsLiteralStruct(ty) } != 0 {
@@ -996,7 +1014,7 @@ impl TypesBuilder {
                 )
             },
             LLVMTypeKind::LLVMHalfTypeKind => self.fp(FPType::Half),
-            #[cfg(feature="llvm-11-or-greater")]
+            #[cfg(feature = "llvm-11-or-greater")]
             LLVMTypeKind::LLVMBFloatTypeKind => self.fp(FPType::BFloat),
             LLVMTypeKind::LLVMFloatTypeKind => self.fp(FPType::Single),
             LLVMTypeKind::LLVMDoubleTypeKind => self.fp(FPType::Double),
@@ -1004,7 +1022,7 @@ impl TypesBuilder {
             LLVMTypeKind::LLVMX86_FP80TypeKind => self.fp(FPType::X86_FP80),
             LLVMTypeKind::LLVMPPC_FP128TypeKind => self.fp(FPType::PPC_FP128),
             LLVMTypeKind::LLVMX86_MMXTypeKind => self.x86_mmx(),
-            #[cfg(feature="llvm-12-or-greater")]
+            #[cfg(feature = "llvm-12-or-greater")]
             LLVMTypeKind::LLVMX86_AMXTypeKind => self.x86_amx(),
             LLVMTypeKind::LLVMMetadataTypeKind => self.metadata_type(),
             LLVMTypeKind::LLVMLabelTypeKind => self.label_type(),

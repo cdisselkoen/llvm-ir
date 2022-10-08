@@ -48,7 +48,7 @@ pub enum Constant {
     /// `Undef` can be used anywhere a constant is expected. See [LLVM 14 docs on Undefined Values](https://releases.llvm.org/14.0.0/docs/LangRef.html#undefined-values)
     Undef(TypeRef),
     /// See [LLVM 14 docs on Poison Values](https://releases.llvm.org/14.0.0/docs/LangRef.html#undefined-values)
-    #[cfg(feature="llvm-12-or-greater")]
+    #[cfg(feature = "llvm-12-or-greater")]
     Poison(TypeRef),
     /// The address of the given (non-entry) [`BasicBlock`](../struct.BasicBlock.html). See [LLVM 14 docs on Addresses of Basic Blocks](https://releases.llvm.org/14.0.0/docs/LangRef.html#addresses-of-basic-blocks).
     /// `BlockAddress` needs more fields, but the necessary getter functions are apparently not exposed in the LLVM C API (only the C++ API)
@@ -126,7 +126,7 @@ pub enum Constant {
 #[allow(non_camel_case_types)]
 pub enum Float {
     Half, // TODO perhaps Half(u16)
-    #[cfg(feature="llvm-11-or-greater")]
+    #[cfg(feature = "llvm-11-or-greater")]
     BFloat, // TODO perhaps BFloat(u16)
     Single(f32),
     Double(f64),
@@ -139,7 +139,7 @@ impl Typed for Float {
     fn get_type(&self, types: &Types) -> TypeRef {
         types.fp(match self {
             Float::Half => FPType::Half,
-            #[cfg(feature="llvm-11-or-greater")]
+            #[cfg(feature = "llvm-11-or-greater")]
             Float::BFloat => FPType::BFloat,
             Float::Single(_) => FPType::Single,
             Float::Double(_) => FPType::Double,
@@ -154,7 +154,7 @@ impl Display for Float {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Float::Half => write!(f, "half"),
-            #[cfg(feature="llvm-11-or-greater")]
+            #[cfg(feature = "llvm-11-or-greater")]
             Float::BFloat => write!(f, "bfloat"),
             Float::Single(s) => write!(f, "float {}", s),
             Float::Double(d) => write!(f, "double {}", d),
@@ -286,7 +286,9 @@ impl Display for Constant {
             Constant::Float(float) => write!(f, "{}", float),
             Constant::Null(ty) => write!(f, "{} null", ty),
             Constant::AggregateZero(ty) => write!(f, "{} zeroinitializer", ty),
-            Constant::Struct { values, is_packed, .. } => {
+            Constant::Struct {
+                values, is_packed, ..
+            } => {
                 if *is_packed {
                     write!(f, "<")?;
                 }
@@ -329,7 +331,7 @@ impl Display for Constant {
                 Ok(())
             },
             Constant::Undef(ty) => write!(f, "{} undef", ty),
-            #[cfg(feature="llvm-12-or-greater")]
+            #[cfg(feature = "llvm-12-or-greater")]
             Constant::Poison(ty) => write!(f, "{} poison", ty),
             Constant::BlockAddress => write!(f, "blockaddr"),
             Constant::GlobalReference { name, ty } => {
@@ -553,8 +555,12 @@ macro_rules! unop_explicitly_typed {
 
         impl Display for $expr {
             fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-                write!(f, "{} ({} to {})",
-                    $dispname, &self.get_operand(), &self.to_type,
+                write!(
+                    f,
+                    "{} ({} to {})",
+                    $dispname,
+                    &self.get_operand(),
+                    &self.to_type,
                 )
             }
         }
@@ -778,7 +784,9 @@ impl Typed for InsertElement {
 
 impl Display for InsertElement {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "insertelement ({}, {}, {})",
+        write!(
+            f,
+            "insertelement ({}, {}, {})",
             &self.vector, &self.element, &self.index,
         )
     }
@@ -800,11 +808,13 @@ impl Typed for ShuffleVector {
         debug_assert_eq!(ty, types.type_of(&self.operand1));
         match ty.as_ref() {
             Type::VectorType { element_type, .. } => match types.type_of(&self.mask).as_ref() {
-                #[cfg(feature="llvm-11-or-greater")]
-                Type::VectorType { num_elements, scalable, .. } => {
-                    types.vector_of(element_type.clone(), *num_elements, *scalable)
-                },
-                #[cfg(feature="llvm-10-or-lower")]
+                #[cfg(feature = "llvm-11-or-greater")]
+                Type::VectorType {
+                    num_elements,
+                    scalable,
+                    ..
+                } => types.vector_of(element_type.clone(), *num_elements, *scalable),
+                #[cfg(feature = "llvm-10-or-lower")]
                 Type::VectorType { num_elements, .. } => {
                     types.vector_of(element_type.clone(), *num_elements)
                 },
@@ -823,7 +833,9 @@ impl Typed for ShuffleVector {
 
 impl Display for ShuffleVector {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "shufflevector ({}, {}, {})",
+        write!(
+            f,
+            "shufflevector ({}, {}, {})",
             &self.operand0, &self.operand1, &self.mask,
         )
     }
@@ -958,7 +970,9 @@ fn gep_type<'c>(
 
 impl Display for GetElementPtr {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "getelementptr{} ({}",
+        write!(
+            f,
+            "getelementptr{} ({}",
             if self.in_bounds { " inbounds" } else { "" },
             &self.address
         )?;
@@ -1102,14 +1116,14 @@ impl Typed for ICmp {
         let ty = types.type_of(&self.operand0);
         debug_assert_eq!(ty, types.type_of(&self.operand1));
         match ty.as_ref() {
-            #[cfg(feature="llvm-11-or-greater")]
-            Type::VectorType { num_elements, scalable, .. } => {
-                types.vector_of(types.bool(), *num_elements, *scalable)
-            },
-            #[cfg(feature="llvm-10-or-lower")]
-            Type::VectorType { num_elements, .. } => {
-                types.vector_of(types.bool(), *num_elements)
-            },
+            #[cfg(feature = "llvm-11-or-greater")]
+            Type::VectorType {
+                num_elements,
+                scalable,
+                ..
+            } => types.vector_of(types.bool(), *num_elements, *scalable),
+            #[cfg(feature = "llvm-10-or-lower")]
+            Type::VectorType { num_elements, .. } => types.vector_of(types.bool(), *num_elements),
             _ => types.bool(),
         }
     }
@@ -1117,7 +1131,9 @@ impl Typed for ICmp {
 
 impl Display for ICmp {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "icmp {} ({}, {})",
+        write!(
+            f,
+            "icmp {} ({}, {})",
             &self.predicate, &self.operand0, &self.operand1,
         )
     }
@@ -1138,14 +1154,14 @@ impl Typed for FCmp {
         let ty = types.type_of(&self.operand0);
         debug_assert_eq!(ty, types.type_of(&self.operand1));
         match ty.as_ref() {
-            #[cfg(feature="llvm-11-or-greater")]
-            Type::VectorType { num_elements, scalable, .. } => {
-                types.vector_of(types.bool(), *num_elements, *scalable)
-            },
-            #[cfg(feature="llvm-10-or-lower")]
-            Type::VectorType { num_elements, .. } => {
-                types.vector_of(types.bool(), *num_elements)
-            },
+            #[cfg(feature = "llvm-11-or-greater")]
+            Type::VectorType {
+                num_elements,
+                scalable,
+                ..
+            } => types.vector_of(types.bool(), *num_elements, *scalable),
+            #[cfg(feature = "llvm-10-or-lower")]
+            Type::VectorType { num_elements, .. } => types.vector_of(types.bool(), *num_elements),
             _ => types.bool(),
         }
     }
@@ -1153,7 +1169,9 @@ impl Typed for FCmp {
 
 impl Display for FCmp {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "fcmp {} ({}, {})",
+        write!(
+            f,
+            "fcmp {} ({}, {})",
             &self.predicate, &self.operand0, &self.operand1,
         )
     }
@@ -1178,7 +1196,9 @@ impl Typed for Select {
 
 impl Display for Select {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "select ({}, {}, {})",
+        write!(
+            f,
+            "select ({}, {}, {})",
             &self.condition, &self.true_value, &self.false_value,
         )
     }
@@ -1438,7 +1458,7 @@ impl InsertElement {
 }
 
 impl ShuffleVector {
-    #[cfg(feature="llvm-10-or-lower")]
+    #[cfg(feature = "llvm-10-or-lower")]
     pub(crate) fn from_llvm_ref(expr: LLVMValueRef, ctx: &mut ModuleContext) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 3);
         Self {
@@ -1447,7 +1467,7 @@ impl ShuffleVector {
             mask: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 2) }, ctx),
         }
     }
-    #[cfg(feature="llvm-11-or-greater")]
+    #[cfg(feature = "llvm-11-or-greater")]
     pub(crate) fn from_llvm_ref(expr: LLVMValueRef, _ctx: &mut ModuleContext) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 2);
         // We currently (as of LLVM 11) have no way to get the mask of a
