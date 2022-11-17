@@ -49,6 +49,11 @@ impl Module {
         self.functions.iter().find(|func| func.name == name)
     }
 
+    /// Get the `GlobalVariable` having the given `Name` (if any).
+    pub fn get_global_var_by_name(&self, name: &Name) -> Option<&GlobalVariable> {
+        self.global_vars.iter().find(|global| global.name == *name)
+    }
+
     /// Parse the LLVM bitcode (.bc) file at the given path to create a `Module`
     pub fn from_bc_path(path: impl AsRef<Path>) -> Result<Self, String> {
         // implementation here inspired by the `inkwell` crate's `Module::parse_bitcode_from_path`
