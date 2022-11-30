@@ -53,8 +53,10 @@ pub enum Constant {
     /// The address of the given (non-entry) [`BasicBlock`](../struct.BasicBlock.html). See [LLVM 14 docs on Addresses of Basic Blocks](https://releases.llvm.org/14.0.0/docs/LangRef.html#addresses-of-basic-blocks).
     /// `BlockAddress` needs more fields, but the necessary getter functions are apparently not exposed in the LLVM C API (only the C++ API)
     BlockAddress, // --TODO ideally we want BlockAddress { function: Name, block: Name },
+    /// Global variable or function
     GlobalReference {
-        name: Name,
+        /// Globals' names must be strings
+        name: String,
         ty: TypeRef,
     },
     TokenNone,
@@ -335,10 +337,6 @@ impl Display for Constant {
             Constant::Poison(ty) => write!(f, "{} poison", ty),
             Constant::BlockAddress => write!(f, "blockaddr"),
             Constant::GlobalReference { name, ty } => {
-                let name = match name {
-                    Name::Name(n) => n,
-                    _ => panic!("Expected global to be named, not numbered"),
-                };
                 match ty.as_ref() {
                     Type::FuncType { .. } => {
                         // function types: just write the name, not the type
@@ -1392,9 +1390,14 @@ impl Constant {
             },
             _ if unsafe { !LLVMIsAGlobalValue(constant).is_null() } => {
                 Constant::GlobalReference {
-                    name: ctx.global_names.get(&constant)
-                        .unwrap_or_else(|| { let names: Vec<_> = ctx.global_names.values().collect(); panic!("Global not found in ctx.global_names; have names {:?}", names) })
-                        .clone(),
+                    name: match ctx.global_names.get(&constant) {
+                        Some(Name::Name(n)) => (**n).clone(),
+                        Some(Name::Number(n)) => panic!("Expected global variable or function to have a real name, not a number {}", n),
+                        None => {
+                            let names: Vec<_> = ctx.global_names.values().collect();
+                            panic!("Global not found in ctx.global_names; have names {:?}", names)
+                        }
+                    },
                     ty: ctx.types.type_from_llvm_ref( unsafe { LLVMGlobalGetValueType(constant) } ),
                 }
             },

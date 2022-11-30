@@ -344,7 +344,7 @@ fn loopbc() {
                 module.type_of(&lifetimestart.function),
                 module.types.pointer_to(ty.clone())
             ); // lifetimestart.function should be a constant function pointer
-            assert_eq!(*name, Name::from("llvm.lifetime.start.p0i8"));
+            assert_eq!(name.as_str(), "llvm.lifetime.start.p0i8");
             if let Type::FuncType {
                 result_type,
                 param_types,
@@ -410,7 +410,7 @@ fn loopbc() {
         .expect("Should be a call");
     if let Either::Right(Operand::ConstantOperand(cref)) = &memset.function {
         if let Constant::GlobalReference { ref name, ref ty } = cref.as_ref() {
-            assert_eq!(*name, Name::from("llvm.memset.p0i8.i64"));
+            assert_eq!(name.as_str(), "llvm.memset.p0i8.i64");
             if let Type::FuncType {
                 result_type,
                 param_types,
@@ -1295,7 +1295,7 @@ fn variablesbc() {
     assert_eq!(
         global_load.address,
         Operand::ConstantOperand(ConstantRef::new(Constant::GlobalReference {
-            name: Name::from("global"),
+            name: "global".into(),
             ty: module.types.i32()
         }))
     );
@@ -1309,7 +1309,7 @@ fn variablesbc() {
     assert_eq!(
         global_store.address,
         Operand::ConstantOperand(ConstantRef::new(Constant::GlobalReference {
-            name: Name::from("global"),
+            name: "global".into(),
             ty: module.types.i32()
         }))
     );
@@ -1519,7 +1519,7 @@ fn rustbc() {
     );
     if let Either::Right(Operand::ConstantOperand(cref)) = &call.function {
         if let Constant::GlobalReference { ref name, ref ty } = cref.as_ref() {
-            assert_eq!(name, &Name::from("_ZN68_$LT$alloc..vec..Vec$LT$T$GT$$u20$as$u20$core..ops..deref..Deref$GT$5deref17h378128d7d9378466E"));
+            assert_eq!(name.as_str(), "_ZN68_$LT$alloc..vec..Vec$LT$T$GT$$u20$as$u20$core..ops..deref..Deref$GT$5deref17h378128d7d9378466E");
             match ty.as_ref() {
                 Type::FuncType {
                     result_type,
