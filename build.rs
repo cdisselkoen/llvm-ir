@@ -21,6 +21,9 @@ fn main() {
     if cfg!(feature = "llvm-14") {
         versions.push(14);
     }
+    if cfg!(feature = "llvm-15") {
+        versions.push(15);
+    }
     match versions.len() {
         0 => panic!("llvm-ir: Please select an LLVM version using a Cargo feature."),
         1 => {},
