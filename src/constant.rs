@@ -1309,7 +1309,10 @@ impl Constant {
                     Type::ArrayType { element_type, num_elements } => Constant::Array {
                         element_type: element_type.clone(),
                         elements: {
-                            (0 .. *num_elements).map(|i| Constant::from_llvm_ref( unsafe { LLVMGetElementAsConstant(constant, i as u32) }, ctx)).collect()
+                            #[cfg(feature = "llvm-14-or-lower")]
+                            { (0 .. *num_elements).map(|i| Constant::from_llvm_ref( unsafe { LLVMGetElementAsConstant(constant, i as u32) }, ctx)).collect() }
+                            #[cfg(feature = "llvm-15-or-greater")]
+                            { (0 .. *num_elements).map(|i| Constant::from_llvm_ref( unsafe { LLVMGetAggregateElement(constant, i as u32) }, ctx)).collect() }
                         },
                     },
                     ty => panic!("Expected ConstantDataArray to have type Type::ArrayType; got {:?}", ty),
@@ -1318,7 +1321,15 @@ impl Constant {
             LLVMValueKind::LLVMConstantDataVectorValueKind => {
                 match ctx.types.type_from_llvm_ref( unsafe { LLVMTypeOf(constant) } ).as_ref() {
                     Type::VectorType { num_elements, .. } => Constant::Vector(
-                        (0 .. *num_elements).map(|i| Constant::from_llvm_ref( unsafe { LLVMGetElementAsConstant(constant, i as u32) }, ctx)).collect()
+                        (0 .. *num_elements).map(
+                            |i| Constant::from_llvm_ref(
+                                unsafe {
+                                    #[cfg(feature = "llvm-14-or-lower")]
+                                    { LLVMGetElementAsConstant(constant, i as u32) }
+                                    #[cfg(feature = "llvm-15-or-greater")]
+                                    { LLVMGetAggregateElement(constant, i as u32) }
+                                },
+                                ctx)).collect()
                     ),
                     ty => panic!("Expected ConstantDataVector to have type Type::VectorType; got {:?}", ty),
                 }
