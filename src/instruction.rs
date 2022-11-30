@@ -2365,6 +2365,10 @@ pub enum RMWBinOp {
     FAdd,
     #[cfg(feature = "llvm-10-or-greater")]
     FSub,
+    #[cfg(feature = "llvm-15-or-greater")]
+    FMax,
+    #[cfg(feature = "llvm-15-or-greater")]
+    FMin,
 }
 
 impl Display for RMWBinOp {
@@ -2385,6 +2389,10 @@ impl Display for RMWBinOp {
             Self::FAdd => write!(f, "fadd"),
             #[cfg(feature = "llvm-10-or-greater")]
             Self::FSub => write!(f, "fsub"),
+            #[cfg(feature = "llvm-15-or-greater")]
+            Self::FMax => write!(f, "fmax"),
+            #[cfg(feature = "llvm-15-or-greater")]
+            Self::FMin => write!(f, "fmin"),
         }
     }
 }
@@ -3338,6 +3346,10 @@ impl RMWBinOp {
             LLVMAtomicRMWBinOp::LLVMAtomicRMWBinOpFAdd => Self::FAdd,
             #[cfg(feature = "llvm-10-or-greater")]
             LLVMAtomicRMWBinOp::LLVMAtomicRMWBinOpFSub => Self::FSub,
+            #[cfg(feature = "llvm-15-or-greater")]
+            LLVMAtomicRMWBinOp::LLVMAtomicRMWBinOpFMax => Self::FMax,
+            #[cfg(feature = "llvm-15-or-greater")]
+            LLVMAtomicRMWBinOp::LLVMAtomicRMWBinOpFMin => Self::FMin,
         }
     }
 }
