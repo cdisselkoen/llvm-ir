@@ -7,6 +7,7 @@ use crate::name::Name;
 use crate::types::{FPType, Type, TypeRef, Typed, Types, TypesBuilder};
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::Path;
+use std::ptr::null_mut;
 
 /// See [LLVM 14 docs on Module Structure](https://releases.llvm.org/14.0.0/docs/LangRef.html#module-structure)
 #[derive(Clone)]
@@ -56,6 +57,39 @@ impl Module {
 
     /// Parse the LLVM bitcode (.bc) file at the given path to create a `Module`
     pub fn from_bc_path(path: impl AsRef<Path>) -> Result<Self, String> {
+        unsafe fn parse_bc(
+            context_ref: LLVMContextRef,
+            mem_buf: LLVMMemoryBufferRef,
+            out_module: *mut LLVMModuleRef,
+        ) -> LLVMBool {
+            let result =
+                llvm_sys::bit_reader::LLVMParseBitcodeInContext2(context_ref, mem_buf, out_module);
+            LLVMDisposeMemoryBuffer(mem_buf);
+            result
+        }
+        Self::from_path(path, parse_bc)
+    }
+
+    /// Parse the LLVM text IR (.ll) file at the given path to create a `Module`
+    pub fn from_ir_path(path: impl AsRef<Path>) -> Result<Self, String> {
+        unsafe fn parse_ir(
+            context_ref: LLVMContextRef,
+            mem_buf: LLVMMemoryBufferRef,
+            out_module: *mut LLVMModuleRef,
+        ) -> LLVMBool {
+            // This call takes ownership of the buffer, so we don't free it.
+            llvm_sys::ir_reader::LLVMParseIRInContext(context_ref, mem_buf, out_module, null_mut())
+        }
+        Self::from_path(path, parse_ir)
+    }
+    fn from_path(
+        path: impl AsRef<Path>,
+        parse: unsafe fn(
+            context_ref: LLVMContextRef,
+            mem_buf: LLVMMemoryBufferRef,
+            out_module: *mut LLVMModuleRef,
+        ) -> LLVMBool,
+    ) -> Result<Self, String> {
         // implementation here inspired by the `inkwell` crate's `Module::parse_bitcode_from_path`
         use std::ffi::{CStr, CString};
         use std::mem;
@@ -88,12 +122,9 @@ impl Module {
 
         let context = crate::from_llvm::Context::new();
 
-        use llvm_sys::bit_reader::LLVMParseBitcodeInContext2;
         let module = unsafe {
             let mut module: mem::MaybeUninit<LLVMModuleRef> = mem::MaybeUninit::uninit();
-            let return_code =
-                LLVMParseBitcodeInContext2(context.ctx, memory_buffer, module.as_mut_ptr());
-            LLVMDisposeMemoryBuffer(memory_buffer);
+            let return_code = parse(context.ctx, memory_buffer, module.as_mut_ptr());
             if return_code != 0 {
                 return Err("Failed to parse bitcode".to_string());
             }
