@@ -203,6 +203,7 @@ llvm_test!("tests/llvm_bc/weak-macho-3.5.ll.bc", weak_macho);
 
 use either::Either;
 use llvm_ir::instruction::{Atomicity, MemoryOrdering, SynchronizationScope};
+#[cfg(feature = "llvm-14-or-lower")]
 use llvm_ir::types::NamedStructDef;
 use llvm_ir::*;
 use std::convert::TryInto;

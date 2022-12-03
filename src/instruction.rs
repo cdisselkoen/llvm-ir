@@ -5,6 +5,8 @@ use crate::function::{CallingConvention, FunctionAttribute, ParameterAttribute};
 use crate::name::Name;
 use crate::operand::Operand;
 use crate::predicates::*;
+#[cfg(feature = "llvm-14-or-lower")]
+use crate::types::NamedStructDef;
 use crate::types::{Type, TypeRef, Typed, Types};
 use either::Either;
 use std::convert::TryFrom;
@@ -2840,7 +2842,7 @@ impl Load {
             address: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 0) }, ctx, func_ctx),
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
             #[cfg(feature = "llvm-15-or-greater")]
-            loaded_ty: unimplemented!("need to look up C API equivalent of load->getType()"),
+            loaded_ty: ctx.types.type_from_llvm_ref(unsafe { LLVMTypeOf(inst) }),
             volatile: unsafe { LLVMGetVolatile(inst) } != 0,
             atomicity: {
                 let ordering = unsafe { LLVMGetOrdering(inst) };
@@ -3124,6 +3126,8 @@ impl Select {
 // just the logic shared by Call and Invoke. Not a public struct, just an implementation convenience.
 pub(crate) struct CallInfo {
     pub function: Either<InlineAssembly, Operand>,
+    #[cfg(feature = "llvm-15-or-greater")]
+    pub function_ty: TypeRef,
     pub arguments: Vec<(Operand, Vec<ParameterAttribute>)>,
     pub return_attributes: Vec<ParameterAttribute>,
     pub function_attributes: Vec<FunctionAttribute>,
@@ -3138,9 +3142,9 @@ impl CallInfo {
         func_ctx: &mut FunctionContext,
     ) -> Self {
         use llvm_sys::{LLVMAttributeFunctionIndex, LLVMAttributeReturnIndex};
+        let called_val = unsafe { LLVMGetCalledValue(inst) };
         Self {
             function: {
-                let called_val = unsafe { LLVMGetCalledValue(inst) };
                 let asm = unsafe { LLVMIsAInlineAsm(called_val) };
                 if !asm.is_null() {
                     Either::Left(InlineAssembly::from_llvm_ref(asm, &mut ctx.types))
@@ -3148,6 +3152,10 @@ impl CallInfo {
                     Either::Right(Operand::from_llvm_ref(called_val, ctx, func_ctx))
                 }
             },
+            #[cfg(feature = "llvm-15-or-greater")]
+            function_ty: ctx
+                .types
+                .type_from_llvm_ref(unsafe { LLVMTypeOf(called_val) }),
             arguments: {
                 let num_args: u32 = unsafe { LLVMGetNumArgOperands(inst) } as u32;
                 (0 .. num_args) // arguments are (0 .. num_args); other operands (such as the called function) are after that
@@ -3232,9 +3240,7 @@ impl Call {
         Self {
             function: callinfo.function,
             #[cfg(feature = "llvm-15-or-greater")]
-            function_ty: unimplemented!(
-                "need to look up C API equivalent of call->getFunctionType()"
-            ),
+            function_ty: callinfo.function_ty,
             arguments: callinfo.arguments,
             return_attributes: callinfo.return_attributes,
             dest: if unsafe {

@@ -374,10 +374,10 @@ fn loopbc() {
         .expect("Should be a call");
     if let Either::Right(Operand::ConstantOperand(cref)) = &lifetimestart.function {
         if let Constant::GlobalReference { ref name, ref ty } = cref.as_ref() {
-            assert_eq!(
-                module.type_of(&lifetimestart.function),
-                module.types.pointer_to(ty.clone())
-            ); // lifetimestart.function should be a constant function pointer
+            assert!(matches!(
+                module.type_of(&lifetimestart.function).as_ref(),
+                Type::PointerType { .. }
+            )); // lifetimestart.function should be a constant function pointer
             assert_eq!(name.as_str(), "llvm.lifetime.start.p0i8");
             if let Type::FuncType {
                 result_type,
@@ -390,7 +390,10 @@ fn loopbc() {
                     param_types,
                     &vec![
                         module.types.i64(),
-                        module.types.pointer_to(module.types.i8())
+                        #[cfg(feature = "llvm-14-or-lower")]
+                        module.types.pointer_to(module.types.i8()),
+                        #[cfg(feature = "llvm-15-or-greater")]
+                        module.types.pointer(),
                     ]
                 );
                 assert_eq!(*is_var_arg, false);
@@ -424,11 +427,15 @@ fn loopbc() {
             value: 40
         }))
     );
+    #[cfg(feature = "llvm-14-or-lower")]
+    let arg1_expected_ty = module.types.pointer_to(module.types.i8());
+    #[cfg(feature = "llvm-15-or-greater")]
+    let arg1_expected_ty = module.types.pointer();
     assert_eq!(
         arg1.0,
         Operand::LocalOperand {
             name: Name::Number(4),
-            ty: module.types.pointer_to(module.types.i8())
+            ty: arg1_expected_ty,
         }
     );
     assert_eq!(arg0.1, vec![]); // should have no parameter attributes
@@ -455,7 +462,10 @@ fn loopbc() {
                 assert_eq!(
                     param_types,
                     &vec![
+                        #[cfg(feature = "llvm-14-or-lower")]
                         module.types.pointer_to(module.types.i8()),
+                        #[cfg(feature = "llvm-15-or-greater")]
+                        module.types.pointer(),
                         module.types.i8(),
                         module.types.i64(),
                         module.types.bool()
@@ -478,11 +488,15 @@ fn loopbc() {
         );
     }
     assert_eq!(memset.arguments.len(), 4);
+    #[cfg(feature = "llvm-14-or-lower")]
+    let memset_arg0_expected_ty = module.types.pointer_to(module.types.i8());
+    #[cfg(feature = "llvm-15-or-greater")]
+    let memset_arg0_expected_ty = module.types.pointer();
     assert_eq!(
         memset.arguments[0].0,
         Operand::LocalOperand {
             name: Name::Number(4),
-            ty: module.types.pointer_to(module.types.i8())
+            ty: memset_arg0_expected_ty,
         }
     );
     assert_eq!(
@@ -936,11 +950,15 @@ fn loopbc() {
         .clone()
         .try_into()
         .expect("Should be a gep");
+    #[cfg(feature = "llvm-14-or-lower")]
+    let gep_addr_expected_ty = module.types.pointer_to(allocated_type.clone());
+    #[cfg(feature = "llvm-15-or-greater")]
+    let gep_addr_expected_ty = module.types.pointer();
     assert_eq!(
         gep.address,
         Operand::LocalOperand {
             name: Name::Number(3),
-            ty: module.types.pointer_to(allocated_type.clone())
+            ty: gep_addr_expected_ty,
         }
     );
     let gep_dest = if cfg!(feature = "llvm-9-or-lower") {
@@ -977,10 +995,13 @@ fn loopbc() {
             },
         ]
     );
+    #[cfg(feature = "llvm-14-or-lower")]
     assert_eq!(
         module.type_of(gep),
         module.types.pointer_to(module.types.i32())
     );
+    #[cfg(feature = "llvm-15-or-greater")]
+    assert_eq!(module.type_of(gep), module.types.pointer());
     #[cfg(feature = "llvm-9-or-lower")]
     assert_eq!(
         &gep.to_string(),
@@ -1022,11 +1043,15 @@ fn loopbc() {
     } else {
         Name::Number(21)
     };
+    #[cfg(feature = "llvm-14-or-lower")]
+    let address_ty = module.types.pointer_to(module.types.i32());
+    #[cfg(feature = "llvm-15-or-greater")]
+    let address_ty = module.types.pointer();
     assert_eq!(
         store.address,
         Operand::LocalOperand {
             name: address,
-            ty: module.types.pointer_to(module.types.i32())
+            ty: address_ty,
         }
     );
     #[cfg(feature = "llvm-12-or-lower")]
@@ -1108,11 +1133,15 @@ fn loopbc() {
     } else {
         Name::Number(24)
     };
+    #[cfg(feature = "llvm-14-or-lower")]
+    let load_addr_expected_ty = module.types.pointer_to(module.types.i32());
+    #[cfg(feature = "llvm-15-or-greater")]
+    let load_addr_expected_ty = module.types.pointer();
     assert_eq!(
         load.address,
         Operand::LocalOperand {
             name: load_addr,
-            ty: module.types.pointer_to(module.types.i32())
+            ty: load_addr_expected_ty,
         }
     );
     #[cfg(feature = "llvm-10-or-lower")]
@@ -1292,7 +1321,10 @@ fn variablesbc() {
     let var = &module.global_vars[0];
     assert_eq!(var.name, "global");
     assert_eq!(var.is_constant, false);
+    #[cfg(feature = "llvm-14-or-lower")]
     assert_eq!(var.ty, module.types.pointer_to(module.types.i32()));
+    #[cfg(feature = "llvm-15-or-greater")]
+    assert_eq!(var.ty, module.types.pointer());
     assert_eq!(
         var.initializer,
         Some(ConstantRef::new(Constant::Int { bits: 32, value: 5 }))
@@ -1306,11 +1338,15 @@ fn variablesbc() {
     assert_eq!(func.name, "variables");
     let bb = &func.basic_blocks[0];
     let store: &instruction::Store = &bb.instrs[2].clone().try_into().expect("Should be a store");
+    #[cfg(feature = "llvm-14-or-lower")]
+    let store_addr_expected_ty = module.types.pointer_to(module.types.i32());
+    #[cfg(feature = "llvm-15-or-greater")]
+    let store_addr_expected_ty = module.types.pointer();
     assert_eq!(
         store.address,
         Operand::LocalOperand {
             name: Name::Number(3),
-            ty: module.types.pointer_to(module.types.i32())
+            ty: store_addr_expected_ty,
         }
     );
     assert_eq!(module.type_of(store), module.types.void());
@@ -1319,11 +1355,15 @@ fn variablesbc() {
         "store volatile i32 %0, i32* %3, align 4"
     );
     let load: &instruction::Load = &bb.instrs[8].clone().try_into().expect("Should be a load");
+    #[cfg(feature = "llvm-14-or-lower")]
+    let load_addr_expected_ty = module.types.pointer_to(module.types.i32());
+    #[cfg(feature = "llvm-15-or-greater")]
+    let load_addr_expected_ty = module.types.pointer();
     assert_eq!(
         load.address,
         Operand::LocalOperand {
             name: Name::Number(4),
-            ty: module.types.pointer_to(module.types.i32())
+            ty: load_addr_expected_ty,
         }
     );
     assert_eq!(module.type_of(load), module.types.i32());
@@ -1525,12 +1565,15 @@ fn rustbc() {
     assert_eq!(func.parameters[2].name, Name::from("v"));
     assert_eq!(func.parameters[0].ty, module.types.i64());
     assert_eq!(func.parameters[1].ty, module.types.i64());
+    #[cfg(feature = "llvm-14-or-lower")]
     assert_eq!(
         func.parameters[2].ty,
         module
             .types
             .pointer_to(module.types.named_struct("alloc::vec::Vec<isize>"))
     );
+    #[cfg(feature = "llvm-15-or-greater")]
+    assert_eq!(func.parameters[2].ty, module.types.pointer());
 
     let startbb = func
         .get_bb_by_name(&Name::from("start"))
@@ -1554,11 +1597,15 @@ fn rustbc() {
         .clone()
         .try_into()
         .expect("Should be a store");
+    #[cfg(feature = "llvm-14-or-lower")]
+    let store_addr_expected_ty = module.types.pointer_to(module.types.i64());
+    #[cfg(feature = "llvm-15-or-greater")]
+    let store_addr_expected_ty = module.types.pointer();
     assert_eq!(
         store.address,
         Operand::LocalOperand {
             name: Name::from("sum"),
-            ty: module.types.pointer_to(module.types.i64())
+            ty: store_addr_expected_ty,
         }
     );
     assert_eq!(&store.to_string(), "store i64 0, i64* %sum, align 8");
@@ -1566,14 +1613,20 @@ fn rustbc() {
         .clone()
         .try_into()
         .expect("Should be a call");
+    #[cfg(feature = "llvm-14-or-lower")]
     let param_type = module
         .types
         .pointer_to(module.types.named_struct("alloc::vec::Vec<isize>"));
+    #[cfg(feature = "llvm-15-or-greater")]
+    let param_type = module.types.pointer();
     let ret_type = module.types.struct_of(
         vec![
+            #[cfg(feature = "llvm-14-or-lower")]
             module
                 .types
                 .pointer_to(module.types.array_of(module.types.i64(), 0)),
+            #[cfg(feature = "llvm-15-or-greater")]
+            module.types.pointer(),
             module.types.i64(),
         ],
         false,
@@ -1726,6 +1779,7 @@ fn simple_linked_list() {
     if let Type::StructType { element_types, .. } = structty_inner.as_ref() {
         assert_eq!(element_types.len(), 2);
         assert_eq!(element_types[0], module.types.i32());
+        #[cfg(feature = "llvm-14-or-lower")]
         if let Type::PointerType { pointee_type, .. } = element_types[1].as_ref() {
             if let Type::NamedStructType { name } = pointee_type.as_ref() {
                 assert_eq!(name, &struct_name);
@@ -1741,6 +1795,11 @@ fn simple_linked_list() {
                 element_types[1]
             );
         }
+        #[cfg(feature = "llvm-15-or-greater")]
+        assert!(matches!(
+            element_types[1].as_ref(),
+            Type::PointerType { .. }
+        ));
     } else {
         panic!(
             "Expected {} to be a StructType, got {:?}",
@@ -1795,6 +1854,7 @@ fn simple_linked_list() {
         .get_func_by_name("takes_opaque_struct")
         .expect("Failed to find function");
     let paramty = &func.parameters[0].ty;
+    #[cfg(feature = "llvm-14-or-lower")]
     match paramty.as_ref() {
         Type::PointerType { pointee_type, .. } => match pointee_type.as_ref() {
             Type::NamedStructType { name } => {
@@ -1810,6 +1870,8 @@ fn simple_linked_list() {
             paramty
         ),
     };
+    #[cfg(feature = "llvm-15-or-greater")]
+    assert!(matches!(paramty.as_ref(), Type::PointerType { .. }));
 }
 
 // this test relates to the version of the file compiled with debuginfo
@@ -1926,6 +1988,7 @@ fn indirectly_recursive_type() {
     if let Type::StructType { element_types, .. } = aty_inner.as_ref() {
         assert_eq!(element_types.len(), 2);
         assert_eq!(element_types[0], module.types.i32());
+        #[cfg(feature = "llvm-14-or-lower")]
         if let Type::PointerType { pointee_type, .. } = element_types[1].as_ref() {
             if let Type::NamedStructType { name } = pointee_type.as_ref() {
                 assert_eq!(name, &struct_name_b);
@@ -1941,6 +2004,11 @@ fn indirectly_recursive_type() {
                 element_types[1]
             );
         }
+        #[cfg(feature = "llvm-15-or-greater")]
+        assert!(matches!(
+            element_types[1].as_ref(),
+            Type::PointerType { .. }
+        ));
     } else {
         panic!(
             "Expected NodeA inner type to be a StructType, got {:?}",
@@ -1950,6 +2018,7 @@ fn indirectly_recursive_type() {
     if let Type::StructType { element_types, .. } = bty_inner.as_ref() {
         assert_eq!(element_types.len(), 2);
         assert_eq!(element_types[0], module.types.i32());
+        #[cfg(feature = "llvm-14-or-lower")]
         if let Type::PointerType { pointee_type, .. } = element_types[1].as_ref() {
             if let Type::NamedStructType { name } = pointee_type.as_ref() {
                 assert_eq!(name, &struct_name_a);
@@ -1965,6 +2034,11 @@ fn indirectly_recursive_type() {
                 element_types[1]
             );
         }
+        #[cfg(feature = "llvm-15-or-greater")]
+        assert!(matches!(
+            element_types[1].as_ref(),
+            Type::PointerType { .. }
+        ));
     } else {
         panic!(
             "Expected NodeB inner type to be a StructType, got {:?}",
@@ -2336,40 +2410,61 @@ fn float_types() {
     );
 
     let f = module.get_func_by_name("returns_half").unwrap();
+    #[cfg(feature = "llvm-14-or-lower")]
     assert_eq!(
         f.return_type,
         module.types.pointer_to(module.types.fp(FPType::Half))
     );
+    #[cfg(feature = "llvm-15-or-greater")]
+    assert_eq!(f.return_type, module.types.pointer());
     let f = module.get_func_by_name("returns_bfloat").unwrap();
+    #[cfg(feature = "llvm-14-or-lower")]
     assert_eq!(
         f.return_type,
         module.types.pointer_to(module.types.fp(FPType::BFloat))
     );
+    #[cfg(feature = "llvm-15-or-greater")]
+    assert_eq!(f.return_type, module.types.pointer());
     let f = module.get_func_by_name("returns_float").unwrap();
+    #[cfg(feature = "llvm-14-or-lower")]
     assert_eq!(
         f.return_type,
         module.types.pointer_to(module.types.fp(FPType::Single))
     );
+    #[cfg(feature = "llvm-15-or-greater")]
+    assert_eq!(f.return_type, module.types.pointer());
     let f = module.get_func_by_name("returns_double").unwrap();
+    #[cfg(feature = "llvm-14-or-lower")]
     assert_eq!(
         f.return_type,
         module.types.pointer_to(module.types.fp(FPType::Double))
     );
+    #[cfg(feature = "llvm-15-or-greater")]
+    assert_eq!(f.return_type, module.types.pointer());
     let f = module.get_func_by_name("returns_fp128").unwrap();
+    #[cfg(feature = "llvm-14-or-lower")]
     assert_eq!(
         f.return_type,
         module.types.pointer_to(module.types.fp(FPType::FP128))
     );
+    #[cfg(feature = "llvm-15-or-greater")]
+    assert_eq!(f.return_type, module.types.pointer());
     let f = module.get_func_by_name("returns_x86_fp80").unwrap();
+    #[cfg(feature = "llvm-14-or-lower")]
     assert_eq!(
         f.return_type,
         module.types.pointer_to(module.types.fp(FPType::X86_FP80))
     );
+    #[cfg(feature = "llvm-15-or-greater")]
+    assert_eq!(f.return_type, module.types.pointer());
     let f = module.get_func_by_name("returns_ppc_fp128").unwrap();
+    #[cfg(feature = "llvm-14-or-lower")]
     assert_eq!(
         f.return_type,
         module.types.pointer_to(module.types.fp(FPType::PPC_FP128))
     );
+    #[cfg(feature = "llvm-15-or-greater")]
+    assert_eq!(f.return_type, module.types.pointer());
 }
 
 #[test]
