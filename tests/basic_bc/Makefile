@@ -5,7 +5,7 @@ CLANG11=clang-11 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/
 CLANG12=clang-12
 CLANG13=clang-13
 CLANG14=clang-14
-CLANG14=clang-15
+CLANG15=clang-15
 RUSTC=rustc
 RUSTFLAGS=--crate-type=lib
 LLVMAS8=$(LLVM8PATH)/bin/llvm-as
@@ -78,7 +78,7 @@ llvm14/%.ll : %.c
 	$(CLANG14) $(CFLAGS) -S -emit-llvm $^ -o $@
 llvm15/%.ll : %.c
 	mkdir -p llvm15
-	$(CLANG14) $(CFLAGS) -S -emit-llvm $^ -o $@
+	$(CLANG15) $(CFLAGS) -S -emit-llvm $^ -o $@
 
 llvm8/%.bc : %.c
 	mkdir -p llvm8
@@ -103,7 +103,7 @@ llvm14/%.bc : %.c
 	$(CLANG14) $(CFLAGS) -c -emit-llvm $^ -o $@
 llvm15/%.bc : %.c
 	mkdir -p llvm15
-	$(CLANG14) $(CFLAGS) -c -emit-llvm $^ -o $@
+	$(CLANG15) $(CFLAGS) -c -emit-llvm $^ -o $@
 
 rust/%.ll : %.rs
 	mkdir -p rust
@@ -137,7 +137,7 @@ llvm14/%.ll-g : %.c
 	$(CLANG14) $(CFLAGS) -g -S -emit-llvm $^ -o $@
 llvm15/%.ll-g : %.c
 	mkdir -p llvm15
-	$(CLANG14) $(CFLAGS) -g -S -emit-llvm $^ -o $@
+	$(CLANG15) $(CFLAGS) -g -S -emit-llvm $^ -o $@
 
 llvm8/%.bc-g : %.c
 	mkdir -p llvm8
@@ -162,7 +162,7 @@ llvm14/%.bc-g : %.c
 	$(CLANG14) $(CFLAGS) -g -c -emit-llvm $^ -o $@
 llvm15/%.bc-g : %.c
 	mkdir -p llvm15
-	$(CLANG14) $(CFLAGS) -g -c -emit-llvm $^ -o $@
+	$(CLANG15) $(CFLAGS) -g -c -emit-llvm $^ -o $@
 
 rust/%.ll-g : %.rs
 	mkdir -p rust

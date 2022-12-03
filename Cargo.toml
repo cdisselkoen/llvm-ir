@@ -58,7 +58,7 @@ llvm-10-or-lower = ["llvm-11-or-lower"]
 llvm-11-or-lower = ["llvm-12-or-lower"]
 llvm-12-or-lower = ["llvm-13-or-lower"]
 llvm-13-or-lower = ["llvm-14-or-lower"]
-llvm-14-or-lower = []
+llvm-14-or-lower = ["llvm-15-or-lower"]
 llvm-15-or-lower = []
 ###
 
