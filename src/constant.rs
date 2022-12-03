@@ -198,7 +198,10 @@ impl Typed for Constant {
             #[cfg(feature="llvm-12-or-greater")]
             Constant::Poison(t) => t.clone(),
             Constant::BlockAddress { .. } => types.label_type(),
+            #[cfg(feature="llvm-14-or-lower")]
             Constant::GlobalReference { ty, .. } => types.pointer_to(ty.clone()),
+            #[cfg(feature="llvm-15-or-greater")]
+            Constant::GlobalReference { .. } => types.pointer(),
             Constant::TokenNone => types.token_type(),
             Constant::Add(a) => types.type_of(a),
             Constant::Sub(s) => types.type_of(s),
@@ -919,12 +922,20 @@ pub struct GetElementPtr {
 
 impl_constexpr!(GetElementPtr, GetElementPtr);
 
+#[cfg(feature = "llvm-14-or-lower")]
 impl Typed for GetElementPtr {
     fn get_type(&self, types: &Types) -> TypeRef {
         gep_type(types.type_of(&self.address), self.indices.iter(), types)
     }
 }
+#[cfg(feature = "llvm-15-or-greater")]
+impl Typed for GetElementPtr {
+    fn get_type(&self, types: &Types) -> TypeRef {
+        types.pointer()
+    }
+}
 
+#[cfg(feature = "llvm-14-or-lower")]
 fn gep_type<'c>(
     cur_type: TypeRef,
     mut indices: impl Iterator<Item = &'c ConstantRef>,
