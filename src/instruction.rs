@@ -5,7 +5,7 @@ use crate::function::{CallingConvention, FunctionAttribute, ParameterAttribute};
 use crate::name::Name;
 use crate::operand::Operand;
 use crate::predicates::*;
-use crate::types::{NamedStructDef, Type, TypeRef, Typed, Types};
+use crate::types::{Type, TypeRef, Typed, Types};
 use either::Either;
 use std::convert::TryFrom;
 use std::fmt::{self, Debug, Display};
@@ -1301,15 +1301,22 @@ pub struct Alloca {
 impl_inst!(Alloca, Alloca);
 impl_hasresult!(Alloca);
 
+#[cfg(feature = "llvm-14-or-lower")]
 impl Typed for Alloca {
     fn get_type(&self, types: &Types) -> TypeRef {
         types.pointer_to(self.allocated_type.clone())
     }
 }
+#[cfg(feature = "llvm-15-or-greater")]
+impl Typed for Alloca {
+    fn get_type(&self, types: &Types) -> TypeRef {
+        types.pointer()
+    }
+}
 
 impl Display for Alloca {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{} = alloca {}", &self.dest, &self.allocated_type,)?;
+        write!(f, "{} = alloca {}", &self.dest, &self.allocated_type)?;
         if let Some(Constant::Int { value: 1, .. }) = self.num_elements.as_constant() {
             // omit num_elements
         } else {
@@ -1330,6 +1337,8 @@ impl Display for Alloca {
 pub struct Load {
     pub address: Operand,
     pub dest: Name,
+    #[cfg(feature = "llvm-15-or-greater")]
+    pub loaded_ty: TypeRef,
     pub volatile: bool,
     pub atomicity: Option<Atomicity>,
     pub alignment: u32,
@@ -1341,12 +1350,19 @@ pub struct Load {
 impl_inst!(Load, Load);
 impl_hasresult!(Load);
 
+#[cfg(feature = "llvm-14-or-lower")]
 impl Typed for Load {
     fn get_type(&self, types: &Types) -> TypeRef {
         match types.type_of(&self.address).as_ref() {
             Type::PointerType { pointee_type, .. } => pointee_type.clone(),
             ty => panic!("Expected a load address to be PointerType, got {:?}", ty),
         }
+    }
+}
+#[cfg(feature = "llvm-15-or-greater")]
+impl Typed for Load {
+    fn get_type(&self, _types: &Types) -> TypeRef {
+        self.loaded_ty.clone()
     }
 }
 
@@ -1516,6 +1532,7 @@ pub struct AtomicRMW {
 impl_inst!(AtomicRMW, AtomicRMW);
 impl_hasresult!(AtomicRMW);
 
+#[cfg(feature = "llvm-14-or-lower")]
 impl Typed for AtomicRMW {
     fn get_type(&self, types: &Types) -> TypeRef {
         match types.type_of(&self.address).as_ref() {
@@ -1525,6 +1542,12 @@ impl Typed for AtomicRMW {
                 ty
             ),
         }
+    }
+}
+#[cfg(feature = "llvm-15-or-greater")]
+impl Typed for AtomicRMW {
+    fn get_type(&self, types: &Types) -> TypeRef {
+        self.value.get_type(types)
     }
 }
 
@@ -1562,12 +1585,20 @@ pub struct GetElementPtr {
 impl_inst!(GetElementPtr, GetElementPtr);
 impl_hasresult!(GetElementPtr);
 
+#[cfg(feature = "llvm-14-or-lower")]
 impl Typed for GetElementPtr {
     fn get_type(&self, types: &Types) -> TypeRef {
         gep_type(types.type_of(&self.address), self.indices.iter(), types)
     }
 }
+#[cfg(feature = "llvm-15-or-greater")]
+impl Typed for GetElementPtr {
+    fn get_type(&self, types: &Types) -> TypeRef {
+        types.pointer()
+    }
+}
 
+#[cfg(feature = "llvm-14-or-lower")]
 fn gep_type<'o>(
     cur_type: TypeRef,
     mut indices: impl Iterator<Item = &'o Operand>,
@@ -2020,6 +2051,8 @@ unop_same_type!(Freeze, "freeze");
 #[derive(PartialEq, Clone, Debug)]
 pub struct Call {
     pub function: Either<InlineAssembly, Operand>,
+    #[cfg(feature = "llvm-15-or-greater")]
+    pub function_ty: TypeRef,
     pub arguments: Vec<(Operand, Vec<ParameterAttribute>)>,
     pub return_attributes: Vec<ParameterAttribute>,
     pub dest: Option<Name>, // will be None if the `function` returns void
@@ -2033,6 +2066,7 @@ pub struct Call {
 
 impl_inst!(Call, Call);
 
+#[cfg(feature = "llvm-14-or-lower")]
 impl Typed for Call {
     fn get_type(&self, types: &Types) -> TypeRef {
         match types.type_of(&self.function).as_ref() {
@@ -2041,6 +2075,15 @@ impl Typed for Call {
                 ty => panic!("Expected Call's function argument to be of type pointer-to-function, got pointer-to-{:?}", ty),
             },
             ty => panic!("Expected Call's function argument to be of type pointer-to-function, got {:?}", ty),
+        }
+    }
+}
+#[cfg(feature = "llvm-15-or-greater")]
+impl Typed for Call {
+    fn get_type(&self, _types: &Types) -> TypeRef {
+        match self.function_ty.as_ref() {
+            Type::FuncType { result_type, .. } => result_type.clone(),
+            ty => panic!("Expected Call.function_ty to be a FuncType, got {:?}", ty),
         }
     }
 }
@@ -2796,6 +2839,8 @@ impl Load {
         Self {
             address: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 0) }, ctx, func_ctx),
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
+            #[cfg(feature = "llvm-15-or-greater")]
+            loaded_ty: unimplemented!("need to look up C API equivalent of load->getType()"),
             volatile: unsafe { LLVMGetVolatile(inst) } != 0,
             atomicity: {
                 let ordering = unsafe { LLVMGetOrdering(inst) };
@@ -3186,6 +3231,8 @@ impl Call {
         let callinfo = CallInfo::from_llvm_ref(inst, ctx, func_ctx);
         Self {
             function: callinfo.function,
+            #[cfg(feature = "llvm-15-or-greater")]
+            function_ty: unimplemented!("need to look up C API equivalent of call->getFunctionType()"),
             arguments: callinfo.arguments,
             return_attributes: callinfo.return_attributes,
             dest: if unsafe {

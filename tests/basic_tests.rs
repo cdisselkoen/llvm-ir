@@ -321,10 +321,13 @@ fn loopbc() {
         Operand::ConstantOperand(ConstantRef::new(Constant::Int { bits: 32, value: 1 })) // One element, which is an array of 10 elements. Not 10 elements, each of which are i32.
     );
     assert_eq!(alloca.alignment, 16);
+    #[cfg(feature = "llvm-14-or-lower")]
     assert_eq!(
         module.type_of(alloca),
-        module.types.pointer_to(allocated_type.clone())
+        module.types.pointer_to(allocated_type.clone()),
     );
+    #[cfg(feature = "llvm-15-or-greater")]
+    assert_eq!(module.type_of(alloca), module.types.pointer());
     assert_eq!(module.type_of(&alloca.num_elements), module.types.i32());
     assert_eq!(&alloca.to_string(), "%3 = alloca [10 x i32], align 16");
     let bitcast: &instruction::BitCast = &bbs[0].instrs[1]
@@ -332,23 +335,33 @@ fn loopbc() {
         .try_into()
         .expect("Should be a bitcast");
     assert_eq!(bitcast.dest, Name::Number(4));
-    assert_eq!(bitcast.to_type, module.types.pointer_to(module.types.i8()));
-    assert_eq!(
-        bitcast.operand,
-        Operand::LocalOperand {
-            name: Name::Number(3),
-            ty: module.types.pointer_to(allocated_type.clone())
-        }
-    );
-    assert_eq!(
-        module.type_of(bitcast),
-        module.types.pointer_to(module.types.i8())
-    );
-    assert_eq!(
-        module.type_of(&bitcast.operand),
-        module.types.pointer_to(allocated_type.clone())
-    );
-    assert_eq!(&bitcast.to_string(), "%4 = bitcast [10 x i32]* %3 to i8*");
+    #[cfg(feature = "llvm-14-or-lower")]
+    {
+        assert_eq!(bitcast.to_type, module.types.pointer_to(module.types.i8()));
+        assert_eq!(
+            bitcast.operand,
+            Operand::LocalOperand {
+                name: Name::Number(3),
+                ty: module.types.pointer_to(allocated_type.clone())
+            }
+        );
+        assert_eq!(
+            module.type_of(bitcast),
+            module.types.pointer_to(module.types.i8())
+        );
+        assert_eq!(
+            module.type_of(&bitcast.operand),
+            module.types.pointer_to(allocated_type.clone())
+        );
+        assert_eq!(&bitcast.to_string(), "%4 = bitcast [10 x i32]* %3 to i8*");
+    }
+    #[cfg(feature = "llvm-15-or-greater")]
+    {
+        assert_eq!(bitcast.to_type, module.types.pointer());
+        assert_eq!(bitcast.operand, Operand::LocalOperand { name: Name::Number(3), ty: module.types.pointer()});
+        assert_eq!(module.type_of(bitcast), module.types.pointer());
+        assert_eq!(module.type_of(&bitcast.operand), module.types.pointer());
+    }
     let lifetimestart: &instruction::Call = &bbs[0].instrs[2]
         .clone()
         .try_into()
@@ -2517,12 +2530,21 @@ fn datalayouts() {
         data_layout.alignments.type_alignment(&module.types.int(26)),
         &Alignment { abi: 32, pref: 32 }
     );
+    #[cfg(feature = "llvm-14-or-lower")]
     assert_eq!(
         data_layout
             .alignments
             .type_alignment(&module.types.pointer_in_addr_space(module.types.int(32), 2)),
         &Alignment { abi: 64, pref: 64 }
     );
+    #[cfg(feature = "llvm-15-or-greater")]
+    assert_eq!(
+        data_layout
+            .alignments
+            .type_alignment(&module.types.pointer_in_addr_space(2)),
+        &Alignment { abi: 64, pref: 64 }
+    );
+    #[cfg(feature = "llvm-14-or-lower")]
     assert_eq!(
         data_layout
             .alignments
@@ -2532,7 +2554,7 @@ fn datalayouts() {
                 false
             ))),
         &Alignment { abi: 64, pref: 64 }
-    )
+    );
 }
 
 #[test]

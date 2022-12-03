@@ -246,6 +246,7 @@ fn DILocation_implicit_code_extra_checks() {
     assert_eq!(invoke.arguments.len(), 2);
     if let Operand::LocalOperand { name, ty } = &invoke.arguments[0].0 {
         assert_eq!(name, &Name::from("a"));
+        #[cfg(feature = "llvm-14-or-lower")]
         if let Type::PointerType { pointee_type, .. } = ty.as_ref() {
             if let Type::NamedStructType { name } = pointee_type.as_ref() {
                 match module.types.named_struct_def(name) {
@@ -266,6 +267,8 @@ fn DILocation_implicit_code_extra_checks() {
                 ty.as_ref()
             );
         }
+        #[cfg(feature = "llvm-15-or-greater")]
+        assert!(matches!(ty.as_ref(), Type::PointerType { .. }));
     } else {
         panic!(
             "Expected invoke.arguments[0].0 to be a local operand; instead it was {:?}",
@@ -308,7 +311,10 @@ fn DILocation_implicit_code_extra_checks() {
         .unwrap_or_else(|_| panic!("Expected a landingpad, got {:?}", &lpad.instrs[0]));
     let expected_landingpad_resultty = module.types.struct_of(
         vec![
+            #[cfg(feature = "llvm-14-or-lower")]
             module.types.pointer_to(module.types.i8()),
+            #[cfg(feature = "llvm-15-or-greater")]
+            module.types.pointer(),
             module.types.i32(),
         ],
         false,
@@ -425,7 +431,10 @@ fn DILocation_implicit_code_extra_checks() {
         ival.element,
         Operand::LocalOperand {
             name: Name::from("exn4"),
-            ty: module.types.pointer_to(module.types.i8())
+            #[cfg(feature = "llvm-14-or-lower")]
+            ty: module.types.pointer_to(module.types.i8()),
+            #[cfg(feature = "llvm-15-or-greater")]
+            ty: module.types.pointer(),
         }
     );
     assert_eq!(ival.indices.len(), 1);
@@ -510,7 +519,10 @@ fn atomics() {
         cmpxchg.address,
         Operand::LocalOperand {
             name: Name::from("word"),
-            ty: module.types.pointer_to(module.types.i32())
+            #[cfg(feature = "llvm-14-or-lower")]
+            ty: module.types.pointer_to(module.types.i32()),
+            #[cfg(feature = "llvm-15-or-greater")]
+            ty: module.types.pointer(),
         }
     );
     assert_eq!(
@@ -543,7 +555,10 @@ fn atomics() {
         atomicrmw.address,
         Operand::LocalOperand {
             name: Name::from("word"),
-            ty: module.types.pointer_to(module.types.i32())
+            #[cfg(feature = "llvm-14-or-lower")]
+            ty: module.types.pointer_to(module.types.i32()),
+            #[cfg(feature = "llvm-15-or-greater")]
+            ty: module.types.pointer(),
         }
     );
     assert_eq!(

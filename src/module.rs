@@ -423,6 +423,7 @@ impl Alignments {
             Type::StructType { .. } | Type::NamedStructType { .. } | Type::ArrayType { .. } => {
                 self.agg_alignment()
             },
+            #[cfg(feature = "llvm-14-or-lower")]
             Type::PointerType {
                 pointee_type,
                 addr_space,
@@ -431,6 +432,8 @@ impl Alignments {
                 Type::FuncType { .. } => &self.fptr_alignment_as_alignment,
                 _ => &self.ptr_alignment(*addr_space).alignment,
             },
+            #[cfg(feature = "llvm-15-or-greater")]
+            Type::PointerType { addr_space } => &self.ptr_alignment(*addr_space).alignment,
             _ => panic!("Don't know how to get the alignment of {:?}", ty),
         }
     }
