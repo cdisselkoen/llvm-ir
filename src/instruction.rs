@@ -3232,7 +3232,9 @@ impl Call {
         Self {
             function: callinfo.function,
             #[cfg(feature = "llvm-15-or-greater")]
-            function_ty: unimplemented!("need to look up C API equivalent of call->getFunctionType()"),
+            function_ty: unimplemented!(
+                "need to look up C API equivalent of call->getFunctionType()"
+            ),
             arguments: callinfo.arguments,
             return_attributes: callinfo.return_attributes,
             dest: if unsafe {

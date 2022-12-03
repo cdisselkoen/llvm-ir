@@ -358,7 +358,13 @@ fn loopbc() {
     #[cfg(feature = "llvm-15-or-greater")]
     {
         assert_eq!(bitcast.to_type, module.types.pointer());
-        assert_eq!(bitcast.operand, Operand::LocalOperand { name: Name::Number(3), ty: module.types.pointer()});
+        assert_eq!(
+            bitcast.operand,
+            Operand::LocalOperand {
+                name: Name::Number(3),
+                ty: module.types.pointer()
+            }
+        );
         assert_eq!(module.type_of(bitcast), module.types.pointer());
         assert_eq!(module.type_of(&bitcast.operand), module.types.pointer());
     }

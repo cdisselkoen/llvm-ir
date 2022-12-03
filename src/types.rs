@@ -24,9 +24,7 @@ pub enum Type {
     /// See [LLVM 15 docs on Pointer Type](https://releases.llvm.org/15.0.0/docs/LangRef.html#pointer-type)
     /// and [this documentation on Opaque Pointers, introduced in LLVM 15](https://releases.llvm.org/15.0.0/docs/OpaquePointers.html)
     #[cfg(feature = "llvm-15-or-greater")]
-    PointerType {
-        addr_space: AddrSpace,
-    },
+    PointerType { addr_space: AddrSpace },
     /// See [LLVM 14 docs on Floating-Point Types](https://releases.llvm.org/14.0.0/docs/LangRef.html#floating-point-types)
     FPType(FPType),
     /// See [LLVM 14 docs on Function Type](https://releases.llvm.org/14.0.0/docs/LangRef.html#function-type)
@@ -426,10 +424,7 @@ impl TypesBuilder {
     }
     /// Get a pointer in the specified address space
     #[cfg(feature = "llvm-15-or-greater")]
-    pub fn pointer_in_addr_space(
-        &mut self,
-        addr_space: AddrSpace,
-    ) -> TypeRef {
+    pub fn pointer_in_addr_space(&mut self, addr_space: AddrSpace) -> TypeRef {
         self.pointer_types
             .lookup_or_insert(addr_space, || Type::PointerType { addr_space })
     }
@@ -693,11 +688,7 @@ impl Types {
 
     /// Get a pointer type in the specified address space
     #[cfg(feature = "llvm-14-or-lower")]
-    pub fn pointer_in_addr_space(
-        &self,
-        pointee_type: TypeRef,
-        addr_space: AddrSpace
-    ) -> TypeRef {
+    pub fn pointer_in_addr_space(&self, pointee_type: TypeRef, addr_space: AddrSpace) -> TypeRef {
         self.pointer_types
             .lookup(&(pointee_type.clone(), addr_space))
             .unwrap_or_else(|| {
@@ -709,15 +700,10 @@ impl Types {
     }
     /// Get a pointer type in the specified address space
     #[cfg(feature = "llvm-15-or-greater")]
-    pub fn pointer_in_addr_space(
-        &self,
-        addr_space: AddrSpace
-    ) -> TypeRef {
+    pub fn pointer_in_addr_space(&self, addr_space: AddrSpace) -> TypeRef {
         self.pointer_types
             .lookup(&addr_space)
-            .unwrap_or_else(|| {
-                TypeRef::new(Type::PointerType { addr_space })
-            })
+            .unwrap_or_else(|| TypeRef::new(Type::PointerType { addr_space }))
     }
 
     /// Get a floating-point type
@@ -1000,7 +986,7 @@ impl TypesBuilder {
             #[cfg(feature = "llvm-15-or-greater")]
             LLVMTypeKind::LLVMPointerTypeKind => {
                 self.pointer_in_addr_space(unsafe { LLVMGetPointerAddressSpace(ty) })
-            }
+            },
             LLVMTypeKind::LLVMArrayTypeKind => {
                 let element_type = self.type_from_llvm_ref(unsafe { LLVMGetElementType(ty) });
                 self.array_of(element_type, unsafe { LLVMGetArrayLength(ty) as usize })
