@@ -330,10 +330,7 @@ fn loopbc() {
         module.type_of(&bitcast.operand),
         module.types.pointer_to(allocated_type.clone())
     );
-    assert_eq!(
-        &bitcast.to_string(),
-        "%4 = bitcast [10 x i32]* %3 to i8*"
-    );
+    assert_eq!(&bitcast.to_string(), "%4 = bitcast [10 x i32]* %3 to i8*");
     let lifetimestart: &instruction::Call = &bbs[0].instrs[2]
         .clone()
         .try_into()
@@ -1094,25 +1091,13 @@ fn loopbc() {
     assert_eq!(module.type_of(load), module.types.i32());
     assert_eq!(load_inst.is_atomic(), false);
     #[cfg(feature = "llvm-10-or-lower")]
-    assert_eq!(
-        &load.to_string(),
-        "%17 = load volatile i32* %16, align 4"
-    );
+    assert_eq!(&load.to_string(), "%17 = load volatile i32* %16, align 4");
     #[cfg(feature = "llvm-11")]
-    assert_eq!(
-        &load.to_string(),
-        "%20 = load volatile i32* %19, align 4"
-    );
+    assert_eq!(&load.to_string(), "%20 = load volatile i32* %19, align 4");
     #[cfg(any(feature = "llvm-12", feature = "llvm-13"))]
-    assert_eq!(
-        &load.to_string(),
-        "%26 = load volatile i32* %25, align 4"
-    );
+    assert_eq!(&load.to_string(), "%26 = load volatile i32* %25, align 4");
     #[cfg(feature = "llvm-14-or-greater")]
-    assert_eq!(
-        &load.to_string(),
-        "%25 = load volatile i32* %24, align 4"
-    );
+    assert_eq!(&load.to_string(), "%25 = load volatile i32* %24, align 4");
     let ret: &Terminator = if cfg!(feature = "llvm-9-or-lower") {
         &bbs[5].term
     } else if cfg!(feature = "llvm-10") || cfg!(feature = "llvm-11") {
@@ -1938,14 +1923,8 @@ fn indirectly_recursive_type() {
             alloca_b.allocated_type
         );
     }
-    assert_eq!(
-        &alloca_a.to_string(),
-        "%3 = alloca %struct.NodeA, align 8"
-    );
-    assert_eq!(
-        &alloca_b.to_string(),
-        "%4 = alloca %struct.NodeB, align 8"
-    );
+    assert_eq!(&alloca_a.to_string(), "%3 = alloca %struct.NodeA, align 8");
+    assert_eq!(&alloca_b.to_string(), "%4 = alloca %struct.NodeB, align 8");
 }
 
 #[test]
