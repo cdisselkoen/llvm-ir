@@ -811,7 +811,10 @@ impl Default for DataLayout {
 impl DataLayout {
     pub(crate) fn from_module_ref(module: LLVMModuleRef) -> Self {
         let layout_str = unsafe { get_data_layout_str(module) };
-        let mut data_layout = DataLayout { layout_str, ..Default::default() };
+        let mut data_layout = DataLayout {
+            layout_str,
+            ..Default::default()
+        };
         for spec in data_layout.layout_str.split('-') {
             if spec == "E" {
                 data_layout.endianness = Endianness::BigEndian;
