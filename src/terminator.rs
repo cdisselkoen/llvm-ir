@@ -380,11 +380,11 @@ impl_hasresult!(Invoke);
 impl Typed for Invoke {
     fn get_type(&self, types: &Types) -> TypeRef {
         match types.type_of(&self.function).as_ref() {
-            Type::FuncType { result_type, .. } => result_type.clone(),
-            ty => panic!(
-                "Expected the function argument of an Invoke to have type FuncType; got {:?}",
-                ty
-            ),
+            Type::PointerType { pointee_type, .. } => match pointee_type.as_ref() {
+                Type::FuncType { result_type, .. } => result_type.clone(),
+                ty => panic!("Expected Invoke's function argument to be of type pointer-to-function, got pointer-to-{:?}", ty),
+            },
+            ty => panic!("Expected Invoke's function argument to be of type pointer-to-function, got {:?}", ty),
         }
     }
 }
