@@ -44,15 +44,16 @@ impl Module {
         self.types.type_of(t)
     }
 
-    /// Get the `Function` having the given `Name` (if any).
+    /// Get the `Function` having the given `name` (if any).
     /// Note that `Function`s are named with `String`s and not `Name`s.
     pub fn get_func_by_name(&self, name: &str) -> Option<&Function> {
         self.functions.iter().find(|func| func.name == name)
     }
 
-    /// Get the `GlobalVariable` having the given `Name` (if any).
-    pub fn get_global_var_by_name(&self, name: &Name) -> Option<&GlobalVariable> {
-        self.global_vars.iter().find(|global| global.name == *name)
+    /// Get the `GlobalVariable` having the given `name` (if any).
+    /// Note that `GlobalVariable`s are named with `String`s and not `Name`s.
+    pub fn get_global_var_by_name(&self, name: &str) -> Option<&GlobalVariable> {
+        self.global_vars.iter().find(|global| &global.name == name)
     }
 
     /// Parse the LLVM bitcode (.bc) file at the given path to create a `Module`
@@ -138,7 +139,8 @@ impl Module {
 /// See [LLVM 14 docs on Global Variables](https://releases.llvm.org/14.0.0/docs/LangRef.html#global-variables)
 #[derive(PartialEq, Clone, Debug)]
 pub struct GlobalVariable {
-    pub name: Name,
+    /// Globals' names must be strings
+    pub name: String,
     pub linkage: Linkage,
     pub visibility: Visibility,
     pub is_constant: bool,
@@ -625,7 +627,12 @@ impl GlobalVariable {
         };
         debug!("Processing a GlobalVariable with type {:?}", ty);
         Self {
-            name: Name::name_or_num(unsafe { get_value_name(global) }, ctr),
+            name: {
+                match Name::name_or_num(unsafe { get_value_name(global) }, ctr) {
+                    Name::Name(s) => *s,
+                    Name::Number(n) => panic!("expected global variable to have a string name, but instead it has the number {}", n),
+                }
+            },
             linkage: Linkage::from_llvm(unsafe { LLVMGetLinkage(global) }),
             visibility: Visibility::from_llvm(unsafe { LLVMGetVisibility(global) }),
             is_constant: unsafe { LLVMIsGlobalConstant(global) } != 0,

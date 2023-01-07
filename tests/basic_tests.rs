@@ -1237,7 +1237,7 @@ fn variablesbc() {
     let module = Module::from_bc_path(&path).expect("Failed to parse module");
     assert_eq!(module.global_vars.len(), 1);
     let var = &module.global_vars[0];
-    assert_eq!(var.name, Name::from("global"));
+    assert_eq!(var.name, "global");
     assert_eq!(var.is_constant, false);
     assert_eq!(var.ty, module.types.pointer_to(module.types.i32()));
     assert_eq!(
@@ -1319,7 +1319,7 @@ fn variablesbcg() {
     // other debuginfo stuff is covered in other tests
     assert_eq!(module.global_vars.len(), 1);
     let var = &module.global_vars[0];
-    assert_eq!(var.name, Name::from("global"));
+    assert_eq!(var.name, "global");
     let debugloc = var
         .get_debug_loc()
         .as_ref()

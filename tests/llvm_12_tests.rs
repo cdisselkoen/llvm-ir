@@ -39,7 +39,7 @@ llvm_test!(
 
 // also ensure that the new-to-llvm-12 `Constant::Poison` was parsed correctly
 
-use llvm_ir::{instruction, instruction::UnaryOp, types::FPType, Constant, Name, Operand, Type};
+use llvm_ir::{instruction, instruction::UnaryOp, types::FPType, Constant, Operand, Type};
 use std::convert::TryInto;
 
 #[test]
@@ -49,9 +49,7 @@ fn constant_poison() {
     let module = Module::from_bc_path(&path).expect("Failed to parse module");
 
     let const_struct = module
-        .global_vars
-        .iter()
-        .find(|gvar| gvar.name == Name::from("const.struct"))
+        .get_global_var_by_name("const.struct")
         .expect("Couldn't find @const.struct");
     let initializer = const_struct
         .initializer
