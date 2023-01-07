@@ -116,6 +116,28 @@ impl Terminator {
 }
 */
 
+impl Terminator {
+    /// Get the result (destination) of the `Terminator`, or `None` if the
+    /// `Terminator` doesn't have a result (has void type).
+    pub fn try_get_result(&self) -> Option<&Name> {
+        match self {
+            Terminator::Ret(_) => None,
+            Terminator::Br(_) => None,
+            Terminator::CondBr(_) => None,
+            Terminator::Switch(_) => None,
+            Terminator::IndirectBr(_) => None,
+            Terminator::Invoke(t) => Some(&t.result),
+            Terminator::Resume(_) => None,
+            Terminator::Unreachable(_) => None,
+            Terminator::CleanupRet(_) => None,
+            Terminator::CatchRet(_) => None,
+            Terminator::CatchSwitch(t) => Some(&t.result),
+            #[cfg(feature = "llvm-9-or-greater")]
+            Terminator::CallBr(t) => Some(&t.result),
+        }
+    }
+}
+
 macro_rules! impl_term {
     ($term:ty, $id:ident) => {
         impl From<$term> for Terminator {
