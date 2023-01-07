@@ -79,6 +79,25 @@ impl Function {
     }
 }
 
+/// See [LLVM 14 docs on Functions](https://releases.llvm.org/14.0.0/docs/LangRef.html#functions)
+#[derive(PartialEq, Clone, Debug)]
+pub struct FunctionDeclaration {
+    pub name: String,
+    pub parameters: Vec<Parameter>,
+    pub is_var_arg: bool,
+    pub return_type: TypeRef,
+    pub return_attributes: Vec<ParameterAttribute>,
+    pub linkage: Linkage,
+    pub visibility: Visibility,
+    pub dll_storage_class: DLLStorageClass,
+    pub calling_convention: CallingConvention,
+    pub alignment: u32,
+    /// See [LLVM 14 docs on Garbage Collector Strategy Names](https://releases.llvm.org/14.0.0/docs/LangRef.html#gc)
+    pub garbage_collector_name: Option<String>,
+    #[cfg(feature = "llvm-9-or-greater")]
+    pub debugloc: Option<DebugLoc>,
+}
+
 #[derive(PartialEq, Clone, Debug)]
 pub struct Parameter {
     pub name: Name,
@@ -290,113 +309,66 @@ pub(crate) struct FunctionContext<'a> {
     pub ctr: usize,
 }
 
-impl Function {
+impl FunctionDeclaration {
     pub(crate) fn from_llvm_ref(func: LLVMValueRef, ctx: &mut ModuleContext) -> Self {
         let func = unsafe { LLVMIsAFunction(func) };
         assert!(!func.is_null());
         debug!("Processing func {:?}", unsafe { get_value_name(func) });
-        let mut local_ctr = 0; // this counter is used to number parameters, variables, and basic blocks that aren't named
 
-        let parameters: Vec<Parameter> = {
-            get_parameters(func)
-                .enumerate()
-                .map(|(i, p)| Parameter {
-                    name: Name::name_or_num(unsafe { get_value_name(p) }, &mut local_ctr),
-                    ty: ctx.types.type_from_llvm_ref(unsafe { LLVMTypeOf(p) }),
-                    attributes: {
-                        let param_num = i + 1; // https://docs.rs/llvm-sys/100.0.1/llvm_sys/type.LLVMAttributeIndex.html indicates that parameter numbers are 1-indexed here; see issue #4
-                        let num_attrs =
-                            unsafe { LLVMGetAttributeCountAtIndex(func, param_num as u32) };
-                        let mut attrs: Vec<LLVMAttributeRef> =
-                            Vec::with_capacity(num_attrs as usize);
-                        unsafe {
-                            LLVMGetAttributesAtIndex(func, param_num as u32, attrs.as_mut_ptr());
-                            attrs.set_len(num_attrs as usize);
-                        };
-                        attrs
-                            .into_iter()
-                            .map(|attr| {
-                                ParameterAttribute::from_llvm_ref(
-                                    attr,
-                                    &ctx.attrsdata,
-                                    #[cfg(feature = "llvm-12-or-greater")]
-                                    &mut ctx.types,
-                                )
-                            })
-                            .collect()
-                    },
-                })
-                .collect()
-        };
-        debug!("Collected info on {} parameters", parameters.len());
+        let (decl, _) = FunctionDeclaration::from_llvm_ref_internal(func, ctx);
+        decl
+    }
 
-        let ctr_val_after_parameters = local_ctr;
-
-        // Functions require two passes over their bodies.
-        // First we make a pass just to map `LLVMBasicBlockRef`s to `Name`s and `LLVMValueRef`s to `Name`s.
-        // Then we do the actual detailed pass.
-        // This is necessary because some instructions (e.g., forward branches) will reference
-        //   `LLVMBasicBlockRef`s and/or `LLVMValueRef`s which we wouldn't have
-        //   seen before if we tried to do everything in one pass, and therefore
-        //   we wouldn't necessarily know what `Name` the block or value had yet.
-        let bbresults: Vec<_> = get_basic_blocks(func)
-            .map(|bb| (bb, BasicBlock::first_pass_names(bb, &mut local_ctr)))
-            .collect();
-        // We use LLVMBasicBlockRef as a *const, even though it's technically a *mut
-        #[allow(clippy::mutable_key_type)]
-        let bb_names: HashMap<LLVMBasicBlockRef, Name> = bbresults
-            .iter()
-            .map(|(bb, (bbname, _))| (*bb, bbname.clone()))
-            .collect();
-        debug!("Collected names of {} basic blocks", bb_names.len());
-        // We use LLVMValueRef as a *const, even though it's technically a *mut
-        #[allow(clippy::mutable_key_type)]
-        let val_names: HashMap<LLVMValueRef, Name> = bbresults
-            .into_iter()
-            .flat_map(|(_, (_, namepairs))| namepairs.into_iter())
-            .chain(get_parameters(func).zip(parameters.iter().map(|p| p.name.clone())))
-            .collect();
-        debug!("Collected names of {} values", val_names.len());
-        let mut func_ctx = FunctionContext {
-            bb_names: &bb_names,
-            val_names: &val_names,
-            ctr: ctr_val_after_parameters, // restart the local_ctr; the second pass should number everything exactly the same though
-        };
-
+    /// this helper is shared by `FunctionDeclaration` and `Function`. It
+    /// provides the whole `FunctionDeclaration`, and also the value of the
+    /// `local_ctr` after parameters are processed (which is needed by
+    /// `Function`).
+    fn from_llvm_ref_internal(func: LLVMValueRef, ctx: &mut ModuleContext) -> (Self, usize) {
         let functy = unsafe { LLVMGetElementType(LLVMTypeOf(func)) }; // for some reason the TypeOf a function is <pointer to function> and not just <function> so we have to deref it like this
-        Self {
+        let mut local_ctr = 0; // this counter is used to number parameters, variables, and basic blocks that aren't named
+        let decl = Self {
             name: unsafe { get_value_name(func) },
-            parameters,
+            parameters: {
+                let parameters: Vec<Parameter> = get_parameters(func)
+                    .enumerate()
+                    .map(|(i, p)| Parameter {
+                        name: Name::name_or_num(unsafe { get_value_name(p) }, &mut local_ctr),
+                        ty: ctx.types.type_from_llvm_ref(unsafe { LLVMTypeOf(p) }),
+                        attributes: {
+                            let param_num = i + 1; // https://docs.rs/llvm-sys/100.0.1/llvm_sys/type.LLVMAttributeIndex.html indicates that parameter numbers are 1-indexed here; see issue #4
+                            let num_attrs =
+                                unsafe { LLVMGetAttributeCountAtIndex(func, param_num as u32) };
+                            let mut attrs: Vec<LLVMAttributeRef> =
+                                Vec::with_capacity(num_attrs as usize);
+                            unsafe {
+                                LLVMGetAttributesAtIndex(
+                                    func,
+                                    param_num as u32,
+                                    attrs.as_mut_ptr(),
+                                );
+                                attrs.set_len(num_attrs as usize);
+                            };
+                            attrs
+                                .into_iter()
+                                .map(|attr| {
+                                    ParameterAttribute::from_llvm_ref(
+                                        attr,
+                                        &ctx.attrsdata,
+                                        #[cfg(feature = "llvm-12-or-greater")]
+                                        &mut ctx.types,
+                                    )
+                                })
+                                .collect()
+                        },
+                    })
+                    .collect();
+                debug!("Collected info on {} parameters", parameters.len());
+                parameters
+            },
             is_var_arg: unsafe { LLVMIsFunctionVarArg(functy) } != 0,
             return_type: ctx
                 .types
                 .type_from_llvm_ref(unsafe { LLVMGetReturnType(functy) }),
-            basic_blocks: {
-                get_basic_blocks(func)
-                    .map(|bb| BasicBlock::from_llvm_ref(bb, ctx, &mut func_ctx))
-                    .collect()
-            },
-            function_attributes: {
-                let num_attrs =
-                    unsafe { LLVMGetAttributeCountAtIndex(func, LLVMAttributeFunctionIndex) };
-                if num_attrs > 0 {
-                    let mut attrs: Vec<LLVMAttributeRef> = Vec::with_capacity(num_attrs as usize);
-                    unsafe {
-                        LLVMGetAttributesAtIndex(
-                            func,
-                            LLVMAttributeFunctionIndex,
-                            attrs.as_mut_ptr(),
-                        );
-                        attrs.set_len(num_attrs as usize);
-                    };
-                    attrs
-                        .into_iter()
-                        .map(|attr| FunctionAttribute::from_llvm_ref(attr, &ctx.attrsdata))
-                        .collect()
-                } else {
-                    vec![]
-                }
-            },
             return_attributes: {
                 let num_attrs =
                     unsafe { LLVMGetAttributeCountAtIndex(func, LLVMAttributeReturnIndex) };
@@ -431,6 +403,95 @@ impl Function {
             calling_convention: CallingConvention::from_u32(unsafe {
                 LLVMGetFunctionCallConv(func)
             }),
+            alignment: unsafe { LLVMGetAlignment(func) },
+            garbage_collector_name: unsafe { get_gc(func) },
+            #[cfg(feature = "llvm-9-or-greater")]
+            debugloc: DebugLoc::from_llvm_no_col(func),
+        };
+        (decl, local_ctr)
+    }
+}
+
+impl Function {
+    pub(crate) fn from_llvm_ref(func: LLVMValueRef, ctx: &mut ModuleContext) -> Self {
+        let func = unsafe { LLVMIsAFunction(func) };
+        assert!(!func.is_null());
+        debug!("Processing func {:?}", unsafe { get_value_name(func) });
+
+        // `Function` is a strict superset of the information in
+        // `FunctionDeclaration`, so we start by collecting all of the
+        // information shared by `FunctionDeclaration`, reusing that code
+        let (decl, ctr_val_after_parameters) =
+            FunctionDeclaration::from_llvm_ref_internal(func, ctx);
+
+        // Functions require two passes over their bodies.
+        // First we make a pass just to map `LLVMBasicBlockRef`s to `Name`s and `LLVMValueRef`s to `Name`s.
+        // Then we do the actual detailed pass.
+        // This is necessary because some instructions (e.g., forward branches) will reference
+        //   `LLVMBasicBlockRef`s and/or `LLVMValueRef`s which we wouldn't have
+        //   seen before if we tried to do everything in one pass, and therefore
+        //   we wouldn't necessarily know what `Name` the block or value had yet.
+        let mut local_ctr = ctr_val_after_parameters; // this counter is used to number parameters, variables, and basic blocks that aren't named
+        let bbresults: Vec<_> = get_basic_blocks(func)
+            .map(|bb| (bb, BasicBlock::first_pass_names(bb, &mut local_ctr)))
+            .collect();
+        // We use LLVMBasicBlockRef as a *const, even though it's technically a *mut
+        #[allow(clippy::mutable_key_type)]
+        let bb_names: HashMap<LLVMBasicBlockRef, Name> = bbresults
+            .iter()
+            .map(|(bb, (bbname, _))| (*bb, bbname.clone()))
+            .collect();
+        debug!("Collected names of {} basic blocks", bb_names.len());
+        // We use LLVMValueRef as a *const, even though it's technically a *mut
+        #[allow(clippy::mutable_key_type)]
+        let val_names: HashMap<LLVMValueRef, Name> = bbresults
+            .into_iter()
+            .flat_map(|(_, (_, namepairs))| namepairs.into_iter())
+            .chain(get_parameters(func).zip(decl.parameters.iter().map(|p| p.name.clone())))
+            .collect();
+        debug!("Collected names of {} values", val_names.len());
+        let mut func_ctx = FunctionContext {
+            bb_names: &bb_names,
+            val_names: &val_names,
+            ctr: ctr_val_after_parameters, // restart the local_ctr; the second pass should number everything exactly the same though
+        };
+
+        Self {
+            name: decl.name,
+            parameters: decl.parameters,
+            is_var_arg: decl.is_var_arg,
+            return_type: decl.return_type,
+            basic_blocks: {
+                get_basic_blocks(func)
+                    .map(|bb| BasicBlock::from_llvm_ref(bb, ctx, &mut func_ctx))
+                    .collect()
+            },
+            function_attributes: {
+                let num_attrs =
+                    unsafe { LLVMGetAttributeCountAtIndex(func, LLVMAttributeFunctionIndex) };
+                if num_attrs > 0 {
+                    let mut attrs: Vec<LLVMAttributeRef> = Vec::with_capacity(num_attrs as usize);
+                    unsafe {
+                        LLVMGetAttributesAtIndex(
+                            func,
+                            LLVMAttributeFunctionIndex,
+                            attrs.as_mut_ptr(),
+                        );
+                        attrs.set_len(num_attrs as usize);
+                    };
+                    attrs
+                        .into_iter()
+                        .map(|attr| FunctionAttribute::from_llvm_ref(attr, &ctx.attrsdata))
+                        .collect()
+                } else {
+                    vec![]
+                }
+            },
+            return_attributes: decl.return_attributes,
+            linkage: decl.linkage,
+            visibility: decl.visibility,
+            dll_storage_class: decl.dll_storage_class,
+            calling_convention: decl.calling_convention,
             section: unsafe { get_section(func) },
             comdat: {
                 let comdat = unsafe { LLVMGetComdat(func) };
@@ -440,8 +501,8 @@ impl Function {
                     Some(Comdat::from_llvm_ref(comdat))
                 }
             },
-            alignment: unsafe { LLVMGetAlignment(func) },
-            garbage_collector_name: unsafe { get_gc(func) },
+            alignment: decl.alignment,
+            garbage_collector_name: decl.garbage_collector_name,
             personality_function: {
                 if unsafe { LLVMHasPersonalityFn(func) } != 0 {
                     Some(Constant::from_llvm_ref(
@@ -453,7 +514,7 @@ impl Function {
                 }
             },
             #[cfg(feature = "llvm-9-or-greater")]
-            debugloc: DebugLoc::from_llvm_no_col(func),
+            debugloc: decl.debugloc,
             // metadata: unimplemented!("Function.metadata"),
         }
     }

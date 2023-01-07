@@ -1,7 +1,7 @@
 use crate::constant::ConstantRef;
 #[cfg(feature = "llvm-9-or-greater")]
 use crate::debugloc::*;
-use crate::function::{Function, FunctionAttribute, GroupID};
+use crate::function::{Function, FunctionAttribute, FunctionDeclaration, GroupID};
 use crate::llvm_sys::*;
 use crate::name::Name;
 use crate::types::{FPType, Type, TypeRef, Typed, Types, TypesBuilder};
@@ -23,6 +23,9 @@ pub struct Module {
     /// Functions which are defined (not just declared) in this `Module`.
     /// See [LLVM 14 docs on Functions](https://releases.llvm.org/14.0.0/docs/LangRef.html#functions)
     pub functions: Vec<Function>,
+    /// Functions which are declared (but not defined) in this `Module`.
+    /// See [LLVM 14 docs on Functions](https://releases.llvm.org/14.0.0/docs/LangRef.html#functions)
+    pub func_declarations: Vec<FunctionDeclaration>,
     /// See [LLVM 14 docs on Global Variables](https://releases.llvm.org/14.0.0/docs/LangRef.html#global-variables)
     pub global_vars: Vec<GlobalVariable>,
     /// See [LLVM 14 docs on Global Aliases](https://releases.llvm.org/14.0.0/docs/LangRef.html#aliases)
@@ -45,9 +48,21 @@ impl Module {
     }
 
     /// Get the `Function` having the given `name` (if any).
-    /// Note that `Function`s are named with `String`s and not `Name`s.
+    /// Note that functions are named with `String`s and not `Name`s.
+    ///
+    /// Note also that this will only find _fully defined_ functions, not
+    /// `FunctionDeclaration`s.
     pub fn get_func_by_name(&self, name: &str) -> Option<&Function> {
         self.functions.iter().find(|func| func.name == name)
+    }
+
+    /// Get the `FunctionDeclaration` having the given `name` (if any).
+    /// Note that functions are named with `String`s and not `Name`s.
+    ///
+    /// Note also that this will only find function _declarations_, and will not
+    /// find defined functions (use `get_func_by_name()` for that).
+    pub fn get_func_decl_by_name(&self, name: &str) -> Option<&FunctionDeclaration> {
+        self.func_declarations.iter().find(|decl| decl.name == name)
     }
 
     /// Get the `GlobalVariable` having the given `name` (if any).
@@ -597,6 +612,9 @@ impl Module {
             target_triple: unsafe { get_target(module) },
             functions: get_defined_functions(module)
                 .map(|f| Function::from_llvm_ref(f, &mut ctx))
+                .collect(),
+            func_declarations: get_declared_functions(module)
+                .map(|f| FunctionDeclaration::from_llvm_ref(f, &mut ctx))
                 .collect(),
             global_vars: get_globals(module)
                 .map(|g| GlobalVariable::from_llvm_ref(g, &mut global_ctr, &mut ctx))

@@ -7,14 +7,17 @@ use llvm_ir::terminator;
 use llvm_ir::types::{FPType, NamedStructDef};
 #[cfg(feature = "llvm-9-or-greater")]
 use llvm_ir::HasDebugLoc;
-use llvm_ir::Instruction;
-use llvm_ir::IntPredicate;
-use llvm_ir::Module;
-use llvm_ir::Name;
-use llvm_ir::Operand;
-use llvm_ir::Terminator;
-use llvm_ir::Type;
-use llvm_ir::{Constant, ConstantRef};
+use llvm_ir::{
+    Constant,
+    ConstantRef,
+    Instruction,
+    IntPredicate,
+    Module,
+    Name,
+    Operand,
+    Terminator,
+    Type,
+};
 use std::convert::TryInto;
 use std::path::{Path, PathBuf};
 
@@ -1228,6 +1231,22 @@ fn switchbc() {
         &phi.to_string(),
         "%13 = phi i32 [ i32 -1, %10 ], [ i32 -3, %9 ], [ i32 0, %8 ], [ i32 77, %7 ], [ i32 -33, %6 ], [ i32 1, %5 ], [ i32 -5, %4 ], [ i32 -7, %3 ], [ i32 5, %2 ], [ i32 3, %1 ]",
     );
+
+    assert_eq!(
+        module.get_func_decl_by_name("has_a_switch"),
+        None,
+        "has_a_switch should be a defined function, not a decl"
+    );
+    let decl = module
+        .get_func_decl_by_name("puts")
+        .expect("there should be a puts declaration");
+    assert_eq!(decl.name, "puts");
+    assert_eq!(decl.return_type, module.types.i32());
+    assert_eq!(decl.parameters.len(), 1);
+    assert_eq!(
+        module.type_of(&decl.parameters[0]),
+        module.types.pointer_to(module.types.i8())
+    );
 }
 
 #[test]
@@ -1302,6 +1321,29 @@ fn variablesbc() {
     assert_eq!(
         &global_store.to_string(),
         "store volatile i32 %13, i32* @global, align 4"
+    );
+
+    assert_eq!(
+        module.get_func_decl_by_name("variables"),
+        None,
+        "variables should be a defined function, not a decl"
+    );
+    let decl = module
+        .get_func_decl_by_name("malloc")
+        .expect("there should be a malloc declaration");
+    assert_eq!(decl.name, "malloc");
+    assert_eq!(decl.return_type, module.types.pointer_to(module.types.i8()));
+    assert!(decl
+        .return_attributes
+        .contains(&ParameterAttribute::NoAlias));
+    assert_eq!(decl.parameters.len(), 1);
+    assert_eq!(module.type_of(&decl.parameters[0]), module.types.i64());
+    #[cfg(feature = "llvm-12-or-lower")]
+    assert_eq!(decl.parameters[0].attributes, vec![]);
+    #[cfg(feature = "llvm-13-or-greater")]
+    assert_eq!(
+        decl.parameters[0].attributes,
+        vec![ParameterAttribute::NoUndef]
     );
 }
 
