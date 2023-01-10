@@ -4,19 +4,11 @@ use llvm_ir::function::{FunctionAttribute, ParameterAttribute};
 use llvm_ir::instruction;
 use llvm_ir::module::{Alignment, Endianness, Mangling, PointerLayout};
 use llvm_ir::terminator;
-use llvm_ir::types::{FPType, NamedStructDef};
+use llvm_ir::types::{FPType, NamedStructDef, Typed};
 #[cfg(feature = "llvm-9-or-greater")]
 use llvm_ir::HasDebugLoc;
 use llvm_ir::{
-    Constant,
-    ConstantRef,
-    Instruction,
-    IntPredicate,
-    Module,
-    Name,
-    Operand,
-    Terminator,
-    Type,
+    Constant, ConstantRef, Instruction, IntPredicate, Module, Name, Operand, Terminator, Type,
 };
 use std::convert::TryInto;
 use std::path::{Path, PathBuf};
@@ -44,6 +36,27 @@ fn llvm_bc_dir() -> PathBuf {
         Path::new(BC_DIR).join("llvm13")
     } else if cfg!(feature = "llvm-14") {
         Path::new(BC_DIR).join("llvm14")
+    } else {
+        unimplemented!("new llvm version?")
+    }
+}
+
+// Test against bitcode compiled with the same version of LLVM
+fn cxx_llvm_bc_dir() -> PathBuf {
+    if cfg!(feature = "llvm-8") {
+        Path::new(BC_DIR).join("cxx-llvm8")
+    } else if cfg!(feature = "llvm-9") {
+        Path::new(BC_DIR).join("cxx-llvm9")
+    } else if cfg!(feature = "llvm-10") {
+        Path::new(BC_DIR).join("cxx-llvm10")
+    } else if cfg!(feature = "llvm-11") {
+        Path::new(BC_DIR).join("cxx-llvm11")
+    } else if cfg!(feature = "llvm-12") {
+        Path::new(BC_DIR).join("cxx-llvm12")
+    } else if cfg!(feature = "llvm-13") {
+        Path::new(BC_DIR).join("cxx-llvm13")
+    } else if cfg!(feature = "llvm-14") {
+        Path::new(BC_DIR).join("cxx-llvm14")
     } else {
         unimplemented!("new llvm version?")
     }
@@ -1627,7 +1640,7 @@ fn rustbcg() {
         .expect("Failed to find bb 'start'");
 
     // the first 17 instructions in the function should not have debuglocs - they are just setting up the stack frame
-    for i in 0 .. 17 {
+    for i in 0..17 {
         assert!(startbb.instrs[i].get_debug_loc().is_none());
     }
 
@@ -1804,7 +1817,7 @@ fn simple_linked_list_g() {
     );
 
     // the first seven instructions shouldn't have debuglocs - they are just setting up the stack frame
-    for i in 0 .. 7 {
+    for i in 0..7 {
         assert!(func.basic_blocks[0].instrs[i].get_debug_loc().is_none());
     }
 
@@ -2518,6 +2531,22 @@ fn datalayouts() {
             ))),
         &Alignment { abi: 64, pref: 64 }
     )
+}
+
+#[test]
+fn throw() {
+    let _ = env_logger::builder().is_test(true).try_init(); // capture log messages with test harness
+    let path = cxx_llvm_bc_dir().join("throw.bc");
+    let module = Module::from_bc_path(&path).expect("Failed to parse module");
+
+    // See https://github.com/cdisselkoen/llvm-ir/pull/30
+    for func in module.functions {
+        for block in func.basic_blocks {
+            if let Terminator::Invoke(i) = block.term {
+                i.get_type(&module.types);
+            }
+        }
+    }
 }
 
 /*

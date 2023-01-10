@@ -5,6 +5,13 @@ CLANG11=clang-11 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/
 CLANG12=clang-12
 CLANG13=clang-13
 CLANG14=clang-14
+CLANGXX8=clang++-8
+CLANGXX9=clang++-9
+CLANGXX10=clang++-10 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk
+CLANGXX11=clang++-11 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk
+CLANGXX12=clang++-12
+CLANGXX13=clang++-13
+CLANGXX14=clang++-14
 RUSTC=rustc
 RUSTFLAGS=--crate-type=lib
 LLVMAS8=$(LLVM8PATH)/bin/llvm-as
@@ -22,6 +29,8 @@ COBJS = \
 	linkedlist.bc linkedlist.ll linkedlist.bc-g linkedlist.ll-g \
 	variables.bc variables.ll variables.bc-g variables.ll-g \
 	issue_4.bc issue_4.ll \
+	
+CXXOBJS = throw.bc throw.ll \
 
 RUSTOBJS = rust.bc rust.ll rust.bc-g rust.ll-g \
 
@@ -30,6 +39,7 @@ LLOBJS = param_and_func_attributes.ll.bc \
 
 .PHONY: all
 all: \
+	cxx \
 	$(patsubst %,llvm8/%,$(COBJS)) \
 	$(patsubst %,llvm9/%,$(COBJS)) \
 	$(patsubst %,llvm10/%,$(COBJS)) \
@@ -46,6 +56,16 @@ all: \
 	$(patsubst %,llvm14/%,$(LLOBJS)) \
 	$(patsubst %,rust/%,$(RUSTOBJS)) \
 	llvm11/float_types.bc llvm12/float_types.bc llvm13/float_types.bc llvm14/float_types.bc \
+
+.PHONY: cxx
+cxx: \
+	$(patsubst %,cxx-llvm8/%,$(CXXOBJS)) \
+	$(patsubst %,cxx-llvm9/%,$(CXXOBJS)) \
+	$(patsubst %,cxx-llvm10/%,$(CXXOBJS)) \
+	$(patsubst %,cxx-llvm11/%,$(CXXOBJS)) \
+	$(patsubst %,cxx-llvm12/%,$(CXXOBJS)) \
+	$(patsubst %,cxx-llvm13/%,$(CXXOBJS)) \
+	$(patsubst %,cxx-llvm14/%,$(CXXOBJS)) \
 
 # default to -O3 unless overridden by a more specific rule
 %: CFLAGS := -O3
@@ -93,6 +113,50 @@ llvm13/%.bc : %.c
 llvm14/%.bc : %.c
 	mkdir -p llvm14
 	$(CLANG14) $(CFLAGS) -c -emit-llvm $^ -o $@
+
+cxx-llvm8/%.ll : %.cpp
+	mkdir -p llvm8
+	$(CLANGXX8) $(CFLAGS) -S -emit-llvm $^ -o $@
+cxx-llvm9/%.ll : %.cpp
+	mkdir -p llvm9
+	$(CLANGXX9) $(CFLAGS) -S -emit-llvm $^ -o $@
+cxx-llvm10/%.ll : %.cpp
+	mkdir -p llvm10
+	$(CLANGXX10) $(CFLAGS) -S -emit-llvm $^ -o $@
+cxx-llvm11/%.ll : %.cpp
+	mkdir -p llvm11
+	$(CLANGXX11) $(CFLAGS) -S -emit-llvm $^ -o $@
+cxx-llvm12/%.ll : %.cpp
+	mkdir -p llvm12
+	$(CLANGXX12) $(CFLAGS) -S -emit-llvm $^ -o $@
+cxx-llvm13/%.ll : %.cpp
+	mkdir -p llvm13
+	$(CLANGXX13) $(CFLAGS) -S -emit-llvm $^ -o $@
+cxx-llvm14/%.ll : %.cpp
+	mkdir -p llvm14
+	$(CLANGXX14) $(CFLAGS) -S -emit-llvm $^ -o $@
+
+cxx-llvm8/%.bc : %.cpp
+	mkdir -p llvm8
+	$(CLANGXX8) $(CFLAGS) -c -emit-llvm $^ -o $@
+cxx-llvm9/%.bc : %.cpp
+	mkdir -p llvm9
+	$(CLANGXX9) $(CFLAGS) -c -emit-llvm $^ -o $@
+cxx-llvm10/%.bc : %.cpp
+	mkdir -p llvm10
+	$(CLANGXX10) $(CFLAGS) -c -emit-llvm $^ -o $@
+cxx-llvm11/%.bc : %.cpp
+	mkdir -p llvm11
+	$(CLANGXX11) $(CFLAGS) -c -emit-llvm $^ -o $@
+cxx-llvm12/%.bc : %.cpp
+	mkdir -p llvm12
+	$(CLANGXX12) $(CFLAGS) -c -emit-llvm $^ -o $@
+cxx-llvm13/%.bc : %.cpp
+	mkdir -p llvm13
+	$(CLANGXX13) $(CFLAGS) -c -emit-llvm $^ -o $@
+cxx-llvm14/%.bc : %.cpp
+	mkdir -p llvm14
+	$(CLANGXX14) $(CFLAGS) -c -emit-llvm $^ -o $@
 
 rust/%.ll : %.rs
 	mkdir -p rust
