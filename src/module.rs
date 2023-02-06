@@ -5,6 +5,7 @@ use crate::llvm_sys::*;
 use crate::name::Name;
 use crate::types::{FPType, Type, TypeRef, Typed, Types, TypesBuilder};
 use std::collections::{BTreeMap, HashMap, HashSet};
+use std::convert::TryFrom;
 use std::path::Path;
 
 /// See [LLVM 14 docs on Module Structure](https://releases.llvm.org/14.0.0/docs/LangRef.html#module-structure)
@@ -371,6 +372,24 @@ pub struct Alignment {
     pub abi: u32,
     /// Preferred alignment (in bits)
     pub pref: u32,
+}
+
+// `llvm::isAligned`
+#[inline]
+fn is_aligned_abi(align: &Alignment, n: u64) -> bool {
+    if align.abi == 0 {
+        return true;
+    }
+    n % u64::from(align.abi) == 0
+}
+
+// `llvm::alignTo`
+fn align_to_abi(size: u64, align: &Alignment) -> u64 {
+    if align.abi == 0 {
+        return size;
+    }
+    let value = u64::from(align.abi);
+    ((size + value - 1) / value) * value
 }
 
 /// Alignment details for function pointers.
@@ -1099,6 +1118,164 @@ impl DataLayout {
         }
         data_layout
     }
+
+    /// Port of `llvm::DataLayout::getTypeStoreSize`.
+    pub fn get_type_store_size(&self, types: &Types, ty: &Type) -> Option<TypeSize> {
+        let base_size = self.get_type_size_in_bits(types, ty)?;
+        fn divide_ciel(numerator: u64, denominator: u64) -> u64 {
+            let aligned = align_to_abi(
+                numerator,
+                &Alignment {
+                    abi: u32::try_from(denominator).unwrap(),
+                    pref: 0,
+                },
+            );
+            aligned / denominator
+        }
+        Some(TypeSize::new(
+            divide_ciel(base_size.quantity, 8),
+            base_size.scalable,
+        ))
+    }
+
+    /// Port of `llvm::DataLayout::getTypeAllocSize`.
+    pub fn get_type_alloc_size(&self, types: &Types, ty: &Type) -> Option<TypeSize> {
+        let store_size = self.get_type_store_size(types, ty)?;
+        Some(TypeSize::fixed(align_to_abi(
+            store_size.to_fixed(),
+            &self.alignments.type_alignment(ty).to_bytes(),
+        )))
+    }
+
+    /// Port of `llvm::DataLayout::getTypeAllocSizeInBits`.
+    pub fn get_type_alloc_size_in_bits(&self, types: &Types, ty: &Type) -> Option<TypeSize> {
+        self.get_type_alloc_size(types, ty).map(|sz| sz * 8)
+    }
+
+    /// > Returns the number of bits necessary to hold the specified type.
+    /// >
+    /// > If Ty is a scalable vector type, the scalable property will be set and
+    /// > the runtime size will be a positive integer multiple of the base size.
+    /// >
+    /// > For example, returns 36 for i36 and 80 for x86_fp80. The type passed must
+    /// > have a size (Type::isSized() must return true).
+    ///
+    /// Port of LLVM's `DataLayout::getTypeSizeInBits`.
+    ///
+    /// Last checked against [the version in LLVM 15.0.7][upstream].
+    ///
+    /// [upstream]: https://github.com/llvm/llvm-project/blob/llvmorg-15.0.7/llvm/include/llvm/IR/DataLayout.h#L673
+    pub fn get_type_size_in_bits(&self, types: &Types, ty: &Type) -> Option<TypeSize> {
+        match ty {
+            Type::IntegerType { bits } => Some(TypeSize::fixed(u64::from(*bits))),
+            Type::PointerType {
+                addr_space,
+                pointee_type: _,
+            } => self
+                .alignments
+                .pointer_layouts
+                .get(addr_space)
+                .map(|ptr_layout| TypeSize::fixed(u64::from(ptr_layout.size))),
+            Type::FPType(FPType::Half) => Some(TypeSize::fixed(16)),
+            #[cfg(feature = "llvm-11-or-greater")]
+            Type::FPType(FPType::BFloat) => Some(TypeSize::fixed(16)),
+            Type::FPType(FPType::Single) => Some(TypeSize::fixed(32)),
+            Type::FPType(FPType::Double) => Some(TypeSize::fixed(64)),
+            Type::FPType(FPType::FP128) => Some(TypeSize::fixed(128)),
+            Type::FPType(FPType::X86_FP80) => Some(TypeSize::fixed(80)),
+            Type::FPType(FPType::PPC_FP128) => Some(TypeSize::fixed(128)),
+            Type::VectorType {
+                element_type,
+                num_elements,
+                scalable,
+            } => self
+                .get_type_size_in_bits(types, element_type)
+                .map(|elt_sz| {
+                    TypeSize::new(
+                        u64::try_from(*num_elements).unwrap() * elt_sz.quantity,
+                        *scalable,
+                    )
+                }),
+            Type::ArrayType {
+                element_type,
+                num_elements,
+            } => self
+                .get_type_size_in_bits(types, element_type)
+                .map(|elt_sz| {
+                    TypeSize::fixed(u64::try_from(*num_elements).unwrap() * elt_sz.quantity)
+                }),
+            Type::StructType {
+                element_types,
+                is_packed,
+            } => {
+                let mut sz = 0;
+                for elt_ty in element_types {
+                    let align = if *is_packed {
+                        Alignment { abi: 1, pref: 1 }
+                    } else {
+                        self.alignments.type_alignment(elt_ty).clone()
+                    };
+                    if !is_aligned_abi(&align, sz) {
+                        sz = align_to_abi(sz, &align);
+                    }
+                    if let Some(elt_sz) = self.get_type_alloc_size_in_bits(types, elt_ty) {
+                        sz += elt_sz.to_fixed();
+                    } else {
+                        return None;
+                    }
+                }
+                Some(TypeSize::fixed(sz))
+            },
+            Type::NamedStructType { name } => {
+                self.get_type_size_in_bits(types, &types.named_struct(name))
+            },
+            Type::X86_AMXType => Some(TypeSize::fixed(8192)),
+            Type::X86_MMXType => Some(TypeSize::fixed(64)),
+            Type::FuncType { .. } => None,
+            Type::LabelType => None,
+            Type::MetadataType => None,
+            Type::TokenType => None,
+            Type::VoidType => None,
+        }
+    }
+}
+
+#[derive(Copy, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct TypeSize {
+    quantity: u64,
+    scalable: bool,
+}
+
+impl TypeSize {
+    fn new(quantity: u64, scalable: bool) -> Self {
+        Self { quantity, scalable }
+    }
+
+    fn fixed(quantity: u64) -> Self {
+        Self::new(quantity, false)
+    }
+
+    fn to_fixed(self) -> u64 {
+        assert!(!self.scalable);
+        self.quantity
+    }
+}
+
+impl std::ops::Mul<u64> for TypeSize {
+    type Output = TypeSize;
+
+    fn mul(self, n: u64) -> Self::Output {
+        Self::new(self.quantity * n, self.scalable)
+    }
+}
+
+impl Alignment {
+    fn to_bytes(&self) -> Alignment {
+        Alignment {
+            abi: self.abi / 8,
+            pref: self.pref / 8,
+        }
+    }
 }
 
 impl Default for Alignments {
@@ -1167,5 +1344,129 @@ impl Default for Alignments {
             .into_iter()
             .collect(),
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::types::{FPType, Type, TypesBuilder};
+
+    use super::{DataLayout, TypeSize};
+
+    // https://github.com/llvm/llvm-project/blob/llvmorg-15.0.7/llvm/include/llvm/IR/DataLayout.h#L441-L456
+
+    #[test]
+    fn test_size_in_bits() {
+        let dl = DataLayout::default();
+        let types = TypesBuilder::new().build();
+        assert_eq!(
+            Some(TypeSize::fixed(1)),
+            dl.get_type_size_in_bits(&types, &types.bool())
+        );
+        assert_eq!(
+            Some(TypeSize::fixed(8)),
+            dl.get_type_size_in_bits(&types, &types.i8())
+        );
+        assert_eq!(
+            Some(TypeSize::fixed(19)),
+            dl.get_type_size_in_bits(&types, &types.int(19))
+        );
+        assert_eq!(
+            Some(TypeSize::fixed(32)),
+            dl.get_type_size_in_bits(&types, &types.single())
+        );
+        assert_eq!(
+            Some(TypeSize::fixed(64)),
+            dl.get_type_size_in_bits(&types, &types.double())
+        );
+        assert_eq!(
+            Some(TypeSize::fixed(80)),
+            dl.get_type_size_in_bits(&types, &types.fp(FPType::X86_FP80))
+        );
+    }
+
+    #[test]
+    fn test_alloc_size() {
+        let dl = DataLayout::default();
+        let types = TypesBuilder::new().build();
+        assert_eq!(
+            Some(TypeSize::fixed(8)),
+            dl.get_type_alloc_size_in_bits(&types, &types.bool())
+        );
+        assert_eq!(
+            Some(TypeSize::fixed(8)),
+            dl.get_type_alloc_size_in_bits(&types, &types.i8())
+        );
+        assert_eq!(
+            Some(TypeSize::fixed(32)),
+            dl.get_type_alloc_size_in_bits(&types, &types.int(19))
+        );
+        assert_eq!(
+            Some(TypeSize::fixed(32)),
+            dl.get_type_alloc_size_in_bits(&types, &types.single())
+        );
+        assert_eq!(
+            Some(TypeSize::fixed(64)),
+            dl.get_type_alloc_size_in_bits(&types, &types.double())
+        );
+        // FP80 has no alignment information in default data layout...
+    }
+
+    #[test]
+    fn test_struct_size() {
+        let dl = DataLayout::default();
+        let types = TypesBuilder::new().build();
+        assert_eq!(
+            Some(TypeSize::fixed(0)),
+            dl.get_type_alloc_size_in_bits(
+                &types,
+                &Type::StructType {
+                    element_types: vec![],
+                    is_packed: false
+                }
+            )
+        );
+        // The i8 needs to be padded for the i32
+        assert_eq!(
+            Some(TypeSize::fixed(64)),
+            dl.get_type_alloc_size_in_bits(
+                &types,
+                &Type::StructType {
+                    element_types: vec![types.i8(), types.i32()],
+                    is_packed: false
+                }
+            )
+        );
+        // The i8 needs to be padded for the pointer
+        assert_eq!(
+            Some(TypeSize::fixed(128)),
+            dl.get_type_alloc_size_in_bits(
+                &types,
+                &Type::StructType {
+                    element_types: vec![types.i8(), types.pointer_to(types.i8())],
+                    is_packed: false
+                }
+            )
+        );
+        assert_eq!(
+            Some(TypeSize::fixed(72)),
+            dl.get_type_alloc_size_in_bits(
+                &types,
+                &Type::StructType {
+                    element_types: vec![types.i8(), types.pointer_to(types.i8())],
+                    is_packed: true
+                }
+            )
+        );
+        assert_eq!(
+            Some(TypeSize::fixed(128)),
+            dl.get_type_alloc_size_in_bits(
+                &types,
+                &Type::StructType {
+                    element_types: vec![types.pointer_to(types.i8()), types.pointer_to(types.i8())],
+                    is_packed: false
+                }
+            )
+        );
     }
 }
