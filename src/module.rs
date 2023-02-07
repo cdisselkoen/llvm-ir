@@ -3,7 +3,7 @@ use crate::debugloc::*;
 use crate::function::{Function, FunctionAttribute, FunctionDeclaration, GroupID};
 use crate::llvm_sys::*;
 use crate::name::Name;
-use crate::types::{FPType, Type, TypeRef, Typed, Types, TypesBuilder};
+use crate::types::{FPType, NamedStructDef, Type, TypeRef, Typed, Types, TypesBuilder};
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::convert::TryFrom;
 use std::path::Path;
@@ -1227,7 +1227,11 @@ impl DataLayout {
                 Some(TypeSize::fixed(sz))
             },
             Type::NamedStructType { name } => {
-                self.get_type_size_in_bits(types, &types.named_struct(name))
+                if let Some(NamedStructDef::Defined(def)) = types.named_struct_def(name) {
+                    self.get_type_size_in_bits(types, &def)
+                } else {
+                    None
+                }
             },
             Type::X86_AMXType => Some(TypeSize::fixed(8192)),
             Type::X86_MMXType => Some(TypeSize::fixed(64)),
