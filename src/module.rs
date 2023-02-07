@@ -1255,9 +1255,17 @@ impl TypeSize {
         Self::new(quantity, false)
     }
 
+    pub fn min_size(self) -> u64 {
+        self.quantity
+    }
+
     fn to_fixed(self) -> u64 {
         assert!(!self.scalable);
         self.quantity
+    }
+
+    pub fn is_fixed(self) -> bool {
+        !self.scalable
     }
 }
 
