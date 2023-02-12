@@ -71,6 +71,12 @@ impl Module {
         self.global_vars.iter().find(|global| &global.name == name)
     }
 
+    /// Get the `GlobalAlias` having the given `name` (if any).
+    /// Note that `GlobalAlias`es are named with `String`s and not `Name`s.
+    pub fn get_global_alias_by_name(&self, name: &str) -> Option<&GlobalAlias> {
+        self.global_aliases.iter().find(|global| &global.name == name)
+    }
+
     /// Parse the LLVM bitcode (.bc) file at the given path to create a `Module`
     pub fn from_bc_path(path: impl AsRef<Path>) -> Result<Self, String> {
         unsafe fn parse_bc(
@@ -189,7 +195,8 @@ impl HasDebugLoc for GlobalVariable {
 /// See [LLVM 14 docs on Global Aliases](https://releases.llvm.org/14.0.0/docs/LangRef.html#aliases)
 #[derive(PartialEq, Clone, Debug)]
 pub struct GlobalAlias {
-    pub name: Name,
+    /// Globals' names must be strings, so this is `String` not `Name`
+    pub name: String,
     pub aliasee: ConstantRef,
     pub linkage: Linkage,
     pub visibility: Visibility,
@@ -700,7 +707,10 @@ impl GlobalAlias {
             _ => panic!("GlobalAlias has a non-pointer type, {:?}", ty),
         };
         Self {
-            name: Name::name_or_num(unsafe { get_value_name(alias) }, ctr),
+            name: match Name::name_or_num(unsafe { get_value_name(alias) }, ctr) {
+                Name::Name(s) => *s,
+                Name::Number(n) => panic!("expected global alias to have a string name, but instead it has the number {}", n),
+            },
             aliasee: Constant::from_llvm_ref(unsafe { LLVMAliasGetAliasee(alias) }, ctx),
             linkage: Linkage::from_llvm(unsafe { LLVMGetLinkage(alias) }),
             visibility: Visibility::from_llvm(unsafe { LLVMGetVisibility(alias) }),
