@@ -1306,9 +1306,13 @@ fn switchbc() {
     assert_eq!(decl.name, "puts");
     assert_eq!(decl.return_type, module.types.i32());
     assert_eq!(decl.parameters.len(), 1);
+    #[cfg(feature = "llvm-14-or-lower")]
+    let param_0_expected_ty = module.types.pointer_to(module.types.i8());
+    #[cfg(feature = "llvm-15-or-greater")]
+    let param_0_expected_ty = module.types.pointer();
     assert_eq!(
         module.type_of(&decl.parameters[0]),
-        module.types.pointer_to(module.types.i8())
+        param_0_expected_ty,
     );
 }
 
@@ -1406,7 +1410,10 @@ fn variablesbc() {
         .get_func_decl_by_name("malloc")
         .expect("there should be a malloc declaration");
     assert_eq!(decl.name, "malloc");
+    #[cfg(feature = "llvm-14-or-lower")]
     assert_eq!(decl.return_type, module.types.pointer_to(module.types.i8()));
+    #[cfg(feature = "llvm-15-or-greater")]
+    assert_eq!(decl.return_type, module.types.pointer());
     assert!(decl
         .return_attributes
         .contains(&ParameterAttribute::NoAlias));
