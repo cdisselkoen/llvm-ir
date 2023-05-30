@@ -1,7 +1,7 @@
 ; ModuleID = 'loop.c'
 source_filename = "loop.c"
 target datalayout = "e-m:o-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128"
-target triple = "x86_64-apple-macosx13.0.0"
+target triple = "x86_64-apple-macosx12.0.0"
 
 ; Function Attrs: argmemonly nofree nounwind ssp uwtable
 define void @loop(i32 noundef %0, i32 noundef %1) local_unnamed_addr #0 {
@@ -95,7 +95,7 @@ attributes #3 = { nounwind }
 !1 = !{i32 7, !"PIC Level", i32 2}
 !2 = !{i32 7, !"uwtable", i32 2}
 !3 = !{i32 7, !"frame-pointer", i32 2}
-!4 = !{!"Homebrew clang version 15.0.3"}
+!4 = !{!"Homebrew clang version 15.0.6"}
 !5 = !{!6, !6, i64 0}
 !6 = !{!"int", !7, i64 0}
 !7 = !{!"omnipotent char", !8, i64 0}

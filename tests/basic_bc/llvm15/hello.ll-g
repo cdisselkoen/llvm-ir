@@ -1,7 +1,7 @@
 ; ModuleID = 'hello.c'
 source_filename = "hello.c"
 target datalayout = "e-m:o-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128"
-target triple = "x86_64-apple-macosx13.0.0"
+target triple = "x86_64-apple-macosx12.0.0"
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind readnone ssp willreturn uwtable
 define i32 @main() local_unnamed_addr #0 !dbg !9 {
@@ -14,15 +14,15 @@ attributes #0 = { mustprogress nofree norecurse nosync nounwind readnone ssp wil
 !llvm.module.flags = !{!2, !3, !4, !5, !6, !7}
 !llvm.ident = !{!8}
 
-!0 = distinct !DICompileUnit(language: DW_LANG_C99, file: !1, producer: "Homebrew clang version 15.0.3", isOptimized: true, runtimeVersion: 0, emissionKind: FullDebug, splitDebugInlining: false, nameTableKind: None, sysroot: "/Library/Developer/CommandLineTools/SDKs/MacOSX12.sdk", sdk: "MacOSX12.sdk")
-!1 = !DIFile(filename: "hello.c", directory: "/Users/william/devel/llvm-ir/tests/basic_bc")
+!0 = distinct !DICompileUnit(language: DW_LANG_C99, file: !1, producer: "Homebrew clang version 15.0.6", isOptimized: true, runtimeVersion: 0, emissionKind: FullDebug, splitDebugInlining: false, nameTableKind: None, sysroot: "/Library/Developer/CommandLineTools/SDKs/MacOSX12.sdk", sdk: "MacOSX12.sdk")
+!1 = !DIFile(filename: "hello.c", directory: "/Users/craig/llvm-ir/tests/basic_bc")
 !2 = !{i32 7, !"Dwarf Version", i32 4}
 !3 = !{i32 2, !"Debug Info Version", i32 3}
 !4 = !{i32 1, !"wchar_size", i32 4}
 !5 = !{i32 7, !"PIC Level", i32 2}
 !6 = !{i32 7, !"uwtable", i32 2}
 !7 = !{i32 7, !"frame-pointer", i32 2}
-!8 = !{!"Homebrew clang version 15.0.3"}
+!8 = !{!"Homebrew clang version 15.0.6"}
 !9 = distinct !DISubprogram(name: "main", scope: !1, file: !1, line: 3, type: !10, scopeLine: 3, flags: DIFlagAllCallsDescribed, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !0, retainedNodes: !13)
 !10 = !DISubroutineType(types: !11)
 !11 = !{!12}

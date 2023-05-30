@@ -1,7 +1,7 @@
 ; ModuleID = 'hello.c'
 source_filename = "hello.c"
 target datalayout = "e-m:o-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128"
-target triple = "x86_64-apple-macosx13.0.0"
+target triple = "x86_64-apple-macosx12.0.0"
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind readnone ssp willreturn uwtable
 define i32 @main() local_unnamed_addr #0 {
@@ -17,4 +17,4 @@ attributes #0 = { mustprogress nofree norecurse nosync nounwind readnone ssp wil
 !1 = !{i32 7, !"PIC Level", i32 2}
 !2 = !{i32 7, !"uwtable", i32 2}
 !3 = !{i32 7, !"frame-pointer", i32 2}
-!4 = !{!"Homebrew clang version 15.0.3"}
+!4 = !{!"Homebrew clang version 15.0.6"}
