@@ -1370,15 +1370,22 @@ impl Typed for Load {
 
 impl Display for Load {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        // we differ from the LLVM IR text syntax here because we don't include
-        // the destination type (that's a little hard to get for us here, and
-        // it's completely redundant with the address type anyway)
         write!(f, "{} = load ", &self.dest)?;
         if self.atomicity.is_some() {
             write!(f, "atomic ")?;
         }
         if self.volatile {
             write!(f, "volatile ")?;
+        }
+        #[cfg(feature = "llvm-14-or-lower")]
+        {
+            // we differ from the LLVM IR text syntax here because we don't include
+            // the destination type (that's a little hard to get for us here, and
+            // it's completely redundant with the address type anyway)
+        }
+        #[cfg(feature = "llvm-15-or-greater")]
+        {
+            write!(f, "{}, ", &self.loaded_ty)?;
         }
         write!(f, "{}", &self.address)?;
         if let Some(a) = &self.atomicity {
@@ -3155,7 +3162,7 @@ impl CallInfo {
             #[cfg(feature = "llvm-15-or-greater")]
             function_ty: ctx
                 .types
-                .type_from_llvm_ref(unsafe { LLVMTypeOf(called_val) }),
+                .type_from_llvm_ref(unsafe { LLVMGetCalledFunctionType(inst) }),
             arguments: {
                 let num_args: u32 = unsafe { LLVMGetNumArgOperands(inst) } as u32;
                 (0 .. num_args) // arguments are (0 .. num_args); other operands (such as the called function) are after that

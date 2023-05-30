@@ -19,7 +19,7 @@ llvm-sys-110 = { package = "llvm-sys", version = "110.0.0", optional = true }
 llvm-sys-120 = { package = "llvm-sys", version = "120.2.0", optional = true }
 llvm-sys-130 = { package = "llvm-sys", version = "130.0.0", optional = true }
 llvm-sys-140 = { package = "llvm-sys", version = "140.0.0", optional = true }
-llvm-sys-150 = { package = "llvm-sys", version = "150.0.0", optional = true }
+llvm-sys-150 = { package = "llvm-sys", version = "150.1.0", optional = true }
 either = "1.6"
 log = "0.4"
 

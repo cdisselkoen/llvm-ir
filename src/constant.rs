@@ -367,9 +367,13 @@ impl Display for Constant {
                         // function types: just write the name, not the type
                         write!(f, "@{}", name)
                     },
-                    _ => {
+                    _ if cfg!(feature = "llvm-14-or-lower") => {
                         // non-function types: typical style with the type and name
                         write!(f, "{}* @{}", ty, name)
+                    },
+                    _ => {
+                        // in LLVM 15+ the (opaque) pointer type is always "ptr"
+                        write!(f, "ptr @{}", name)
                     },
                 }
             },

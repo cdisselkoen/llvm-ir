@@ -59,6 +59,8 @@ fn cxx_llvm_bc_dir() -> PathBuf {
         Path::new(BC_DIR).join("cxx-llvm13")
     } else if cfg!(feature = "llvm-14") {
         Path::new(BC_DIR).join("cxx-llvm14")
+    } else if cfg!(feature = "llvm-15") {
+        Path::new(BC_DIR).join("cxx-llvm15")
     } else {
         unimplemented!("new llvm version?")
     }
@@ -289,7 +291,7 @@ fn loopbc() {
         assert_eq!(bb47.name, Name::Number(47));
         vec![bb2, bb6, bb12, bb17, bb19, bb47]
     };
-    #[cfg(feature = "llvm-14-or-greater")]
+    #[cfg(feature = "llvm-14")]
     let bbs = {
         assert_eq!(func.basic_blocks.len(), 8);
         let bb2 = &func.basic_blocks[0];
@@ -305,6 +307,24 @@ fn loopbc() {
         assert_eq!(bb16.name, Name::Number(16));
         assert_eq!(bb18.name, Name::Number(18));
         assert_eq!(bb46.name, Name::Number(46));
+        vec![bb2, bb7, bb11, bb16, bb18, bb46]
+    };
+    #[cfg(feature = "llvm-15-or-greater")]
+    let bbs = {
+        assert_eq!(func.basic_blocks.len(), 8);
+        let bb2 = &func.basic_blocks[0];
+        let bb7 = &func.basic_blocks[1];
+        let bb11 = &func.basic_blocks[2];
+        let bb16 = &func.basic_blocks[3];
+        let bb18 = &func.basic_blocks[4];
+        let bb46 = &func.basic_blocks[7];
+        // actually have 8 BBs, but we only use the first five and the last one
+        assert_eq!(bb2.name, Name::Number(2));
+        assert_eq!(bb7.name, Name::Number(6));
+        assert_eq!(bb11.name, Name::Number(9));
+        assert_eq!(bb16.name, Name::Number(14));
+        assert_eq!(bb18.name, Name::Number(16));
+        assert_eq!(bb46.name, Name::Number(44));
         vec![bb2, bb7, bb11, bb16, bb18, bb46]
     };
 
@@ -330,13 +350,13 @@ fn loopbc() {
     assert_eq!(module.type_of(alloca), module.types.pointer());
     assert_eq!(module.type_of(&alloca.num_elements), module.types.i32());
     assert_eq!(&alloca.to_string(), "%3 = alloca [10 x i32], align 16");
-    let bitcast: &instruction::BitCast = &bbs[0].instrs[1]
-        .clone()
-        .try_into()
-        .expect("Should be a bitcast");
-    assert_eq!(bitcast.dest, Name::Number(4));
-    #[cfg(feature = "llvm-14-or-lower")]
+    #[cfg(feature = "llvm-14-or-lower")] // LLVM 15+ does not require bitcasts in this function
     {
+        let bitcast: &instruction::BitCast = &bbs[0].instrs[1]
+            .clone()
+            .try_into()
+            .expect("Should be a bitcast");
+        assert_eq!(bitcast.dest, Name::Number(4));
         assert_eq!(bitcast.to_type, module.types.pointer_to(module.types.i8()));
         assert_eq!(
             bitcast.operand,
@@ -355,20 +375,13 @@ fn loopbc() {
         );
         assert_eq!(&bitcast.to_string(), "%4 = bitcast [10 x i32]* %3 to i8*");
     }
-    #[cfg(feature = "llvm-15-or-greater")]
-    {
-        assert_eq!(bitcast.to_type, module.types.pointer());
-        assert_eq!(
-            bitcast.operand,
-            Operand::LocalOperand {
-                name: Name::Number(3),
-                ty: module.types.pointer()
-            }
-        );
-        assert_eq!(module.type_of(bitcast), module.types.pointer());
-        assert_eq!(module.type_of(&bitcast.operand), module.types.pointer());
-    }
+    #[cfg(feature = "llvm-14-or-lower")]
     let lifetimestart: &instruction::Call = &bbs[0].instrs[2]
+        .clone()
+        .try_into()
+        .expect("Should be a call");
+    #[cfg(feature = "llvm-15-or-greater")]
+    let lifetimestart: &instruction::Call = &bbs[0].instrs[1]
         .clone()
         .try_into()
         .expect("Should be a call");
@@ -378,7 +391,10 @@ fn loopbc() {
                 module.type_of(&lifetimestart.function).as_ref(),
                 Type::PointerType { .. }
             )); // lifetimestart.function should be a constant function pointer
+            #[cfg(feature = "llvm-14-or-lower")]
             assert_eq!(name.as_str(), "llvm.lifetime.start.p0i8");
+            #[cfg(feature = "llvm-15-or-greater")]
+            assert_eq!(name.as_str(), "llvm.lifetime.start.p0");
             if let Type::FuncType {
                 result_type,
                 param_types,
@@ -428,30 +444,44 @@ fn loopbc() {
         }))
     );
     #[cfg(feature = "llvm-14-or-lower")]
+    let arg1_expected_name = Name::Number(4);
+    #[cfg(feature = "llvm-15-or-greater")]
+    let arg1_expected_name = Name::Number(3);
+    #[cfg(feature = "llvm-14-or-lower")]
     let arg1_expected_ty = module.types.pointer_to(module.types.i8());
     #[cfg(feature = "llvm-15-or-greater")]
     let arg1_expected_ty = module.types.pointer();
     assert_eq!(
         arg1.0,
         Operand::LocalOperand {
-            name: Name::Number(4),
+            name: arg1_expected_name,
             ty: arg1_expected_ty,
         }
     );
     assert_eq!(arg0.1, vec![]); // should have no parameter attributes
     assert_eq!(arg1.1.len(), 1); // should have one parameter attribute
     assert_eq!(lifetimestart.dest, None);
-    assert_eq!(
-        &lifetimestart.to_string(),
-        "call @llvm.lifetime.start.p0i8(i64 40, i8* %4)"
-    );
+    #[cfg(feature = "llvm-14-or-lower")]
+    let expected_fmt = "call @llvm.lifetime.start.p0i8(i64 40, i8* %4)";
+    #[cfg(feature = "llvm-15-or-greater")]
+    let expected_fmt = "call @llvm.lifetime.start.p0(i64 40, ptr %3)";
+    assert_eq!(&lifetimestart.to_string(), expected_fmt);
+    #[cfg(feature = "llvm-14-or-lower")]
     let memset: &instruction::Call = &bbs[0].instrs[3]
+        .clone()
+        .try_into()
+        .expect("Should be a call");
+    #[cfg(feature = "llvm-15-or-greater")]
+    let memset: &instruction::Call = &bbs[0].instrs[2]
         .clone()
         .try_into()
         .expect("Should be a call");
     if let Either::Right(Operand::ConstantOperand(cref)) = &memset.function {
         if let Constant::GlobalReference { ref name, ref ty } = cref.as_ref() {
+            #[cfg(feature = "llvm-14-or-lower")]
             assert_eq!(name.as_str(), "llvm.memset.p0i8.i64");
+            #[cfg(feature = "llvm-15-or-greater")]
+            assert_eq!(name.as_str(), "llvm.memset.p0.i64");
             if let Type::FuncType {
                 result_type,
                 param_types,
@@ -489,13 +519,17 @@ fn loopbc() {
     }
     assert_eq!(memset.arguments.len(), 4);
     #[cfg(feature = "llvm-14-or-lower")]
+    let memset_arg0_expected_name = Name::Number(4);
+    #[cfg(feature = "llvm-15-or-greater")]
+    let memset_arg0_expected_name = Name::Number(3);
+    #[cfg(feature = "llvm-14-or-lower")]
     let memset_arg0_expected_ty = module.types.pointer_to(module.types.i8());
     #[cfg(feature = "llvm-15-or-greater")]
     let memset_arg0_expected_ty = module.types.pointer();
     assert_eq!(
         memset.arguments[0].0,
         Operand::LocalOperand {
-            name: Name::Number(4),
+            name: memset_arg0_expected_name,
             ty: memset_arg0_expected_ty,
         }
     );
@@ -515,10 +549,11 @@ fn loopbc() {
         Operand::ConstantOperand(ConstantRef::new(Constant::Int { bits: 1, value: 1 }))
     );
     assert_eq!(memset.arguments[0].1.len(), 2); // should have two parameter attributes
-    assert_eq!(
-        &memset.to_string(),
-        "call @llvm.memset.p0i8.i64(i8* %4, i8 0, i64 40, i1 true)"
-    );
+    #[cfg(feature = "llvm-14-or-lower")]
+    let expected_fmt = "call @llvm.memset.p0i8.i64(i8* %4, i8 0, i64 40, i1 true)";
+    #[cfg(feature = "llvm-15-or-greater")]
+    let expected_fmt = "call @llvm.memset.p0.i64(ptr %3, i8 0, i64 40, i1 true)";
+    assert_eq!(&memset.to_string(), expected_fmt);
     #[cfg(feature = "llvm-12-or-lower")]
     {
         let add: &instruction::Add = &bbs[0].instrs[4]
@@ -581,9 +616,15 @@ fn loopbc() {
             add.operand1,
             Operand::ConstantOperand(ConstantRef::new(Constant::Int { bits: 32, value: 3 }))
         );
+        #[cfg(feature = "llvm-14-or-lower")]
         assert_eq!(add.dest, Name::Number(8));
+        #[cfg(feature = "llvm-15-or-greater")]
+        assert_eq!(add.dest, Name::Number(7));
         assert_eq!(module.type_of(add), module.types.i32());
+        #[cfg(feature = "llvm-14-or-lower")]
         assert_eq!(&add.to_string(), "%8 = add i32 %0, i32 3");
+        #[cfg(feature = "llvm-15-or-greater")]
+        assert_eq!(&add.to_string(), "%7 = add i32 %0, i32 3");
     }
     #[cfg(feature = "llvm-12-or-lower")]
     {
@@ -635,15 +676,30 @@ fn loopbc() {
     }
     #[cfg(feature = "llvm-14-or-greater")]
     {
+        #[cfg(feature = "llvm-14-or-lower")]
         let icmp: &instruction::ICmp = &bbs[0].instrs[5]
             .clone()
             .try_into()
             .expect("Should be an icmp");
+        #[cfg(feature = "llvm-15-or-greater")]
+        let icmp: &instruction::ICmp = &bbs[0].instrs[4]
+            .clone()
+            .try_into()
+            .expect("Should be an icmp");
         assert_eq!(icmp.predicate, IntPredicate::ULT);
+        #[cfg(feature = "llvm-14-or-lower")]
         assert_eq!(
             icmp.operand0,
             Operand::LocalOperand {
                 name: Name::Number(5),
+                ty: module.types.i32()
+            }
+        );
+        #[cfg(feature = "llvm-15-or-greater")]
+        assert_eq!(
+            icmp.operand0,
+            Operand::LocalOperand {
+                name: Name::Number(4),
                 ty: module.types.i32()
             }
         );
@@ -655,41 +711,38 @@ fn loopbc() {
             }))
         );
         assert_eq!(module.type_of(icmp), module.types.bool());
+        #[cfg(feature = "llvm-14-or-lower")]
         assert_eq!(&icmp.to_string(), "%6 = icmp ult i32 %5, i32 10");
+        #[cfg(feature = "llvm-15-or-greater")]
+        assert_eq!(&icmp.to_string(), "%5 = icmp ult i32 %4, i32 10");
     }
 
     let condbr: &terminator::CondBr = &bbs[0].term.clone().try_into().expect("Should be a condbr");
     #[cfg(feature = "llvm-12-or-lower")]
-    assert_eq!(
-        condbr.condition,
-        Operand::LocalOperand {
-            name: Name::Number(6),
-            ty: module.types.bool()
-        }
-    );
+    let expected_condition_op = Name::Number(6);
     #[cfg(feature = "llvm-13")]
+    let expected_condition_op = Name::Number(5);
+    #[cfg(feature = "llvm-14")]
+    let expected_condition_op = Name::Number(6);
+    #[cfg(feature = "llvm-15-or-greater")]
+    let expected_condition_op = Name::Number(5);
     assert_eq!(
         condbr.condition,
         Operand::LocalOperand {
-            name: Name::Number(5),
-            ty: module.types.bool()
-        }
-    );
-    #[cfg(feature = "llvm-14-or-greater")]
-    assert_eq!(
-        condbr.condition,
-        Operand::LocalOperand {
-            name: Name::Number(6),
+            name: expected_condition_op.clone(),
             ty: module.types.bool()
         }
     );
     #[cfg(feature = "llvm-12-or-lower")]
-    assert_eq!(condbr.true_dest, Name::Number(7));
+    let expected_true_dest = Name::Number(7);
     #[cfg(feature = "llvm-13")]
-    assert_eq!(condbr.true_dest, Name::Number(6));
-    #[cfg(feature = "llvm-14-or-greater")]
-    assert_eq!(condbr.true_dest, Name::Number(7));
-    let false_dest = if cfg!(feature = "llvm-9-or-lower") {
+    let expected_true_dest = Name::Number(6);
+    #[cfg(feature = "llvm-14")]
+    let expected_true_dest = Name::Number(7);
+    #[cfg(feature = "llvm-15-or-greater")]
+    let expected_true_dest = Name::Number(6);
+    assert_eq!(condbr.true_dest, expected_true_dest);
+    let expected_false_dest = if cfg!(feature = "llvm-9-or-lower") {
         Name::Number(22)
     } else if cfg!(feature = "llvm-10") {
         Name::Number(21)
@@ -697,28 +750,20 @@ fn loopbc() {
         Name::Number(24)
     } else if cfg!(feature = "llvm-12") || cfg!(feature = "llvm-13") {
         Name::Number(47)
-    } else {
+    } else if cfg!(feature = "llvm-14") {
         Name::Number(46)
+    } else {
+        Name::Number(44)
     };
-    assert_eq!(condbr.false_dest, false_dest);
+    assert_eq!(condbr.false_dest, expected_false_dest);
     assert_eq!(module.type_of(condbr), module.types.void());
     assert_eq!(
         &condbr.to_string(),
         &format!(
-            "br i1 %{}, label %{}, label %{}",
-            if cfg!(feature = "llvm-13") { 5 } else { 6 },
-            if cfg!(feature = "llvm-13") { 6 } else { 7 },
-            if cfg!(feature = "llvm-9-or-lower") {
-                22
-            } else if cfg!(feature = "llvm-10") {
-                21
-            } else if cfg!(feature = "llvm-11") {
-                24
-            } else if cfg!(feature = "llvm-12") || cfg!(feature = "llvm-13") {
-                47
-            } else {
-                46
-            }
+            "br i1 {}, label {}, label {}",
+            expected_condition_op,
+            expected_true_dest,
+            expected_false_dest,
         ),
     );
 
@@ -758,8 +803,10 @@ fn loopbc() {
         Name::Number(11)
     } else if cfg!(feature = "llvm-12") || cfg!(feature = "llvm-13") {
         Name::Number(13)
-    } else {
+    } else if cfg!(feature = "llvm-14") {
         Name::Number(12)
+    } else {
+        Name::Number(10)
     };
     assert_eq!(
         ext.operand,
@@ -781,8 +828,10 @@ fn loopbc() {
     assert_eq!(&ext.to_string(), "%13 = zext i32 %10 to i64");
     #[cfg(feature = "llvm-13")]
     assert_eq!(&ext.to_string(), "%13 = zext i32 %1 to i64");
-    #[cfg(feature = "llvm-14-or-greater")]
+    #[cfg(feature = "llvm-14")]
     assert_eq!(&ext.to_string(), "%12 = zext i32 %1 to i64");
+    #[cfg(feature = "llvm-15-or-greater")]
+    assert_eq!(&ext.to_string(), "%10 = zext i32 %1 to i64");
     #[cfg(feature = "llvm-9-or-lower")]
     {
         // LLVM 10 and 11 don't have a Br in this function
@@ -798,10 +847,15 @@ fn loopbc() {
             assert_eq!(br.dest, Name::Number(19));
             assert_eq!(&br.to_string(), "br label %19");
         }
-        #[cfg(feature = "llvm-14-or-greater")]
+        #[cfg(feature = "llvm-14")]
         {
             assert_eq!(br.dest, Name::Number(18));
             assert_eq!(&br.to_string(), "br label %18");
+        }
+        #[cfg(feature = "llvm-15-or-greater")]
+        {
+            assert_eq!(br.dest, Name::Number(16));
+            assert_eq!(&br.to_string(), "br label %16");
         }
     }
 
@@ -824,8 +878,10 @@ fn loopbc() {
         Name::Number(15)
     } else if cfg!(any(feature = "llvm-12", feature = "llvm-13")) {
         Name::Number(20)
-    } else {
+    } else if cfg!(feature = "llvm-14") {
         Name::Number(19)
+    } else {
+        Name::Number(17)
     };
     assert_eq!(phi.dest, phi_dest);
     assert_eq!(phi.to_type, module.types.i64());
@@ -897,7 +953,7 @@ fn loopbc() {
             ),
         ]
     );
-    #[cfg(feature = "llvm-14-or-greater")]
+    #[cfg(feature = "llvm-14")]
     assert_eq!(
         phi.incoming_values,
         vec![
@@ -911,6 +967,23 @@ fn loopbc() {
                     ty: module.types.i64()
                 },
                 Name::Number(18)
+            ),
+        ]
+    );
+    #[cfg(feature = "llvm-15-or-greater")]
+    assert_eq!(
+        phi.incoming_values,
+        vec![
+            (
+                Operand::ConstantOperand(ConstantRef::new(Constant::Int { bits: 64, value: 1 })),
+                Name::Number(14)
+            ),
+            (
+                Operand::LocalOperand {
+                    name: Name::Number(31),
+                    ty: module.types.i64()
+                },
+                Name::Number(16)
             ),
         ]
     );
@@ -934,10 +1007,15 @@ fn loopbc() {
         &phi.to_string(),
         "%20 = phi i64 [ i64 1, %17 ], [ i64 %34, %19 ]"
     );
-    #[cfg(feature = "llvm-14-or-greater")]
+    #[cfg(feature = "llvm-14")]
     assert_eq!(
         &phi.to_string(),
         "%19 = phi i64 [ i64 1, %16 ], [ i64 %33, %18 ]"
+    );
+    #[cfg(feature = "llvm-15-or-greater")]
+    assert_eq!(
+        &phi.to_string(),
+        "%17 = phi i64 [ i64 1, %14 ], [ i64 %31, %16 ]"
     );
 
     #[cfg(feature = "llvm-11-or-lower")]
@@ -969,8 +1047,10 @@ fn loopbc() {
         Name::Number(16)
     } else if cfg!(feature = "llvm-12") || cfg!(feature = "llvm-13") {
         Name::Number(22)
-    } else {
+    } else if cfg!(feature = "llvm-14") {
         Name::Number(21)
+    } else {
+        Name::Number(19)
     };
     assert_eq!(gep.dest, gep_dest);
     assert_eq!(gep.in_bounds, true);
@@ -982,8 +1062,10 @@ fn loopbc() {
         Name::Number(15)
     } else if cfg!(feature = "llvm-12") || cfg!(feature = "llvm-13") {
         Name::Number(20)
-    } else {
+    } else if cfg!(feature = "llvm-14") {
         Name::Number(19)
+    } else {
+        Name::Number(17)
     };
     assert_eq!(
         gep.indices,
@@ -1022,10 +1104,15 @@ fn loopbc() {
         &gep.to_string(),
         "%22 = getelementptr inbounds [10 x i32]* %3, i64 0, i64 %20"
     );
-    #[cfg(feature = "llvm-14-or-greater")]
+    #[cfg(feature = "llvm-14")]
     assert_eq!(
         &gep.to_string(),
         "%21 = getelementptr inbounds [10 x i32]* %3, i64 0, i64 %19"
+    );
+    #[cfg(feature = "llvm-15-or-greater")]
+    assert_eq!(
+        &gep.to_string(),
+        "%19 = getelementptr inbounds ptr %3, i64 0, i64 %17"
     );
     #[cfg(feature = "llvm-11-or-lower")]
     let store_inst = &bbs[2].instrs[2];
@@ -1040,8 +1127,10 @@ fn loopbc() {
         Name::Number(16)
     } else if cfg!(feature = "llvm-12") || cfg!(feature = "llvm-13") {
         Name::Number(22)
-    } else {
+    } else if cfg!(feature = "llvm-14") {
         Name::Number(21)
+    } else {
+        Name::Number(19)
     };
     #[cfg(feature = "llvm-14-or-lower")]
     let address_ty = module.types.pointer_to(module.types.i32());
@@ -1070,11 +1159,19 @@ fn loopbc() {
             ty: module.types.i32()
         }
     );
-    #[cfg(feature = "llvm-14-or-greater")]
+    #[cfg(feature = "llvm-14")]
     assert_eq!(
         store.value,
         Operand::LocalOperand {
             name: Name::Number(8),
+            ty: module.types.i32()
+        }
+    );
+    #[cfg(feature = "llvm-15-or-greater")]
+    assert_eq!(
+        store.value,
+        Operand::LocalOperand {
+            name: Name::Number(7),
             ty: module.types.i32()
         }
     );
@@ -1107,10 +1204,15 @@ fn loopbc() {
         &store.to_string(),
         "store volatile i32 %7, i32* %22, align 4"
     );
-    #[cfg(feature = "llvm-14-or-greater")]
+    #[cfg(feature = "llvm-14")]
     assert_eq!(
         &store.to_string(),
         "store volatile i32 %8, i32* %21, align 4"
+    );
+    #[cfg(feature = "llvm-15-or-greater")]
+    assert_eq!(
+        &store.to_string(),
+        "store volatile i32 %7, ptr %19, align 4"
     );
 
     // and finally other instructions of types we haven't seen yet
@@ -1130,8 +1232,10 @@ fn loopbc() {
         Name::Number(19)
     } else if cfg!(feature = "llvm-12") || cfg!(feature = "llvm-13") {
         Name::Number(25)
-    } else {
+    } else if cfg!(feature = "llvm-14") {
         Name::Number(24)
+    } else {
+        Name::Number(22)
     };
     #[cfg(feature = "llvm-14-or-lower")]
     let load_addr_expected_ty = module.types.pointer_to(module.types.i32());
@@ -1150,8 +1254,10 @@ fn loopbc() {
     assert_eq!(load.dest, Name::Number(20));
     #[cfg(any(feature = "llvm-12", feature = "llvm-13"))]
     assert_eq!(load.dest, Name::Number(26));
-    #[cfg(feature = "llvm-14-or-greater")]
+    #[cfg(feature = "llvm-14")]
     assert_eq!(load.dest, Name::Number(25));
+    #[cfg(feature = "llvm-15-or-greater")]
+    assert_eq!(load.dest, Name::Number(23));
     assert_eq!(load.volatile, true);
     assert_eq!(load.alignment, 4);
     assert_eq!(module.type_of(load), module.types.i32());
@@ -1162,8 +1268,10 @@ fn loopbc() {
     assert_eq!(&load.to_string(), "%20 = load volatile i32* %19, align 4");
     #[cfg(any(feature = "llvm-12", feature = "llvm-13"))]
     assert_eq!(&load.to_string(), "%26 = load volatile i32* %25, align 4");
-    #[cfg(feature = "llvm-14-or-greater")]
+    #[cfg(feature = "llvm-14")]
     assert_eq!(&load.to_string(), "%25 = load volatile i32* %24, align 4");
+    #[cfg(feature = "llvm-15-or-greater")]
+    assert_eq!(&load.to_string(), "%23 = load volatile i32, ptr %22, align 4");
     let ret: &Terminator = if cfg!(feature = "llvm-9-or-lower") {
         &bbs[5].term
     } else if cfg!(feature = "llvm-10") || cfg!(feature = "llvm-11") {
@@ -1354,11 +1462,15 @@ fn variablesbc() {
         }
     );
     assert_eq!(module.type_of(store), module.types.void());
-    assert_eq!(
-        &store.to_string(),
-        "store volatile i32 %0, i32* %3, align 4"
-    );
+    #[cfg(feature = "llvm-14-or-lower")]
+    let expected_fmt = "store volatile i32 %0, i32* %3, align 4";
+    #[cfg(feature = "llvm-15-or-greater")]
+    let expected_fmt = "store volatile i32 %0, ptr %3, align 4";
+    assert_eq!(&store.to_string(), expected_fmt);
+    #[cfg(feature = "llvm-14-or-lower")]
     let load: &instruction::Load = &bb.instrs[8].clone().try_into().expect("Should be a load");
+    #[cfg(feature = "llvm-15-or-greater")]
+    let load: &instruction::Load = &bb.instrs[6].clone().try_into().expect("Should be a load");
     #[cfg(feature = "llvm-14-or-lower")]
     let load_addr_expected_ty = module.types.pointer_to(module.types.i32());
     #[cfg(feature = "llvm-15-or-greater")]
@@ -1371,9 +1483,17 @@ fn variablesbc() {
         }
     );
     assert_eq!(module.type_of(load), module.types.i32());
-    assert_eq!(&load.to_string(), "%8 = load volatile i32* %4, align 4");
+    #[cfg(feature = "llvm-14-or-lower")]
+    let expected_fmt = "%8 = load volatile i32* %4, align 4";
+    #[cfg(feature = "llvm-15-or-greater")]
+    let expected_fmt = "%6 = load volatile i32, ptr %4, align 4";
+    assert_eq!(&load.to_string(), expected_fmt);
+    #[cfg(feature = "llvm-14-or-lower")]
     let global_load: &instruction::Load =
         &bb.instrs[14].clone().try_into().expect("Should be a load");
+    #[cfg(feature = "llvm-15-or-greater")]
+    let global_load: &instruction::Load =
+        &bb.instrs[12].clone().try_into().expect("Should be a load");
     assert_eq!(
         global_load.address,
         Operand::ConstantOperand(ConstantRef::new(Constant::GlobalReference {
@@ -1382,12 +1502,17 @@ fn variablesbc() {
         }))
     );
     assert_eq!(module.type_of(global_load), module.types.i32());
-    assert_eq!(
-        &global_load.to_string(),
-        "%12 = load volatile i32* @global, align 4"
-    );
+    #[cfg(feature = "llvm-14-or-lower")]
+    let expected_fmt = "%12 = load volatile i32* @global, align 4";
+    #[cfg(feature = "llvm-15-or-greater")]
+    let expected_fmt = "%10 = load volatile i32, ptr @global, align 4";
+    assert_eq!(&global_load.to_string(), expected_fmt);
+    #[cfg(feature = "llvm-14-or-lower")]
     let global_store: &instruction::Store =
         &bb.instrs[16].clone().try_into().expect("Should be a store");
+    #[cfg(feature = "llvm-15-or-greater")]
+    let global_store: &instruction::Store =
+        &bb.instrs[14].clone().try_into().expect("Should be a store");
     assert_eq!(
         global_store.address,
         Operand::ConstantOperand(ConstantRef::new(Constant::GlobalReference {
@@ -1396,10 +1521,11 @@ fn variablesbc() {
         }))
     );
     assert_eq!(module.type_of(global_store), module.types.void());
-    assert_eq!(
-        &global_store.to_string(),
-        "store volatile i32 %13, i32* @global, align 4"
-    );
+    #[cfg(feature = "llvm-14-or-lower")]
+    let expected_fmt = "store volatile i32 %13, i32* @global, align 4";
+    #[cfg(feature = "llvm-15-or-greater")]
+    let expected_fmt = "store volatile i32 %11, ptr @global, align 4";
+    assert_eq!(&global_store.to_string(), expected_fmt);
 
     assert_eq!(
         module.get_func_decl_by_name("variables"),
@@ -1479,7 +1605,7 @@ fn issue4() {
     } else if cfg!(feature = "llvm-12") {
         // LLVM 12+ adds "willreturn"
         22
-    } else if cfg!(feature = "llvm-13-or-greater") {
+    } else if cfg!(feature = "llvm-13") || cfg!(feature = "llvm-14") {
         // LLVM 13+ adds "mustprogress" and "nosync"
         // LLVM 13+ removes the following string attributes:
         //   "disable-tail-calls=false"
@@ -1492,6 +1618,9 @@ fn issue4() {
         //   "use-soft-float=false"
         // for a net of -6 attributes
         16
+    } else if cfg!(feature = "llvm-15-or-greater") {
+        // LLVM 15+ adds "argmemonly"
+        17
     } else {
         panic!("Shouldn't reach this")
     };
@@ -1503,15 +1632,17 @@ fn issue4() {
         func.function_attributes.len(),
         func.function_attributes
     );
-    // and that all but 6 of them are StringAttributes (5 of them for LLVM 8; 7 for LLVM 12; 9 for LLVM 13+)
+    // and that all but 6 of them are StringAttributes (5 of them for LLVM 8; 7 for LLVM 12; 9 for LLVM 13/14; 10 for LLVM 15+)
     let expected_num_enum_attrs = if cfg!(feature = "llvm-8-or-lower") {
         5 // missing "nofree"
     } else if cfg!(feature = "llvm-9") || cfg!(feature = "llvm-10") || cfg!(feature = "llvm-11") {
         6
     } else if cfg!(feature = "llvm-12") {
         7 // adds "willreturn"
-    } else if cfg!(feature = "llvm-13-or-greater") {
+    } else if cfg!(feature = "llvm-13") || cfg!(feature = "llvm-14") {
         9 // adds "mustprogress" and "nosync"
+    } else if cfg!(feature = "llvm-15-or-greater") {
+        10 // adds "argmemonly"
     } else {
         panic!("Shouldn't reach this")
     };
@@ -1590,10 +1721,11 @@ fn rustbc() {
         .try_into()
         .expect("Should be an alloca");
     assert_eq!(alloca_iter.dest, Name::from("iter"));
-    assert_eq!(
-        &alloca_iter.to_string(),
-        "%iter = alloca { i64*, i64* }, align 8"
-    );
+    #[cfg(feature = "llvm-14-or-lower")]
+    let expected_fmt = "%iter = alloca { i64*, i64* }, align 8";
+    #[cfg(feature = "llvm-15-or-greater")]
+    let expected_fmt = "%iter = alloca { ptr, ptr }, align 8";
+    assert_eq!(&alloca_iter.to_string(), expected_fmt);
     let alloca_sum: &instruction::Alloca = &startbb.instrs[6]
         .clone()
         .try_into()
@@ -1615,7 +1747,11 @@ fn rustbc() {
             ty: store_addr_expected_ty,
         }
     );
-    assert_eq!(&store.to_string(), "store i64 0, i64* %sum, align 8");
+    #[cfg(feature = "llvm-14-or-lower")]
+    let expected_fmt = "store i64 0, i64* %sum, align 8";
+    #[cfg(feature = "llvm-15-or-greater")]
+    let expected_fmt = "store i64 0, ptr %sum, align 8";
+    assert_eq!(&store.to_string(), expected_fmt);
     let call: &instruction::Call = &startbb.instrs[8]
         .clone()
         .try_into()
@@ -1675,10 +1811,11 @@ fn rustbc() {
         }
     );
     assert_eq!(call.dest, Some(Name::Number(0)));
-    assert_eq!(
-        &call.to_string(),
-        "%0 = call @_ZN68_$LT$alloc..vec..Vec$LT$T$GT$$u20$as$u20$core..ops..deref..Deref$GT$5deref17h378128d7d9378466E(%alloc::vec::Vec<isize>* %v)",
-    );
+    #[cfg(feature = "llvm-14-or-lower")]
+    let expected_fmt = "%0 = call @_ZN68_$LT$alloc..vec..Vec$LT$T$GT$$u20$as$u20$core..ops..deref..Deref$GT$5deref17h378128d7d9378466E(%alloc::vec::Vec<isize>* %v)";
+    #[cfg(feature = "llvm-15-or-greater")]
+    let expected_fmt = "%0 = call @_ZN68_$LT$alloc..vec..Vec$LT$T$GT$$u20$as$u20$core..ops..deref..Deref$GT$5deref17h378128d7d9378466E(ptr %v)";
+    assert_eq!(&call.to_string(), expected_fmt);
 
     #[cfg(feature = "llvm-9-or-greater")]
     {
@@ -1736,9 +1873,13 @@ fn rustbcg() {
         debugloc.directory.as_ref().map(|s| s.as_str()),
         Some(debug_directory)
     );
+    #[cfg(feature = "llvm-14-or-lower")]
+    let expected_fmt = "store i64 0, i64* %sum, align 8 (with debugloc)";
+    #[cfg(feature = "llvm-15-or-greater")]
+    let expected_fmt = "store i64 0, ptr %sum, align 8 (with debugloc)";
     assert_eq!(
         &startbb.instrs[31].to_string(),
-        "store i64 0, i64* %sum, align 8 (with debugloc)"
+        expected_fmt
     );
     let call_debugloc = startbb.instrs[33]
         .get_debug_loc()
@@ -1751,10 +1892,11 @@ fn rustbcg() {
         debugloc.directory.as_ref().map(|s| s.as_str()),
         Some(debug_directory)
     );
-    assert_eq!(
-        &startbb.instrs[33].to_string(),
-        "%4 = call @_ZN68_$LT$alloc..vec..Vec$LT$T$GT$$u20$as$u20$core..ops..deref..Deref$GT$5deref17h378128d7d9378466E(%alloc::vec::Vec<isize>* %3) (with debugloc)",
-    );
+    #[cfg(feature = "llvm-14-or-lower")]
+    let expected_fmt = "%4 = call @_ZN68_$LT$alloc..vec..Vec$LT$T$GT$$u20$as$u20$core..ops..deref..Deref$GT$5deref17h378128d7d9378466E(%alloc::vec::Vec<isize>* %3) (with debugloc)";
+    #[cfg(feature = "llvm-15-or-greater")]
+    let expected_fmt = "%4 = call @_ZN68_$LT$alloc..vec..Vec$LT$T$GT$$u20$as$u20$core..ops..deref..Deref$GT$5deref17h378128d7d9378466E(ptr %3) (with debugloc)";
+    assert_eq!(&startbb.instrs[33].to_string(), expected_fmt);
 }
 
 #[test]
@@ -1834,29 +1976,34 @@ fn simple_linked_list() {
         "%3 = alloca %struct.SimpleLinkedList, align 8"
     );
 
-    let struct_name: String = "struct.SomeOpaqueStruct".into();
-    let structty = module.types.named_struct(&struct_name);
-    match structty.as_ref() {
-        Type::NamedStructType { name } => {
-            assert_eq!(name, &struct_name);
-        },
-        ty => panic!(
-            "Expected {} to be a NamedStructType, but got {:?}",
-            struct_name, ty
-        ),
+    // LLVM 15 has no need for the SomeOpaqueStruct due to opaque pointer types
+    #[cfg(feature = "llvm-14-or-lower")]
+    {
+        let struct_name: String = "struct.SomeOpaqueStruct".into();
+        let structty = module.types.named_struct(&struct_name);
+        match structty.as_ref() {
+            Type::NamedStructType { name } => {
+                assert_eq!(name, &struct_name);
+            },
+            ty => panic!(
+                "Expected {} to be a NamedStructType, but got {:?}",
+                struct_name, ty
+            ),
+        }
+        match module.types.named_struct_def(&struct_name) {
+            None => panic!(
+                "Failed to find {} with module.types.named_struct_def(); have names {:?}",
+                struct_name,
+                module.types.all_struct_names().collect::<Vec<_>>()
+            ),
+            Some(NamedStructDef::Opaque) => (),
+            Some(NamedStructDef::Defined(def)) => panic!(
+                "{} should be an opaque type; got def {:?}",
+                struct_name, def
+            ),
+        }
     }
-    match module.types.named_struct_def(&struct_name) {
-        None => panic!(
-            "Failed to find {} with module.types.named_struct_def(); have names {:?}",
-            struct_name,
-            module.types.all_struct_names().collect::<Vec<_>>()
-        ),
-        Some(NamedStructDef::Opaque) => (),
-        Some(NamedStructDef::Defined(def)) => panic!(
-            "{} should be an opaque type; got def {:?}",
-            struct_name, def
-        ),
-    }
+
     let func = module
         .get_func_by_name("takes_opaque_struct")
         .expect("Failed to find function");
@@ -1865,7 +2012,7 @@ fn simple_linked_list() {
     match paramty.as_ref() {
         Type::PointerType { pointee_type, .. } => match pointee_type.as_ref() {
             Type::NamedStructType { name } => {
-                assert_eq!(name, &struct_name);
+                assert_eq!(name, "struct.SomeOpaqueStruct");
             },
             ty => panic!(
                 "Expected parameter type to be pointer to named struct, but got pointer to {:?}",
@@ -1940,10 +2087,11 @@ fn simple_linked_list_g() {
         debugloc.directory.as_ref().map(|s| s.as_str()),
         Some(debug_directory)
     );
-    assert_eq!(
-        &func.basic_blocks[0].instrs[9].to_string(),
-        "%8 = getelementptr inbounds %struct.SimpleLinkedList* %3, i32 0, i32 0 (with debugloc)",
-    );
+    #[cfg(feature = "llvm-14-or-lower")]
+    let expected_fmt = "%8 = getelementptr inbounds %struct.SimpleLinkedList* %3, i32 0, i32 0 (with debugloc)";
+    #[cfg(feature = "llvm-15-or-greater")]
+    let expected_fmt = "%8 = getelementptr inbounds ptr %3, i32 0, i32 0 (with debugloc)";
+    assert_eq!(&func.basic_blocks[0].instrs[9].to_string(), expected_fmt);
 }
 
 #[test]
