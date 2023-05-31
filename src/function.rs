@@ -324,7 +324,10 @@ impl FunctionDeclaration {
     /// `local_ctr` after parameters are processed (which is needed by
     /// `Function`).
     fn from_llvm_ref_internal(func: LLVMValueRef, ctx: &mut ModuleContext) -> (Self, usize) {
+        #[cfg(feature = "llvm-14-or-lower")]
         let functy = unsafe { LLVMGetElementType(LLVMTypeOf(func)) }; // for some reason the TypeOf a function is <pointer to function> and not just <function> so we have to deref it like this
+        #[cfg(feature = "llvm-15-or-greater")]
+        let functy = unsafe { LLVMGlobalGetValueType(func) };
         let mut local_ctr = 0; // this counter is used to number parameters, variables, and basic blocks that aren't named
         let decl = Self {
             name: unsafe { get_value_name(func) },

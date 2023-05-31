@@ -362,6 +362,8 @@ impl Display for IndirectBr {
 #[derive(PartialEq, Clone, Debug)]
 pub struct Invoke {
     pub function: Either<InlineAssembly, Operand>,
+    #[cfg(feature = "llvm-15-or-greater")]
+    pub function_ty: TypeRef,
     pub arguments: Vec<(Operand, Vec<ParameterAttribute>)>,
     pub return_attributes: Vec<ParameterAttribute>,
     pub result: Name, // The name of the variable that will get the result of the call (if the callee returns with 'ret')
@@ -377,6 +379,7 @@ pub struct Invoke {
 impl_term!(Invoke, Invoke);
 impl_hasresult!(Invoke);
 
+#[cfg(feature = "llvm-14-or-lower")]
 impl Typed for Invoke {
     fn get_type(&self, types: &Types) -> TypeRef {
         match types.type_of(&self.function).as_ref() {
@@ -385,6 +388,15 @@ impl Typed for Invoke {
                 ty => panic!("Expected Invoke's function argument to be of type pointer-to-function, got pointer-to-{:?}", ty),
             },
             ty => panic!("Expected Invoke's function argument to be of type pointer-to-function, got {:?}", ty),
+        }
+    }
+}
+#[cfg(feature = "llvm-15-or-greater")]
+impl Typed for Invoke {
+    fn get_type(&self, _types: &Types) -> TypeRef {
+        match self.function_ty.as_ref() {
+            Type::FuncType { result_type, .. } => result_type.clone(),
+            ty => panic!("Expected Invoke.function_ty to be a FuncType, got {:?}", ty),
         }
     }
 }
@@ -853,6 +865,8 @@ impl Invoke {
         let callinfo = CallInfo::from_llvm_ref(term, ctx, func_ctx);
         Self {
             function: callinfo.function,
+            #[cfg(feature = "llvm-15-or-greater")]
+            function_ty: callinfo.function_ty,
             arguments: callinfo.arguments,
             return_attributes: callinfo.return_attributes,
             result: Name::name_or_num(unsafe { get_value_name(term) }, &mut func_ctx.ctr),

@@ -58,8 +58,9 @@ fn callbr_parsing() {
         .unwrap_or_else(|_| panic!("Expected a callbr, got {:?}", &bb.term));
     assert!(callbr.function.is_left());
     assert_eq!(callbr.return_label, Name::from("normal"));
-    assert_eq!(
-        &format!("{}", callbr),
-        "%0 = callbr <inline assembly>(i32 %x, blockaddr) to label %normal",
-    )
+    #[cfg(feature = "llvm-14-or-lower")]
+    let expected_fmt = "%0 = callbr <inline assembly>(i32 %x, blockaddr) to label %normal";
+    #[cfg(feature = "llvm-15-or-greater")]
+    let expected_fmt = "%0 = callbr <inline assembly>(i32 %x) to label %normal";
+    assert_eq!(&format!("{}", callbr), expected_fmt);
 }

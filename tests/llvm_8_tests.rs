@@ -203,6 +203,7 @@ llvm_test!("tests/llvm_bc/weak-macho-3.5.ll.bc", weak_macho);
 
 use either::Either;
 use llvm_ir::instruction::{Atomicity, MemoryOrdering, SynchronizationScope};
+#[cfg(feature = "llvm-14-or-lower")]
 use llvm_ir::types::NamedStructDef;
 use llvm_ir::*;
 use std::convert::TryInto;
@@ -246,6 +247,7 @@ fn DILocation_implicit_code_extra_checks() {
     assert_eq!(invoke.arguments.len(), 2);
     if let Operand::LocalOperand { name, ty } = &invoke.arguments[0].0 {
         assert_eq!(name, &Name::from("a"));
+        #[cfg(feature = "llvm-14-or-lower")]
         if let Type::PointerType { pointee_type, .. } = ty.as_ref() {
             if let Type::NamedStructType { name } = pointee_type.as_ref() {
                 match module.types.named_struct_def(name) {
@@ -266,6 +268,8 @@ fn DILocation_implicit_code_extra_checks() {
                 ty.as_ref()
             );
         }
+        #[cfg(feature = "llvm-15-or-greater")]
+        assert!(matches!(ty.as_ref(), Type::PointerType { .. }));
     } else {
         panic!(
             "Expected invoke.arguments[0].0 to be a local operand; instead it was {:?}",
@@ -279,15 +283,12 @@ fn DILocation_implicit_code_extra_checks() {
     assert_eq!(invoke.return_label, Name::from("invoke.cont"));
     assert_eq!(invoke.exception_label, Name::from("lpad"));
     #[cfg(feature = "llvm-8-or-lower")]
-    assert_eq!(
-        &format!("{}", invoke),
-        "%0 = invoke @_ZN1A3fooEi(%struct.A* %a, i32 0) to label %invoke.cont unwind label %lpad",
-    );
-    #[cfg(feature = "llvm-9-or-greater")]
-    assert_eq!(
-        &format!("{}", invoke),
-        "%0 = invoke @_ZN1A3fooEi(%struct.A* %a, i32 0) to label %invoke.cont unwind label %lpad (with debugloc)",
-    );
+    let expected_fmt = "%0 = invoke @_ZN1A3fooEi(%struct.A* %a, i32 0) to label %invoke.cont unwind label %lpad";
+    #[cfg(all(feature = "llvm-9-or-greater", feature = "llvm-14-or-lower"))]
+    let expected_fmt = "%0 = invoke @_ZN1A3fooEi(%struct.A* %a, i32 0) to label %invoke.cont unwind label %lpad (with debugloc)";
+    #[cfg(feature = "llvm-15-or-greater")]
+    let expected_fmt = "%0 = invoke @_ZN1A3fooEi(ptr %a, i32 0) to label %invoke.cont unwind label %lpad (with debugloc)";
+    assert_eq!(&format!("{}", invoke), expected_fmt);
 
     // For the rest of the function, our numbered variables are one-off the
     // numbers in the .ll file in the LLVM repo.
@@ -308,7 +309,10 @@ fn DILocation_implicit_code_extra_checks() {
         .unwrap_or_else(|_| panic!("Expected a landingpad, got {:?}", &lpad.instrs[0]));
     let expected_landingpad_resultty = module.types.struct_of(
         vec![
+            #[cfg(feature = "llvm-14-or-lower")]
             module.types.pointer_to(module.types.i8()),
+            #[cfg(feature = "llvm-15-or-greater")]
+            module.types.pointer(),
             module.types.i32(),
         ],
         false,
@@ -318,12 +322,12 @@ fn DILocation_implicit_code_extra_checks() {
     assert_eq!(landingpad.cleanup, false);
     assert_eq!(landingpad.dest, Name::Number(1));
     #[cfg(feature = "llvm-8-or-lower")]
-    assert_eq!(&format!("{}", landingpad), "%1 = landingpad { i8*, i32 }");
-    #[cfg(feature = "llvm-9-or-greater")]
-    assert_eq!(
-        &format!("{}", landingpad),
-        "%1 = landingpad { i8*, i32 } (with debugloc)"
-    );
+    let expected_fmt = "%1 = landingpad { i8*, i32 }";
+    #[cfg(all(feature = "llvm-9-or-greater", feature = "llvm-14-or-lower"))]
+    let expected_fmt = "%1 = landingpad { i8*, i32 } (with debugloc)";
+    #[cfg(feature = "llvm-15-or-greater")]
+    let expected_fmt = "%1 = landingpad { ptr, i32 } (with debugloc)";
+    assert_eq!(&format!("{}", landingpad), expected_fmt);
     let eval: &instruction::ExtractValue = &lpad.instrs[1]
         .clone()
         .try_into()
@@ -339,12 +343,12 @@ fn DILocation_implicit_code_extra_checks() {
     assert_eq!(eval.indices[0], 0);
     assert_eq!(eval.dest, Name::Number(2));
     #[cfg(feature = "llvm-8-or-lower")]
-    assert_eq!(&format!("{}", eval), "%2 = extractvalue { i8*, i32 } %1, 0");
-    #[cfg(feature = "llvm-9-or-greater")]
-    assert_eq!(
-        &format!("{}", eval),
-        "%2 = extractvalue { i8*, i32 } %1, 0 (with debugloc)"
-    );
+    let expected_fmt = "%2 = extractvalue { i8*, i32 } %1, 0";
+    #[cfg(all(feature = "llvm-9-or-greater", feature = "llvm-14-or-lower"))]
+    let expected_fmt = "%2 = extractvalue { i8*, i32 } %1, 0 (with debugloc)";
+    #[cfg(feature = "llvm-15-or-greater")]
+    let expected_fmt = "%2 = extractvalue { ptr, i32 } %1, 0 (with debugloc)";
+    assert_eq!(&format!("{}", eval), expected_fmt);
 
     // From this point on, our numbers are off by 2 instead of 1, due to
     // numbering the invoke terminator in the 'catch' block.
@@ -361,15 +365,12 @@ fn DILocation_implicit_code_extra_checks() {
     assert_eq!(landingpad.clauses.len(), 0);
     assert_eq!(landingpad.cleanup, true);
     #[cfg(feature = "llvm-8-or-lower")]
-    assert_eq!(
-        &format!("{}", landingpad),
-        "%10 = landingpad { i8*, i32 } cleanup"
-    );
-    #[cfg(feature = "llvm-9-or-greater")]
-    assert_eq!(
-        &format!("{}", landingpad),
-        "%10 = landingpad { i8*, i32 } cleanup (with debugloc)"
-    );
+    let expected_fmt = "%10 = landingpad { i8*, i32 } cleanup";
+    #[cfg(all(feature = "llvm-9-or-greater", feature = "llvm-14-or-lower"))]
+    let expected_fmt = "%10 = landingpad { i8*, i32 } cleanup (with debugloc)";
+    #[cfg(feature = "llvm-15-or-greater")]
+    let expected_fmt = "%10 = landingpad { ptr, i32 } cleanup (with debugloc)";
+    assert_eq!(&format!("{}", landingpad), expected_fmt);
     let eval: &instruction::ExtractValue = &lpad1.instrs[3]
         .clone()
         .try_into()
@@ -385,15 +386,12 @@ fn DILocation_implicit_code_extra_checks() {
     assert_eq!(eval.indices[0], 1);
     assert_eq!(eval.dest, Name::Number(12));
     #[cfg(feature = "llvm-8-or-lower")]
-    assert_eq!(
-        &format!("{}", eval),
-        "%12 = extractvalue { i8*, i32 } %10, 1"
-    );
-    #[cfg(feature = "llvm-9-or-greater")]
-    assert_eq!(
-        &format!("{}", eval),
-        "%12 = extractvalue { i8*, i32 } %10, 1 (with debugloc)"
-    );
+    let expected_fmt = "%12 = extractvalue { i8*, i32 } %10, 1";
+    #[cfg(all(feature = "llvm-9-or-greater", feature = "llvm-14-or-lower"))]
+    let expected_fmt = "%12 = extractvalue { i8*, i32 } %10, 1 (with debugloc)";
+    #[cfg(feature = "llvm-15-or-greater")]
+    let expected_fmt = "%12 = extractvalue { ptr, i32 } %10, 1 (with debugloc)";
+    assert_eq!(&format!("{}", eval), expected_fmt);
 
     let trycont = func
         .get_bb_by_name(&Name::from("try.cont"))
@@ -425,22 +423,22 @@ fn DILocation_implicit_code_extra_checks() {
         ival.element,
         Operand::LocalOperand {
             name: Name::from("exn4"),
-            ty: module.types.pointer_to(module.types.i8())
+            #[cfg(feature = "llvm-14-or-lower")]
+            ty: module.types.pointer_to(module.types.i8()),
+            #[cfg(feature = "llvm-15-or-greater")]
+            ty: module.types.pointer(),
         }
     );
     assert_eq!(ival.indices.len(), 1);
     assert_eq!(ival.indices[0], 0);
     assert_eq!(ival.dest, Name::from("lpad.val"));
     #[cfg(feature = "llvm-8-or-lower")]
-    assert_eq!(
-        &format!("{}", ival),
-        "%lpad.val = insertvalue { i8*, i32 } undef, i8* %exn4, 0"
-    );
-    #[cfg(feature = "llvm-9-or-greater")]
-    assert_eq!(
-        &format!("{}", ival),
-        "%lpad.val = insertvalue { i8*, i32 } undef, i8* %exn4, 0 (with debugloc)"
-    );
+    let expected_fmt = "%lpad.val = insertvalue { i8*, i32 } undef, i8* %exn4, 0";
+    #[cfg(all(feature = "llvm-9-or-greater", feature = "llvm-14-or-lower"))]
+    let expected_fmt = "%lpad.val = insertvalue { i8*, i32 } undef, i8* %exn4, 0 (with debugloc)";
+    #[cfg(feature = "llvm-15-or-greater")]
+    let expected_fmt = "%lpad.val = insertvalue { ptr, i32 } undef, ptr %exn4, 0 (with debugloc)";
+    assert_eq!(&format!("{}", ival), expected_fmt);
     let ival2: &instruction::InsertValue = &ehresume.instrs[3]
         .clone()
         .try_into()
@@ -463,15 +461,12 @@ fn DILocation_implicit_code_extra_checks() {
     assert_eq!(ival2.indices[0], 1);
     assert_eq!(ival2.dest, Name::from("lpad.val6"));
     #[cfg(feature = "llvm-8-or-lower")]
-    assert_eq!(
-        &format!("{}", ival2),
-        "%lpad.val6 = insertvalue { i8*, i32 } %lpad.val, i32 %sel5, 1"
-    );
-    #[cfg(feature = "llvm-9-or-greater")]
-    assert_eq!(
-        &format!("{}", ival2),
-        "%lpad.val6 = insertvalue { i8*, i32 } %lpad.val, i32 %sel5, 1 (with debugloc)"
-    );
+    let expected_fmt = "%lpad.val6 = insertvalue { i8*, i32 } %lpad.val, i32 %sel5, 1";
+    #[cfg(all(feature = "llvm-9-or-greater", feature = "llvm-14-or-lower"))]
+    let expected_fmt = "%lpad.val6 = insertvalue { i8*, i32 } %lpad.val, i32 %sel5, 1 (with debugloc)";
+    #[cfg(feature = "llvm-15-or-greater")]
+    let expected_fmt = "%lpad.val6 = insertvalue { ptr, i32 } %lpad.val, i32 %sel5, 1 (with debugloc)";
+    assert_eq!(&format!("{}", ival2), expected_fmt);
     let resume: &terminator::Resume = &ehresume
         .term
         .clone()
@@ -485,12 +480,12 @@ fn DILocation_implicit_code_extra_checks() {
         }
     );
     #[cfg(feature = "llvm-8-or-lower")]
-    assert_eq!(&format!("{}", resume), "resume { i8*, i32 } %lpad.val6");
-    #[cfg(feature = "llvm-9-or-greater")]
-    assert_eq!(
-        &format!("{}", resume),
-        "resume { i8*, i32 } %lpad.val6 (with debugloc)"
-    );
+    let expected_fmt = "resume { i8*, i32 } %lpad.val6";
+    #[cfg(all(feature = "llvm-9-or-greater", feature = "llvm-14-or-lower"))]
+    let expected_fmt = "resume { i8*, i32 } %lpad.val6 (with debugloc)";
+    #[cfg(feature = "llvm-15-or-greater")]
+    let expected_fmt = "resume { ptr, i32 } %lpad.val6 (with debugloc)";
+    assert_eq!(&format!("{}", resume), expected_fmt);
 }
 
 #[test]
@@ -510,7 +505,10 @@ fn atomics() {
         cmpxchg.address,
         Operand::LocalOperand {
             name: Name::from("word"),
-            ty: module.types.pointer_to(module.types.i32())
+            #[cfg(feature = "llvm-14-or-lower")]
+            ty: module.types.pointer_to(module.types.i32()),
+            #[cfg(feature = "llvm-15-or-greater")]
+            ty: module.types.pointer(),
         }
     );
     assert_eq!(
@@ -531,10 +529,11 @@ fn atomics() {
         }
     );
     assert_eq!(cmpxchg.failure_memory_ordering, MemoryOrdering::Monotonic);
-    assert_eq!(
-        &format!("{}", cmpxchg),
-        "%cmpxchg.0 = cmpxchg i32* %word, i32 0, i32 4 monotonic monotonic"
-    );
+    #[cfg(feature = "llvm-14-or-lower")]
+    let expected_fmt = "%cmpxchg.0 = cmpxchg i32* %word, i32 0, i32 4 monotonic monotonic";
+    #[cfg(feature = "llvm-15-or-greater")]
+    let expected_fmt = "%cmpxchg.0 = cmpxchg ptr %word, i32 0, i32 4 monotonic monotonic";
+    assert_eq!(&format!("{}", cmpxchg), expected_fmt);
     let atomicrmw: &instruction::AtomicRMW = &bb.instrs[8]
         .clone()
         .try_into()
@@ -543,7 +542,10 @@ fn atomics() {
         atomicrmw.address,
         Operand::LocalOperand {
             name: Name::from("word"),
-            ty: module.types.pointer_to(module.types.i32())
+            #[cfg(feature = "llvm-14-or-lower")]
+            ty: module.types.pointer_to(module.types.i32()),
+            #[cfg(feature = "llvm-15-or-greater")]
+            ty: module.types.pointer(),
         }
     );
     assert_eq!(
@@ -556,13 +558,10 @@ fn atomics() {
     assert_eq!(atomicrmw.dest, Name::from("atomicrmw.xchg"));
     assert_eq!(module.type_of(atomicrmw), module.types.i32());
     #[cfg(feature = "llvm-9-or-lower")]
-    assert_eq!(
-        &format!("{}", atomicrmw),
-        "%atomicrmw.xchg = atomicrmw i32* %word, i32 12 not_atomic"
-    ); // I'm not sure why it's not_atomic for LLVM 9 and lower, but monotonic for LLVM 10+
-    #[cfg(feature = "llvm-10-or-greater")]
-    assert_eq!(
-        &format!("{}", atomicrmw),
-        "%atomicrmw.xchg = atomicrmw xchg i32* %word, i32 12 monotonic"
-    );
+    let expected_fmt = "%atomicrmw.xchg = atomicrmw i32* %word, i32 12 not_atomic";
+    #[cfg(all(feature = "llvm-10-or-greater", feature = "llvm-14-or-lower"))]
+    let expected_fmt = "%atomicrmw.xchg = atomicrmw xchg i32* %word, i32 12 monotonic"; // I'm not sure why it's not_atomic for LLVM 9 and lower, but monotonic for LLVM 10+
+    #[cfg(feature = "llvm-15-or-greater")]
+    let expected_fmt = "%atomicrmw.xchg = atomicrmw xchg ptr %word, i32 12 monotonic"; // I'm not sure why it's not_atomic for LLVM 9 and lower, but monotonic for LLVM 10+
+    assert_eq!(&format!("{}", atomicrmw), expected_fmt);
 }

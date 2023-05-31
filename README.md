@@ -37,11 +37,11 @@ add it as a dependency in your `Cargo.toml`, selecting the feature corresponding
 to the LLVM version you want:
 ```toml
 [dependencies]
-llvm-ir = { version = "0.9.0", features = ["llvm-14"] }
+llvm-ir = { version = "0.9.0", features = ["llvm-15"] }
 ```
 
 Currently, the supported LLVM versions are `llvm-8`, `llvm-9`, `llvm-10`,
-`llvm-11`, `llvm-12`, `llvm-13`, and `llvm-14`.
+`llvm-11`, `llvm-12`, `llvm-13`, `llvm-14`, and `llvm-15`.
 
 Then, the easiest way to get started is to parse some existing LLVM IR into
 this crate's data structures.
@@ -82,8 +82,8 @@ using.
 ## Compatibility
 Starting with `llvm-ir` 0.7.0, LLVM versions are selected by a Cargo feature
 flag. This means that a single crate version can be used for any supported LLVM
-version. Currently, `llvm-ir` supports LLVM versions 8 through 14, selected by
-feature flags `llvm-8` through `llvm-14`.
+version. Currently, `llvm-ir` supports LLVM versions 8 through 15, selected by
+feature flags `llvm-8` through `llvm-15`.
 
 `llvm-ir` works on stable Rust, and requires Rust 1.45+.
 
@@ -136,7 +136,7 @@ but not to query the values of these flags on existing instructions.
 - contents of inline assembly functions
 - information about the clauses in the variadic `LandingPad` instruction
 - information about the operands of a `BlockAddress` constant expression
-- the ["prefix data"](https://releases.llvm.org/14.0.0/docs/LangRef.html#prefix-data)
+- the ["prefix data"](https://releases.llvm.org/15.0.0/docs/LangRef.html#prefix-data)
 associated with a function
 - the values of constant integers which are larger than 64 bits (and don't
 fit in 64 bits) -- see [#5](https://github.com/cdisselkoen/llvm-ir/issues/5)

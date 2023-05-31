@@ -16,10 +16,15 @@ pub enum Type {
     /// See [LLVM 14 docs on Integer Type](https://releases.llvm.org/14.0.0/docs/LangRef.html#integer-type)
     IntegerType { bits: u32 },
     /// See [LLVM 14 docs on Pointer Type](https://releases.llvm.org/14.0.0/docs/LangRef.html#pointer-type)
+    #[cfg(feature = "llvm-14-or-lower")]
     PointerType {
         pointee_type: TypeRef,
         addr_space: AddrSpace,
     },
+    /// See [LLVM 15 docs on Pointer Type](https://releases.llvm.org/15.0.0/docs/LangRef.html#pointer-type)
+    /// and [this documentation on Opaque Pointers, introduced in LLVM 15](https://releases.llvm.org/15.0.0/docs/OpaquePointers.html)
+    #[cfg(feature = "llvm-15-or-greater")]
+    PointerType { addr_space: AddrSpace },
     /// See [LLVM 14 docs on Floating-Point Types](https://releases.llvm.org/14.0.0/docs/LangRef.html#floating-point-types)
     FPType(FPType),
     /// See [LLVM 14 docs on Function Type](https://releases.llvm.org/14.0.0/docs/LangRef.html#function-type)
@@ -77,7 +82,10 @@ impl Display for Type {
         match self {
             Type::VoidType => write!(f, "void"),
             Type::IntegerType { bits } => write!(f, "i{}", bits),
+            #[cfg(feature = "llvm-14-or-lower")]
             Type::PointerType { pointee_type, .. } => write!(f, "{}*", pointee_type),
+            #[cfg(feature = "llvm-15-or-greater")]
+            Type::PointerType { .. } => write!(f, "ptr"),
             Type::FPType(fpt) => write!(f, "{}", fpt),
             Type::FuncType {
                 result_type,
@@ -268,7 +276,11 @@ pub(crate) struct TypesBuilder {
     /// Map of integer size to `Type::IntegerType` of that size
     int_types: TypeCache<u32>,
     /// Map of (pointee type, address space) to the corresponding `Type::PointerType`
+    #[cfg(feature = "llvm-14-or-lower")]
     pointer_types: TypeCache<(TypeRef, AddrSpace)>,
+    /// Map of address space to the corresponding `Type::PointerType`
+    #[cfg(feature = "llvm-15-or-greater")]
+    pointer_types: TypeCache<AddrSpace>,
     /// Map of `FPType` to the corresponding `Type::FPType`
     fp_types: TypeCache<FPType>,
     /// Map of `(result_type, param_types, is_var_arg)` to the corresponding `Type::FunctionType`
@@ -387,11 +399,18 @@ impl TypesBuilder {
     }
 
     /// Get a pointer type in the default address space (`0`)
+    #[cfg(feature = "llvm-14-or-lower")]
     pub fn pointer_to(&mut self, pointee_type: TypeRef) -> TypeRef {
         self.pointer_in_addr_space(pointee_type, 0) // default to address space 0
     }
+    /// Get the pointer type for the default address space (`0`)
+    #[cfg(feature = "llvm-15-or-greater")]
+    pub fn pointer(&mut self) -> TypeRef {
+        self.pointer_in_addr_space(0) // default to address space 0
+    }
 
     /// Get a pointer in the specified address space
+    #[cfg(feature = "llvm-14-or-lower")]
     pub fn pointer_in_addr_space(
         &mut self,
         pointee_type: TypeRef,
@@ -402,6 +421,12 @@ impl TypesBuilder {
                 pointee_type,
                 addr_space,
             })
+    }
+    /// Get a pointer in the specified address space
+    #[cfg(feature = "llvm-15-or-greater")]
+    pub fn pointer_in_addr_space(&mut self, addr_space: AddrSpace) -> TypeRef {
+        self.pointer_types
+            .lookup_or_insert(addr_space, || Type::PointerType { addr_space })
     }
 
     /// Get a floating-point type
@@ -574,7 +599,11 @@ pub struct Types {
     /// Map of integer size to `Type::IntegerType` of that size
     int_types: TypeCache<u32>,
     /// Map of (pointee type, address space) to the corresponding `Type::PointerType`
+    #[cfg(feature = "llvm-14-or-lower")]
     pointer_types: TypeCache<(TypeRef, AddrSpace)>,
+    /// Map of address space to the corresponding `Type::PointerType`
+    #[cfg(feature = "llvm-15-or-greater")]
+    pointer_types: TypeCache<AddrSpace>,
     /// Map of `FPType` to the corresponding `Type::FPType`
     fp_types: TypeCache<FPType>,
     /// Map of `(result_type, param_types, is_var_arg)` to the corresponding `Type::FunctionType`
@@ -647,11 +676,18 @@ impl Types {
     }
 
     /// Get a pointer type in the default address space (`0`)
+    #[cfg(feature = "llvm-14-or-lower")]
     pub fn pointer_to(&self, pointee_type: TypeRef) -> TypeRef {
         self.pointer_in_addr_space(pointee_type, 0)
     }
+    /// Get the pointer type for the default address space (`0`)
+    #[cfg(feature = "llvm-15-or-greater")]
+    pub fn pointer(&self) -> TypeRef {
+        self.pointer_in_addr_space(0)
+    }
 
     /// Get a pointer type in the specified address space
+    #[cfg(feature = "llvm-14-or-lower")]
     pub fn pointer_in_addr_space(&self, pointee_type: TypeRef, addr_space: AddrSpace) -> TypeRef {
         self.pointer_types
             .lookup(&(pointee_type.clone(), addr_space))
@@ -661,6 +697,13 @@ impl Types {
                     addr_space,
                 })
             })
+    }
+    /// Get a pointer type in the specified address space
+    #[cfg(feature = "llvm-15-or-greater")]
+    pub fn pointer_in_addr_space(&self, addr_space: AddrSpace) -> TypeRef {
+        self.pointer_types
+            .lookup(&addr_space)
+            .unwrap_or_else(|| TypeRef::new(Type::PointerType { addr_space }))
     }
 
     /// Get a floating-point type
@@ -826,8 +869,13 @@ impl Types {
         match ty {
             Type::VoidType => self.void(),
             Type::IntegerType{ bits } => self.int(*bits),
+            #[cfg(feature = "llvm-14-or-lower")]
             Type::PointerType { pointee_type, addr_space } => {
                 self.pointer_in_addr_space(pointee_type.clone(), *addr_space)
+            },
+            #[cfg(feature = "llvm-15-or-greater")]
+            Type::PointerType { addr_space } => {
+                self.pointer_in_addr_space(*addr_space)
             },
             Type::FPType(fpt) => self.fp(*fpt),
             Type::FuncType { result_type, param_types, is_var_arg } => {
@@ -930,9 +978,14 @@ impl TypesBuilder {
         match kind {
             LLVMTypeKind::LLVMVoidTypeKind => self.void(),
             LLVMTypeKind::LLVMIntegerTypeKind => self.int(unsafe { LLVMGetIntTypeWidth(ty) }),
+            #[cfg(feature = "llvm-14-or-lower")]
             LLVMTypeKind::LLVMPointerTypeKind => {
                 let pointee_type = self.type_from_llvm_ref(unsafe { LLVMGetElementType(ty) });
                 self.pointer_in_addr_space(pointee_type, unsafe { LLVMGetPointerAddressSpace(ty) })
+            },
+            #[cfg(feature = "llvm-15-or-greater")]
+            LLVMTypeKind::LLVMPointerTypeKind => {
+                self.pointer_in_addr_space(unsafe { LLVMGetPointerAddressSpace(ty) })
             },
             LLVMTypeKind::LLVMArrayTypeKind => {
                 let element_type = self.type_from_llvm_ref(unsafe { LLVMGetElementType(ty) });

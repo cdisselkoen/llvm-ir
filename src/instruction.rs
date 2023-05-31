@@ -5,7 +5,9 @@ use crate::function::{CallingConvention, FunctionAttribute, ParameterAttribute};
 use crate::name::Name;
 use crate::operand::Operand;
 use crate::predicates::*;
-use crate::types::{NamedStructDef, Type, TypeRef, Typed, Types};
+#[cfg(feature = "llvm-14-or-lower")]
+use crate::types::NamedStructDef;
+use crate::types::{Type, TypeRef, Typed, Types};
 use either::Either;
 use std::convert::TryFrom;
 use std::fmt::{self, Debug, Display};
@@ -1301,15 +1303,22 @@ pub struct Alloca {
 impl_inst!(Alloca, Alloca);
 impl_hasresult!(Alloca);
 
+#[cfg(feature = "llvm-14-or-lower")]
 impl Typed for Alloca {
     fn get_type(&self, types: &Types) -> TypeRef {
         types.pointer_to(self.allocated_type.clone())
     }
 }
+#[cfg(feature = "llvm-15-or-greater")]
+impl Typed for Alloca {
+    fn get_type(&self, types: &Types) -> TypeRef {
+        types.pointer()
+    }
+}
 
 impl Display for Alloca {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{} = alloca {}", &self.dest, &self.allocated_type,)?;
+        write!(f, "{} = alloca {}", &self.dest, &self.allocated_type)?;
         if let Some(Constant::Int { value: 1, .. }) = self.num_elements.as_constant() {
             // omit num_elements
         } else {
@@ -1330,6 +1339,8 @@ impl Display for Alloca {
 pub struct Load {
     pub address: Operand,
     pub dest: Name,
+    #[cfg(feature = "llvm-15-or-greater")]
+    pub loaded_ty: TypeRef,
     pub volatile: bool,
     pub atomicity: Option<Atomicity>,
     pub alignment: u32,
@@ -1341,6 +1352,7 @@ pub struct Load {
 impl_inst!(Load, Load);
 impl_hasresult!(Load);
 
+#[cfg(feature = "llvm-14-or-lower")]
 impl Typed for Load {
     fn get_type(&self, types: &Types) -> TypeRef {
         match types.type_of(&self.address).as_ref() {
@@ -1349,18 +1361,31 @@ impl Typed for Load {
         }
     }
 }
+#[cfg(feature = "llvm-15-or-greater")]
+impl Typed for Load {
+    fn get_type(&self, _types: &Types) -> TypeRef {
+        self.loaded_ty.clone()
+    }
+}
 
 impl Display for Load {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        // we differ from the LLVM IR text syntax here because we don't include
-        // the destination type (that's a little hard to get for us here, and
-        // it's completely redundant with the address type anyway)
         write!(f, "{} = load ", &self.dest)?;
         if self.atomicity.is_some() {
             write!(f, "atomic ")?;
         }
         if self.volatile {
             write!(f, "volatile ")?;
+        }
+        #[cfg(feature = "llvm-14-or-lower")]
+        {
+            // we differ from the LLVM IR text syntax here because we don't include
+            // the destination type (that's a little hard to get for us here, and
+            // it's completely redundant with the address type anyway)
+        }
+        #[cfg(feature = "llvm-15-or-greater")]
+        {
+            write!(f, "{}, ", &self.loaded_ty)?;
         }
         write!(f, "{}", &self.address)?;
         if let Some(a) = &self.atomicity {
@@ -1516,6 +1541,7 @@ pub struct AtomicRMW {
 impl_inst!(AtomicRMW, AtomicRMW);
 impl_hasresult!(AtomicRMW);
 
+#[cfg(feature = "llvm-14-or-lower")]
 impl Typed for AtomicRMW {
     fn get_type(&self, types: &Types) -> TypeRef {
         match types.type_of(&self.address).as_ref() {
@@ -1525,6 +1551,12 @@ impl Typed for AtomicRMW {
                 ty
             ),
         }
+    }
+}
+#[cfg(feature = "llvm-15-or-greater")]
+impl Typed for AtomicRMW {
+    fn get_type(&self, types: &Types) -> TypeRef {
+        self.value.get_type(types)
     }
 }
 
@@ -1562,12 +1594,20 @@ pub struct GetElementPtr {
 impl_inst!(GetElementPtr, GetElementPtr);
 impl_hasresult!(GetElementPtr);
 
+#[cfg(feature = "llvm-14-or-lower")]
 impl Typed for GetElementPtr {
     fn get_type(&self, types: &Types) -> TypeRef {
         gep_type(types.type_of(&self.address), self.indices.iter(), types)
     }
 }
+#[cfg(feature = "llvm-15-or-greater")]
+impl Typed for GetElementPtr {
+    fn get_type(&self, types: &Types) -> TypeRef {
+        types.pointer()
+    }
+}
 
+#[cfg(feature = "llvm-14-or-lower")]
 fn gep_type<'o>(
     cur_type: TypeRef,
     mut indices: impl Iterator<Item = &'o Operand>,
@@ -2020,6 +2060,8 @@ unop_same_type!(Freeze, "freeze");
 #[derive(PartialEq, Clone, Debug)]
 pub struct Call {
     pub function: Either<InlineAssembly, Operand>,
+    #[cfg(feature = "llvm-15-or-greater")]
+    pub function_ty: TypeRef,
     pub arguments: Vec<(Operand, Vec<ParameterAttribute>)>,
     pub return_attributes: Vec<ParameterAttribute>,
     pub dest: Option<Name>, // will be None if the `function` returns void
@@ -2033,6 +2075,7 @@ pub struct Call {
 
 impl_inst!(Call, Call);
 
+#[cfg(feature = "llvm-14-or-lower")]
 impl Typed for Call {
     fn get_type(&self, types: &Types) -> TypeRef {
         match types.type_of(&self.function).as_ref() {
@@ -2041,6 +2084,15 @@ impl Typed for Call {
                 ty => panic!("Expected Call's function argument to be of type pointer-to-function, got pointer-to-{:?}", ty),
             },
             ty => panic!("Expected Call's function argument to be of type pointer-to-function, got {:?}", ty),
+        }
+    }
+}
+#[cfg(feature = "llvm-15-or-greater")]
+impl Typed for Call {
+    fn get_type(&self, _types: &Types) -> TypeRef {
+        match self.function_ty.as_ref() {
+            Type::FuncType { result_type, .. } => result_type.clone(),
+            ty => panic!("Expected Call.function_ty to be a FuncType, got {:?}", ty),
         }
     }
 }
@@ -2365,6 +2417,10 @@ pub enum RMWBinOp {
     FAdd,
     #[cfg(feature = "llvm-10-or-greater")]
     FSub,
+    #[cfg(feature = "llvm-15-or-greater")]
+    FMax,
+    #[cfg(feature = "llvm-15-or-greater")]
+    FMin,
 }
 
 impl Display for RMWBinOp {
@@ -2385,6 +2441,10 @@ impl Display for RMWBinOp {
             Self::FAdd => write!(f, "fadd"),
             #[cfg(feature = "llvm-10-or-greater")]
             Self::FSub => write!(f, "fsub"),
+            #[cfg(feature = "llvm-15-or-greater")]
+            Self::FMax => write!(f, "fmax"),
+            #[cfg(feature = "llvm-15-or-greater")]
+            Self::FMin => write!(f, "fmin"),
         }
     }
 }
@@ -2788,6 +2848,8 @@ impl Load {
         Self {
             address: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 0) }, ctx, func_ctx),
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
+            #[cfg(feature = "llvm-15-or-greater")]
+            loaded_ty: ctx.types.type_from_llvm_ref(unsafe { LLVMTypeOf(inst) }),
             volatile: unsafe { LLVMGetVolatile(inst) } != 0,
             atomicity: {
                 let ordering = unsafe { LLVMGetOrdering(inst) };
@@ -3071,6 +3133,8 @@ impl Select {
 // just the logic shared by Call and Invoke. Not a public struct, just an implementation convenience.
 pub(crate) struct CallInfo {
     pub function: Either<InlineAssembly, Operand>,
+    #[cfg(feature = "llvm-15-or-greater")]
+    pub function_ty: TypeRef,
     pub arguments: Vec<(Operand, Vec<ParameterAttribute>)>,
     pub return_attributes: Vec<ParameterAttribute>,
     pub function_attributes: Vec<FunctionAttribute>,
@@ -3085,9 +3149,9 @@ impl CallInfo {
         func_ctx: &mut FunctionContext,
     ) -> Self {
         use llvm_sys::{LLVMAttributeFunctionIndex, LLVMAttributeReturnIndex};
+        let called_val = unsafe { LLVMGetCalledValue(inst) };
         Self {
             function: {
-                let called_val = unsafe { LLVMGetCalledValue(inst) };
                 let asm = unsafe { LLVMIsAInlineAsm(called_val) };
                 if !asm.is_null() {
                     Either::Left(InlineAssembly::from_llvm_ref(asm, &mut ctx.types))
@@ -3095,6 +3159,10 @@ impl CallInfo {
                     Either::Right(Operand::from_llvm_ref(called_val, ctx, func_ctx))
                 }
             },
+            #[cfg(feature = "llvm-15-or-greater")]
+            function_ty: ctx
+                .types
+                .type_from_llvm_ref(unsafe { LLVMGetCalledFunctionType(inst) }),
             arguments: {
                 let num_args: u32 = unsafe { LLVMGetNumArgOperands(inst) } as u32;
                 (0 .. num_args) // arguments are (0 .. num_args); other operands (such as the called function) are after that
@@ -3178,6 +3246,8 @@ impl Call {
         let callinfo = CallInfo::from_llvm_ref(inst, ctx, func_ctx);
         Self {
             function: callinfo.function,
+            #[cfg(feature = "llvm-15-or-greater")]
+            function_ty: callinfo.function_ty,
             arguments: callinfo.arguments,
             return_attributes: callinfo.return_attributes,
             dest: if unsafe {
@@ -3338,6 +3408,10 @@ impl RMWBinOp {
             LLVMAtomicRMWBinOp::LLVMAtomicRMWBinOpFAdd => Self::FAdd,
             #[cfg(feature = "llvm-10-or-greater")]
             LLVMAtomicRMWBinOp::LLVMAtomicRMWBinOpFSub => Self::FSub,
+            #[cfg(feature = "llvm-15-or-greater")]
+            LLVMAtomicRMWBinOp::LLVMAtomicRMWBinOpFMax => Self::FMax,
+            #[cfg(feature = "llvm-15-or-greater")]
+            LLVMAtomicRMWBinOp::LLVMAtomicRMWBinOpFMin => Self::FMin,
         }
     }
 }
