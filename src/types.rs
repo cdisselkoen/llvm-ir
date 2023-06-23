@@ -77,7 +77,11 @@ pub enum Type {
     TokenType,
     /// See [LLVM 16 docs on Target Extension Type](https://releases.llvm.org/16.0.0/docs/LangRef.html#target-extension-type)
     #[cfg(feature = "llvm-16-or-greater")]
-    TargetExtType,
+    TargetExtType {
+        name: String,
+        contained_types: Vec<TypeRef>,
+        contained_ints: Vec<u32>,
+    },
 }
 
 impl Display for Type {
@@ -156,7 +160,23 @@ impl Display for Type {
             Type::MetadataType => write!(f, "metadata"),
             Type::LabelType => write!(f, "label"),
             Type::TokenType => write!(f, "token"),
-            Type::TargetExtType => write!(f, "target"),
+            Type::TargetExtType {
+                name,
+                contained_types,
+                contained_ints,
+            } => {
+                // Name, then type parameters first then integer parameters.
+                let members = [name]
+                    .iter()
+                    .map(|name| format!("\"{name}\""))
+                    .chain(contained_types.iter().map(ToString::to_string))
+                    .chain(contained_ints.iter().map(ToString::to_string))
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                write!(f, "target({members})")?;
+
+                Ok(())
+            },
         }
     }
 }
@@ -310,8 +330,9 @@ pub(crate) struct TypesBuilder {
     label_type: TypeRef,
     /// `TypeRef` to `Type::TokenType`
     token_type: TypeRef,
-    /// `TypeRef` to `Type::TargetExtType`
-    target_ext_type: TypeRef,
+    /// Map of `(name, contained_types, contained_ints)` to the corresponding `Type::TargetExtType`
+    #[cfg(feature = "llvm-16-or-greater")]
+    target_ext_types: TypeCache<(String, Vec<TypeRef>, Vec<u32>)>,
     /// internal cache of already-seen `LLVMTypeRef`s so we can quickly produce
     /// the corresponding `TypeRef` without re-parsing the type
     llvm_type_map: HashMap<LLVMTypeRef, TypeRef>,
@@ -336,7 +357,8 @@ impl TypesBuilder {
             metadata_type: TypeRef::new(Type::MetadataType),
             label_type: TypeRef::new(Type::LabelType),
             token_type: TypeRef::new(Type::TokenType),
-            target_ext_type: TypeRef::new(Type::TargetExtType),
+            #[cfg(feature = "llvm-16-or-greater")]
+            target_ext_types: TypeCache::new(),
             llvm_type_map: HashMap::new(),
         }
     }
@@ -362,7 +384,8 @@ impl TypesBuilder {
             metadata_type: self.metadata_type,
             label_type: self.label_type,
             token_type: self.token_type,
-            // target_ext_type: self.target_ext_type,
+            #[cfg(feature = "llvm-16-or-greater")]
+            target_ext_types: self.target_ext_types,
         }
     }
 }
@@ -579,8 +602,25 @@ impl TypesBuilder {
     }
 
     /// Get the target extension type
-    pub fn target_ext_type(&self) -> TypeRef {
-        self.target_ext_type.clone()
+    #[cfg(feature = "llvm-16-or-greater")]
+    pub fn target_ext_type(
+        &mut self,
+        name: String,
+        contained_types: Vec<TypeRef>,
+        contained_ints: Vec<u32>,
+    ) -> TypeRef {
+        self.target_ext_types.lookup_or_insert(
+            (
+                name.clone(),
+                contained_types.clone(),
+                contained_ints.clone(),
+            ),
+            || Type::TargetExtType {
+                name,
+                contained_types,
+                contained_ints,
+            },
+        )
     }
 }
 
@@ -643,9 +683,9 @@ pub struct Types {
     label_type: TypeRef,
     /// `TypeRef` to `Type::TokenType`
     token_type: TypeRef,
-    // TODO: This probably needs to be a TypeCache
-    // /// `TypeRef` to `Type::TargetExtType`
-    // target_ext_type: TypeRef,
+    /// Map of `(name, contained_types, contained_ints)` to the corresponding `Type::TargetExtType`
+    #[cfg(feature = "llvm-16-or-greater")]
+    target_ext_types: TypeCache<(String, Vec<TypeRef>, Vec<u32>)>,
 }
 
 impl Types {
@@ -879,6 +919,30 @@ impl Types {
         self.token_type.clone()
     }
 
+    /// Get the `TypeRef` for target extension type with the given
+    /// name, contained types, and contained ints.
+    #[cfg(feature = "llvm-16-or-greater")]
+    pub fn target_ext_type(
+        &self,
+        name: String,
+        contained_types: Vec<TypeRef>,
+        contained_ints: Vec<u32>,
+    ) -> TypeRef {
+        self.target_ext_types
+            .lookup(&(
+                name.clone(),
+                contained_types.clone(),
+                contained_ints.clone(),
+            ))
+            .unwrap_or_else(|| {
+                TypeRef::new(Type::TargetExtType {
+                    name,
+                    contained_types,
+                    contained_ints,
+                })
+            })
+    }
+
     /// Get a `TypeRef` for the given `Type`
     #[rustfmt::skip] // so we can keep each of the match arms more consistent with each other
     pub fn get_for_type(&self, ty: &Type) -> TypeRef {
@@ -918,7 +982,10 @@ impl Types {
             Type::MetadataType => self.metadata_type(),
             Type::LabelType => self.label_type(),
             Type::TokenType => self.token_type(),
-            Type::TargetExtType => todo!(),
+            #[cfg(feature="llvm-16-or-greater")]
+            Type::TargetExtType { name, contained_types, contained_ints } => {
+                self.target_ext_type(name.clone(), contained_types.clone(), contained_ints.clone())
+            },
         }
     }
 }
@@ -1098,7 +1165,10 @@ impl TypesBuilder {
             LLVMTypeKind::LLVMLabelTypeKind => self.label_type(),
             LLVMTypeKind::LLVMTokenTypeKind => self.token_type(),
             #[cfg(feature = "llvm-16-or-greater")]
-            LLVMTypeKind::LLVMTargetExtTypeKind => self.target_ext_type(),
+            LLVMTypeKind::LLVMTargetExtTypeKind => {
+                todo!()
+                // self.target_ext_type()
+            },
         }
     }
 

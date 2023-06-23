@@ -38,6 +38,8 @@ fn llvm_bc_dir() -> PathBuf {
         Path::new(BC_DIR).join("llvm14")
     } else if cfg!(feature = "llvm-15") {
         Path::new(BC_DIR).join("llvm15")
+    } else if cfg!(feature = "llvm-16") {
+        Path::new(BC_DIR).join("llvm16")
     } else {
         unimplemented!("new llvm version?")
     }
@@ -61,6 +63,8 @@ fn cxx_llvm_bc_dir() -> PathBuf {
         Path::new(BC_DIR).join("cxx-llvm14")
     } else if cfg!(feature = "llvm-15") {
         Path::new(BC_DIR).join("cxx-llvm15")
+    } else if cfg!(feature = "llvm-16") {
+        Path::new(BC_DIR).join("cxx-llvm16")
     } else {
         unimplemented!("new llvm version?")
     }
@@ -761,9 +765,7 @@ fn loopbc() {
         &condbr.to_string(),
         &format!(
             "br i1 {}, label {}, label {}",
-            expected_condition_op,
-            expected_true_dest,
-            expected_false_dest,
+            expected_condition_op, expected_true_dest, expected_false_dest,
         ),
     );
 
@@ -1271,7 +1273,10 @@ fn loopbc() {
     #[cfg(feature = "llvm-14")]
     assert_eq!(&load.to_string(), "%25 = load volatile i32* %24, align 4");
     #[cfg(feature = "llvm-15-or-greater")]
-    assert_eq!(&load.to_string(), "%23 = load volatile i32, ptr %22, align 4");
+    assert_eq!(
+        &load.to_string(),
+        "%23 = load volatile i32, ptr %22, align 4"
+    );
     let ret: &Terminator = if cfg!(feature = "llvm-9-or-lower") {
         &bbs[5].term
     } else if cfg!(feature = "llvm-10") || cfg!(feature = "llvm-11") {
@@ -1418,10 +1423,7 @@ fn switchbc() {
     let param_0_expected_ty = module.types.pointer_to(module.types.i8());
     #[cfg(feature = "llvm-15-or-greater")]
     let param_0_expected_ty = module.types.pointer();
-    assert_eq!(
-        module.type_of(&decl.parameters[0]),
-        param_0_expected_ty,
-    );
+    assert_eq!(module.type_of(&decl.parameters[0]), param_0_expected_ty,);
 }
 
 #[test]
@@ -1877,10 +1879,7 @@ fn rustbcg() {
     let expected_fmt = "store i64 0, i64* %sum, align 8 (with debugloc)";
     #[cfg(feature = "llvm-15-or-greater")]
     let expected_fmt = "store i64 0, ptr %sum, align 8 (with debugloc)";
-    assert_eq!(
-        &startbb.instrs[31].to_string(),
-        expected_fmt
-    );
+    assert_eq!(&startbb.instrs[31].to_string(), expected_fmt);
     let call_debugloc = startbb.instrs[33]
         .get_debug_loc()
         .as_ref()
@@ -2088,7 +2087,8 @@ fn simple_linked_list_g() {
         Some(debug_directory)
     );
     #[cfg(feature = "llvm-14-or-lower")]
-    let expected_fmt = "%8 = getelementptr inbounds %struct.SimpleLinkedList* %3, i32 0, i32 0 (with debugloc)";
+    let expected_fmt =
+        "%8 = getelementptr inbounds %struct.SimpleLinkedList* %3, i32 0, i32 0 (with debugloc)";
     #[cfg(feature = "llvm-15-or-greater")]
     let expected_fmt = "%8 = getelementptr inbounds ptr %3, i32 0, i32 0 (with debugloc)";
     assert_eq!(&func.basic_blocks[0].instrs[9].to_string(), expected_fmt);
