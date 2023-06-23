@@ -75,6 +75,9 @@ pub enum Type {
     LabelType,
     /// See [LLVM 14 docs on Token Type](https://releases.llvm.org/14.0.0/docs/LangRef.html#token-type)
     TokenType,
+    /// See [LLVM 16 docs on Target Extension Type](https://releases.llvm.org/16.0.0/docs/LangRef.html#target-extension-type)
+    #[cfg(feature = "llvm-16-or-greater")]
+    TargetExtType,
 }
 
 impl Display for Type {
@@ -153,6 +156,7 @@ impl Display for Type {
             Type::MetadataType => write!(f, "metadata"),
             Type::LabelType => write!(f, "label"),
             Type::TokenType => write!(f, "token"),
+            Type::TargetExtType => write!(f, "target"),
         }
     }
 }
@@ -306,6 +310,8 @@ pub(crate) struct TypesBuilder {
     label_type: TypeRef,
     /// `TypeRef` to `Type::TokenType`
     token_type: TypeRef,
+    /// `TypeRef` to `Type::TargetExtType`
+    target_ext_type: TypeRef,
     /// internal cache of already-seen `LLVMTypeRef`s so we can quickly produce
     /// the corresponding `TypeRef` without re-parsing the type
     llvm_type_map: HashMap<LLVMTypeRef, TypeRef>,
@@ -330,6 +336,7 @@ impl TypesBuilder {
             metadata_type: TypeRef::new(Type::MetadataType),
             label_type: TypeRef::new(Type::LabelType),
             token_type: TypeRef::new(Type::TokenType),
+            target_ext_type: TypeRef::new(Type::TargetExtType),
             llvm_type_map: HashMap::new(),
         }
     }
@@ -355,6 +362,7 @@ impl TypesBuilder {
             metadata_type: self.metadata_type,
             label_type: self.label_type,
             token_type: self.token_type,
+            // target_ext_type: self.target_ext_type,
         }
     }
 }
@@ -569,6 +577,11 @@ impl TypesBuilder {
     pub fn token_type(&self) -> TypeRef {
         self.token_type.clone()
     }
+
+    /// Get the target extension type
+    pub fn target_ext_type(&self) -> TypeRef {
+        self.target_ext_type.clone()
+    }
 }
 
 #[derive(Clone, Debug, Hash)]
@@ -630,6 +643,9 @@ pub struct Types {
     label_type: TypeRef,
     /// `TypeRef` to `Type::TokenType`
     token_type: TypeRef,
+    // TODO: This probably needs to be a TypeCache
+    // /// `TypeRef` to `Type::TargetExtType`
+    // target_ext_type: TypeRef,
 }
 
 impl Types {
@@ -902,6 +918,7 @@ impl Types {
             Type::MetadataType => self.metadata_type(),
             Type::LabelType => self.label_type(),
             Type::TokenType => self.token_type(),
+            Type::TargetExtType => todo!(),
         }
     }
 }
@@ -1080,6 +1097,8 @@ impl TypesBuilder {
             LLVMTypeKind::LLVMMetadataTypeKind => self.metadata_type(),
             LLVMTypeKind::LLVMLabelTypeKind => self.label_type(),
             LLVMTypeKind::LLVMTokenTypeKind => self.token_type(),
+            #[cfg(feature = "llvm-16-or-greater")]
+            LLVMTypeKind::LLVMTargetExtTypeKind => self.target_ext_type(),
         }
     }
 
