@@ -90,6 +90,15 @@ llvm-13-strict = ["llvm-13", "llvm-sys-130/strict-versioning"]
 llvm-14-strict = ["llvm-14", "llvm-sys-140/strict-versioning"]
 llvm-15-strict = ["llvm-15", "llvm-sys-150/strict-versioning"]
 
+# As with the strict feature above, we cannot enable it globally, as it would
+# activate all the llvm-sys-* dependencies, so have a single feature for each
+# version to enable dynamic linking. We only allow this for llvm-sys versions
+# that have this feature (>=llvm-sys-120).
+llvm-12-dynamic = ["llvm-12", "llvm-sys-120/prefer-dynamic"]
+llvm-13-dynamic = ["llvm-13", "llvm-sys-130/prefer-dynamic"]
+llvm-14-dynamic = ["llvm-14", "llvm-sys-140/prefer-dynamic"]
+llvm-15-dynamic = ["llvm-15", "llvm-sys-150/prefer-dynamic"]
+
 [package.metadata.docs.rs]
 # Generate docs.rs documentation with the llvm-10 feature
 features = ["llvm-10"]
