@@ -1588,6 +1588,8 @@ pub struct GetElementPtr {
     pub in_bounds: bool,
     #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
+    #[cfg(feature = "llvm-14-or-greater")]
+    pub source_element_type: TypeRef
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
@@ -2992,6 +2994,8 @@ impl GetElementPtr {
             in_bounds: unsafe { LLVMIsInBounds(inst) } != 0,
             #[cfg(feature = "llvm-9-or-greater")]
             debugloc: DebugLoc::from_llvm_with_col(inst),
+            #[cfg(feature = "llvm-14-or-greater")]
+            source_element_type: ctx.types.type_from_llvm_ref(unsafe { LLVMGetGEPSourceElementType(inst) }),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
