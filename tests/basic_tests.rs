@@ -134,7 +134,7 @@ fn hellobcg() {
     assert_eq!(&module.name, &path.to_str().unwrap());
     assert_eq!(module.source_file_name, "hello.c");
     let debug_filename = "hello.c";
-    let debug_directory = "/Users/craig/llvm-ir/tests/basic_bc"; // this is what appears in the checked-in copy of hello.bc-g
+    let debug_directory_suffix = "/tests/basic_bc";
 
     let func = &module.functions[0];
     assert_eq!(func.name, "main");
@@ -145,10 +145,7 @@ fn hellobcg() {
     assert_eq!(debugloc.line, 3);
     assert_eq!(debugloc.col, None);
     assert_eq!(debugloc.filename, debug_filename);
-    assert_eq!(
-        debugloc.directory.as_ref().map(|s| s.as_str()),
-        Some(debug_directory)
-    );
+    assert!(debugloc.directory.as_ref().expect("directory should exist").ends_with(debug_directory_suffix));
 
     let bb = &func.basic_blocks[0];
     let ret: &terminator::Ret = &bb
@@ -163,10 +160,7 @@ fn hellobcg() {
     assert_eq!(debugloc.line, 4);
     assert_eq!(debugloc.col, Some(3));
     assert_eq!(debugloc.filename, debug_filename);
-    assert_eq!(
-        debugloc.directory.as_ref().map(|s| s.as_str()),
-        Some(debug_directory)
-    );
+    assert!(debugloc.directory.as_ref().expect("directory should exist").ends_with(debug_directory_suffix));
     assert_eq!(&ret.to_string(), "ret i32 0 (with debugloc)");
 }
 
@@ -1562,7 +1556,7 @@ fn variablesbcg() {
     let path = llvm_bc_dir().join("variables.bc-g");
     let module = Module::from_bc_path(&path).expect("Failed to parse module");
     let debug_filename = "variables.c";
-    let debug_directory = "/Users/craig/llvm-ir/tests/basic_bc"; // this is what appears in the checked-in copy of variables.bc-g
+    let debug_directory_suffix = "/tests/basic_bc";
 
     // really all we want to check is the debugloc of the global variable.
     // other debuginfo stuff is covered in other tests
@@ -1576,10 +1570,7 @@ fn variablesbcg() {
     assert_eq!(debugloc.line, 5);
     assert_eq!(debugloc.col, None); // only `Instruction`s and `Terminator`s get column numbers
     assert_eq!(debugloc.filename, debug_filename);
-    assert_eq!(
-        debugloc.directory.as_ref().map(|s| s.as_str()),
-        Some(debug_directory)
-    );
+    assert!(debugloc.directory.as_ref().expect("directory should exist").ends_with(debug_directory_suffix));
 }
 
 /// this test checks for regression on issue #4
@@ -1846,7 +1837,7 @@ fn rustbcg() {
     let path = rust_bc_dir().join("rust.bc-g");
     let module = Module::from_bc_path(&path).expect("Failed to parse module");
     let debug_filename = "rust.rs";
-    let debug_directory = "/Users/craig/llvm-ir/tests/basic_bc"; // this is what appears in the checked-in copy of rust.bc-g
+    let debug_directory_suffix = "/tests/basic_bc";
 
     let func = module
         .get_func_by_name("_ZN4rust9rust_loop17h3ed0672b8cf44eb1E")
@@ -1858,10 +1849,7 @@ fn rustbcg() {
     assert_eq!(debugloc.line, 3);
     assert_eq!(debugloc.col, None);
     assert_eq!(debugloc.filename, debug_filename);
-    assert_eq!(
-        debugloc.directory.as_ref().map(|s| s.as_str()),
-        Some(debug_directory)
-    );
+    assert!(debugloc.directory.as_ref().expect("directory should exist").ends_with(debug_directory_suffix));
 
     let startbb = func
         .get_bb_by_name(&Name::from("start"))
@@ -1879,10 +1867,7 @@ fn rustbcg() {
     assert_eq!(store_debugloc.line, 4);
     assert_eq!(store_debugloc.col, Some(18));
     assert_eq!(store_debugloc.filename, debug_filename);
-    assert_eq!(
-        debugloc.directory.as_ref().map(|s| s.as_str()),
-        Some(debug_directory)
-    );
+    assert!(debugloc.directory.as_ref().expect("directory should exist").ends_with(debug_directory_suffix));
     #[cfg(feature = "llvm-14-or-lower")]
     let expected_fmt = "store i64 0, i64* %sum, align 8 (with debugloc)";
     #[cfg(feature = "llvm-15-or-greater")]
@@ -1898,10 +1883,7 @@ fn rustbcg() {
     assert_eq!(call_debugloc.line, 5);
     assert_eq!(call_debugloc.col, Some(13));
     assert_eq!(call_debugloc.filename, debug_filename);
-    assert_eq!(
-        debugloc.directory.as_ref().map(|s| s.as_str()),
-        Some(debug_directory)
-    );
+    assert!(debugloc.directory.as_ref().expect("directory should exist").ends_with(debug_directory_suffix));
     #[cfg(feature = "llvm-14-or-lower")]
     let expected_fmt = "%4 = call @_ZN68_$LT$alloc..vec..Vec$LT$T$GT$$u20$as$u20$core..ops..deref..Deref$GT$5deref17h378128d7d9378466E(%alloc::vec::Vec<isize>* %3) (with debugloc)";
     #[cfg(feature = "llvm-15-or-greater")]
@@ -2046,7 +2028,7 @@ fn simple_linked_list_g() {
     let path = llvm_bc_dir().join("linkedlist.bc-g");
     let module = Module::from_bc_path(&path).expect("Failed to parse module");
     let debug_filename = "linkedlist.c";
-    let debug_directory = "/Users/craig/llvm-ir/tests/basic_bc"; // this is what appears in the checked-in copy of linkedlist.bc-g
+    let debug_directory_suffix = "/tests/basic_bc";
 
     let func = module
         .get_func_by_name("simple_linked_list")
@@ -2058,10 +2040,7 @@ fn simple_linked_list_g() {
     assert_eq!(debugloc.line, 8);
     assert_eq!(debugloc.col, None);
     assert_eq!(debugloc.filename, debug_filename);
-    assert_eq!(
-        debugloc.directory.as_ref().map(|s| s.as_str()),
-        Some(debug_directory)
-    );
+    assert!(debugloc.directory.as_ref().expect("directory should exist").ends_with(debug_directory_suffix));
 
     // the first seven instructions shouldn't have debuglocs - they are just setting up the stack frame
     for i in 0..7 {
@@ -2076,10 +2055,7 @@ fn simple_linked_list_g() {
     assert_eq!(debugloc.line, 8);
     assert_eq!(debugloc.col, Some(28));
     assert_eq!(debugloc.filename, debug_filename);
-    assert_eq!(
-        debugloc.directory.as_ref().map(|s| s.as_str()),
-        Some(debug_directory)
-    );
+    assert!(debugloc.directory.as_ref().expect("directory should exist").ends_with(debug_directory_suffix));
     assert_eq!(
         &func.basic_blocks[0].instrs[7].to_string(),
         "call @llvm.dbg.declare(<metadata>, <metadata>, <metadata>) (with debugloc)",
@@ -2093,10 +2069,7 @@ fn simple_linked_list_g() {
     assert_eq!(debugloc.line, 9);
     assert_eq!(debugloc.col, Some(34));
     assert_eq!(debugloc.filename, debug_filename);
-    assert_eq!(
-        debugloc.directory.as_ref().map(|s| s.as_str()),
-        Some(debug_directory)
-    );
+    assert!(debugloc.directory.as_ref().expect("directory should exist").ends_with(debug_directory_suffix));
     #[cfg(feature = "llvm-14-or-lower")]
     let expected_fmt = "%8 = getelementptr inbounds %struct.SimpleLinkedList* %3, i32 0, i32 0 (with debugloc)";
     #[cfg(feature = "llvm-15-or-greater")]
