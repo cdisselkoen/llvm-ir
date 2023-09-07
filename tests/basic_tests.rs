@@ -392,9 +392,9 @@ fn loopbc() {
                 Type::PointerType { .. }
             )); // lifetimestart.function should be a constant function pointer
             #[cfg(feature = "llvm-14-or-lower")]
-            assert_eq!(name.as_str(), "llvm.lifetime.start.p0i8");
+            assert_eq!(*name, Name::from("llvm.lifetime.start.p0i8"));
             #[cfg(feature = "llvm-15-or-greater")]
-            assert_eq!(name.as_str(), "llvm.lifetime.start.p0");
+            assert_eq!(*name, Name::from("llvm.lifetime.start.p0"));
             if let Type::FuncType {
                 result_type,
                 param_types,
@@ -479,9 +479,9 @@ fn loopbc() {
     if let Either::Right(Operand::ConstantOperand(cref)) = &memset.function {
         if let Constant::GlobalReference { ref name, ref ty } = cref.as_ref() {
             #[cfg(feature = "llvm-14-or-lower")]
-            assert_eq!(name.as_str(), "llvm.memset.p0i8.i64");
+            assert_eq!(*name, Name::from("llvm.memset.p0i8.i64"));
             #[cfg(feature = "llvm-15-or-greater")]
-            assert_eq!(name.as_str(), "llvm.memset.p0.i64");
+            assert_eq!(*name, Name::from("llvm.memset.p0.i64"));
             if let Type::FuncType {
                 result_type,
                 param_types,
@@ -1431,7 +1431,7 @@ fn variablesbc() {
     let module = Module::from_bc_path(&path).expect("Failed to parse module");
     assert_eq!(module.global_vars.len(), 1);
     let var = &module.global_vars[0];
-    assert_eq!(var.name, "global");
+    assert_eq!(var.name, Name::from("global"));
     assert_eq!(var.is_constant, false);
     #[cfg(feature = "llvm-14-or-lower")]
     assert_eq!(var.ty, module.types.pointer_to(module.types.i32()));
@@ -1497,7 +1497,7 @@ fn variablesbc() {
     assert_eq!(
         global_load.address,
         Operand::ConstantOperand(ConstantRef::new(Constant::GlobalReference {
-            name: "global".into(),
+            name: Name::from("global"),
             ty: module.types.i32()
         }))
     );
@@ -1516,7 +1516,7 @@ fn variablesbc() {
     assert_eq!(
         global_store.address,
         Operand::ConstantOperand(ConstantRef::new(Constant::GlobalReference {
-            name: "global".into(),
+            name: Name::from("global"),
             ty: module.types.i32()
         }))
     );
@@ -1568,7 +1568,7 @@ fn variablesbcg() {
     // other debuginfo stuff is covered in other tests
     assert_eq!(module.global_vars.len(), 1);
     let var = &module.global_vars[0];
-    assert_eq!(var.name, "global");
+    assert_eq!(var.name, Name::from("global"));
     let debugloc = var
         .get_debug_loc()
         .as_ref()
@@ -1582,7 +1582,7 @@ fn variablesbcg() {
     );
 }
 
-// this test checks for regression on issue #4
+/// this test checks for regression on issue #4
 #[test]
 fn issue4() {
     init_logging();
@@ -1687,6 +1687,16 @@ fn issue4() {
     assert!(first_param_attrs.iter().any(is_sret));
 }
 
+/// This test checks for regression on issue 42
+#[cfg(feature = "llvm-14-or-greater")]
+#[test]
+fn issue42() {
+    init_logging();
+    let path = Path::new(BC_DIR).join("issue-42.ll");
+    let _ = Module::from_ir_path(&path).expect("Failed to parse module");
+    // just check the module parses without errors
+}
+
 #[test]
 fn rustbc() {
     // This tests against the checked-in rust.bc, which was generated from the checked-in rust.rs with rustc 1.39.0
@@ -1776,7 +1786,7 @@ fn rustbc() {
     );
     if let Either::Right(Operand::ConstantOperand(cref)) = &call.function {
         if let Constant::GlobalReference { ref name, ref ty } = cref.as_ref() {
-            assert_eq!(name.as_str(), "_ZN68_$LT$alloc..vec..Vec$LT$T$GT$$u20$as$u20$core..ops..deref..Deref$GT$5deref17h378128d7d9378466E");
+            assert_eq!(name, &Name::from("_ZN68_$LT$alloc..vec..Vec$LT$T$GT$$u20$as$u20$core..ops..deref..Deref$GT$5deref17h378128d7d9378466E"));
             match ty.as_ref() {
                 Type::FuncType {
                     result_type,
