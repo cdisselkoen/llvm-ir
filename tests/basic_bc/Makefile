@@ -66,7 +66,7 @@ all: \
 	$(patsubst %,llvm16/%,$(LLOBJS)) \
 	$(patsubst %,rust/%,$(RUSTOBJS)) \
 	llvm11/float_types.bc llvm12/float_types.bc llvm13/float_types.bc \
-	llvm14/float_types.bc llvm15/float_types.bc \
+	llvm14/float_types.bc llvm15/float_types.bc llvm16/float_types.bc \
 
 .PHONY: cxx
 cxx: \
