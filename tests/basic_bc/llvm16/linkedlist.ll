@@ -1,14 +1,14 @@
 ; ModuleID = 'linkedlist.c'
 source_filename = "linkedlist.c"
-target datalayout = "e-m:o-i64:64-i128:128-n32:64-S128"
-target triple = "arm64-apple-macosx13.0.0"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-linux-gnu"
 
 %struct.SimpleLinkedList = type { i32, ptr }
 %struct.NodeA = type { i32, ptr }
 %struct.NodeB = type { i32, ptr }
 
-; Function Attrs: noinline nounwind optnone ssp uwtable(sync)
-define i32 @simple_linked_list(i32 noundef %0) #0 {
+; Function Attrs: noinline nounwind optnone uwtable
+define dso_local i32 @simple_linked_list(i32 noundef %0) #0 {
   %2 = alloca i32, align 4
   %3 = alloca %struct.SimpleLinkedList, align 8
   %4 = alloca %struct.SimpleLinkedList, align 8
@@ -84,8 +84,8 @@ define i32 @simple_linked_list(i32 noundef %0) #0 {
   ret i32 %56
 }
 
-; Function Attrs: noinline nounwind optnone ssp uwtable(sync)
-define i32 @indirectly_recursive_type(i32 noundef %0) #0 {
+; Function Attrs: noinline nounwind optnone uwtable
+define dso_local i32 @indirectly_recursive_type(i32 noundef %0) #0 {
   %2 = alloca i32, align 4
   %3 = alloca %struct.NodeA, align 8
   %4 = alloca %struct.NodeB, align 8
@@ -133,8 +133,8 @@ define i32 @indirectly_recursive_type(i32 noundef %0) #0 {
   ret i32 %35
 }
 
-; Function Attrs: noinline nounwind optnone ssp uwtable(sync)
-define i32 @takes_opaque_struct(ptr noundef %0) #0 {
+; Function Attrs: noinline nounwind optnone uwtable
+define dso_local i32 @takes_opaque_struct(ptr noundef %0) #0 {
   %2 = alloca ptr, align 8
   store ptr %0, ptr %2, align 8
   %3 = load ptr, ptr %2, align 8
@@ -143,13 +143,14 @@ define i32 @takes_opaque_struct(ptr noundef %0) #0 {
   ret i32 %5
 }
 
-attributes #0 = { noinline nounwind optnone ssp uwtable(sync) "frame-pointer"="non-leaf" "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-cpu"="apple-m1" "target-features"="+aes,+crc,+crypto,+dotprod,+fp-armv8,+fp16fml,+fullfp16,+lse,+neon,+ras,+rcpc,+rdm,+sha2,+sha3,+sm4,+v8.1a,+v8.2a,+v8.3a,+v8.4a,+v8.5a,+v8a,+zcm,+zcz" }
+attributes #0 = { noinline nounwind optnone uwtable "frame-pointer"="all" "min-legal-vector-width"="0" "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-cpu"="x86-64" "target-features"="+cx8,+fxsr,+mmx,+sse,+sse2,+x87" "tune-cpu"="generic" }
 
-!llvm.module.flags = !{!0, !1, !2, !3}
-!llvm.ident = !{!4}
+!llvm.module.flags = !{!0, !1, !2, !3, !4}
+!llvm.ident = !{!5}
 
 !0 = !{i32 1, !"wchar_size", i32 4}
 !1 = !{i32 8, !"PIC Level", i32 2}
-!2 = !{i32 7, !"uwtable", i32 1}
-!3 = !{i32 7, !"frame-pointer", i32 1}
-!4 = !{!"Homebrew clang version 16.0.6"}
+!2 = !{i32 7, !"PIE Level", i32 2}
+!3 = !{i32 7, !"uwtable", i32 2}
+!4 = !{i32 7, !"frame-pointer", i32 2}
+!5 = !{!"clang version 16.0.6"}
