@@ -231,7 +231,7 @@ fn DILocation_implicit_code_extra_checks() {
         .unwrap_or_else(|_| panic!("Expected an invoke, got {:?}", &entry.term));
     if let Either::Right(Operand::ConstantOperand(cref)) = &invoke.function {
         if let Constant::GlobalReference { name, .. } = cref.as_ref() {
-            assert_eq!(name.as_str(), "_ZN1A3fooEi");
+            assert_eq!(name, &Name::from("_ZN1A3fooEi"));
         } else {
             panic!(
                 "Expected invoke.function to be a GlobalReference; instead it was another kind of Constant: {:?}",
