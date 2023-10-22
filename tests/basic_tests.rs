@@ -1620,9 +1620,13 @@ fn issue4() {
         //   "use-soft-float=false"
         // for a net of -6 attributes
         16
-    } else if cfg!(feature = "llvm-15-or-greater") {
+    } else if cfg!(feature = "llvm-15") {
         // LLVM 15+ adds "argmemonly"
         17
+    } else if cfg!(feature = "llvm-16-or-greater") {
+        // LLVM 16+ merges "argmemonly", "inaccessiblememonly", etc. into a single memory attribute
+        // See https://discourse.llvm.org/t/rfc-unify-memory-effect-attributes/65579/20
+        16
     } else {
         panic!("Shouldn't reach this")
     };
@@ -1643,8 +1647,10 @@ fn issue4() {
         7 // adds "willreturn"
     } else if cfg!(feature = "llvm-13") || cfg!(feature = "llvm-14") {
         9 // adds "mustprogress" and "nosync"
-    } else if cfg!(feature = "llvm-15-or-greater") {
+    } else if cfg!(feature = "llvm-15") {
         10 // adds "argmemonly"
+    } else if cfg!(feature = "llvm-16-or-greater") {
+        9 // new "memory" attribute combines "argmemonly" and related attributes
     } else {
         panic!("Shouldn't reach this")
     };
