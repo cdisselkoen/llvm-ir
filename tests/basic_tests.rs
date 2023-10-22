@@ -2453,10 +2453,18 @@ fn param_and_func_attributes() {
     assert_eq!(f.function_attributes[0], FunctionAttribute::OptSize);
     let f = module.get_func_by_name("f.readnone").unwrap();
     assert_eq!(f.function_attributes.len(), 1);
+
+    // LLVM 16 no longer has the ReadNone attribute
+    #[cfg(feature="llvm-15-or-lower")]
     assert_eq!(f.function_attributes[0], FunctionAttribute::ReadNone);
+
     let f = module.get_func_by_name("f.readonly").unwrap();
     assert_eq!(f.function_attributes.len(), 1);
+
+    // LLVM 16 no longer has the ReadOnly attribute
+    #[cfg(feature="llvm-15-or-lower")]
     assert_eq!(f.function_attributes[0], FunctionAttribute::ReadOnly);
+
     let f = module.get_func_by_name("f.returns_twice").unwrap();
     assert_eq!(f.function_attributes.len(), 1);
     assert_eq!(f.function_attributes[0], FunctionAttribute::ReturnsTwice);
@@ -2510,18 +2518,26 @@ fn param_and_func_attributes() {
     assert_eq!(f.function_attributes[0], FunctionAttribute::NoRecurse);
     let f = module.get_func_by_name("f.inaccessiblememonly").unwrap();
     assert_eq!(f.function_attributes.len(), 1);
+
+    // LLVM 16 no longer has InaccessibleMemOnly attribute
+    #[cfg(feature="llvm-15-or-lower")]
     assert_eq!(
         f.function_attributes[0],
         FunctionAttribute::InaccessibleMemOnly
     );
+
     let f = module
         .get_func_by_name("f.inaccessiblemem_or_argmemonly")
         .unwrap();
     assert_eq!(f.function_attributes.len(), 1);
+
+    // LLVM 16 no longer has InaccessibleMemOrArgMemOnly attribute
+    #[cfg(feature="llvm-15-or-lower")]
     assert_eq!(
         f.function_attributes[0],
         FunctionAttribute::InaccessibleMemOrArgMemOnly
     );
+
     let f = module.get_func_by_name("f.strictfp").unwrap();
     assert_eq!(f.function_attributes.len(), 1);
     assert_eq!(f.function_attributes[0], FunctionAttribute::StrictFP);
