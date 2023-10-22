@@ -160,6 +160,7 @@ impl Display for Type {
             Type::MetadataType => write!(f, "metadata"),
             Type::LabelType => write!(f, "label"),
             Type::TokenType => write!(f, "token"),
+            #[cfg(feature = "llvm-16-or-greater")]
             Type::TargetExtType {
                 name,
                 contained_types,
