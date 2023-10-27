@@ -590,7 +590,9 @@ impl AttributesData {
             "builtin",
             "cold",
             "convergent",
+            #[cfg(feature = "llvm-15-or-lower")]
             "inaccessiblememonly",
+            #[cfg(feature = "llvm-15-or-lower")]
             "inaccessiblemem_or_argmemonly",
             "inlinehint",
             "jumptable",
@@ -623,6 +625,7 @@ impl AttributesData {
             "readnone",
             "readonly",
             "writeonly",
+            #[cfg(feature = "llvm-15-or-lower")]
             "argmemonly",
             "safestack",
             "sanitize_address",

@@ -38,6 +38,8 @@ fn llvm_bc_dir() -> PathBuf {
         Path::new(BC_DIR).join("llvm14")
     } else if cfg!(feature = "llvm-15") {
         Path::new(BC_DIR).join("llvm15")
+    } else if cfg!(feature = "llvm-16") {
+        Path::new(BC_DIR).join("llvm16")
     } else {
         unimplemented!("new llvm version?")
     }
@@ -61,6 +63,8 @@ fn cxx_llvm_bc_dir() -> PathBuf {
         Path::new(BC_DIR).join("cxx-llvm14")
     } else if cfg!(feature = "llvm-15") {
         Path::new(BC_DIR).join("cxx-llvm15")
+    } else if cfg!(feature = "llvm-16") {
+        Path::new(BC_DIR).join("cxx-llvm16")
     } else {
         unimplemented!("new llvm version?")
     }
@@ -755,9 +759,7 @@ fn loopbc() {
         &condbr.to_string(),
         &format!(
             "br i1 {}, label {}, label {}",
-            expected_condition_op,
-            expected_true_dest,
-            expected_false_dest,
+            expected_condition_op, expected_true_dest, expected_false_dest,
         ),
     );
 
@@ -1265,7 +1267,10 @@ fn loopbc() {
     #[cfg(feature = "llvm-14")]
     assert_eq!(&load.to_string(), "%25 = load volatile i32* %24, align 4");
     #[cfg(feature = "llvm-15-or-greater")]
-    assert_eq!(&load.to_string(), "%23 = load volatile i32, ptr %22, align 4");
+    assert_eq!(
+        &load.to_string(),
+        "%23 = load volatile i32, ptr %22, align 4"
+    );
     let ret: &Terminator = if cfg!(feature = "llvm-9-or-lower") {
         &bbs[5].term
     } else if cfg!(feature = "llvm-10") || cfg!(feature = "llvm-11") {
@@ -1412,10 +1417,7 @@ fn switchbc() {
     let param_0_expected_ty = module.types.pointer_to(module.types.i8());
     #[cfg(feature = "llvm-15-or-greater")]
     let param_0_expected_ty = module.types.pointer();
-    assert_eq!(
-        module.type_of(&decl.parameters[0]),
-        param_0_expected_ty,
-    );
+    assert_eq!(module.type_of(&decl.parameters[0]), param_0_expected_ty,);
 }
 
 #[test]
@@ -1609,9 +1611,13 @@ fn issue4() {
         //   "use-soft-float=false"
         // for a net of -6 attributes
         16
-    } else if cfg!(feature = "llvm-15-or-greater") {
+    } else if cfg!(feature = "llvm-15") {
         // LLVM 15+ adds "argmemonly"
         17
+    } else if cfg!(feature = "llvm-16-or-greater") {
+        // LLVM 16+ merges "argmemonly", "inaccessiblememonly", etc. into a single memory attribute
+        // See https://discourse.llvm.org/t/rfc-unify-memory-effect-attributes/65579/20
+        16
     } else {
         panic!("Shouldn't reach this")
     };
@@ -1632,8 +1638,10 @@ fn issue4() {
         7 // adds "willreturn"
     } else if cfg!(feature = "llvm-13") || cfg!(feature = "llvm-14") {
         9 // adds "mustprogress" and "nosync"
-    } else if cfg!(feature = "llvm-15-or-greater") {
+    } else if cfg!(feature = "llvm-15") {
         10 // adds "argmemonly"
+    } else if cfg!(feature = "llvm-16-or-greater") {
+        9 // new "memory" attribute combines "argmemonly" and related attributes
     } else {
         panic!("Shouldn't reach this")
     };
@@ -1872,10 +1880,7 @@ fn rustbcg() {
     let expected_fmt = "store i64 0, i64* %sum, align 8 (with debugloc)";
     #[cfg(feature = "llvm-15-or-greater")]
     let expected_fmt = "store i64 0, ptr %sum, align 8 (with debugloc)";
-    assert_eq!(
-        &startbb.instrs[31].to_string(),
-        expected_fmt
-    );
+    assert_eq!(&startbb.instrs[31].to_string(), expected_fmt);
     let call_debugloc = startbb.instrs[33]
         .get_debug_loc()
         .as_ref()
@@ -2071,7 +2076,8 @@ fn simple_linked_list_g() {
     assert_eq!(debugloc.filename, debug_filename);
     assert!(debugloc.directory.as_ref().expect("directory should exist").ends_with(debug_directory_suffix));
     #[cfg(feature = "llvm-14-or-lower")]
-    let expected_fmt = "%8 = getelementptr inbounds %struct.SimpleLinkedList* %3, i32 0, i32 0 (with debugloc)";
+    let expected_fmt =
+        "%8 = getelementptr inbounds %struct.SimpleLinkedList* %3, i32 0, i32 0 (with debugloc)";
     #[cfg(feature = "llvm-15-or-greater")]
     let expected_fmt = "%8 = getelementptr inbounds ptr %3, i32 0, i32 0 (with debugloc)";
     assert_eq!(&func.basic_blocks[0].instrs[9].to_string(), expected_fmt);
@@ -2430,10 +2436,18 @@ fn param_and_func_attributes() {
     assert_eq!(f.function_attributes[0], FunctionAttribute::OptSize);
     let f = module.get_func_by_name("f.readnone").unwrap();
     assert_eq!(f.function_attributes.len(), 1);
+
+    // LLVM 16 no longer has the ReadNone attribute
+    #[cfg(feature="llvm-15-or-lower")]
     assert_eq!(f.function_attributes[0], FunctionAttribute::ReadNone);
+
     let f = module.get_func_by_name("f.readonly").unwrap();
     assert_eq!(f.function_attributes.len(), 1);
+
+    // LLVM 16 no longer has the ReadOnly attribute
+    #[cfg(feature="llvm-15-or-lower")]
     assert_eq!(f.function_attributes[0], FunctionAttribute::ReadOnly);
+
     let f = module.get_func_by_name("f.returns_twice").unwrap();
     assert_eq!(f.function_attributes.len(), 1);
     assert_eq!(f.function_attributes[0], FunctionAttribute::ReturnsTwice);
@@ -2487,18 +2501,26 @@ fn param_and_func_attributes() {
     assert_eq!(f.function_attributes[0], FunctionAttribute::NoRecurse);
     let f = module.get_func_by_name("f.inaccessiblememonly").unwrap();
     assert_eq!(f.function_attributes.len(), 1);
+
+    // LLVM 16 no longer has InaccessibleMemOnly attribute
+    #[cfg(feature="llvm-15-or-lower")]
     assert_eq!(
         f.function_attributes[0],
         FunctionAttribute::InaccessibleMemOnly
     );
+
     let f = module
         .get_func_by_name("f.inaccessiblemem_or_argmemonly")
         .unwrap();
     assert_eq!(f.function_attributes.len(), 1);
+
+    // LLVM 16 no longer has InaccessibleMemOrArgMemOnly attribute
+    #[cfg(feature="llvm-15-or-lower")]
     assert_eq!(
         f.function_attributes[0],
         FunctionAttribute::InaccessibleMemOrArgMemOnly
     );
+
     let f = module.get_func_by_name("f.strictfp").unwrap();
     assert_eq!(f.function_attributes.len(), 1);
     assert_eq!(f.function_attributes[0], FunctionAttribute::StrictFP);
