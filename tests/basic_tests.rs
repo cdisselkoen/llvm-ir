@@ -10,6 +10,8 @@ use llvm_ir::HasDebugLoc;
 use llvm_ir::{
     Constant, ConstantRef, Instruction, IntPredicate, Module, Name, Operand, Terminator, Type,
 };
+#[cfg(feature = "llvm-16-or-greater")]
+use llvm_ir::function::MemoryEffect;
 use std::convert::TryInto;
 use std::path::{Path, PathBuf};
 
@@ -2524,6 +2526,82 @@ fn param_and_func_attributes() {
     let f = module.get_func_by_name("f.strictfp").unwrap();
     assert_eq!(f.function_attributes.len(), 1);
     assert_eq!(f.function_attributes[0], FunctionAttribute::StrictFP);
+
+    // Test the memory(...) attribute that's in LLVM 16+
+    #[cfg(feature = "llvm-16-or-greater")]
+    {
+        let f = module.get_func_by_name("f.default_none").unwrap();
+        assert_eq!(f.function_attributes.len(), 1);
+        assert_eq!(f.function_attributes[0], FunctionAttribute::Memory {
+            default: MemoryEffect::None,
+            argmem: MemoryEffect::None,
+            inaccessible_mem: MemoryEffect::None
+        });
+
+        let f = module.get_func_by_name("f.default_read").unwrap();
+        assert_eq!(f.function_attributes.len(), 1);
+        assert_eq!(f.function_attributes[0], FunctionAttribute::Memory {
+            default: MemoryEffect::Read,
+            argmem: MemoryEffect::Read,
+            inaccessible_mem: MemoryEffect::Read
+        });
+
+        let f = module.get_func_by_name("f.default_write").unwrap();
+        assert_eq!(f.function_attributes.len(), 1);
+        assert_eq!(f.function_attributes[0], FunctionAttribute::Memory {
+            default: MemoryEffect::Write,
+            argmem: MemoryEffect::Write,
+            inaccessible_mem: MemoryEffect::Write
+        });
+
+        let f = module.get_func_by_name("f.default_readwrite").unwrap();
+        assert_eq!(f.function_attributes.len(), 1);
+        assert_eq!(f.function_attributes[0], FunctionAttribute::Memory {
+            default: MemoryEffect::ReadWrite,
+            argmem: MemoryEffect::ReadWrite,
+            inaccessible_mem: MemoryEffect::ReadWrite
+        });
+
+        let f = module.get_func_by_name("f.default_none_arg_readwrite").unwrap();
+        assert_eq!(f.function_attributes.len(), 1);
+        assert_eq!(f.function_attributes[0], FunctionAttribute::Memory {
+            default: MemoryEffect::None,
+            argmem: MemoryEffect::ReadWrite,
+            inaccessible_mem: MemoryEffect::None
+        });
+
+        let f = module.get_func_by_name("f.default_readwrite_arg_none").unwrap();
+        assert_eq!(f.function_attributes.len(), 1);
+        assert_eq!(f.function_attributes[0], FunctionAttribute::Memory {
+            default: MemoryEffect::ReadWrite,
+            argmem: MemoryEffect::None,
+            inaccessible_mem: MemoryEffect::ReadWrite
+        });
+
+        let f = module.get_func_by_name("f.arg_read").unwrap();
+        assert_eq!(f.function_attributes.len(), 1);
+        assert_eq!(f.function_attributes[0], FunctionAttribute::Memory {
+            default: MemoryEffect::None,
+            argmem: MemoryEffect::Read,
+            inaccessible_mem: MemoryEffect::None
+        });
+
+        let f = module.get_func_by_name("f.inaccessiblemem_read").unwrap();
+        assert_eq!(f.function_attributes.len(), 1);
+        assert_eq!(f.function_attributes[0], FunctionAttribute::Memory {
+            default: MemoryEffect::None,
+            argmem: MemoryEffect::None,
+            inaccessible_mem: MemoryEffect::Read
+        });
+
+        let f = module.get_func_by_name("f.default_read_inaccessiblemem_write_arg_none").unwrap();
+        assert_eq!(f.function_attributes.len(), 1);
+        assert_eq!(f.function_attributes[0], FunctionAttribute::Memory {
+            default: MemoryEffect::Read,
+            argmem: MemoryEffect::None,
+            inaccessible_mem: MemoryEffect::Write
+        });
+    }
 }
 
 #[cfg(feature = "llvm-11-or-greater")]
