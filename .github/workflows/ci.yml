@@ -33,7 +33,7 @@ jobs:
         if: matrix.llvm >= 14
 
       - name: Install zstd
-        run: sudo apt-get install -y zstd
+        run: sudo apt-get install -y libzstd-dev
         if: matrix.llvm >= 16
 
       - name: Install Rust toolchain
