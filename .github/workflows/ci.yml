@@ -19,6 +19,7 @@ jobs:
         - 13
         - 14
         - 15
+        - 16
 
     steps:
       - name: Checkout sources
@@ -37,14 +38,20 @@ jobs:
           profile: minimal
           toolchain: stable
 
-      - name: Build
+      - name: Build Debug
         uses: actions-rs/cargo@v1
         with:
           command: build
           args: --features=llvm-${{ matrix.llvm }}
 
+      - name: Build Release
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --release --features=llvm-${{ matrix.llvm }}
+
       - name: Test
         uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --features=llvm-${{ matrix.llvm }}
+          args: --release --features=llvm-${{ matrix.llvm }}
