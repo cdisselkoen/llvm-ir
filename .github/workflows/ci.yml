@@ -32,6 +32,10 @@ jobs:
         run: sudo apt-get install -y libpolly-${{ matrix.llvm }}-dev
         if: matrix.llvm >= 14
 
+      - name: Install zstd
+        run: sudo apt-get install -y zstd
+        if: matrix.llvm >= 16
+
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
         with:
