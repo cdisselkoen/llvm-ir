@@ -8,7 +8,7 @@ on:
 
 jobs:
   test:
-    name: Test
+    name: Test for LLVM ${{ matrix.llvm }}
 
     runs-on: ubuntu-20.04
 
