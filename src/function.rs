@@ -162,6 +162,30 @@ pub enum CallingConvention {
     Numbered(u32),
 }
 
+/// Describes how a given location in memory can be accessed.
+/// See [LLVM 16 docs on FunctionAttributes](https://releases.llvm.org/16.0.0/docs/LangRef.html#fnattrs),
+/// the section on memory(...)
+#[derive(PartialEq, Eq, Clone, Debug)]
+pub enum MemoryEffect {
+    None,
+    Read,
+    Write,
+    ReadWrite
+}
+
+impl MemoryEffect {
+    // See https://github.com/llvm/llvm-project/blob/7cbf1a2591520c2491aa35339f227775f4d3adf6/llvm/include/llvm/Support/ModRef.h#L27
+    pub(crate) fn from_llvm_bits(val : u64) -> Self {
+        match val {
+            0b00 => Self::None,
+            0b01 => Self::Read,
+            0b10 => Self::Write,
+            0b11 => Self::ReadWrite,
+            _ => panic!("Memory effect given unexpected bits {}", val)
+        }
+    }
+}
+
 /// See [LLVM 14 docs on Function Attributes](https://releases.llvm.org/14.0.0/docs/LangRef.html#fnattrs)
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub enum FunctionAttribute {
@@ -223,6 +247,12 @@ pub enum FunctionAttribute {
     StackProtectStrong,
     StrictFP,
     UWTable,
+    #[cfg(feature = "llvm-16-or-greater")]
+    Memory {
+        default: MemoryEffect,
+        argmem: MemoryEffect,
+        inaccessible_mem: MemoryEffect
+    },
     StringAttribute {
         kind: String,
         value: String, // for no value, use ""
@@ -642,6 +672,8 @@ impl AttributesData {
             "sspstrong",
             "strictfp",
             "uwtable",
+            #[cfg(feature = "llvm-16-or-greater")]
+            "memory"
         ]
         .iter()
         .map(|&attrname| {
@@ -776,6 +808,25 @@ impl FunctionAttribute {
                 Some("sspstrong") => Self::StackProtectStrong,
                 Some("strictfp") => Self::StrictFP,
                 Some("uwtable") => Self::UWTable,
+                #[cfg(feature = "llvm-16-or-greater")]
+                Some("memory") => {
+                    let value = unsafe { LLVMGetEnumAttributeValue(a) };
+
+                    // The value is encoded as a bitmask for the possible effects, shifted for each location kind,
+                    // and merged together
+                    // See https://github.com/llvm/llvm-project/blob/7cbf1a2591520c2491aa35339f227775f4d3adf6/llvm/include/llvm/Support/ModRef.h#L63
+                    // for the breakdown of the encoding logic
+
+                    let encoded_argmem           = (value >> 0) & 0b11;
+                    let encoded_inaccessible_mem = (value >> 2) & 0b11;
+                    let encoded_default_mem      = (value >> 4) & 0b11;
+
+                    Self::Memory {
+                        default: MemoryEffect::from_llvm_bits(encoded_default_mem),
+                        argmem: MemoryEffect::from_llvm_bits(encoded_argmem),
+                        inaccessible_mem: MemoryEffect::from_llvm_bits(encoded_inaccessible_mem)
+                    }
+                },
                 Some(s) => panic!("Unhandled value from lookup_function_attr: {:?}", s),
                 None => {
                     debug!("unknown enum function attr {}", kind);

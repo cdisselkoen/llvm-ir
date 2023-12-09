@@ -325,7 +325,7 @@ llvm11/param_and_func_attributes.ll.bc : param_and_func_attributes.ll
 llvm12/param_and_func_attributes.ll.bc : param_and_func_attributes_llvm12.ll
 	mkdir -p llvm12
 	$(LLVMAS12) $< -o $@
-# use the llvm13+ version of the file for LLVM 13+
+# use the llvm13+ version of the file for LLVM 13-15
 llvm13/param_and_func_attributes.ll.bc : param_and_func_attributes_llvm13+.ll
 	mkdir -p llvm13
 	$(LLVMAS13) $< -o $@
@@ -335,7 +335,8 @@ llvm14/param_and_func_attributes.ll.bc : param_and_func_attributes_llvm13+.ll
 llvm15/param_and_func_attributes.ll.bc : param_and_func_attributes_llvm13+.ll
 	mkdir -p llvm15
 	$(LLVMAS15) $< -o $@
-llvm16/param_and_func_attributes.ll.bc : param_and_func_attributes_llvm13+.ll
+# use the llvm16+ version of the file for LLVM 16+
+llvm16/param_and_func_attributes.ll.bc : param_and_func_attributes_llvm16+.ll
 	mkdir -p llvm16
 	$(LLVMAS16) $< -o $@
 
