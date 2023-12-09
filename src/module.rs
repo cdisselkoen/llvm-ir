@@ -1084,9 +1084,9 @@ impl DataLayout {
 impl Default for Alignments {
     fn default() -> Self {
         Self {
-            /// Explicit alignments for various sizes of integers (in bits). Sizes not
-            /// specified here are determined according to the rules described in the
-            /// Data Layout docs.
+            // Explicit alignments for various sizes of integers (in bits). Sizes not
+            // specified here are determined according to the rules described in the
+            // Data Layout docs.
             int_alignments: vec![
                 (1, Alignment { abi: 8, pref: 8 }),
                 (8, Alignment { abi: 8, pref: 8 }),
@@ -1096,9 +1096,9 @@ impl Default for Alignments {
             ]
             .into_iter()
             .collect(),
-            /// Explicit alignments for various sizes of vectors (in bits). Sizes not
-            /// specified here are determined according to the rules described in the
-            /// Data Layout docs.
+            // Explicit alignments for various sizes of vectors (in bits). Sizes not
+            // specified here are determined according to the rules described in the
+            // Data Layout docs.
             vec_alignments: vec![
                 (64, Alignment { abi: 64, pref: 64 }),
                 (
@@ -1111,7 +1111,7 @@ impl Default for Alignments {
             ]
             .into_iter()
             .collect(),
-            /// Alignment for floating-point types, by size (in bits)
+            // Alignment for floating-point types, by size (in bits)
             fp_alignments: vec![
                 (16, Alignment { abi: 16, pref: 16 }),
                 (32, Alignment { abi: 32, pref: 32 }),
@@ -1126,18 +1126,18 @@ impl Default for Alignments {
             ]
             .into_iter()
             .collect(),
-            /// Alignment for aggregate types (structs, arrays)
+            // Alignment for aggregate types (structs, arrays)
             agg_alignment: Alignment { abi: 0, pref: 64 },
-            /// Alignment for function pointers
+            // Alignment for function pointers
             #[cfg(feature = "llvm-9-or-greater")]
             fptr_alignment: FunctionPtrAlignment {
                 independent: true,
                 abi: 64,
             },
-            /// Alignment for function pointers, as an `Alignment`
+            // Alignment for function pointers, as an `Alignment`
             #[cfg(feature = "llvm-9-or-greater")]
             fptr_alignment_as_alignment: Alignment { abi: 64, pref: 64 },
-            /// Layout details for (non-function-pointer) pointers, by address space
+            // Layout details for (non-function-pointer) pointers, by address space
             pointer_layouts: vec![(
                 0,
                 PointerLayout {
