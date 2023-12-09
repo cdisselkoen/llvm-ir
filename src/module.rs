@@ -7,7 +7,6 @@ use crate::name::Name;
 use crate::types::{FPType, Type, TypeRef, Typed, Types, TypesBuilder};
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::Path;
-use std::ptr::null_mut;
 
 /// See [LLVM 14 docs on Module Structure](https://releases.llvm.org/14.0.0/docs/LangRef.html#module-structure)
 #[derive(Clone)]
