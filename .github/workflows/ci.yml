@@ -27,7 +27,7 @@ jobs:
 
       - name: Install LLVM ${{ matrix.llvm }}
         run: curl https://apt.llvm.org/llvm.sh | sudo bash  -s -- ${{ matrix.llvm }}
-      
+
       - name: Install Polly ${{ matrix.llvm }}
         run: sudo apt-get install -y libpolly-${{ matrix.llvm }}-dev
         if: matrix.llvm >= 14
@@ -52,10 +52,10 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --release --features=llvm-${{ matrix.llvm }}
+          args: --release --features=llvm-${{ matrix.llvm }}-strict
 
       - name: Test
         uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --release --features=llvm-${{ matrix.llvm }}
+          args: --release --features=llvm-${{ matrix.llvm }}-strict
