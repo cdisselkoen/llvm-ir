@@ -50,7 +50,8 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --features=llvm-${{ matrix.llvm }}
+          # LLVM 11 doesn't work with -strict, see #53
+          args: ${{ matrix.llvm == '11' && format('--features=llvm-{0}', matrix.llvm) || format('--features=llvm-{0}-strict', matrix.llvm) }}
 
       - name: Build Release
         uses: actions-rs/cargo@v1
