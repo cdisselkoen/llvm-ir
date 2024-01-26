@@ -136,6 +136,7 @@ but not to query the values of these flags on existing instructions.
 - contents of inline assembly functions
 - information about the clauses in the variadic `LandingPad` instruction
 - information about the operands of a `BlockAddress` constant expression
+- information about `TargetExtType` types
 - the ["prefix data"](https://releases.llvm.org/16.0.0/docs/LangRef.html#prefix-data)
 associated with a function
 - the values of constant integers which are larger than 64 bits (and don't
@@ -165,9 +166,9 @@ versions, which are outlined here.
 one of the features `llvm-8`, `llvm-9`, or `llvm-10`. Previously, we had the
 `0.6.x` branch for LLVM 10, the `0.5.x` branch for LLVM 9, and didn't
 officially support LLVM 8. Now, a single release supports LLVM 8, 9, and 10.
-  - (Note: 0.7.3 and later also supports LLVM 11; 0.7.5 and later also supports
-  LLVM 12; 0.8.1 and later also supports LLVM 13; and 0.8.2 and later also
-  supports LLVM 14.)
+  - (Note: Versions of this crate beyond 0.7.0 have added support for later LLVM
+  versions as well. For instance, 0.7.3 and later also supports LLVM 11; and
+  0.7.5 and later also supports LLVM 12.)
 - [`FunctionAttribute`] and [`ParameterAttribute`] are now proper enums with
 descriptive variants such as `NoInline`, `StackProtect`, etc. Previously,
 attributes were opaque numeric codes which were difficult to interpret.
