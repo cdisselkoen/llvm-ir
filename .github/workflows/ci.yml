@@ -1,10 +1,14 @@
 name: CI
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - main
+  pull_request:
 
 jobs:
   test:
-    name: Test
+    name: Test for LLVM ${{ matrix.llvm }}
 
     runs-on: ubuntu-20.04
 
@@ -27,7 +31,7 @@ jobs:
 
       - name: Install LLVM ${{ matrix.llvm }}
         run: curl https://apt.llvm.org/llvm.sh | sudo bash  -s -- ${{ matrix.llvm }}
-      
+
       - name: Install Polly ${{ matrix.llvm }}
         run: sudo apt-get install -y libpolly-${{ matrix.llvm }}-dev
         if: matrix.llvm >= 14
@@ -46,16 +50,18 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --features=llvm-${{ matrix.llvm }}
+          # LLVM 11 doesn't work with -strict, see #53
+          args: ${{ matrix.llvm == '11' && format('--features=llvm-{0}', matrix.llvm) || format('--features=llvm-{0}-strict', matrix.llvm) }}
 
       - name: Build Release
         uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --release --features=llvm-${{ matrix.llvm }}
+          # LLVM 11 doesn't work with -strict, see #53
+          args: ${{ matrix.llvm == '11' && format('--release --features=llvm-{0}', matrix.llvm) || format('--release --features=llvm-{0}-strict', matrix.llvm) }}
 
       - name: Test
         uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --release --features=llvm-${{ matrix.llvm }}
+          args: ${{ matrix.llvm == '11' && format('--release --features=llvm-{0}', matrix.llvm) || format('--release --features=llvm-{0}-strict', matrix.llvm) }}
