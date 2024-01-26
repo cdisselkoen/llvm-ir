@@ -75,13 +75,13 @@ pub enum Type {
     LabelType,
     /// See [LLVM 14 docs on Token Type](https://releases.llvm.org/14.0.0/docs/LangRef.html#token-type)
     TokenType,
-    /// See [LLVM 16 docs on Target Extension Type](https://releases.llvm.org/16.0.0/docs/LangRef.html#target-extension-type)
+    /// See [LLVM 16 docs on Target Extension Type](https://releases.llvm.org/16.0.0/docs/LangRef.html#target-extension-type).
+    ///
+    /// `TargetExtType` needs more fields, but the necessary getter functions
+    /// are apparently not exposed in the LLVM C API (only the C++ API).
+    /// See discussion in #39.
     #[cfg(feature = "llvm-16-or-greater")]
-    TargetExtType {
-        name: String,
-        contained_types: Vec<TypeRef>,
-        contained_ints: Vec<u32>,
-    },
+    TargetExtType, // TODO ideally we want something like TargetExtType { name: String, contained_types: Vec<TypeRef>, contained_ints: Vec<u32> }
 }
 
 impl Display for Type {
@@ -161,11 +161,9 @@ impl Display for Type {
             Type::LabelType => write!(f, "label"),
             Type::TokenType => write!(f, "token"),
             #[cfg(feature = "llvm-16-or-greater")]
-            Type::TargetExtType {
-                name,
-                contained_types,
-                contained_ints,
-            } => {
+            Type::TargetExtType => write!(f, "target()"),
+                // someday if/when TargetExtType contains other fields, we need something like the below:
+                /*
                 // Name, then type parameters first then integer parameters.
                 let members = [name]
                     .iter()
@@ -177,7 +175,7 @@ impl Display for Type {
                 write!(f, "target({members})")?;
 
                 Ok(())
-            },
+                */
         }
     }
 }
@@ -331,9 +329,10 @@ pub(crate) struct TypesBuilder {
     label_type: TypeRef,
     /// `TypeRef` to `Type::TokenType`
     token_type: TypeRef,
-    /// Map of `(name, contained_types, contained_ints)` to the corresponding `Type::TargetExtType`
+    /// `TypeRef` to `Type::TargetExtType`
+    // someday: Map of `(name, contained_types, contained_ints)` to the corresponding `Type::TargetExtType`. See notes on Type::TargetExtType
     #[cfg(feature = "llvm-16-or-greater")]
-    target_ext_types: TypeCache<(String, Vec<TypeRef>, Vec<u32>)>,
+    target_ext_type: TypeRef,
     /// internal cache of already-seen `LLVMTypeRef`s so we can quickly produce
     /// the corresponding `TypeRef` without re-parsing the type
     llvm_type_map: HashMap<LLVMTypeRef, TypeRef>,
@@ -359,7 +358,7 @@ impl TypesBuilder {
             label_type: TypeRef::new(Type::LabelType),
             token_type: TypeRef::new(Type::TokenType),
             #[cfg(feature = "llvm-16-or-greater")]
-            target_ext_types: TypeCache::new(),
+            target_ext_type: TypeRef::new(Type::TargetExtType),
             llvm_type_map: HashMap::new(),
         }
     }
@@ -386,7 +385,7 @@ impl TypesBuilder {
             label_type: self.label_type,
             token_type: self.token_type,
             #[cfg(feature = "llvm-16-or-greater")]
-            target_ext_types: self.target_ext_types,
+            target_ext_type: self.target_ext_type,
         }
     }
 }
@@ -606,22 +605,11 @@ impl TypesBuilder {
     #[cfg(feature = "llvm-16-or-greater")]
     pub fn target_ext_type(
         &mut self,
-        name: String,
-        contained_types: Vec<TypeRef>,
-        contained_ints: Vec<u32>,
+        // name: String, // TODO not exposed in the LLVM C API; see notes on Type::TargetExtType
+        // contained_types: Vec<TypeRef>, // TODO not exposed in the LLVM C API; see notes on Type::TargetExtType
+        // contained_ints: Vec<u32>, // TODO not exposed in the LLVM C API; see notes on Type::TargetExtType
     ) -> TypeRef {
-        self.target_ext_types.lookup_or_insert(
-            (
-                name.clone(),
-                contained_types.clone(),
-                contained_ints.clone(),
-            ),
-            || Type::TargetExtType {
-                name,
-                contained_types,
-                contained_ints,
-            },
-        )
+        self.target_ext_type.clone()
     }
 }
 
@@ -684,9 +672,9 @@ pub struct Types {
     label_type: TypeRef,
     /// `TypeRef` to `Type::TokenType`
     token_type: TypeRef,
-    /// Map of `(name, contained_types, contained_ints)` to the corresponding `Type::TargetExtType`
+    /// `TypeRef` to `Type::TargetExtType`
     #[cfg(feature = "llvm-16-or-greater")]
-    target_ext_types: TypeCache<(String, Vec<TypeRef>, Vec<u32>)>,
+    target_ext_type: TypeRef,
 }
 
 impl Types {
@@ -925,23 +913,11 @@ impl Types {
     #[cfg(feature = "llvm-16-or-greater")]
     pub fn target_ext_type(
         &self,
-        name: String,
-        contained_types: Vec<TypeRef>,
-        contained_ints: Vec<u32>,
+        // name: String, // TODO not exposed in the LLVM C API; see notes on Type::TargetExtType
+        // contained_types: Vec<TypeRef>, // TODO not exposed in the LLVM C API; see notes on Type::TargetExtType
+        // contained_ints: Vec<u32>, // TODO not exposed in the LLVM C API; see notes on Type::TargetExtType
     ) -> TypeRef {
-        self.target_ext_types
-            .lookup(&(
-                name.clone(),
-                contained_types.clone(),
-                contained_ints.clone(),
-            ))
-            .unwrap_or_else(|| {
-                TypeRef::new(Type::TargetExtType {
-                    name,
-                    contained_types,
-                    contained_ints,
-                })
-            })
+        self.target_ext_type.clone()
     }
 
     /// Get a `TypeRef` for the given `Type`
@@ -984,9 +960,7 @@ impl Types {
             Type::LabelType => self.label_type(),
             Type::TokenType => self.token_type(),
             #[cfg(feature="llvm-16-or-greater")]
-            Type::TargetExtType { name, contained_types, contained_ints } => {
-                self.target_ext_type(name.clone(), contained_types.clone(), contained_ints.clone())
-            },
+            Type::TargetExtType => self.target_ext_type(),
         }
     }
 }
@@ -1166,10 +1140,7 @@ impl TypesBuilder {
             LLVMTypeKind::LLVMLabelTypeKind => self.label_type(),
             LLVMTypeKind::LLVMTokenTypeKind => self.token_type(),
             #[cfg(feature = "llvm-16-or-greater")]
-            LLVMTypeKind::LLVMTargetExtTypeKind => {
-                todo!()
-                // self.target_ext_type()
-            },
+            LLVMTypeKind::LLVMTargetExtTypeKind => self.target_ext_type(),
         }
     }
 
