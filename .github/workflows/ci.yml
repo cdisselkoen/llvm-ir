@@ -64,4 +64,4 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --release --features=llvm-${{ matrix.llvm }}-strict
+          args: ${{ matrix.llvm == '11' && format('--release --features=llvm-{0}', matrix.llvm) || format('--release --features=llvm-{0}-strict', matrix.llvm) }}
