@@ -27,7 +27,7 @@ fn main() {
     if cfg!(feature = "llvm-16") {
         versions.push(16);
     }
-	if cfg!(feature = "llvm-17") {
+    if cfg!(feature = "llvm-17") {
         versions.push(17);
     }
     match versions.len() {
