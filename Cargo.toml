@@ -12,7 +12,6 @@ license = "MIT"
 build = "build.rs"
 
 [dependencies]
-llvm-sys-80 = { package = "llvm-sys", version = "80.3.0", optional = true }
 llvm-sys-90 = { package = "llvm-sys", version = "90.2.0", optional = true }
 llvm-sys-100 = { package = "llvm-sys", version = "100.2.0", optional = true }
 llvm-sys-110 = { package = "llvm-sys", version = "110.0.0", optional = true }
@@ -32,7 +31,6 @@ itertools = "0.11"
 [features]
 # Select the LLVM version to be compatible with.
 # You _must_ enable exactly one of the following features.
-llvm-8 = ["llvm-sys-80", "llvm-8-or-lower", "llvm-8-or-greater"]
 llvm-9 = ["llvm-sys-90", "llvm-9-or-lower", "llvm-9-or-greater"]
 llvm-10 = ["llvm-sys-100", "llvm-10-or-lower", "llvm-10-or-greater"]
 llvm-11 = ["llvm-sys-110", "llvm-11-or-lower", "llvm-11-or-greater"]
@@ -47,8 +45,7 @@ llvm-17 = ["llvm-sys-170", "llvm-17-or-lower", "llvm-17-or-greater"]
 # For convenience, these automatically-enabled features allow us to avoid
 # checking complex combinations of features all the time. They are not meant to
 # be manually enabled; use the above llvm-x features instead
-llvm-8-or-greater = []
-llvm-9-or-greater = ["llvm-8-or-greater"]
+llvm-9-or-greater = []
 llvm-10-or-greater = ["llvm-9-or-greater"]
 llvm-11-or-greater = ["llvm-10-or-greater"]
 llvm-12-or-greater = ["llvm-11-or-greater"]
@@ -58,7 +55,6 @@ llvm-15-or-greater = ["llvm-14-or-greater"]
 llvm-16-or-greater = ["llvm-15-or-greater"]
 llvm-17-or-greater = ["llvm-16-or-greater"]
 
-llvm-8-or-lower = ["llvm-9-or-lower"]
 llvm-9-or-lower = ["llvm-10-or-lower"]
 llvm-10-or-lower = ["llvm-11-or-lower"]
 llvm-11-or-lower = ["llvm-12-or-lower"]
@@ -78,7 +74,6 @@ llvm-17-or-lower = []
 # This avoids activating all the optional dependencies when `strict-versioning`
 # is activated.
 strict-versioning = [
-    "llvm-sys-80?/strict-versioning",
     "llvm-sys-90?/strict-versioning",
     "llvm-sys-100?/strict-versioning",
     "llvm-sys-110?/strict-versioning",

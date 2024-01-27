@@ -1,5 +1,4 @@
 use crate::constant::ConstantRef;
-#[cfg(feature = "llvm-9-or-greater")]
 use crate::debugloc::*;
 use crate::function::{Function, FunctionAttribute, FunctionDeclaration, GroupID};
 use crate::llvm_sys::*;
@@ -176,7 +175,6 @@ pub struct GlobalVariable {
     pub section: Option<String>,
     pub comdat: Option<Comdat>, // llvm-hs-pure has Option<String> for some reason
     pub alignment: u32,
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: Vec<(String, MetadataRef<MetadataNode>)>,
 }
@@ -187,7 +185,6 @@ impl Typed for GlobalVariable {
     }
 }
 
-#[cfg(feature = "llvm-9-or-greater")]
 impl HasDebugLoc for GlobalVariable {
     fn get_debug_loc(&self) -> &Option<DebugLoc> {
         &self.debugloc
@@ -355,7 +352,6 @@ pub struct Alignment {
 
 /// Alignment details for function pointers.
 /// See [LLVM 14 docs on Data Layout](https://releases.llvm.org/14.0.0/docs/LangRef.html#data-layout)
-#[cfg(feature = "llvm-9-or-greater")]
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct FunctionPtrAlignment {
     /// If `true`, function pointer alignment is independent of function alignment.
@@ -394,10 +390,8 @@ pub struct Alignments {
     /// Alignment for aggregate types (structs, arrays)
     agg_alignment: Alignment,
     /// Alignment for function pointers
-    #[cfg(feature = "llvm-9-or-greater")]
     fptr_alignment: FunctionPtrAlignment,
     /// Alignment for function pointers, as an `Alignment`
-    #[cfg(feature = "llvm-9-or-greater")]
     fptr_alignment_as_alignment: Alignment,
     /// Layout details for (non-function-pointer) pointers, by address space
     pointer_layouts: HashMap<AddrSpace, PointerLayout>,
@@ -429,7 +423,6 @@ impl Alignments {
                 pointee_type,
                 addr_space,
             } => match pointee_type.as_ref() {
-                #[cfg(feature = "llvm-9-or-greater")]
                 Type::FuncType { .. } => &self.fptr_alignment_as_alignment,
                 _ => &self.ptr_alignment(*addr_space).alignment,
             },
@@ -500,7 +493,6 @@ impl Alignments {
     }
 
     /// Alignment of function pointers
-    #[cfg(feature = "llvm-9-or-greater")]
     pub fn fptr_alignment(&self) -> &FunctionPtrAlignment {
         &self.fptr_alignment
     }
@@ -687,7 +679,6 @@ impl GlobalVariable {
                 }
             },
             alignment: unsafe { LLVMGetAlignment(global) },
-            #[cfg(feature = "llvm-9-or-greater")]
             debugloc: DebugLoc::from_llvm_no_col(global),
             // metadata: unimplemented!("metadata"),
         }
@@ -994,39 +985,25 @@ impl DataLayout {
                 assert!(chunks.next().is_none(), "datalayout 'a': Too many chunks");
                 data_layout.alignments.agg_alignment = Alignment { abi, pref };
             } else if let Some(stripped) = spec.strip_prefix("Fi") {
-                #[cfg(feature = "llvm-8-or-lower")]
-                {
-                    panic!("datalayout: Unknown spec {:?}", spec);
-                }
-                #[cfg(feature = "llvm-9-or-greater")]
-                {
-                    let abi: u32 = stripped
-                        .parse()
-                        .expect("datalayout 'Fi': Failed to parse abi");
-                    data_layout.alignments.fptr_alignment = FunctionPtrAlignment {
-                        independent: true,
-                        abi,
-                    };
-                    data_layout.alignments.fptr_alignment_as_alignment =
-                        Alignment { abi, pref: abi };
-                }
+                let abi: u32 = stripped
+                    .parse()
+                    .expect("datalayout 'Fi': Failed to parse abi");
+                data_layout.alignments.fptr_alignment = FunctionPtrAlignment {
+                    independent: true,
+                    abi,
+                };
+                data_layout.alignments.fptr_alignment_as_alignment =
+                    Alignment { abi, pref: abi };
             } else if let Some(stripped) = spec.strip_prefix("Fn") {
-                #[cfg(feature = "llvm-8-or-lower")]
-                {
-                    panic!("datalayout: Unknown spec {:?}", spec);
-                }
-                #[cfg(feature = "llvm-9-or-greater")]
-                {
-                    let abi: u32 = stripped
-                        .parse()
-                        .expect("datalayout 'Fn': Failed to parse abi");
-                    data_layout.alignments.fptr_alignment = FunctionPtrAlignment {
-                        independent: false,
-                        abi,
-                    };
-                    data_layout.alignments.fptr_alignment_as_alignment =
-                        Alignment { abi, pref: abi };
-                }
+                let abi: u32 = stripped
+                    .parse()
+                    .expect("datalayout 'Fn': Failed to parse abi");
+                data_layout.alignments.fptr_alignment = FunctionPtrAlignment {
+                    independent: false,
+                    abi,
+                };
+                data_layout.alignments.fptr_alignment_as_alignment =
+                    Alignment { abi, pref: abi };
             } else if spec.starts_with('m') {
                 let mut chunks = spec.split(':');
                 let first_chunk = chunks.next().unwrap();
@@ -1129,13 +1106,11 @@ impl Default for Alignments {
             // Alignment for aggregate types (structs, arrays)
             agg_alignment: Alignment { abi: 0, pref: 64 },
             // Alignment for function pointers
-            #[cfg(feature = "llvm-9-or-greater")]
             fptr_alignment: FunctionPtrAlignment {
                 independent: true,
                 abi: 64,
             },
             // Alignment for function pointers, as an `Alignment`
-            #[cfg(feature = "llvm-9-or-greater")]
             fptr_alignment_as_alignment: Alignment { abi: 64, pref: 64 },
             // Layout details for (non-function-pointer) pointers, by address space
             pointer_layouts: vec![(

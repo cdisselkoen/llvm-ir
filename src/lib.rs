@@ -15,9 +15,7 @@ pub mod basicblock;
 pub use basicblock::BasicBlock;
 pub mod constant;
 pub use constant::{Constant, ConstantRef};
-#[cfg(feature = "llvm-9-or-greater")]
 pub mod debugloc;
-#[cfg(feature = "llvm-9-or-greater")]
 pub use debugloc::{DebugLoc, HasDebugLoc};
 pub mod function;
 pub use function::Function;
@@ -48,7 +46,6 @@ macro_rules! case {
 
 /// Returns the LLVM version for which `llvm-ir` was configured.
 pub fn llvm_version() -> &'static str {
-    case!("llvm-8");
     case!("llvm-9");
     case!("llvm-10");
     case!("llvm-11");

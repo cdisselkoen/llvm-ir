@@ -1,8 +1,5 @@
 fn main() {
     let mut versions = vec![];
-    if cfg!(feature = "llvm-8") {
-        versions.push(8);
-    }
     if cfg!(feature = "llvm-9") {
         versions.push(9);
     }

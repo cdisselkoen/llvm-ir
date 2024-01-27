@@ -40,8 +40,8 @@ to the LLVM version you want:
 llvm-ir = { version = "0.10.0", features = ["llvm-17"] }
 ```
 
-Currently, the supported LLVM versions are `llvm-8`, `llvm-9`, `llvm-10`,
-`llvm-11`, `llvm-12`, `llvm-13`, `llvm-14`, `llvm-15`, `llvm-16`, and `llvm-17`.
+Currently, the supported LLVM versions are `llvm-9`, `llvm-10`, `llvm-11`,
+`llvm-12`, `llvm-13`, `llvm-14`, `llvm-15`, `llvm-16`, and `llvm-17`.
 
 Then, the easiest way to get started is to parse some existing LLVM IR into
 this crate's data structures.
@@ -82,8 +82,15 @@ using.
 ## Compatibility
 Starting with `llvm-ir` 0.7.0, LLVM versions are selected by a Cargo feature
 flag. This means that a single crate version can be used for any supported LLVM
-version. Currently, `llvm-ir` supports LLVM versions 8 through 17, selected by
-feature flags `llvm-8` through `llvm-17`.
+version. Currently, `llvm-ir` supports LLVM versions 9 through 17, selected by
+feature flags `llvm-9` through `llvm-17`.
+
+You should select the LLVM version corresponding to the version of the LLVM
+library you are linking against (i.e., that is available on your system.)
+Newer LLVMs should be able to read bitcode produced by older LLVMs, so you
+should be able to use this crate to parse bitcode older than the LLVM version
+you select via crate feature, even bitcode produced by LLVMs older than LLVM 9.
+However, this is not extensively tested by us.
 
 `llvm-ir` works on stable Rust. As of this writing, it requires Rust 1.65+.
 
@@ -167,8 +174,9 @@ one of the features `llvm-8`, `llvm-9`, or `llvm-10`. Previously, we had the
 `0.6.x` branch for LLVM 10, the `0.5.x` branch for LLVM 9, and didn't
 officially support LLVM 8. Now, a single release supports LLVM 8, 9, and 10.
   - (Note: Versions of this crate beyond 0.7.0 have added support for later LLVM
-  versions as well. For instance, 0.7.3 and later also supports LLVM 11; and
-  0.7.5 and later also supports LLVM 12.)
+  versions as well. For instance, 0.7.3 and later also support LLVM 11; and
+  0.7.5 and later also support LLVM 12. Crate version 0.11.0 removed support
+  for LLVM 8.)
 - [`FunctionAttribute`] and [`ParameterAttribute`] are now proper enums with
 descriptive variants such as `NoInline`, `StackProtect`, etc. Previously,
 attributes were opaque numeric codes which were difficult to interpret.
