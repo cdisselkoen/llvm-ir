@@ -749,8 +749,10 @@ pub struct Add {
     pub operand0: Operand,
     pub operand1: Operand,
     pub dest: Name,
-    // pub nsw: bool,  // getters for these seem to not be exposed in the LLVM C API, only in the C++ one
-    // pub nuw: bool,  // getters for these seem to not be exposed in the LLVM C API, only in the C++ one
+    #[cfg(feature = "llvm-17-or-greater")]
+    pub nuw: bool,  // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
+    #[cfg(feature = "llvm-17-or-greater")]
+    pub nsw: bool,  // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
     #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
@@ -766,8 +768,10 @@ pub struct Sub {
     pub operand0: Operand,
     pub operand1: Operand,
     pub dest: Name,
-    // pub nsw: bool,  // getters for these seem to not be exposed in the LLVM C API, only in the C++ one
-    // pub nuw: bool,  // getters for these seem to not be exposed in the LLVM C API, only in the C++ one
+    #[cfg(feature = "llvm-17-or-greater")]
+    pub nuw: bool,  // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
+    #[cfg(feature = "llvm-17-or-greater")]
+    pub nsw: bool,  // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
     #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
@@ -783,8 +787,10 @@ pub struct Mul {
     pub operand0: Operand,
     pub operand1: Operand,
     pub dest: Name,
-    // pub nsw: bool,  // getters for these seem to not be exposed in the LLVM C API, only in the C++ one
-    // pub nuw: bool,  // getters for these seem to not be exposed in the LLVM C API, only in the C++ one
+    #[cfg(feature = "llvm-17-or-greater")]
+    pub nuw: bool,  // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
+    #[cfg(feature = "llvm-17-or-greater")]
+    pub nsw: bool,  // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
     #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
@@ -800,7 +806,8 @@ pub struct UDiv {
     pub operand0: Operand,
     pub operand1: Operand,
     pub dest: Name,
-    // pub exact: bool,  // getters for these seem to not be exposed in the LLVM C API, only in the C++ one
+    #[cfg(feature = "llvm-17-or-greater")]
+    pub exact: bool,  // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
     #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
@@ -816,7 +823,8 @@ pub struct SDiv {
     pub operand0: Operand,
     pub operand1: Operand,
     pub dest: Name,
-    // pub exact: bool,  // getters for these seem to not be exposed in the LLVM C API, only in the C++ one
+    #[cfg(feature = "llvm-17-or-greater")]
+    pub exact: bool,  // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
     #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
@@ -907,8 +915,10 @@ pub struct Shl {
     pub operand0: Operand,
     pub operand1: Operand,
     pub dest: Name,
-    // pub nsw: bool,  // getters for these seem to not be exposed in the LLVM C API, only in the C++ one
-    // pub nuw: bool,  // getters for these seem to not be exposed in the LLVM C API, only in the C++ one
+    #[cfg(feature = "llvm-17-or-greater")]
+    pub nuw: bool,  // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
+    #[cfg(feature = "llvm-17-or-greater")]
+    pub nsw: bool,  // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
     #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
@@ -924,7 +934,8 @@ pub struct LShr {
     pub operand0: Operand,
     pub operand1: Operand,
     pub dest: Name,
-    // pub exact: bool,  // getters for these seem to not be exposed in the LLVM C API, only in the C++ one
+    #[cfg(feature = "llvm-17-or-greater")]
+    pub exact: bool,  // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
     #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
@@ -940,7 +951,8 @@ pub struct AShr {
     pub operand0: Operand,
     pub operand1: Operand,
     pub dest: Name,
-    // pub exact: bool,  // getters for these seem to not be exposed in the LLVM C API, only in the C++ one
+    #[cfg(feature = "llvm-17-or-greater")]
+    pub exact: bool,  // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
     #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
@@ -2660,19 +2672,85 @@ macro_rules! binop_from_llvm {
     };
 }
 
-binop_from_llvm!(Add);
-binop_from_llvm!(Sub);
-binop_from_llvm!(Mul);
-binop_from_llvm!(UDiv);
-binop_from_llvm!(SDiv);
+macro_rules! binop_from_llvm_with_nuw_nsw {
+    ($inst:ident) => {
+        impl $inst {
+            pub(crate) fn from_llvm_ref(
+                inst: LLVMValueRef,
+                ctx: &mut ModuleContext,
+                func_ctx: &mut FunctionContext,
+            ) -> Self {
+                assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 2);
+                Self {
+                    operand0: Operand::from_llvm_ref(
+                        unsafe { LLVMGetOperand(inst, 0) },
+                        ctx,
+                        func_ctx,
+                    ),
+                    operand1: Operand::from_llvm_ref(
+                        unsafe { LLVMGetOperand(inst, 1) },
+                        ctx,
+                        func_ctx,
+                    ),
+                    dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
+                    #[cfg(feature = "llvm-17-or-greater")]
+                    nuw: unsafe { LLVMGetNUW(inst) } != 0,
+                    #[cfg(feature = "llvm-17-or-greater")]
+                    nsw: unsafe { LLVMGetNSW(inst) } != 0,
+                    #[cfg(feature = "llvm-9-or-greater")]
+                    debugloc: DebugLoc::from_llvm_with_col(inst),
+                    // metadata: InstructionMetadata::from_llvm_inst(inst),
+                }
+            }
+        }
+    };
+}
+
+macro_rules! binop_from_llvm_with_exact {
+    ($inst:ident) => {
+        impl $inst {
+            pub(crate) fn from_llvm_ref(
+                inst: LLVMValueRef,
+                ctx: &mut ModuleContext,
+                func_ctx: &mut FunctionContext,
+            ) -> Self {
+                assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 2);
+                Self {
+                    operand0: Operand::from_llvm_ref(
+                        unsafe { LLVMGetOperand(inst, 0) },
+                        ctx,
+                        func_ctx,
+                    ),
+                    operand1: Operand::from_llvm_ref(
+                        unsafe { LLVMGetOperand(inst, 1) },
+                        ctx,
+                        func_ctx,
+                    ),
+                    dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
+                    #[cfg(feature = "llvm-17-or-greater")]
+                    exact: unsafe { LLVMGetExact(inst) } != 0,
+                    #[cfg(feature = "llvm-9-or-greater")]
+                    debugloc: DebugLoc::from_llvm_with_col(inst),
+                    // metadata: InstructionMetadata::from_llvm_inst(inst),
+                }
+            }
+        }
+    };
+}
+
+binop_from_llvm_with_nuw_nsw!(Add);
+binop_from_llvm_with_nuw_nsw!(Sub);
+binop_from_llvm_with_nuw_nsw!(Mul);
+binop_from_llvm_with_exact!(UDiv);
+binop_from_llvm_with_exact!(SDiv);
 binop_from_llvm!(URem);
 binop_from_llvm!(SRem);
 binop_from_llvm!(And);
 binop_from_llvm!(Or);
 binop_from_llvm!(Xor);
-binop_from_llvm!(Shl);
-binop_from_llvm!(LShr);
-binop_from_llvm!(AShr);
+binop_from_llvm_with_nuw_nsw!(Shl);
+binop_from_llvm_with_exact!(LShr);
+binop_from_llvm_with_exact!(AShr);
 binop_from_llvm!(FAdd);
 binop_from_llvm!(FSub);
 binop_from_llvm!(FMul);
