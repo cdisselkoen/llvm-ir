@@ -82,7 +82,7 @@ using.
 ## Compatibility
 Starting with `llvm-ir` 0.7.0, LLVM versions are selected by a Cargo feature
 flag. This means that a single crate version can be used for any supported LLVM
-version. Currently, `llvm-ir` supports LLVM versions 8 through 16, selected by
+version. Currently, `llvm-ir` supports LLVM versions 8 through 17, selected by
 feature flags `llvm-8` through `llvm-17`.
 
 `llvm-ir` works on stable Rust, and requires Rust 1.45+.
