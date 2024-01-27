@@ -127,6 +127,7 @@ pub enum Constant {
     // Other ops
     ICmp(ICmp),
     FCmp(FCmp),
+    #[cfg(feature = "llvm-16-or-lower")]
     Select(Select),
 }
 
