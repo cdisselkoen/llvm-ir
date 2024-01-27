@@ -127,6 +127,7 @@ pub enum Constant {
     // Other ops
     ICmp(ICmp),
     FCmp(FCmp),
+    #[cfg(feature = "llvm-16-or-lower")]
     Select(Select),
 }
 
@@ -263,6 +264,7 @@ impl Typed for Constant {
             Constant::AddrSpaceCast(a) => types.type_of(a),
             Constant::ICmp(i) => types.type_of(i),
             Constant::FCmp(f) => types.type_of(f),
+            #[cfg(feature="llvm-16-or-lower")]
             Constant::Select(s) => types.type_of(s),
         }
     }
@@ -431,6 +433,7 @@ impl Display for Constant {
             Constant::AddrSpaceCast(a) => write!(f, "{}", a),
             Constant::ICmp(i) => write!(f, "{}", i),
             Constant::FCmp(c) => write!(f, "{}", c),
+            #[cfg(feature="llvm-16-or-lower")]
             Constant::Select(s) => write!(f, "{}", s),
         }
     }
@@ -1262,6 +1265,7 @@ impl Display for FCmp {
     }
 }
 
+#[cfg(feature="llvm-16-or-lower")]
 #[derive(PartialEq, Clone, Debug)]
 pub struct Select {
     pub condition: ConstantRef,
@@ -1269,8 +1273,10 @@ pub struct Select {
     pub false_value: ConstantRef,
 }
 
+#[cfg(feature="llvm-16-or-lower")]
 impl_constexpr!(Select, Select);
 
+#[cfg(feature="llvm-16-or-lower")]
 impl Typed for Select {
     fn get_type(&self, types: &Types) -> TypeRef {
         let t = types.type_of(&self.true_value);
@@ -1279,6 +1285,7 @@ impl Typed for Select {
     }
 }
 
+#[cfg(feature="llvm-16-or-lower")]
 impl Display for Select {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
@@ -1493,6 +1500,7 @@ impl Constant {
                     LLVMOpcode::LLVMAddrSpaceCast => Constant::AddrSpaceCast(AddrSpaceCast::from_llvm_ref(constant, ctx)),
                     LLVMOpcode::LLVMICmp => Constant::ICmp(ICmp::from_llvm_ref(constant, ctx)),
                     LLVMOpcode::LLVMFCmp => Constant::FCmp(FCmp::from_llvm_ref(constant, ctx)),
+                    #[cfg(feature="llvm-16-or-lower")]
                     LLVMOpcode::LLVMSelect => Constant::Select(Select::from_llvm_ref(constant, ctx)),
                     opcode => panic!("ConstantExpr has unexpected opcode {:?}", opcode),
                 }
@@ -1691,6 +1699,7 @@ impl FCmp {
     }
 }
 
+#[cfg(feature="llvm-16-or-lower")]
 impl Select {
     pub(crate) fn from_llvm_ref(expr: LLVMValueRef, ctx: &mut ModuleContext) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 3);

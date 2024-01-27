@@ -12,6 +12,8 @@ pub use llvm_sys_140 as llvm_sys;
 pub use llvm_sys_150 as llvm_sys;
 #[cfg(feature = "llvm-16")]
 pub use llvm_sys_160 as llvm_sys;
+#[cfg(feature = "llvm-17")]
+pub use llvm_sys_170 as llvm_sys;
 #[cfg(feature = "llvm-8")]
 pub use llvm_sys_80 as llvm_sys;
 #[cfg(feature = "llvm-9")]
