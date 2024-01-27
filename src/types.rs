@@ -1048,7 +1048,16 @@ impl TypesBuilder {
             },
             LLVMTypeKind::LLVMArrayTypeKind => {
                 let element_type = self.type_from_llvm_ref(unsafe { LLVMGetElementType(ty) });
-                self.array_of(element_type, unsafe { LLVMGetArrayLength(ty) as usize })
+                
+                // LLVMGetArrayLength2 was added in LLVM-17: the old function still exists there,
+                // but is deprecated. The parameters are the same, but the return type is changed
+                // from c_uint to u64
+                #[cfg(feature = "llvm-16-or-lower")]
+                let array_len = unsafe { LLVMGetArrayLength(ty) as usize };
+                #[cfg(feature = "llvm-17-or-greater")]
+                let array_len = unsafe { LLVMGetArrayLength2(ty) as usize };
+                
+                self.array_of(element_type, array_len)
             },
             LLVMTypeKind::LLVMVectorTypeKind => {
                 let element_type = self.type_from_llvm_ref(unsafe { LLVMGetElementType(ty) });
