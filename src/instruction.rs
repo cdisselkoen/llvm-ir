@@ -654,13 +654,21 @@ macro_rules! binop_nuw_nsw_display {
     ($inst:ty, $dispname:expr) => {
         impl Display for $inst {
             fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                #[cfg(feature = "llvm-16-or-lower")]
+                let nuw = "";
+                #[cfg(feature = "llvm-17-or-greater")]
+                let nuw = if self.nuw { " nuw" } else { "" };
+                #[cfg(feature = "llvm-16-or-lower")]
+                let nsw = "";
+                #[cfg(feature = "llvm-17-or-greater")]
+                let nsw = if self.nsw { " nsw" } else { "" };
                 write!(
                     f,
                     "{} = {}{}{} {}, {}",
                     &self.dest,
                     $dispname,
-                    if cfg!(feature = "llvm-17-or-greater") && self.nuw { " nuw" } else { "" },
-                    if cfg!(feature = "llvm-17-or-greater") && self.nsw { " nsw" } else { "" },
+                    nuw,
+                    nsw,
                     &self.operand0,
                     &self.operand1,
                 )?;
@@ -679,12 +687,16 @@ macro_rules! binop_exact_display {
     ($inst:ty, $dispname:expr) => {
         impl Display for $inst {
             fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                #[cfg(feature = "llvm-16-or-lower")]
+                let exact = "";
+                #[cfg(feature = "llvm-17-or-greater")]
+                let exact = if self.exact { " exact" } else { "" };
                 write!(
                     f,
                     "{} = {}{} {}, {}",
                     &self.dest,
                     $dispname,
-                    if cfg!(feature = "llvm-17-or-greater") && self.exact { " exact" } else { "" },
+                    exact,
                     &self.operand0,
                     &self.operand1,
                 )?;
