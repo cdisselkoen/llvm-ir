@@ -51,18 +51,18 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: build
-          # LLVM 11 doesn't work with -strict, see #53
-          args: ${{ matrix.llvm == '11' && format('--features=llvm-{0}', matrix.llvm) || format('--features=llvm-{0}-strict', matrix.llvm) }}
+          # LLVM 11 doesn't work with strict-versioning, see #53
+          args: ${{ format('--features=llvm-{0}{1}', matrix.llvm, matrix.llvm != '11' && ',strict-versioning' || '') }}
 
       - name: Build Release
         uses: actions-rs/cargo@v1
         with:
           command: build
-          # LLVM 11 doesn't work with -strict, see #53
-          args: ${{ matrix.llvm == '11' && format('--release --features=llvm-{0}', matrix.llvm) || format('--release --features=llvm-{0}-strict', matrix.llvm) }}
+          # LLVM 11 doesn't work with strict-versioning, see #53
+          args: ${{ format('--release --features=llvm-{0}{1}', matrix.llvm, matrix.llvm != '11' && ',strict-versioning' || '') }}
 
       - name: Test
         uses: actions-rs/cargo@v1
         with:
           command: test
-          args: ${{ matrix.llvm == '11' && format('--release --features=llvm-{0}', matrix.llvm) || format('--release --features=llvm-{0}-strict', matrix.llvm) }}
+          args: ${{ format('--release --features=llvm-{0}{1}', matrix.llvm, matrix.llvm != '11' && ',strict-versioning' || '') }}
