@@ -85,7 +85,7 @@ flag. This means that a single crate version can be used for any supported LLVM
 version. Currently, `llvm-ir` supports LLVM versions 8 through 17, selected by
 feature flags `llvm-8` through `llvm-17`.
 
-`llvm-ir` works on stable Rust, and requires Rust 1.45+.
+`llvm-ir` works on stable Rust. As of this writing, it requires Rust 1.65+.
 
 ## Development/Debugging
 For development or debugging, you may want LLVM text-format (`*.ll`) files in
