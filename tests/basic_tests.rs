@@ -625,10 +625,16 @@ fn loopbc() {
         #[cfg(feature = "llvm-15-or-greater")]
         assert_eq!(add.dest, Name::Number(7));
         assert_eq!(module.type_of(add), module.types.i32());
+        #[cfg(feature = "llvm-17-or-greater")]
+        assert_eq!(add.nuw, false);
+        #[cfg(feature = "llvm-17-or-greater")]
+        assert_eq!(add.nsw, true);
         #[cfg(feature = "llvm-14-or-lower")]
         assert_eq!(&add.to_string(), "%8 = add i32 %0, i32 3");
-        #[cfg(feature = "llvm-15-or-greater")]
+        #[cfg(any(feature = "llvm-15", feature = "llvm-16"))]
         assert_eq!(&add.to_string(), "%7 = add i32 %0, i32 3");
+        #[cfg(feature = "llvm-17-or-greater")]
+        assert_eq!(&add.to_string(), "%7 = add nsw i32 %0, i32 3");
     }
     #[cfg(feature = "llvm-12-or-lower")]
     {
