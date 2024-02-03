@@ -45,7 +45,7 @@ Currently, the supported LLVM versions are `llvm-9`, `llvm-10`, `llvm-11`,
 
 Then, the easiest way to get started is to parse some existing LLVM IR into
 this crate's data structures.
-To do this, you need LLVM bitcode (`*.bc`) files.
+To do this, you need LLVM bitcode (`*.bc`) or text-format IR (`*.ll`) files.
 If you currently have C/C++ sources (say, `source.c`), you can generate
 `*.bc` files with `clang`'s `-c` and `-emit-llvm` flags:
 ```bash
@@ -61,6 +61,7 @@ In either case, once you have a bitcode file, then you can use `llvm-ir`'s
 use llvm_ir::Module;
 let module = Module::from_bc_path("path/to/my/file.bc")?;
 ```
+or if you have a text-format IR file, you can use `Module::from_ir_path()`.
 
 You may also be interested in the [`llvm-ir-analysis`] crate, which computes
 control-flow graphs, dominator trees, etc for `llvm-ir` functions.
@@ -125,20 +126,12 @@ source locations), but makes no attempt to recover any other debug metadata.
 LLVM files containing metadata can still be parsed in with no problems, but
 the resulting `Module` structures will not contain any of the metadata,
 except debug locations.
-Work-in-progress on fixing this can be found on the `metadata` branch of this
-repo, but be warned that the `metadata` branch doesn't even build at the time
-of this writing, let alone provide any meaningful functionality for crate
-users.
 
 A few other features are missing from `llvm-ir`'s data structures because
 getters for them are missing from the LLVM C API and the Rust `llvm-sys`
 crate, only being present in the LLVM C++ API.
 These include but are not limited to:
 
-- the `nsw` and `nuw` flags on `Add`, `Sub`, `Mul`, and `Shl`, and likewise
-the `exact` flag on `UDiv`, `SDiv`, `LShr`, and `AShr`. The C API has
-functionality to create new instructions specifying values of these flags,
-but not to query the values of these flags on existing instructions.
 - the "fast-math flags" on various floating-point operations
 - contents of inline assembly functions
 - information about the clauses in the variadic `LandingPad` instruction
@@ -150,6 +143,11 @@ associated with a function
 fit in 64 bits) -- see [#5](https://github.com/cdisselkoen/llvm-ir/issues/5)
 - the "other labels" reachable from a `CallBr` terminator (which was
 introduced in LLVM 9)
+- (LLVM 16 and lower -- fixed in LLVM 17 and later) the `nsw` and `nuw` flags on
+`Add`, `Sub`, `Mul`, and `Shl`, and likewise the `exact` flag on `UDiv`, `SDiv`,
+`LShr`, and `AShr`. The C API has functionality to create new instructions
+specifying values of these flags, but not to query the values of these flags on
+existing instructions.
 - (LLVM 9 and lower -- fixed in LLVM 10 and later) the opcode for the
 `AtomicRMW` instruction, i.e., `Xchg`, `Add`, `Max`, `Min`, and the like.
 
@@ -158,11 +156,10 @@ More discussion about this is in
 Any contributions to filling these gaps in the C API are greatly appreciated!
 
 ## Acknowledgments
-`llvm-ir` is heavily inspired by the [`llvm-hs-pure` Haskell package].
-Most of the data structures in `llvm-ir` are essentially translations from
-Haskell to Rust of the data structures in `llvm-hs-pure` (with some tweaks).
-To a lesser extent, `llvm-ir` borrows from the larger [`llvm-hs` Haskell
-package] as well.
+`llvm-ir` took its original inspiration from the [`llvm-hs-pure` Haskell package].
+Most of the data structures in the original release of `llvm-ir` were
+essentially translations from Haskell to Rust of the data structures in
+`llvm-hs-pure` (with some tweaks).
 
 ## Changelog for 0.7.0
 
@@ -197,8 +194,8 @@ number of breaking changes to the public interface:
   [`module.types.named_struct_def()`] to get the definition for any named
   struct type in the module.
 - The required Rust version increased from 1.36+ to 1.39+.
-  - (Note: 0.7.2 increased the required Rust version again, to 1.43+;
-    and 0.8.1 increased it to 1.45+.)
+  - (Note: Versions of this crate beyond 0.7.0 have increased this requirement
+  further.  For the current required Rust version, see "Compatibility" above.)
 
 [`llvm-sys`]: https://crates.io/crates/llvm-sys
 [`inkwell`]: https://github.com/TheDan64/inkwell
