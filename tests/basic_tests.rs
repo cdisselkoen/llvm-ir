@@ -1708,6 +1708,28 @@ fn issue42() {
     // just check the module parses without errors
 }
 
+/// This test checks for regression on issue 57
+#[cfg(feature = "llvm-16-or-greater")] // although the issue probably affects all of our supported versions (IFunc has existed since at least LLVM 8), the provided bitcode was produced with LLVM 16
+#[test]
+fn issue57() {
+    init_logging();
+    let path = Path::new(BC_DIR).join("ifunc_minimal.ll");
+    let module = Module::from_ir_path(&path).expect("Failed to parse module");
+    let ifunc = module.get_global_ifunc_by_name(&Name::from("__libc_strstr")).expect("failed to find global ifunc");
+    assert_eq!(ifunc.ty, module.types.pointer());
+    match ifunc.resolver_fn.as_ref() {
+        Constant::GlobalReference { name, ty } => {
+            assert_eq!(name, &Name::from("__libc_strstr_ifunc"));
+            assert_eq!(ty, &module.types.func_type(module.types.pointer(), vec![], false));
+        }
+        _ => panic!("expected a GlobalReference"),
+    }
+
+    let path = Path::new(BC_DIR).join("strstr.o.bc");
+    let _ = Module::from_bc_path(&path).expect("Failed to parse module");
+    // just check the module parses without errors
+}
+
 #[test]
 fn rustbc() {
     // This tests against the checked-in rust.bc, which was generated from the checked-in rust.rs with rustc 1.39.0

@@ -19,6 +19,10 @@ pub fn get_global_aliases(module: LLVMModuleRef) -> impl Iterator<Item = LLVMVal
     GlobalAliasIterator::new(module)
 }
 
+pub fn get_global_ifuncs(module: LLVMModuleRef) -> impl Iterator<Item = LLVMValueRef> {
+    GlobalIFuncIterator::new(module)
+}
+
 pub fn get_parameters(func: LLVMValueRef) -> impl Iterator<Item = LLVMValueRef> {
     ParamIterator::new(func)
 }
@@ -81,6 +85,13 @@ iterator!(
     LLVMValueRef,
     LLVMGetFirstGlobalAlias,
     LLVMGetNextGlobalAlias
+);
+iterator!(
+    GlobalIFuncIterator,
+    LLVMModuleRef,
+    LLVMValueRef,
+    LLVMGetFirstGlobalIFunc,
+    LLVMGetNextGlobalIFunc
 );
 iterator!(
     ParamIterator,
