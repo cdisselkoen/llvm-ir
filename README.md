@@ -37,7 +37,7 @@ add it as a dependency in your `Cargo.toml`, selecting the feature corresponding
 to the LLVM version you want:
 ```toml
 [dependencies]
-llvm-ir = { version = "0.10.0", features = ["llvm-17"] }
+llvm-ir = { version = "0.11.0", features = ["llvm-17"] }
 ```
 
 Currently, the supported LLVM versions are `llvm-9`, `llvm-10`, `llvm-11`,
