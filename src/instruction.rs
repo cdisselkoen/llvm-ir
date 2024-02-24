@@ -1,5 +1,4 @@
 use crate::constant::ConstantRef;
-#[cfg(feature = "llvm-9-or-greater")]
 use crate::debugloc::{DebugLoc, HasDebugLoc};
 use crate::function::{CallingConvention, FunctionAttribute, ParameterAttribute};
 use crate::name::Name;
@@ -150,7 +149,6 @@ impl Typed for Instruction {
     }
 }
 
-#[cfg(feature = "llvm-9-or-greater")]
 impl HasDebugLoc for Instruction {
     fn get_debug_loc(&self) -> &Option<DebugLoc> {
         match self {
@@ -555,7 +553,6 @@ macro_rules! impl_inst {
             }
         }
 
-        #[cfg(feature = "llvm-9-or-greater")]
         impl HasDebugLoc for $inst {
             fn get_debug_loc(&self) -> &Option<DebugLoc> {
                 &self.debugloc
@@ -639,7 +636,6 @@ macro_rules! binop_display {
                     "{} = {} {}, {}",
                     &self.dest, $dispname, &self.operand0, &self.operand1,
                 )?;
-                #[cfg(feature = "llvm-9-or-greater")]
                 if self.debugloc.is_some() {
                     write!(f, " (with debugloc)")?;
                 }
@@ -672,7 +668,6 @@ macro_rules! binop_nuw_nsw_display {
                     &self.operand0,
                     &self.operand1,
                 )?;
-                #[cfg(feature = "llvm-9-or-greater")]
                 if self.debugloc.is_some() {
                     write!(f, " (with debugloc)")?;
                 }
@@ -700,7 +695,6 @@ macro_rules! binop_exact_display {
                     &self.operand0,
                     &self.operand1,
                 )?;
-                #[cfg(feature = "llvm-9-or-greater")]
                 if self.debugloc.is_some() {
                     write!(f, " (with debugloc)")?;
                 }
@@ -724,7 +718,6 @@ macro_rules! unop_same_type {
         impl Display for $inst {
             fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
                 write!(f, "{} = {} {}", &self.dest, $dispname, &self.operand)?;
-                #[cfg(feature = "llvm-9-or-greater")]
                 if self.debugloc.is_some() {
                     write!(f, " (with debugloc)")?;
                 }
@@ -747,7 +740,6 @@ macro_rules! unop_explicitly_typed {
                     "{} = {} {} to {}",
                     &self.dest, $dispname, &self.operand, &self.to_type,
                 )?;
-                #[cfg(feature = "llvm-9-or-greater")]
                 if self.debugloc.is_some() {
                     write!(f, " (with debugloc)")?;
                 }
@@ -813,7 +805,6 @@ pub struct Add {
     pub nuw: bool,  // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
     #[cfg(feature = "llvm-17-or-greater")]
     pub nsw: bool,  // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -834,7 +825,6 @@ pub struct Sub {
     pub nuw: bool,  // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
     #[cfg(feature = "llvm-17-or-greater")]
     pub nsw: bool,  // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -855,7 +845,6 @@ pub struct Mul {
     pub nuw: bool,  // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
     #[cfg(feature = "llvm-17-or-greater")]
     pub nsw: bool,  // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -874,7 +863,6 @@ pub struct UDiv {
     pub dest: Name,
     #[cfg(feature = "llvm-17-or-greater")]
     pub exact: bool,  // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -893,7 +881,6 @@ pub struct SDiv {
     pub dest: Name,
     #[cfg(feature = "llvm-17-or-greater")]
     pub exact: bool,  // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -910,7 +897,6 @@ pub struct URem {
     pub operand0: Operand,
     pub operand1: Operand,
     pub dest: Name,
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -927,7 +913,6 @@ pub struct SRem {
     pub operand0: Operand,
     pub operand1: Operand,
     pub dest: Name,
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -944,7 +929,6 @@ pub struct And {
     pub operand0: Operand,
     pub operand1: Operand,
     pub dest: Name,
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -961,7 +945,6 @@ pub struct Or {
     pub operand0: Operand,
     pub operand1: Operand,
     pub dest: Name,
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -978,7 +961,6 @@ pub struct Xor {
     pub operand0: Operand,
     pub operand1: Operand,
     pub dest: Name,
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -999,7 +981,6 @@ pub struct Shl {
     pub nuw: bool,  // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
     #[cfg(feature = "llvm-17-or-greater")]
     pub nsw: bool,  // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -1018,7 +999,6 @@ pub struct LShr {
     pub dest: Name,
     #[cfg(feature = "llvm-17-or-greater")]
     pub exact: bool,  // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -1037,7 +1017,6 @@ pub struct AShr {
     pub dest: Name,
     #[cfg(feature = "llvm-17-or-greater")]
     pub exact: bool,  // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -1055,7 +1034,6 @@ pub struct FAdd {
     pub operand1: Operand,
     pub dest: Name,
     // pub fast_math_flags: FastMathFlags,  // getters for these seem to not be exposed in the LLVM C API, only in the C++ one
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -1073,7 +1051,6 @@ pub struct FSub {
     pub operand1: Operand,
     pub dest: Name,
     // pub fast_math_flags: FastMathFlags,  // getters for these seem to not be exposed in the LLVM C API, only in the C++ one
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -1091,7 +1068,6 @@ pub struct FMul {
     pub operand1: Operand,
     pub dest: Name,
     // pub fast_math_flags: FastMathFlags,  // getters for these seem to not be exposed in the LLVM C API, only in the C++ one
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -1109,7 +1085,6 @@ pub struct FDiv {
     pub operand1: Operand,
     pub dest: Name,
     // pub fast_math_flags: FastMathFlags,  // getters for these seem to not be exposed in the LLVM C API, only in the C++ one
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -1127,7 +1102,6 @@ pub struct FRem {
     pub operand1: Operand,
     pub dest: Name,
     // pub fast_math_flags: FastMathFlags,  // getters for these seem to not be exposed in the LLVM C API, only in the C++ one
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -1144,7 +1118,6 @@ pub struct FNeg {
     pub operand: Operand,
     pub dest: Name,
     // pub fast_math_flags: FastMathFlags,  // getters for these seem to not be exposed in the LLVM C API, only in the C++ one
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -1159,7 +1132,6 @@ pub struct ExtractElement {
     pub vector: Operand,
     pub index: Operand,
     pub dest: Name,
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -1186,7 +1158,6 @@ impl Display for ExtractElement {
             "{} = extractelement {}, {}",
             &self.dest, &self.vector, &self.index,
         )?;
-        #[cfg(feature = "llvm-9-or-greater")]
         if self.debugloc.is_some() {
             write!(f, " (with debugloc)")?;
         }
@@ -1202,7 +1173,6 @@ pub struct InsertElement {
     pub element: Operand,
     pub index: Operand,
     pub dest: Name,
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -1223,7 +1193,6 @@ impl Display for InsertElement {
             "{} = insertelement {}, {}, {}",
             &self.dest, &self.vector, &self.element, &self.index,
         )?;
-        #[cfg(feature = "llvm-9-or-greater")]
         if self.debugloc.is_some() {
             write!(f, " (with debugloc)")?;
         }
@@ -1239,7 +1208,6 @@ pub struct ShuffleVector {
     pub operand1: Operand,
     pub dest: Name,
     pub mask: ConstantRef,
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -1283,7 +1251,6 @@ impl Display for ShuffleVector {
             "{} = shufflevector {}, {}, {}",
             &self.dest, &self.operand0, &self.operand1, &self.mask,
         )?;
-        #[cfg(feature = "llvm-9-or-greater")]
         if self.debugloc.is_some() {
             write!(f, " (with debugloc)")?;
         }
@@ -1298,7 +1265,6 @@ pub struct ExtractValue {
     pub aggregate: Operand,
     pub indices: Vec<u32>,
     pub dest: Name,
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -1344,7 +1310,6 @@ impl Display for ExtractValue {
         for idx in &self.indices[1 ..] {
             write!(f, ", {idx}")?;
         }
-        #[cfg(feature = "llvm-9-or-greater")]
         if self.debugloc.is_some() {
             write!(f, " (with debugloc)")?;
         }
@@ -1360,7 +1325,6 @@ pub struct InsertValue {
     pub element: Operand,
     pub indices: Vec<u32>,
     pub dest: Name,
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -1387,7 +1351,6 @@ impl Display for InsertValue {
         for idx in &self.indices[1 ..] {
             write!(f, ", {idx}")?;
         }
-        #[cfg(feature = "llvm-9-or-greater")]
         if self.debugloc.is_some() {
             write!(f, " (with debugloc)")?;
         }
@@ -1403,7 +1366,6 @@ pub struct Alloca {
     pub num_elements: Operand, // llvm-hs-pure has Option<Operand>
     pub dest: Name,
     pub alignment: u32,
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -1433,7 +1395,6 @@ impl Display for Alloca {
             write!(f, ", {}", &self.num_elements)?;
         }
         write!(f, ", align {}", &self.alignment)?;
-        #[cfg(feature = "llvm-9-or-greater")]
         if self.debugloc.is_some() {
             write!(f, " (with debugloc)")?;
         }
@@ -1452,7 +1413,6 @@ pub struct Load {
     pub volatile: bool,
     pub atomicity: Option<Atomicity>,
     pub alignment: u32,
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -1500,7 +1460,6 @@ impl Display for Load {
             write!(f, " {}", a)?;
         }
         write!(f, ", align {}", &self.alignment)?;
-        #[cfg(feature = "llvm-9-or-greater")]
         if self.debugloc.is_some() {
             write!(f, " (with debugloc)")?;
         }
@@ -1517,7 +1476,6 @@ pub struct Store {
     pub volatile: bool,
     pub atomicity: Option<Atomicity>,
     pub alignment: u32,
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -1539,7 +1497,6 @@ impl Display for Store {
             write!(f, " {}", a)?;
         }
         write!(f, ", align {}", &self.alignment)?;
-        #[cfg(feature = "llvm-9-or-greater")]
         if self.debugloc.is_some() {
             write!(f, " (with debugloc)")?;
         }
@@ -1552,7 +1509,6 @@ impl Display for Store {
 #[derive(PartialEq, Clone, Debug)]
 pub struct Fence {
     pub atomicity: Atomicity,
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -1563,7 +1519,6 @@ void_typed!(Fence);
 impl Display for Fence {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "fence {}", &self.atomicity)?;
-        #[cfg(feature = "llvm-9-or-greater")]
         if self.debugloc.is_some() {
             write!(f, " (with debugloc)")?;
         }
@@ -1586,7 +1541,6 @@ pub struct CmpXchg {
     pub failure_memory_ordering: MemoryOrdering,
     #[cfg(feature = "llvm-10-or-greater")]
     pub weak: bool,
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -1621,7 +1575,6 @@ impl Display for CmpXchg {
             &self.atomicity,
             &self.failure_memory_ordering,
         )?;
-        #[cfg(feature = "llvm-9-or-greater")]
         if self.debugloc.is_some() {
             write!(f, " (with debugloc)")?;
         }
@@ -1641,7 +1594,6 @@ pub struct AtomicRMW {
     pub dest: Name,
     pub volatile: bool,
     pub atomicity: Atomicity,
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -1677,7 +1629,6 @@ impl Display for AtomicRMW {
         #[cfg(feature = "llvm-10-or-greater")]
         write!(f, "{} ", &self.operation)?;
         write!(f, "{}, {} {}", &self.address, &self.value, &self.atomicity)?;
-        #[cfg(feature = "llvm-9-or-greater")]
         if self.debugloc.is_some() {
             write!(f, " (with debugloc)")?;
         }
@@ -1694,7 +1645,6 @@ pub struct GetElementPtr {
     pub indices: Vec<Operand>,
     pub dest: Name,
     pub in_bounds: bool,
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     #[cfg(feature = "llvm-14-or-greater")]
     pub source_element_type: TypeRef
@@ -1771,7 +1721,6 @@ impl Display for GetElementPtr {
         for idx in &self.indices {
             write!(f, ", {}", idx)?;
         }
-        #[cfg(feature = "llvm-9-or-greater")]
         if self.debugloc.is_some() {
             write!(f, " (with debugloc)")?;
         }
@@ -1786,7 +1735,6 @@ pub struct Trunc {
     pub operand: Operand,
     pub to_type: TypeRef,
     pub dest: Name,
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -1801,7 +1749,6 @@ pub struct ZExt {
     pub operand: Operand,
     pub to_type: TypeRef,
     pub dest: Name,
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -1816,7 +1763,6 @@ pub struct SExt {
     pub operand: Operand,
     pub to_type: TypeRef,
     pub dest: Name,
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -1831,7 +1777,6 @@ pub struct FPTrunc {
     pub operand: Operand,
     pub to_type: TypeRef,
     pub dest: Name,
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -1846,7 +1791,6 @@ pub struct FPExt {
     pub operand: Operand,
     pub to_type: TypeRef,
     pub dest: Name,
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -1861,7 +1805,6 @@ pub struct FPToUI {
     pub operand: Operand,
     pub to_type: TypeRef,
     pub dest: Name,
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -1876,7 +1819,6 @@ pub struct FPToSI {
     pub operand: Operand,
     pub to_type: TypeRef,
     pub dest: Name,
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -1891,7 +1833,6 @@ pub struct UIToFP {
     pub operand: Operand,
     pub to_type: TypeRef,
     pub dest: Name,
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -1906,7 +1847,6 @@ pub struct SIToFP {
     pub operand: Operand,
     pub to_type: TypeRef,
     pub dest: Name,
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -1921,7 +1861,6 @@ pub struct PtrToInt {
     pub operand: Operand,
     pub to_type: TypeRef,
     pub dest: Name,
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -1936,7 +1875,6 @@ pub struct IntToPtr {
     pub operand: Operand,
     pub to_type: TypeRef,
     pub dest: Name,
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -1951,7 +1889,6 @@ pub struct BitCast {
     pub operand: Operand,
     pub to_type: TypeRef,
     pub dest: Name,
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -1966,7 +1903,6 @@ pub struct AddrSpaceCast {
     pub operand: Operand,
     pub to_type: TypeRef,
     pub dest: Name,
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -1982,7 +1918,6 @@ pub struct ICmp {
     pub operand0: Operand,
     pub operand1: Operand,
     pub dest: Name,
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -2015,7 +1950,6 @@ impl Display for ICmp {
             "{} = icmp {} {}, {}",
             &self.dest, &self.predicate, &self.operand0, &self.operand1,
         )?;
-        #[cfg(feature = "llvm-9-or-greater")]
         if self.debugloc.is_some() {
             write!(f, " (with debugloc)")?;
         }
@@ -2031,7 +1965,6 @@ pub struct FCmp {
     pub operand0: Operand,
     pub operand1: Operand,
     pub dest: Name,
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -2064,7 +1997,6 @@ impl Display for FCmp {
             "{} = fcmp {} {}, {}",
             &self.dest, &self.predicate, &self.operand0, &self.operand1,
         )?;
-        #[cfg(feature = "llvm-9-or-greater")]
         if self.debugloc.is_some() {
             write!(f, " (with debugloc)")?;
         }
@@ -2078,7 +2010,6 @@ pub struct Phi {
     pub incoming_values: Vec<(Operand, Name)>,
     pub dest: Name,
     pub to_type: TypeRef,
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -2101,7 +2032,6 @@ impl Display for Phi {
         for (val, label) in &self.incoming_values[1 ..] {
             write!(f, ", [ {}, {} ]", val, label)?;
         }
-        #[cfg(feature = "llvm-9-or-greater")]
         if self.debugloc.is_some() {
             write!(f, " (with debugloc)")?;
         }
@@ -2117,7 +2047,6 @@ pub struct Select {
     pub true_value: Operand,
     pub false_value: Operand,
     pub dest: Name,
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -2140,7 +2069,6 @@ impl Display for Select {
             "{} = select {}, {}, {}",
             &self.dest, &self.condition, &self.true_value, &self.false_value,
         )?;
-        #[cfg(feature = "llvm-9-or-greater")]
         if self.debugloc.is_some() {
             write!(f, " (with debugloc)")?;
         }
@@ -2155,7 +2083,6 @@ impl Display for Select {
 pub struct Freeze {
     pub operand: Operand,
     pub dest: Name,
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -2178,7 +2105,6 @@ pub struct Call {
     pub function_attributes: Vec<FunctionAttribute>, // llvm-hs has the equivalent of Vec<Either<GroupID, FunctionAttribute>>, but I'm not sure how the GroupID option comes up
     pub is_tail_call: bool, // llvm-hs has the more sophisticated structure Option<TailCallKind>, but the LLVM C API just gives us true/false
     pub calling_convention: CallingConvention,
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -2233,7 +2159,6 @@ impl Display for Call {
             }
         }
         write!(f, ")")?;
-        #[cfg(feature = "llvm-9-or-greater")]
         if self.debugloc.is_some() {
             write!(f, " (with debugloc)")?;
         }
@@ -2248,7 +2173,6 @@ pub struct VAArg {
     pub arg_list: Operand,
     pub cur_type: TypeRef,
     pub dest: Name,
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -2269,7 +2193,6 @@ impl Display for VAArg {
             "{} = va_arg {}, {}",
             &self.dest, &self.arg_list, &self.cur_type,
         )?;
-        #[cfg(feature = "llvm-9-or-greater")]
         if self.debugloc.is_some() {
             write!(f, " (with debugloc)")?;
         }
@@ -2285,7 +2208,6 @@ pub struct LandingPad {
     pub clauses: Vec<LandingPadClause>,
     pub dest: Name,
     pub cleanup: bool,
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -2305,7 +2227,6 @@ impl Display for LandingPad {
         if self.cleanup {
             write!(f, " cleanup")?;
         }
-        #[cfg(feature = "llvm-9-or-greater")]
         if self.debugloc.is_some() {
             write!(f, " (with debugloc)")?;
         }
@@ -2320,7 +2241,6 @@ pub struct CatchPad {
     pub catch_switch: Operand,
     pub args: Vec<Operand>,
     pub dest: Name,
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -2349,7 +2269,6 @@ impl Display for CatchPad {
             }
         }
         write!(f, "]")?;
-        #[cfg(feature = "llvm-9-or-greater")]
         if self.debugloc.is_some() {
             write!(f, " (with debugloc)")?;
         }
@@ -2364,7 +2283,6 @@ pub struct CleanupPad {
     pub parent_pad: Operand,
     pub args: Vec<Operand>,
     pub dest: Name,
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -2393,7 +2311,6 @@ impl Display for CleanupPad {
             }
         }
         write!(f, "]")?;
-        #[cfg(feature = "llvm-9-or-greater")]
         if self.debugloc.is_some() {
             write!(f, " (with debugloc)")?;
         }
@@ -2729,7 +2646,6 @@ macro_rules! unop_from_llvm {
                         func_ctx,
                     ),
                     dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
-                    #[cfg(feature = "llvm-9-or-greater")]
                     debugloc: DebugLoc::from_llvm_with_col(inst),
                     // metadata: InstructionMetadata::from_llvm_inst(inst),
                 }
@@ -2759,7 +2675,6 @@ macro_rules! binop_from_llvm {
                         func_ctx,
                     ),
                     dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
-                    #[cfg(feature = "llvm-9-or-greater")]
                     debugloc: DebugLoc::from_llvm_with_col(inst),
                     // metadata: InstructionMetadata::from_llvm_inst(inst),
                 }
@@ -2793,7 +2708,6 @@ macro_rules! binop_from_llvm_with_nuw_nsw {
                     nuw: unsafe { LLVMGetNUW(inst) } != 0,
                     #[cfg(feature = "llvm-17-or-greater")]
                     nsw: unsafe { LLVMGetNSW(inst) } != 0,
-                    #[cfg(feature = "llvm-9-or-greater")]
                     debugloc: DebugLoc::from_llvm_with_col(inst),
                     // metadata: InstructionMetadata::from_llvm_inst(inst),
                 }
@@ -2825,7 +2739,6 @@ macro_rules! binop_from_llvm_with_exact {
                     dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
                     #[cfg(feature = "llvm-17-or-greater")]
                     exact: unsafe { LLVMGetExact(inst) } != 0,
-                    #[cfg(feature = "llvm-9-or-greater")]
                     debugloc: DebugLoc::from_llvm_with_col(inst),
                     // metadata: InstructionMetadata::from_llvm_inst(inst),
                 }
@@ -2867,7 +2780,6 @@ impl ExtractElement {
             vector: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 0) }, ctx, func_ctx),
             index: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 1) }, ctx, func_ctx),
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
-            #[cfg(feature = "llvm-9-or-greater")]
             debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
@@ -2886,7 +2798,6 @@ impl InsertElement {
             element: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 1) }, ctx, func_ctx),
             index: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 2) }, ctx, func_ctx),
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
-            #[cfg(feature = "llvm-9-or-greater")]
             debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
@@ -2937,7 +2848,6 @@ impl ShuffleVector {
                 }
             },
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
-            #[cfg(feature = "llvm-9-or-greater")]
             debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
@@ -2959,7 +2869,6 @@ impl ExtractValue {
                 std::slice::from_raw_parts(ptr, num_indices as usize).to_vec()
             },
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
-            #[cfg(feature = "llvm-9-or-greater")]
             debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
@@ -2982,7 +2891,6 @@ impl InsertValue {
                 std::slice::from_raw_parts(ptr, num_indices as usize).to_vec()
             },
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
-            #[cfg(feature = "llvm-9-or-greater")]
             debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
@@ -3007,7 +2915,6 @@ impl Alloca {
             ),
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
             alignment: unsafe { LLVMGetAlignment(inst) },
-            #[cfg(feature = "llvm-9-or-greater")]
             debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
@@ -3039,7 +2946,6 @@ impl Load {
                 }
             },
             alignment: unsafe { LLVMGetAlignment(inst) },
-            #[cfg(feature = "llvm-9-or-greater")]
             debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
@@ -3069,7 +2975,6 @@ impl Store {
                 }
             },
             alignment: unsafe { LLVMGetAlignment(inst) },
-            #[cfg(feature = "llvm-9-or-greater")]
             debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
@@ -3084,7 +2989,6 @@ impl Fence {
                 synch_scope: SynchronizationScope::from_llvm_ref(inst),
                 mem_ordering: MemoryOrdering::from_llvm(unsafe { LLVMGetOrdering(inst) }),
             },
-            #[cfg(feature = "llvm-9-or-greater")]
             debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
@@ -3115,7 +3019,6 @@ impl CmpXchg {
             }),
             #[cfg(feature = "llvm-10-or-greater")]
             weak: unsafe { LLVMGetWeak(inst) } != 0,
-            #[cfg(feature = "llvm-9-or-greater")]
             debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
@@ -3141,7 +3044,6 @@ impl AtomicRMW {
                 synch_scope: SynchronizationScope::from_llvm_ref(inst),
                 mem_ordering: MemoryOrdering::from_llvm(unsafe { LLVMGetOrdering(inst) }),
             },
-            #[cfg(feature = "llvm-9-or-greater")]
             debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
@@ -3166,7 +3068,6 @@ impl GetElementPtr {
             },
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
             in_bounds: unsafe { LLVMIsInBounds(inst) } != 0,
-            #[cfg(feature = "llvm-9-or-greater")]
             debugloc: DebugLoc::from_llvm_with_col(inst),
             #[cfg(feature = "llvm-14-or-greater")]
             source_element_type: ctx.types.type_from_llvm_ref(unsafe { LLVMGetGEPSourceElementType(inst) }),
@@ -3194,7 +3095,6 @@ macro_rules! typed_unop_from_llvm {
                     ),
                     to_type: ctx.types.type_from_llvm_ref(unsafe { LLVMTypeOf(inst) }),
                     dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
-                    #[cfg(feature = "llvm-9-or-greater")]
                     debugloc: DebugLoc::from_llvm_with_col(inst),
                     // metadata: InstructionMetadata::from_llvm_inst(inst),
                 }
@@ -3229,7 +3129,6 @@ impl ICmp {
             operand0: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 0) }, ctx, func_ctx),
             operand1: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 1) }, ctx, func_ctx),
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
-            #[cfg(feature = "llvm-9-or-greater")]
             debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
@@ -3248,7 +3147,6 @@ impl FCmp {
             operand0: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 0) }, ctx, func_ctx),
             operand1: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 1) }, ctx, func_ctx),
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
-            #[cfg(feature = "llvm-9-or-greater")]
             debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
@@ -3282,7 +3180,6 @@ impl Phi {
             },
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
             to_type: ctx.types.type_from_llvm_ref(unsafe { LLVMTypeOf(inst) }),
-            #[cfg(feature = "llvm-9-or-greater")]
             debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
@@ -3301,7 +3198,6 @@ impl Select {
             true_value: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 1) }, ctx, func_ctx),
             false_value: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 2) }, ctx, func_ctx),
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
-            #[cfg(feature = "llvm-9-or-greater")]
             debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
@@ -3442,7 +3338,6 @@ impl Call {
             function_attributes: callinfo.function_attributes,
             is_tail_call: unsafe { LLVMIsTailCall(inst) } != 0,
             calling_convention: callinfo.calling_convention,
-            #[cfg(feature = "llvm-9-or-greater")]
             debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
@@ -3460,7 +3355,6 @@ impl VAArg {
             arg_list: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 0) }, ctx, func_ctx),
             cur_type: ctx.types.type_from_llvm_ref(unsafe { LLVMTypeOf(inst) }),
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
-            #[cfg(feature = "llvm-9-or-greater")]
             debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
@@ -3483,7 +3377,6 @@ impl LandingPad {
             },
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
             cleanup: unsafe { LLVMIsCleanup(inst) } != 0,
-            #[cfg(feature = "llvm-9-or-greater")]
             debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
@@ -3511,7 +3404,6 @@ impl CatchPad {
                     .collect()
             },
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
-            #[cfg(feature = "llvm-9-or-greater")]
             debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
@@ -3535,7 +3427,6 @@ impl CleanupPad {
                     .collect()
             },
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
-            #[cfg(feature = "llvm-9-or-greater")]
             debugloc: DebugLoc::from_llvm_with_col(inst),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }

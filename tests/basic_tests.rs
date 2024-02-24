@@ -5,7 +5,6 @@ use llvm_ir::instruction;
 use llvm_ir::module::{Alignment, Endianness, Mangling, PointerLayout};
 use llvm_ir::terminator;
 use llvm_ir::types::{FPType, NamedStructDef, Typed};
-#[cfg(feature = "llvm-9-or-greater")]
 use llvm_ir::HasDebugLoc;
 use llvm_ir::{
     Constant, ConstantRef, Instruction, IntPredicate, Module, Name, Operand, Terminator, Type,
@@ -24,9 +23,7 @@ const BC_DIR: &str = "tests/basic_bc/";
 
 // Test against bitcode compiled with the same version of LLVM
 fn llvm_bc_dir() -> PathBuf {
-    if cfg!(feature = "llvm-8") {
-        Path::new(BC_DIR).join("llvm8")
-    } else if cfg!(feature = "llvm-9") {
+    if cfg!(feature = "llvm-9") {
         Path::new(BC_DIR).join("llvm9")
     } else if cfg!(feature = "llvm-10") {
         Path::new(BC_DIR).join("llvm10")
@@ -51,9 +48,7 @@ fn llvm_bc_dir() -> PathBuf {
 
 // Test against bitcode compiled with the same version of LLVM
 fn cxx_llvm_bc_dir() -> PathBuf {
-    if cfg!(feature = "llvm-8") {
-        Path::new(BC_DIR).join("cxx-llvm8")
-    } else if cfg!(feature = "llvm-9") {
+    if cfg!(feature = "llvm-9") {
         Path::new(BC_DIR).join("cxx-llvm9")
     } else if cfg!(feature = "llvm-10") {
         Path::new(BC_DIR).join("cxx-llvm10")
@@ -126,16 +121,12 @@ fn hellobc() {
     );
     assert_eq!(&ret.to_string(), "ret i32 0");
 
-    #[cfg(feature = "llvm-9-or-greater")]
-    {
-        // this file was compiled without debuginfo, so nothing should have a debugloc
-        assert_eq!(func.debugloc, None);
-        assert_eq!(ret.debugloc, None);
-    }
+    // this file was compiled without debuginfo, so nothing should have a debugloc
+    assert_eq!(func.debugloc, None);
+    assert_eq!(ret.debugloc, None);
 }
 
 // this test relates to the version of the file compiled with debuginfo
-#[cfg(feature = "llvm-9-or-greater")]
 #[test]
 fn hellobcg() {
     init_logging();
@@ -1450,7 +1441,6 @@ fn variablesbc() {
         Some(ConstantRef::new(Constant::Int { bits: 32, value: 5 }))
     );
     assert_eq!(var.alignment, 4);
-    #[cfg(feature = "llvm-9-or-greater")]
     assert!(var.get_debug_loc().is_none()); // this file was compiled without debuginfo
 
     assert_eq!(module.functions.len(), 1);
@@ -1563,7 +1553,6 @@ fn variablesbc() {
 }
 
 // this test relates to the version of the file compiled with debuginfo
-#[cfg(feature = "llvm-9-or-greater")]
 #[test]
 fn variablesbcg() {
     init_logging();
@@ -1597,10 +1586,7 @@ fn issue4() {
     let func = &module.functions[0];
 
     // not part of issue 4 proper, but let's check that we have the correct number of function attributes
-    let expected_num_function_attributes = if cfg!(feature = "llvm-8-or-lower") {
-        21
-    } else if cfg!(feature = "llvm-9") {
-        // LLVM 9+ adds the attribute "nofree"
+    let expected_num_function_attributes = if cfg!(feature = "llvm-9") {
         22
     } else if cfg!(feature = "llvm-10") || cfg!(feature = "llvm-11") {
         // LLVM 10+ seems to have combined the two attributes
@@ -1641,10 +1627,8 @@ fn issue4() {
         func.function_attributes.len(),
         func.function_attributes
     );
-    // and that all but 6 of them are StringAttributes (5 of them for LLVM 8; 7 for LLVM 12; 9 for LLVM 13/14; 10 for LLVM 15+)
-    let expected_num_enum_attrs = if cfg!(feature = "llvm-8-or-lower") {
-        5 // missing "nofree"
-    } else if cfg!(feature = "llvm-9") || cfg!(feature = "llvm-10") || cfg!(feature = "llvm-11") {
+    // and that all but 6 of them are StringAttributes (7 for LLVM 12; 9 for LLVM 13/14; 10 for LLVM 15+)
+    let expected_num_enum_attrs = if cfg!(feature = "llvm-11-or-lower") {
         6
     } else if cfg!(feature = "llvm-12") {
         7 // adds "willreturn"
@@ -1655,7 +1639,7 @@ fn issue4() {
     } else if cfg!(feature = "llvm-16-or-greater") {
         9 // new "memory" attribute combines "argmemonly" and related attributes
     } else {
-        panic!("Shouldn't reach this")
+        unreachable!("Shouldn't reach this")
     };
     let string_attrs = func.function_attributes.iter().filter(|attr| {
         if let FunctionAttribute::StringAttribute { .. } = attr {
@@ -1838,19 +1822,15 @@ fn rustbc() {
     let expected_fmt = "%0 = call @_ZN68_$LT$alloc..vec..Vec$LT$T$GT$$u20$as$u20$core..ops..deref..Deref$GT$5deref17h378128d7d9378466E(ptr %v)";
     assert_eq!(&call.to_string(), expected_fmt);
 
-    #[cfg(feature = "llvm-9-or-greater")]
-    {
-        // this file was compiled without debuginfo, so nothing should have a debugloc
-        assert!(func.get_debug_loc().is_none());
-        assert!(alloca_iter.get_debug_loc().is_none());
-        assert!(alloca_sum.get_debug_loc().is_none());
-        assert!(store.get_debug_loc().is_none());
-        assert!(call.get_debug_loc().is_none());
-    }
+    // this file was compiled without debuginfo, so nothing should have a debugloc
+    assert!(func.get_debug_loc().is_none());
+    assert!(alloca_iter.get_debug_loc().is_none());
+    assert!(alloca_sum.get_debug_loc().is_none());
+    assert!(store.get_debug_loc().is_none());
+    assert!(call.get_debug_loc().is_none());
 }
 
 // this test relates to the version of the file compiled with debuginfo
-#[cfg(feature = "llvm-9-or-greater")]
 #[test]
 fn rustbcg() {
     init_logging();
@@ -2038,7 +2018,6 @@ fn simple_linked_list() {
 }
 
 // this test relates to the version of the file compiled with debuginfo
-#[cfg(feature = "llvm-9-or-greater")]
 #[test]
 fn simple_linked_list_g() {
     init_logging();
@@ -2304,9 +2283,7 @@ fn param_and_func_attributes() {
     assert_eq!(f.parameters.len(), 1);
     let param = &f.parameters[0];
     assert_eq!(param.attributes.len(), 1);
-    #[cfg(feature = "llvm-8-or-lower")]
-    assert_eq!(param.attributes[0], ParameterAttribute::ByVal);
-    #[cfg(all(feature = "llvm-9-or-greater", feature = "llvm-11-or-lower"))]
+    #[cfg(feature = "llvm-11-or-lower")]
     assert_eq!(param.attributes[0], ParameterAttribute::UnknownAttribute);
     #[cfg(feature = "llvm-12-or-greater")]
     match &param.attributes[0] {

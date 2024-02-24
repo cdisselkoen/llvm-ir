@@ -1,4 +1,3 @@
-#[cfg(feature = "llvm-9-or-greater")]
 use crate::debugloc::{DebugLoc, HasDebugLoc};
 use crate::module::{Comdat, DLLStorageClass, Linkage, Visibility};
 use crate::types::{TypeRef, Typed, Types};
@@ -26,7 +25,6 @@ pub struct Function {
     // pub prefix: Option<ConstantRef>,  // appears to not be exposed in the LLVM C API, only the C++ API
     /// Personalities are used for exception handling. See [LLVM 14 docs on Personality Function](https://releases.llvm.org/14.0.0/docs/LangRef.html#personalityfn)
     pub personality_function: Option<ConstantRef>,
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: Vec<(String, MetadataRef<MetadataNode>)>,
 }
@@ -41,7 +39,6 @@ impl Typed for Function {
     }
 }
 
-#[cfg(feature = "llvm-9-or-greater")]
 impl HasDebugLoc for Function {
     fn get_debug_loc(&self) -> &Option<DebugLoc> {
         &self.debugloc
@@ -73,7 +70,6 @@ impl Function {
             alignment: 4,
             garbage_collector_name: None,
             personality_function: None,
-            #[cfg(feature = "llvm-9-or-greater")]
             debugloc: None,
         }
     }
@@ -94,7 +90,6 @@ pub struct FunctionDeclaration {
     pub alignment: u32,
     /// See [LLVM 14 docs on Garbage Collector Strategy Names](https://releases.llvm.org/14.0.0/docs/LangRef.html#gc)
     pub garbage_collector_name: Option<String>,
-    #[cfg(feature = "llvm-9-or-greater")]
     pub debugloc: Option<DebugLoc>,
 }
 
@@ -207,7 +202,6 @@ pub enum FunctionAttribute {
     NoBuiltin,
     NoCFCheck,
     NoDuplicate,
-    #[cfg(feature = "llvm-9-or-greater")]
     NoFree,
     NoImplicitFloat,
     NoInline,
@@ -217,10 +211,8 @@ pub enum FunctionAttribute {
     NoRedZone,
     NoReturn,
     NoRecurse,
-    #[cfg(feature = "llvm-9-or-greater")]
     WillReturn,
     ReturnsTwice,
-    #[cfg(feature = "llvm-9-or-greater")]
     NoSync,
     NoUnwind,
     #[cfg(feature = "llvm-11-or-greater")]
@@ -237,7 +229,6 @@ pub enum FunctionAttribute {
     SanitizeMemory,
     SanitizeThread,
     SanitizeHWAddress,
-    #[cfg(feature = "llvm-9-or-greater")]
     SanitizeMemTag,
     ShadowCallStack,
     SpeculativeLoadHardening,
@@ -286,7 +277,6 @@ pub enum ParameterAttribute {
     Alignment(u64),
     NoAlias,
     NoCapture,
-    #[cfg(feature = "llvm-9-or-greater")]
     NoFree,
     Nest,
     Returned,
@@ -438,7 +428,6 @@ impl FunctionDeclaration {
             }),
             alignment: unsafe { LLVMGetAlignment(func) },
             garbage_collector_name: unsafe { get_gc(func) },
-            #[cfg(feature = "llvm-9-or-greater")]
             debugloc: DebugLoc::from_llvm_no_col(func),
         };
         (decl, local_ctr)
@@ -546,7 +535,6 @@ impl Function {
                     None
                 }
             },
-            #[cfg(feature = "llvm-9-or-greater")]
             debugloc: decl.debugloc,
             // metadata: unimplemented!("Function.metadata"),
         }
@@ -631,7 +619,6 @@ impl AttributesData {
             "nobuiltin",
             "nocf_check",
             "noduplicate",
-            #[cfg(feature = "llvm-9-or-greater")]
             "nofree",
             "noimplicitfloat",
             "noinline",
@@ -641,10 +628,8 @@ impl AttributesData {
             "noredzone",
             "noreturn",
             "norecurse",
-            #[cfg(feature = "llvm-9-or-greater")]
             "willreturn",
             "returns_twice",
-            #[cfg(feature = "llvm-9-or-greater")]
             "nosync",
             "nounwind",
             #[cfg(feature = "llvm-11-or-greater")]
@@ -662,7 +647,6 @@ impl AttributesData {
             "sanitize_memory",
             "sanitize_thread",
             "sanitize_hwaddress",
-            #[cfg(feature = "llvm-9-or-greater")]
             "sanitize_memtag",
             "shadowcallstack",
             "speculative_load_hardening",
@@ -695,7 +679,6 @@ impl AttributesData {
             "align",
             "noalias",
             "nocapture",
-            #[cfg(feature = "llvm-9-or-greater")]
             "nofree",
             "nest",
             "returned",
@@ -704,7 +687,6 @@ impl AttributesData {
             "dereferenceable_or_null",
             "swiftself",
             "swifterror",
-            #[cfg(feature = "llvm-9-or-greater")]
             "immarg",
             #[cfg(feature = "llvm-11-or-greater")]
             "noundef",
@@ -768,7 +750,6 @@ impl FunctionAttribute {
                 Some("nobuiltin") => Self::NoBuiltin,
                 Some("nocf_check") => Self::NoCFCheck,
                 Some("noduplicate") => Self::NoDuplicate,
-                #[cfg(feature = "llvm-9-or-greater")]
                 Some("nofree") => Self::NoFree,
                 Some("noimplicitfloat") => Self::NoImplicitFloat,
                 Some("noinline") => Self::NoInline,
@@ -778,10 +759,8 @@ impl FunctionAttribute {
                 Some("noredzone") => Self::NoRedZone,
                 Some("noreturn") => Self::NoReturn,
                 Some("norecurse") => Self::NoRecurse,
-                #[cfg(feature = "llvm-9-or-greater")]
                 Some("willreturn") => Self::WillReturn,
                 Some("returns_twice") => Self::ReturnsTwice,
-                #[cfg(feature = "llvm-9-or-greater")]
                 Some("nosync") => Self::NoSync,
                 Some("nounwind") => Self::NoUnwind,
                 #[cfg(feature = "llvm-11-or-greater")]
@@ -798,7 +777,6 @@ impl FunctionAttribute {
                 Some("sanitize_memory") => Self::SanitizeMemory,
                 Some("sanitize_thread") => Self::SanitizeThread,
                 Some("sanitize_hwaddress") => Self::SanitizeHWAddress,
-                #[cfg(feature = "llvm-9-or-greater")]
                 Some("sanitize_memtag") => Self::SanitizeMemTag,
                 Some("shadowcallstack") => Self::ShadowCallStack,
                 Some("speculative_load_hardening") => Self::SpeculativeLoadHardening,
@@ -868,7 +846,6 @@ impl ParameterAttribute {
                 Some("align") => Self::Alignment(unsafe { LLVMGetEnumAttributeValue(a) }),
                 Some("noalias") => Self::NoAlias,
                 Some("nocapture") => Self::NoCapture,
-                #[cfg(feature = "llvm-9-or-greater")]
                 Some("nofree") => Self::NoFree,
                 Some("nest") => Self::Nest,
                 Some("returned") => Self::Returned,

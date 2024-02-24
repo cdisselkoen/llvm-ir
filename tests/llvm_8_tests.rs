@@ -282,9 +282,7 @@ fn DILocation_implicit_code_extra_checks() {
     );
     assert_eq!(invoke.return_label, Name::from("invoke.cont"));
     assert_eq!(invoke.exception_label, Name::from("lpad"));
-    #[cfg(feature = "llvm-8-or-lower")]
-    let expected_fmt = "%0 = invoke @_ZN1A3fooEi(%struct.A* %a, i32 0) to label %invoke.cont unwind label %lpad";
-    #[cfg(all(feature = "llvm-9-or-greater", feature = "llvm-14-or-lower"))]
+    #[cfg(feature = "llvm-14-or-lower")]
     let expected_fmt = "%0 = invoke @_ZN1A3fooEi(%struct.A* %a, i32 0) to label %invoke.cont unwind label %lpad (with debugloc)";
     #[cfg(feature = "llvm-15-or-greater")]
     let expected_fmt = "%0 = invoke @_ZN1A3fooEi(ptr %a, i32 0) to label %invoke.cont unwind label %lpad (with debugloc)";
@@ -321,9 +319,7 @@ fn DILocation_implicit_code_extra_checks() {
     assert_eq!(landingpad.clauses.len(), 1);
     assert_eq!(landingpad.cleanup, false);
     assert_eq!(landingpad.dest, Name::Number(1));
-    #[cfg(feature = "llvm-8-or-lower")]
-    let expected_fmt = "%1 = landingpad { i8*, i32 }";
-    #[cfg(all(feature = "llvm-9-or-greater", feature = "llvm-14-or-lower"))]
+    #[cfg(feature = "llvm-14-or-lower")]
     let expected_fmt = "%1 = landingpad { i8*, i32 } (with debugloc)";
     #[cfg(feature = "llvm-15-or-greater")]
     let expected_fmt = "%1 = landingpad { ptr, i32 } (with debugloc)";
@@ -342,9 +338,7 @@ fn DILocation_implicit_code_extra_checks() {
     assert_eq!(eval.indices.len(), 1);
     assert_eq!(eval.indices[0], 0);
     assert_eq!(eval.dest, Name::Number(2));
-    #[cfg(feature = "llvm-8-or-lower")]
-    let expected_fmt = "%2 = extractvalue { i8*, i32 } %1, 0";
-    #[cfg(all(feature = "llvm-9-or-greater", feature = "llvm-14-or-lower"))]
+    #[cfg(feature = "llvm-14-or-lower")]
     let expected_fmt = "%2 = extractvalue { i8*, i32 } %1, 0 (with debugloc)";
     #[cfg(feature = "llvm-15-or-greater")]
     let expected_fmt = "%2 = extractvalue { ptr, i32 } %1, 0 (with debugloc)";
@@ -364,9 +358,7 @@ fn DILocation_implicit_code_extra_checks() {
     assert_eq!(landingpad.result_type, expected_landingpad_resultty);
     assert_eq!(landingpad.clauses.len(), 0);
     assert_eq!(landingpad.cleanup, true);
-    #[cfg(feature = "llvm-8-or-lower")]
-    let expected_fmt = "%10 = landingpad { i8*, i32 } cleanup";
-    #[cfg(all(feature = "llvm-9-or-greater", feature = "llvm-14-or-lower"))]
+    #[cfg(feature = "llvm-14-or-lower")]
     let expected_fmt = "%10 = landingpad { i8*, i32 } cleanup (with debugloc)";
     #[cfg(feature = "llvm-15-or-greater")]
     let expected_fmt = "%10 = landingpad { ptr, i32 } cleanup (with debugloc)";
@@ -385,9 +377,7 @@ fn DILocation_implicit_code_extra_checks() {
     assert_eq!(eval.indices.len(), 1);
     assert_eq!(eval.indices[0], 1);
     assert_eq!(eval.dest, Name::Number(12));
-    #[cfg(feature = "llvm-8-or-lower")]
-    let expected_fmt = "%12 = extractvalue { i8*, i32 } %10, 1";
-    #[cfg(all(feature = "llvm-9-or-greater", feature = "llvm-14-or-lower"))]
+    #[cfg(feature = "llvm-14-or-lower")]
     let expected_fmt = "%12 = extractvalue { i8*, i32 } %10, 1 (with debugloc)";
     #[cfg(feature = "llvm-15-or-greater")]
     let expected_fmt = "%12 = extractvalue { ptr, i32 } %10, 1 (with debugloc)";
@@ -401,9 +391,6 @@ fn DILocation_implicit_code_extra_checks() {
         .clone()
         .try_into()
         .unwrap_or_else(|_| panic!("Expected an unreachable, got {:?}", &trycont.term));
-    #[cfg(feature = "llvm-8-or-lower")]
-    assert_eq!(&format!("{}", u), "unreachable");
-    #[cfg(feature = "llvm-9-or-greater")]
     assert_eq!(&format!("{}", u), "unreachable (with debugloc)");
 
     let ehresume = func
@@ -432,9 +419,7 @@ fn DILocation_implicit_code_extra_checks() {
     assert_eq!(ival.indices.len(), 1);
     assert_eq!(ival.indices[0], 0);
     assert_eq!(ival.dest, Name::from("lpad.val"));
-    #[cfg(feature = "llvm-8-or-lower")]
-    let expected_fmt = "%lpad.val = insertvalue { i8*, i32 } undef, i8* %exn4, 0";
-    #[cfg(all(feature = "llvm-9-or-greater", feature = "llvm-14-or-lower"))]
+    #[cfg(feature = "llvm-14-or-lower")]
     let expected_fmt = "%lpad.val = insertvalue { i8*, i32 } undef, i8* %exn4, 0 (with debugloc)";
     #[cfg(feature = "llvm-15-or-greater")]
     let expected_fmt = "%lpad.val = insertvalue { ptr, i32 } undef, ptr %exn4, 0 (with debugloc)";
@@ -460,9 +445,7 @@ fn DILocation_implicit_code_extra_checks() {
     assert_eq!(ival2.indices.len(), 1);
     assert_eq!(ival2.indices[0], 1);
     assert_eq!(ival2.dest, Name::from("lpad.val6"));
-    #[cfg(feature = "llvm-8-or-lower")]
-    let expected_fmt = "%lpad.val6 = insertvalue { i8*, i32 } %lpad.val, i32 %sel5, 1";
-    #[cfg(all(feature = "llvm-9-or-greater", feature = "llvm-14-or-lower"))]
+    #[cfg(feature = "llvm-14-or-lower")]
     let expected_fmt = "%lpad.val6 = insertvalue { i8*, i32 } %lpad.val, i32 %sel5, 1 (with debugloc)";
     #[cfg(feature = "llvm-15-or-greater")]
     let expected_fmt = "%lpad.val6 = insertvalue { ptr, i32 } %lpad.val, i32 %sel5, 1 (with debugloc)";
@@ -479,9 +462,7 @@ fn DILocation_implicit_code_extra_checks() {
             ty: expected_landingpad_resultty.clone()
         }
     );
-    #[cfg(feature = "llvm-8-or-lower")]
-    let expected_fmt = "resume { i8*, i32 } %lpad.val6";
-    #[cfg(all(feature = "llvm-9-or-greater", feature = "llvm-14-or-lower"))]
+    #[cfg(feature = "llvm-14-or-lower")]
     let expected_fmt = "resume { i8*, i32 } %lpad.val6 (with debugloc)";
     #[cfg(feature = "llvm-15-or-greater")]
     let expected_fmt = "resume { ptr, i32 } %lpad.val6 (with debugloc)";
