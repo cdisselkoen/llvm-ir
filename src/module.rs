@@ -28,6 +28,8 @@ pub struct Module {
     pub global_vars: Vec<GlobalVariable>,
     /// See [LLVM 14 docs on Global Aliases](https://releases.llvm.org/14.0.0/docs/LangRef.html#aliases)
     pub global_aliases: Vec<GlobalAlias>,
+    /// See [LLVM 14 docs on Global IFuncs](https://releases.llvm.org/14.0.0/docs/LangRef.html#ifuncs)
+    pub global_ifuncs: Vec<GlobalIFunc>,
     // --TODO not yet implemented-- pub function_attribute_groups: Vec<FunctionAttributeGroup>,
     /// See [LLVM 14 docs on Module-Level Inline Assembly](https://releases.llvm.org/14.0.0/docs/LangRef.html#moduleasm)
     pub inline_assembly: String,
@@ -71,6 +73,11 @@ impl Module {
     /// Get the `GlobalAlias` having the given `Name` (if any).
     pub fn get_global_alias_by_name(&self, name: &Name) -> Option<&GlobalAlias> {
         self.global_aliases.iter().find(|global| global.name == *name)
+    }
+
+    /// Get the `GlobalIFunc` having the given `Name` (if any).
+    pub fn get_global_ifunc_by_name(&self, name: &Name) -> Option<&GlobalIFunc> {
+        self.global_ifuncs.iter().find(|global| global.name == *name)
     }
 
     /// Parse the LLVM bitcode (.bc) file at the given path to create a `Module`
@@ -206,6 +213,22 @@ pub struct GlobalAlias {
 }
 
 impl Typed for GlobalAlias {
+    fn get_type(&self, _types: &Types) -> TypeRef {
+        self.ty.clone()
+    }
+}
+
+/// See [LLVM 14 docs on Global IFuncs](https://releases.llvm.org/14.0.0/docs/LangRef.html#ifuncs)
+#[derive(PartialEq, Clone, Debug)]
+pub struct GlobalIFunc {
+    pub name: Name,
+    pub linkage: Linkage,
+    pub visibility: Visibility,
+    pub ty: TypeRef,
+    pub resolver_fn: ConstantRef,
+}
+
+impl Typed for GlobalIFunc {
     fn get_type(&self, _types: &Types) -> TypeRef {
         self.ty.clone()
     }
@@ -585,9 +608,9 @@ impl Module {
         let mut global_ctr = 0; // this ctr is used to number global objects that aren't named
 
         // Modules require two passes over their contents.
-        // First we make a pass just to map global objects -- in particular, Functions,
-        //   GlobalVariables, and GlobalAliases -- to Names; then we do the actual
-        //   detailed pass.
+        // First we make a pass just to map global objects -- in particular,
+        //   Functions, GlobalVariables, GlobalAliases, and GlobalIFuncs -- to
+        //   Names; then we do the actual detailed pass.
         // This is necessary because these structures may reference each other in a
         //   circular fashion, and we need to be able to fill in the Name of the
         //   referenced object from having only its `LLVMValueRef`.
@@ -597,6 +620,7 @@ impl Module {
             .chain(get_declared_functions(module))
             .chain(get_globals(module))
             .chain(get_global_aliases(module))
+            .chain(get_global_ifuncs(module))
             .map(|g| {
                 (
                     g,
@@ -624,6 +648,9 @@ impl Module {
                 .collect(),
             global_aliases: get_global_aliases(module)
                 .map(|g| GlobalAlias::from_llvm_ref(g, &mut global_ctr, &mut ctx))
+                .collect(),
+            global_ifuncs: get_global_ifuncs(module)
+                .map(|g| GlobalIFunc::from_llvm_ref(g, &mut global_ctr, &mut ctx))
                 .collect(),
             // function_attribute_groups: unimplemented!("function_attribute_groups"),  // llvm-hs collects these in the decoder monad or something
             inline_assembly: unsafe { get_module_inline_asm(module) },
@@ -706,6 +733,22 @@ impl GlobalAlias {
             dll_storage_class: DLLStorageClass::from_llvm(unsafe { LLVMGetDLLStorageClass(alias) }),
             thread_local_mode: ThreadLocalMode::from_llvm(unsafe { LLVMGetThreadLocalMode(alias) }),
             unnamed_addr: UnnamedAddr::from_llvm(unsafe { LLVMGetUnnamedAddress(alias) }),
+        }
+    }
+}
+
+impl GlobalIFunc {
+    pub(crate) fn from_llvm_ref(
+        ifunc: LLVMValueRef,
+        ctr: &mut usize,
+        ctx: &mut ModuleContext,
+    ) -> Self {
+        Self {
+            name: Name::name_or_num(unsafe { get_value_name(ifunc) }, ctr),
+            linkage: Linkage::from_llvm(unsafe { LLVMGetLinkage(ifunc) }),
+            visibility: Visibility::from_llvm(unsafe { LLVMGetVisibility(ifunc) }),
+            ty: ctx.types.type_from_llvm_ref(unsafe { LLVMTypeOf(ifunc) }),
+            resolver_fn: Constant::from_llvm_ref(unsafe { LLVMGetGlobalIFuncResolver(ifunc) }, ctx),
         }
     }
 }
