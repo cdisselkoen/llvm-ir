@@ -5,20 +5,20 @@
 use llvm_ir::Module;
 use std::path::Path;
 
-macro_rules! llvm_ll_test {
+macro_rules! llvm_test {
     ($path:expr, $func:ident) => {
         #[test]
         #[allow(non_snake_case)]
         fn $func() {
             let _ = env_logger::builder().is_test(true).try_init(); // capture log messages with test harness
             let path = Path::new($path);
-            let _ = Module::from_ir_path(&path).expect("Failed to parse module");
+            let _ = Module::from_bc_path(&path).expect("Failed to parse module");
         }
     };
 }
 
-llvm_ll_test!(
-    "tests/llvm_bc/compatibility-as-of-llvm-17.ll",
+llvm_test!(
+    "tests/llvm_bc/compatibility-as-of-llvm-17.bc",
     compatibility_llvm_17
 );
 
@@ -29,8 +29,8 @@ use std::convert::TryInto;
 #[test]
 fn nuw_nsw_exact() {
     let _ = env_logger::builder().is_test(true).try_init(); // capture log messages with test harness
-    let path = Path::new("tests/llvm_bc/compatibility-as-of-llvm-17.ll");
-    let module = Module::from_ir_path(&path).expect("Failed to parse module");
+    let path = Path::new("tests/llvm_bc/compatibility-as-of-llvm-17.bc");
+    let module = Module::from_bc_path(&path).expect("Failed to parse module");
     let func = module
         .get_func_by_name("instructions.binops")
         .expect("Failed to find function");

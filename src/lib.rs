@@ -55,5 +55,6 @@ pub fn llvm_version() -> &'static str {
     case!("llvm-15");
     case!("llvm-16");
     case!("llvm-17");
+    case!("llvm-18");
     unreachable!()
 }
