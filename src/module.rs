@@ -374,23 +374,7 @@ pub struct Alignment {
     pub pref: u32,
 }
 
-// `llvm::isAligned`
-#[inline]
-fn is_aligned_abi(align: &Alignment, n: u64) -> bool {
-    if align.abi == 0 {
-        return true;
-    }
-    n % u64::from(align.abi) == 0
-}
 
-// `llvm::alignTo`
-fn align_to_abi(size: u64, align: &Alignment) -> u64 {
-    if align.abi == 0 {
-        return size;
-    }
-    let value = u64::from(align.abi);
-    ((size + value - 1) / value) * value
-}
 
 /// Alignment details for function pointers.
 /// See [LLVM 14 docs on Data Layout](https://releases.llvm.org/14.0.0/docs/LangRef.html#data-layout)
@@ -1125,13 +1109,10 @@ impl DataLayout {
     pub fn get_type_store_size(&self, types: &Types, ty: &Type) -> Option<TypeSize> {
         let base_size = self.get_type_size_in_bits(types, ty)?;
         fn divide_ciel(numerator: u64, denominator: u64) -> u64 {
-            let aligned = align_to_abi(
-                numerator,
-                &Alignment {
-                    abi: u32::try_from(denominator).unwrap(),
-                    pref: 0,
-                },
-            );
+            let aligned = &Alignment {
+                abi: u32::try_from(denominator).unwrap(),
+                pref: 0,
+            }.align_to_abi(numerator);
             aligned / denominator
         }
         Some(TypeSize::new(
@@ -1143,9 +1124,8 @@ impl DataLayout {
     /// Port of `llvm::DataLayout::getTypeAllocSize`.
     pub fn get_type_alloc_size(&self, types: &Types, ty: &Type) -> Option<TypeSize> {
         let store_size = self.get_type_store_size(types, ty)?;
-        Some(TypeSize::fixed(align_to_abi(
-            store_size.to_fixed(),
-            &self.alignments.type_alignment(ty).to_bytes(),
+        Some(TypeSize::fixed(self.alignments.type_alignment(ty).to_bytes().align_to_abi(
+            store_size.to_fixed()
         )))
     }
 
@@ -1217,8 +1197,8 @@ impl DataLayout {
                     } else {
                         self.alignments.type_alignment(elt_ty).clone()
                     };
-                    if !is_aligned_abi(&align, sz) {
-                        sz = align_to_abi(sz, &align);
+                    if !align.is_aligned_abi(sz) {
+                        sz = align.align_to_abi(sz);
                     }
                     if let Some(elt_sz) = self.get_type_alloc_size_in_bits(types, elt_ty) {
                         sz += elt_sz.to_fixed();
@@ -1290,6 +1270,24 @@ impl Alignment {
             abi: self.abi / 8,
             pref: self.pref / 8,
         }
+    }
+
+    // `llvm::isAligned`
+    #[inline]
+    fn is_aligned_abi(&self, n: u64) -> bool {
+        if self.abi == 0 {
+            return true;
+        }
+        n % u64::from(self.abi) == 0
+    }
+
+    // `llvm::alignTo`
+    fn align_to_abi(&self, size: u64) -> u64 {
+        if self.abi == 0 {
+            return size;
+        }
+        let value = u64::from(self.abi);
+        ((size + value - 1) / value) * value
     }
 }
 
