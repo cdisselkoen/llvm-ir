@@ -468,6 +468,8 @@ impl Alignments {
                 Type::FuncType { .. } => &self.fptr_alignment_as_alignment,
                 _ => &self.ptr_alignment(*addr_space).alignment,
             },
+            #[cfg(feature = "llvm-16-or-greater")]
+            Type::TargetExtType => todo!(),
             #[cfg(feature = "llvm-15-or-greater")]
             Type::PointerType { addr_space } => &self.ptr_alignment(*addr_space).alignment,
             _ => panic!("Don't know how to get the alignment of {:?}", ty),
@@ -1170,7 +1172,7 @@ impl DataLayout {
             Type::IntegerType { bits } => Some(TypeSize::fixed(u64::from(*bits))),
             Type::PointerType {
                 addr_space,
-                pointee_type: _,
+                ..
             } => self
                 .alignments
                 .pointer_layouts
@@ -1240,6 +1242,7 @@ impl DataLayout {
             Type::MetadataType => None,
             Type::TokenType => None,
             Type::VoidType => None,
+            Type::TargetExtType => todo!(),
         }
     }
 }
