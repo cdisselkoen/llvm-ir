@@ -1108,15 +1108,15 @@ impl DataLayout {
     /// Port of `llvm::DataLayout::getTypeStoreSize`.
     pub fn get_type_store_size(&self, types: &Types, ty: &Type) -> Option<TypeSize> {
         let base_size = self.get_type_size_in_bits(types, ty)?;
-        fn divide_ceil(numerator: u64, denominator: u32) -> u64 {
+        fn divide_floor(numerator: u64, denominator: u32) -> u64 {
             let aligned = &Alignment {
                 abi: denominator,
                 pref: 0,
             }.align_to_abi(numerator);
-            1 + aligned / (denominator as u64)
+            aligned / (denominator as u64)
         }
         Some(TypeSize::new(
-            divide_ceil(base_size.quantity, 8),
+            divide_floor(base_size.quantity, 8),
             base_size.scalable,
         ))
     }
