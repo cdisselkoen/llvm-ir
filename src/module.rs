@@ -1242,7 +1242,7 @@ impl TypeSize {
         Self::new(quantity, false)
     }
 
-    pub fn min_size(self) -> u64 {
+    pub fn min_size_in_bits(self) -> u64 {
         self.quantity
     }
 
