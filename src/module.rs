@@ -1113,7 +1113,7 @@ impl DataLayout {
                 abi: denominator,
                 pref: 0,
             }.align_to_abi(numerator);
-            aligned / (denominator as u64)
+            1 + aligned / (denominator as u64)
         }
         Some(TypeSize::new(
             divide_ceil(base_size.quantity, 8),
