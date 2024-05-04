@@ -1,6 +1,6 @@
 #![cfg(feature = "llvm-18-or-greater")]
 
-//! Test that we can parse the copy of `compatibility.ll` in LLVM 17's `test/Bitcode` directory
+//! Test that we can parse the copy of `compatibility.ll` in LLVM 18's `test/Bitcode` directory
 
 use llvm_ir::Module;
 use std::path::Path;
@@ -19,7 +19,7 @@ macro_rules! llvm_test {
 
 llvm_test!(
     "tests/llvm_bc/compatibility-as-of-llvm-18.bc",
-    compatibility_llvm_17
+    compatibility_llvm_18
 );
 
 
