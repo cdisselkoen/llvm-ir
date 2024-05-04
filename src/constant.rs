@@ -76,11 +76,15 @@ pub enum Constant {
     SRem(SRem),
 
     // Bitwise binary ops
+    #[cfg(feature = "llvm-17-or-lower")]
     And(And),
+    #[cfg(feature = "llvm-17-or-lower")]
     Or(Or),
     Xor(Xor),
     Shl(Shl),
+    #[cfg(feature = "llvm-17-or-lower")]
     LShr(LShr),
+    #[cfg(feature = "llvm-17-or-lower")]
     AShr(AShr),
 
     // Floating-point ops
@@ -111,13 +115,21 @@ pub enum Constant {
 
     // Conversion ops
     Trunc(Trunc),
+    #[cfg(feature = "llvm-17-or-lower")]
     ZExt(ZExt),
+    #[cfg(feature = "llvm-17-or-lower")]
     SExt(SExt),
+    #[cfg(feature = "llvm-17-or-lower")]
     FPTrunc(FPTrunc),
+    #[cfg(feature = "llvm-17-or-lower")]
     FPExt(FPExt),
+    #[cfg(feature = "llvm-17-or-lower")]
     FPToUI(FPToUI),
+    #[cfg(feature = "llvm-17-or-lower")]
     FPToSI(FPToSI),
+    #[cfg(feature = "llvm-17-or-lower")]
     UIToFP(UIToFP),
+    #[cfg(feature = "llvm-17-or-lower")]
     SIToFP(SIToFP),
     PtrToInt(PtrToInt),
     IntToPtr(IntToPtr),
@@ -225,11 +237,15 @@ impl Typed for Constant {
             Constant::URem(r) => types.type_of(r),
             #[cfg(feature = "llvm-14-or-lower")]
             Constant::SRem(r) => types.type_of(r),
-            Constant::And(a) => types.type_of(a),
+            #[cfg(feature = "llvm-17-or-lower")]
+			Constant::And(a) => types.type_of(a),
+			#[cfg(feature = "llvm-17-or-lower")]
             Constant::Or(o) => types.type_of(o),
             Constant::Xor(x) => types.type_of(x),
             Constant::Shl(s) => types.type_of(s),
+			#[cfg(feature = "llvm-17-or-lower")]
             Constant::LShr(l) => types.type_of(l),
+			#[cfg(feature = "llvm-17-or-lower")]
             Constant::AShr(a) => types.type_of(a),
             #[cfg(feature = "llvm-14-or-lower")]
             Constant::FAdd(f) => types.type_of(f),
@@ -250,13 +266,21 @@ impl Typed for Constant {
             Constant::InsertValue(i) => types.type_of(i),
             Constant::GetElementPtr(g) => types.type_of(g),
             Constant::Trunc(t) => types.type_of(t),
+			#[cfg(feature = "llvm-17-or-lower")]
             Constant::ZExt(z) => types.type_of(z),
+			#[cfg(feature = "llvm-17-or-lower")]
             Constant::SExt(s) => types.type_of(s),
+			#[cfg(feature = "llvm-17-or-lower")]
             Constant::FPTrunc(f) => types.type_of(f),
+			#[cfg(feature = "llvm-17-or-lower")]
             Constant::FPExt(f) => types.type_of(f),
+			#[cfg(feature = "llvm-17-or-lower")]
             Constant::FPToUI(f) => types.type_of(f),
+			#[cfg(feature = "llvm-17-or-lower")]
             Constant::FPToSI(f) => types.type_of(f),
+			#[cfg(feature = "llvm-17-or-lower")]
             Constant::UIToFP(u) => types.type_of(u),
+			#[cfg(feature = "llvm-17-or-lower")]
             Constant::SIToFP(s) => types.type_of(s),
             Constant::PtrToInt(p) => types.type_of(p),
             Constant::IntToPtr(i) => types.type_of(i),
@@ -394,11 +418,15 @@ impl Display for Constant {
             Constant::URem(r) => write!(f, "{}", r),
             #[cfg(feature = "llvm-14-or-lower")]
             Constant::SRem(r) => write!(f, "{}", r),
+			#[cfg(feature = "llvm-17-or-lower")]
             Constant::And(a) => write!(f, "{}", a),
+			#[cfg(feature = "llvm-17-or-lower")]
             Constant::Or(o) => write!(f, "{}", o),
             Constant::Xor(x) => write!(f, "{}", x),
             Constant::Shl(s) => write!(f, "{}", s),
+			#[cfg(feature = "llvm-17-or-lower")]
             Constant::LShr(l) => write!(f, "{}", l),
+			#[cfg(feature = "llvm-17-or-lower")]
             Constant::AShr(a) => write!(f, "{}", a),
             #[cfg(feature = "llvm-14-or-lower")]
             Constant::FAdd(a) => write!(f, "{}", a),
@@ -419,13 +447,21 @@ impl Display for Constant {
             Constant::InsertValue(i) => write!(f, "{}", i),
             Constant::GetElementPtr(g) => write!(f, "{}", g),
             Constant::Trunc(t) => write!(f, "{}", t),
+			#[cfg(feature = "llvm-17-or-lower")]
             Constant::ZExt(z) => write!(f, "{}", z),
+			#[cfg(feature = "llvm-17-or-lower")]
             Constant::SExt(s) => write!(f, "{}", s),
+			#[cfg(feature = "llvm-17-or-lower")]
             Constant::FPTrunc(t) => write!(f, "{}", t),
+			#[cfg(feature = "llvm-17-or-lower")]
             Constant::FPExt(e) => write!(f, "{}", e),
+			#[cfg(feature = "llvm-17-or-lower")]
             Constant::FPToUI(t) => write!(f, "{}", t),
+			#[cfg(feature = "llvm-17-or-lower")]
             Constant::FPToSI(t) => write!(f, "{}", t),
+			#[cfg(feature = "llvm-17-or-lower")]
             Constant::UIToFP(t) => write!(f, "{}", t),
+			#[cfg(feature = "llvm-17-or-lower")]
             Constant::SIToFP(t) => write!(f, "{}", t),
             Constant::PtrToInt(p) => write!(f, "{}", p),
             Constant::IntToPtr(i) => write!(f, "{}", i),
@@ -694,22 +730,28 @@ impl_constexpr!(SRem, SRem);
 #[cfg(feature = "llvm-14-or-lower")]
 binop_same_type!(SRem, "srem");
 
+#[cfg(feature = "llvm-17-or-lower")]
 #[derive(PartialEq, Clone, Debug)]
 pub struct And {
     pub operand0: ConstantRef,
     pub operand1: ConstantRef,
 }
 
+#[cfg(feature = "llvm-17-or-lower")]
 impl_constexpr!(And, And);
+#[cfg(feature = "llvm-17-or-lower")]
 binop_same_type!(And, "and");
 
+#[cfg(feature = "llvm-17-or-lower")]
 #[derive(PartialEq, Clone, Debug)]
 pub struct Or {
     pub operand0: ConstantRef,
     pub operand1: ConstantRef,
 }
 
+#[cfg(feature = "llvm-17-or-lower")]
 impl_constexpr!(Or, Or);
+#[cfg(feature = "llvm-17-or-lower")]
 binop_same_type!(Or, "or");
 
 #[derive(PartialEq, Clone, Debug)]
@@ -732,6 +774,7 @@ pub struct Shl {
 impl_constexpr!(Shl, Shl);
 binop_left_type!(Shl, "shl");
 
+#[cfg(feature = "llvm-17-or-lower")]
 #[derive(PartialEq, Clone, Debug)]
 pub struct LShr {
     pub operand0: ConstantRef,
@@ -739,9 +782,12 @@ pub struct LShr {
     // pub exact: bool,  // getters for these seem to not be exposed in the LLVM C API, only in the C++ one
 }
 
+#[cfg(feature = "llvm-17-or-lower")]
 impl_constexpr!(LShr, LShr);
+#[cfg(feature = "llvm-17-or-lower")]
 binop_left_type!(LShr, "lshr");
 
+#[cfg(feature = "llvm-17-or-lower")]
 #[derive(PartialEq, Clone, Debug)]
 pub struct AShr {
     pub operand0: ConstantRef,
@@ -749,7 +795,9 @@ pub struct AShr {
     // pub exact: bool,  // getters for these seem to not be exposed in the LLVM C API, only in the C++ one
 }
 
+#[cfg(feature = "llvm-17-or-lower")]
 impl_constexpr!(AShr, AShr);
+#[cfg(feature = "llvm-17-or-lower")]
 binop_left_type!(AShr, "ashr");
 
 #[cfg(feature = "llvm-14-or-lower")]
@@ -1081,76 +1129,99 @@ pub struct Trunc {
 impl_constexpr!(Trunc, Trunc);
 unop_explicitly_typed!(Trunc, "trunc");
 
+#[cfg(feature = "llvm-17-or-lower")]
 #[derive(PartialEq, Clone, Debug)]
 pub struct ZExt {
     pub operand: ConstantRef,
     pub to_type: TypeRef,
 }
 
+#[cfg(feature = "llvm-17-or-lower")]
 impl_constexpr!(ZExt, ZExt);
+#[cfg(feature = "llvm-17-or-lower")]
 unop_explicitly_typed!(ZExt, "zext");
 
+#[cfg(feature = "llvm-17-or-lower")]
 #[derive(PartialEq, Clone, Debug)]
 pub struct SExt {
     pub operand: ConstantRef,
     pub to_type: TypeRef,
 }
 
+#[cfg(feature = "llvm-17-or-lower")]
 impl_constexpr!(SExt, SExt);
+#[cfg(feature = "llvm-17-or-lower")]
 unop_explicitly_typed!(SExt, "sext");
 
+#[cfg(feature = "llvm-17-or-lower")]
 #[derive(PartialEq, Clone, Debug)]
 pub struct FPTrunc {
     pub operand: ConstantRef,
     pub to_type: TypeRef,
 }
-
+#[cfg(feature = "llvm-17-or-lower")]
 impl_constexpr!(FPTrunc, FPTrunc);
+#[cfg(feature = "llvm-17-or-lower")]
 unop_explicitly_typed!(FPTrunc, "fptrunc");
 
+#[cfg(feature = "llvm-17-or-lower")]
 #[derive(PartialEq, Clone, Debug)]
 pub struct FPExt {
     pub operand: ConstantRef,
     pub to_type: TypeRef,
 }
 
+#[cfg(feature = "llvm-17-or-lower")]
 impl_constexpr!(FPExt, FPExt);
+#[cfg(feature = "llvm-17-or-lower")]
 unop_explicitly_typed!(FPExt, "fpext");
 
+#[cfg(feature = "llvm-17-or-lower")]
 #[derive(PartialEq, Clone, Debug)]
 pub struct FPToUI {
     pub operand: ConstantRef,
     pub to_type: TypeRef,
 }
 
+#[cfg(feature = "llvm-17-or-lower")]
 impl_constexpr!(FPToUI, FPToUI);
+#[cfg(feature = "llvm-17-or-lower")]
 unop_explicitly_typed!(FPToUI, "fptoui");
 
+#[cfg(feature = "llvm-17-or-lower")]
 #[derive(PartialEq, Clone, Debug)]
 pub struct FPToSI {
     pub operand: ConstantRef,
     pub to_type: TypeRef,
 }
 
+#[cfg(feature = "llvm-17-or-lower")]
 impl_constexpr!(FPToSI, FPToSI);
+#[cfg(feature = "llvm-17-or-lower")]
 unop_explicitly_typed!(FPToSI, "fptosi");
 
+#[cfg(feature = "llvm-17-or-lower")]
 #[derive(PartialEq, Clone, Debug)]
 pub struct UIToFP {
     pub operand: ConstantRef,
     pub to_type: TypeRef,
 }
 
+#[cfg(feature = "llvm-17-or-lower")]
 impl_constexpr!(UIToFP, UIToFP);
+#[cfg(feature = "llvm-17-or-lower")]
 unop_explicitly_typed!(UIToFP, "uitofp");
 
+#[cfg(feature = "llvm-17-or-lower")]
 #[derive(PartialEq, Clone, Debug)]
 pub struct SIToFP {
     pub operand: ConstantRef,
     pub to_type: TypeRef,
 }
 
+#[cfg(feature = "llvm-17-or-lower")]
 impl_constexpr!(SIToFP, SIToFP);
+#[cfg(feature = "llvm-17-or-lower")]
 unop_explicitly_typed!(SIToFP, "sitofp");
 
 #[derive(PartialEq, Clone, Debug)]
@@ -1461,11 +1532,15 @@ impl Constant {
                     LLVMOpcode::LLVMURem => Constant::URem(URem::from_llvm_ref(constant, ctx)),
                     #[cfg(feature = "llvm-14-or-lower")]
                     LLVMOpcode::LLVMSRem => Constant::SRem(SRem::from_llvm_ref(constant, ctx)),
-                    LLVMOpcode::LLVMAnd => Constant::And(And::from_llvm_ref(constant, ctx)),
+                    #[cfg(feature = "llvm-17-or-lower")]
+					LLVMOpcode::LLVMAnd => Constant::And(And::from_llvm_ref(constant, ctx)),
+                    #[cfg(feature = "llvm-17-or-lower")]
                     LLVMOpcode::LLVMOr => Constant::Or(Or::from_llvm_ref(constant, ctx)),
                     LLVMOpcode::LLVMXor => Constant::Xor(Xor::from_llvm_ref(constant, ctx)),
                     LLVMOpcode::LLVMShl => Constant::Shl(Shl::from_llvm_ref(constant, ctx)),
+					#[cfg(feature = "llvm-17-or-lower")]
                     LLVMOpcode::LLVMLShr => Constant::LShr(LShr::from_llvm_ref(constant, ctx)),
+					#[cfg(feature = "llvm-17-or-lower")]
                     LLVMOpcode::LLVMAShr => Constant::AShr(AShr::from_llvm_ref(constant, ctx)),
                     #[cfg(feature = "llvm-14-or-lower")]
                     LLVMOpcode::LLVMFAdd => Constant::FAdd(FAdd::from_llvm_ref(constant, ctx)),
@@ -1486,13 +1561,21 @@ impl Constant {
                     LLVMOpcode::LLVMInsertValue => Constant::InsertValue(InsertValue::from_llvm_ref(constant, ctx)),
                     LLVMOpcode::LLVMGetElementPtr => Constant::GetElementPtr(GetElementPtr::from_llvm_ref(constant, ctx)),
                     LLVMOpcode::LLVMTrunc => Constant::Trunc(Trunc::from_llvm_ref(constant, ctx)),
+                    #[cfg(feature = "llvm-17-or-lower")]
                     LLVMOpcode::LLVMZExt => Constant::ZExt(ZExt::from_llvm_ref(constant, ctx)),
+                    #[cfg(feature = "llvm-17-or-lower")]
                     LLVMOpcode::LLVMSExt => Constant::SExt(SExt::from_llvm_ref(constant, ctx)),
+                    #[cfg(feature = "llvm-17-or-lower")]
                     LLVMOpcode::LLVMFPTrunc => Constant::FPTrunc(FPTrunc::from_llvm_ref(constant, ctx)),
+                    #[cfg(feature = "llvm-17-or-lower")]
                     LLVMOpcode::LLVMFPExt => Constant::FPExt(FPExt::from_llvm_ref(constant, ctx)),
+                    #[cfg(feature = "llvm-17-or-lower")]
                     LLVMOpcode::LLVMFPToUI => Constant::FPToUI(FPToUI::from_llvm_ref(constant, ctx)),
+                    #[cfg(feature = "llvm-17-or-lower")]
                     LLVMOpcode::LLVMFPToSI => Constant::FPToSI(FPToSI::from_llvm_ref(constant, ctx)),
+                    #[cfg(feature = "llvm-17-or-lower")]
                     LLVMOpcode::LLVMUIToFP => Constant::UIToFP(UIToFP::from_llvm_ref(constant, ctx)),
+                    #[cfg(feature = "llvm-17-or-lower")]
                     LLVMOpcode::LLVMSIToFP => Constant::SIToFP(SIToFP::from_llvm_ref(constant, ctx)),
                     LLVMOpcode::LLVMPtrToInt => Constant::PtrToInt(PtrToInt::from_llvm_ref(constant, ctx)),
                     LLVMOpcode::LLVMIntToPtr => Constant::IntToPtr(IntToPtr::from_llvm_ref(constant, ctx)),
@@ -1543,11 +1626,15 @@ binop_from_llvm!(SDiv);
 binop_from_llvm!(URem);
 #[cfg(feature = "llvm-14-or-lower")]
 binop_from_llvm!(SRem);
+#[cfg(feature = "llvm-17-or-lower")]
 binop_from_llvm!(And);
+#[cfg(feature = "llvm-17-or-lower")]
 binop_from_llvm!(Or);
 binop_from_llvm!(Xor);
 binop_from_llvm!(Shl);
+#[cfg(feature = "llvm-17-or-lower")]
 binop_from_llvm!(LShr);
+#[cfg(feature = "llvm-17-or-lower")]
 binop_from_llvm!(AShr);
 #[cfg(feature = "llvm-14-or-lower")]
 binop_from_llvm!(FAdd);
@@ -1664,13 +1751,21 @@ macro_rules! typed_unop_from_llvm {
 }
 
 typed_unop_from_llvm!(Trunc);
+#[cfg(feature = "llvm-17-or-lower")]
 typed_unop_from_llvm!(ZExt);
+#[cfg(feature = "llvm-17-or-lower")]
 typed_unop_from_llvm!(SExt);
+#[cfg(feature = "llvm-17-or-lower")]
 typed_unop_from_llvm!(FPTrunc);
+#[cfg(feature = "llvm-17-or-lower")]
 typed_unop_from_llvm!(FPExt);
+#[cfg(feature = "llvm-17-or-lower")]
 typed_unop_from_llvm!(FPToUI);
+#[cfg(feature = "llvm-17-or-lower")]
 typed_unop_from_llvm!(FPToSI);
+#[cfg(feature = "llvm-17-or-lower")]
 typed_unop_from_llvm!(UIToFP);
+#[cfg(feature = "llvm-17-or-lower")]
 typed_unop_from_llvm!(SIToFP);
 typed_unop_from_llvm!(PtrToInt);
 typed_unop_from_llvm!(IntToPtr);
