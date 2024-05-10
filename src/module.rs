@@ -34,7 +34,11 @@ pub struct Module {
     // --TODO not yet implemented-- pub function_attribute_groups: Vec<FunctionAttributeGroup>,
     /// See [LLVM 14 docs on Module-Level Inline Assembly](https://releases.llvm.org/14.0.0/docs/LangRef.html#moduleasm)
     pub inline_assembly: String,
-    // --TODO not yet implemented-- pub metadata_nodes: Vec<(MetadataNodeID, MetadataNode)>,
+    // --TODO not yet implemented-- pub metadata_nodes: V
+    //             Type::MetadataType => None,
+    //             Type::TokenType => None,
+    //             Type::VoidType => None,
+    //             Type::TargetExtType => todo!(),ec<(MetadataNodeID, MetadataNode)>,
     // --TODO not yet implemented-- pub named_metadatas: Vec<NamedMetadata>,
     // --TODO not yet implemented-- pub comdats: Vec<Comdat>,
     /// Holds a reference to all of the `Type`s used in the `Module`, and
@@ -1219,9 +1223,13 @@ impl DataLayout {
             Type::X86_MMXType => Some(TypeSize::fixed(64)),
             Type::FuncType { .. } => None,
             Type::LabelType => None,
+            #[cfg(feature = "llvm-16-or-greater")]
             Type::MetadataType => None,
+            #[cfg(feature = "llvm-16-or-greater")]
             Type::TokenType => None,
+            #[cfg(feature = "llvm-16-or-greater")]
             Type::VoidType => None,
+            #[cfg(feature = "llvm-16-or-greater")]
             Type::TargetExtType => todo!(),
         }
     }
