@@ -1464,7 +1464,7 @@ mod test {
             dl.get_type_alloc_size_in_bits(
                 &types,
                 &Type::StructType {
-                    element_types: vec![types.i8(), types.pointer_to(types.i8())],
+                    element_types: vec![types.i8(), (&types).into()],
                     is_packed: false
                 }
             )
@@ -1474,7 +1474,7 @@ mod test {
             dl.get_type_alloc_size_in_bits(
                 &types,
                 &Type::StructType {
-                    element_types: vec![types.i8(), types.pointer_to(types.i8())],
+                    element_types: vec![types.i8(), (&types).into()],
                     is_packed: true
                 }
             )
@@ -1484,7 +1484,7 @@ mod test {
             dl.get_type_alloc_size_in_bits(
                 &types,
                 &Type::StructType {
-                    element_types: vec![types.pointer_to(types.i8()), types.pointer_to(types.i8())],
+                    element_types: vec![(&types).into(), (&types).into()],
                     is_packed: false
                 }
             )
