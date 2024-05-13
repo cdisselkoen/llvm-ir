@@ -1173,6 +1173,7 @@ impl DataLayout {
             Type::VectorType {
                 element_type,
                 num_elements,
+                #[cfg(feature = "llvm-11-or-greater")]
                 scalable,
             } => self
                 .get_type_size_in_bits(types, element_type)
@@ -1219,6 +1220,7 @@ impl DataLayout {
                     None
                 }
             },
+            #[cfg(feature = "llvm-12-or-greater")]
             Type::X86_AMXType => Some(TypeSize::fixed(8192)),
             Type::X86_MMXType => Some(TypeSize::fixed(64)),
             Type::FuncType { .. } => None,
