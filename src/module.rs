@@ -1180,7 +1180,10 @@ impl DataLayout {
                 .map(|elt_sz| {
                     TypeSize::new(
                         u64::try_from(*num_elements).unwrap() * elt_sz.quantity,
+                        #[cfg(feature = "llvm-11-or-greater")]
                         *scalable,
+                        #[cfg(not(feature = "llvm-11-or-greater"))]
+                        false
                     )
                 }),
             Type::ArrayType {
