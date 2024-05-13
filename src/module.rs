@@ -1225,11 +1225,8 @@ impl DataLayout {
             Type::X86_MMXType => Some(TypeSize::fixed(64)),
             Type::FuncType { .. } => None,
             Type::LabelType => None,
-            #[cfg(feature = "llvm-16-or-greater")]
             Type::MetadataType => None,
-            #[cfg(feature = "llvm-16-or-greater")]
             Type::TokenType => None,
-            #[cfg(feature = "llvm-16-or-greater")]
             Type::VoidType => None,
             #[cfg(feature = "llvm-16-or-greater")]
             Type::TargetExtType => todo!(),
