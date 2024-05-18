@@ -974,6 +974,19 @@ impl Types {
     }
 }
 
+impl From<&Types> for TypeRef {
+    fn from(types: &Types) -> Self {
+        #[cfg(feature = "llvm-14-or-lower")]
+        {
+            types.pointer_to(types.i8())
+        }
+        #[cfg(feature = "llvm-15-or-greater")]
+        {
+            types.pointer()
+        }
+    }
+}
+
 #[derive(Clone, Debug)]
 struct TypeCache<K: Eq + Hash + Clone> {
     map: HashMap<K, TypeRef>,
