@@ -8,6 +8,7 @@ CLANG14=clang-14
 CLANG15=clang-15
 CLANG16=$(LLVM16PATH)/bin/clang
 CLANG17=$(LLVM17PATH)/bin/clang
+CLANG18=$(LLVM18PATH)/bin/clang
 CLANGXX8=clang++-8
 CLANGXX9=clang++-9
 CLANGXX10=clang++-10 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk
@@ -18,6 +19,7 @@ CLANGXX14=clang++-14
 CLANGXX15=$(LLVM15PATH)/bin/clang++
 CLANGXX16=$(LLVM16PATH)/bin/clang++
 CLANGXX17=$(LLVM17PATH)/bin/clang++
+CLANGXX18=$(LLVM18PATH)/bin/clang++
 RUSTC=rustc
 RUSTFLAGS=--crate-type=lib
 LLVMAS8=$(LLVM8PATH)/bin/llvm-as
@@ -30,6 +32,7 @@ LLVMAS14=$(LLVM14PATH)/bin/llvm-as
 LLVMAS15=$(LLVM15PATH)/bin/llvm-as
 LLVMAS16=$(LLVM16PATH)/bin/llvm-as
 LLVMAS17=$(LLVM17PATH)/bin/llvm-as
+LLVMAS18=$(LLVM18PATH)/bin/llvm-as
 
 COBJS = \
 	hello.bc hello.ll hello.bc-g hello.ll-g \
@@ -69,10 +72,11 @@ all: \
 	$(patsubst %,llvm15/%,$(LLOBJS)) \
 	$(patsubst %,llvm16/%,$(LLOBJS)) \
 	$(patsubst %,llvm17/%,$(LLOBJS)) \
+	$(patsubst %,llvm18/%,$(LLOBJS)) \
 	$(patsubst %,rust/%,$(RUSTOBJS)) \
 	llvm11/float_types.bc llvm12/float_types.bc llvm13/float_types.bc \
 	llvm14/float_types.bc llvm15/float_types.bc llvm16/float_types.bc \
-	llvm17/float_types.bc \
+	llvm17/float_types.bc llvm18/float_types.bc \
 
 .PHONY: cxx
 cxx: \
@@ -86,6 +90,7 @@ cxx: \
 	$(patsubst %,cxx-llvm15/%,$(CXXOBJS)) \
 	$(patsubst %,cxx-llvm16/%,$(CXXOBJS)) \
 	$(patsubst %,cxx-llvm17/%,$(CXXOBJS)) \
+	$(patsubst %,cxx-llvm18/%,$(CXXOBJS)) \
 
 # default to -O3 unless overridden by a more specific rule
 %: CFLAGS := -O3
@@ -120,7 +125,9 @@ llvm16/%.ll : %.c
 llvm17/%.ll : %.c
 	mkdir -p llvm17
 	$(CLANG17) $(CFLAGS) -S -emit-llvm $^ -o $@
-
+llvm18/%.ll : %.c
+	mkdir -p llvm18
+	$(CLANG18) $(CFLAGS) -S -emit-llvm $^ -o $@
 
 llvm8/%.bc : %.c
 	mkdir -p llvm8
@@ -152,6 +159,9 @@ llvm16/%.bc : %.c
 llvm17/%.bc : %.c
 	mkdir -p llvm17
 	$(CLANG17) $(CFLAGS) -c -emit-llvm $^ -o $@
+llvm18/%.bc : %.c
+	mkdir -p llvm18
+	$(CLANG18) $(CFLAGS) -c -emit-llvm $^ -o $@
 
 cxx-llvm8/%.ll : %.cpp
 	mkdir -p cxx-llvm8
@@ -183,6 +193,9 @@ cxx-llvm16/%.ll : %.cpp
 cxx-llvm17/%.ll : %.cpp
 	mkdir -p cxx-llvm17
 	$(CLANGXX17) $(CFLAGS) -S -emit-llvm $^ -o $@
+cxx-llvm18/%.ll : %.cpp
+	mkdir -p cxx-llvm18
+	$(CLANGXX18) $(CFLAGS) -S -emit-llvm $^ -o $@
 
 cxx-llvm8/%.bc : %.cpp
 	mkdir -p cxx-llvm8
@@ -214,6 +227,9 @@ cxx-llvm16/%.bc : %.cpp
 cxx-llvm17/%.bc : %.cpp
 	mkdir -p cxx-llvm17
 	$(CLANGXX17) $(CFLAGS) -c -emit-llvm $^ -o $@
+cxx-llvm18/%.bc : %.cpp
+	mkdir -p cxx-llvm18
+	$(CLANGXX18) $(CFLAGS) -c -emit-llvm $^ -o $@
 
 rust/%.ll : %.rs
 	mkdir -p rust
@@ -254,6 +270,9 @@ llvm16/%.ll-g : %.c
 llvm17/%.ll-g : %.c
 	mkdir -p llvm17
 	$(CLANG17) $(CFLAGS) -g -S -emit-llvm $^ -o $@
+llvm18/%.ll-g : %.c
+	mkdir -p llvm17
+	$(CLANG18) $(CFLAGS) -g -S -emit-llvm $^ -o $@
 
 llvm8/%.bc-g : %.c
 	mkdir -p llvm8
@@ -285,6 +304,9 @@ llvm16/%.bc-g : %.c
 llvm17/%.bc-g : %.c
 	mkdir -p llvm17
 	$(CLANG17) $(CFLAGS) -g -c -emit-llvm $^ -o $@
+llvm18/%.bc-g : %.c
+	mkdir -p llvm17
+	$(CLANG18) $(CFLAGS) -g -c -emit-llvm $^ -o $@
 
 rust/%.ll-g : %.rs
 	mkdir -p rust
@@ -305,6 +327,7 @@ llvm14/linkedlist.% : CFLAGS := -O0
 llvm15/linkedlist.% : CFLAGS := -O0
 llvm16/linkedlist.% : CFLAGS := -O0
 llvm17/linkedlist.% : CFLAGS := -O0
+llvm18/linkedlist.% : CFLAGS := -O0
 
 # assemble this one directly from .ll
 llvm8/fences.ll.bc : fences.ll
@@ -337,6 +360,9 @@ llvm16/fences.ll.bc : fences.ll
 llvm17/fences.ll.bc : fences.ll
 	mkdir -p llvm17
 	$(LLVMAS17) $< -o $@
+llvm18/fences.ll.bc : fences.ll
+	mkdir -p llvm18
+	$(LLVMAS18) $< -o $@
 
 # assemble this one directly from .ll as well
 llvm8/param_and_func_attributes.ll.bc : param_and_func_attributes.ll
@@ -372,6 +398,9 @@ llvm16/param_and_func_attributes.ll.bc : param_and_func_attributes_llvm16+.ll
 llvm17/param_and_func_attributes.ll.bc : param_and_func_attributes_llvm16+.ll
 	mkdir -p llvm17
 	$(LLVMAS17) $< -o $@
+llvm18/param_and_func_attributes.ll.bc : param_and_func_attributes_llvm16+.ll
+	mkdir -p llvm18
+	$(LLVMAS18) $< -o $@
 
 # assemble this one directly from .ll, and only for LLVM 11+
 llvm11/float_types.bc : float_types.ll
@@ -395,6 +424,9 @@ llvm16/float_types.bc : float_types.ll
 llvm17/float_types.bc : float_types.ll
 	mkdir -p llvm17
 	$(LLVMAS17) $< -o $@
+llvm18/float_types.bc : float_types.ll
+	mkdir -p llvm18
+	$(LLVMAS18) $< -o $@
 
 .PHONY: clean
 clean:

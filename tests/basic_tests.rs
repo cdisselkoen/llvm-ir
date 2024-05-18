@@ -41,6 +41,8 @@ fn llvm_bc_dir() -> PathBuf {
         Path::new(BC_DIR).join("llvm16")
     } else if cfg!(feature = "llvm-17") {
         Path::new(BC_DIR).join("llvm17")
+    } else if cfg!(feature = "llvm-18") {
+        Path::new(BC_DIR).join("llvm18")
     } else {
         unimplemented!("new llvm version?")
     }
@@ -66,6 +68,8 @@ fn cxx_llvm_bc_dir() -> PathBuf {
         Path::new(BC_DIR).join("cxx-llvm16")
     } else if cfg!(feature = "llvm-17") {
         Path::new(BC_DIR).join("cxx-llvm17")
+    } else if cfg!(feature = "llvm-18") {
+        Path::new(BC_DIR).join("cxx-llvm18")
     } else {
         unimplemented!("new llvm version?")
     }
@@ -304,7 +308,7 @@ fn loopbc() {
         assert_eq!(bb46.name, Name::Number(46));
         vec![bb2, bb7, bb11, bb16, bb18, bb46]
     };
-    #[cfg(feature = "llvm-15-or-greater")]
+    #[cfg(all(feature = "llvm-15-or-greater", feature = "llvm-17-or-lower"))]
     let bbs = {
         assert_eq!(func.basic_blocks.len(), 8);
         let bb2 = &func.basic_blocks[0];
@@ -320,6 +324,25 @@ fn loopbc() {
         assert_eq!(bb16.name, Name::Number(14));
         assert_eq!(bb18.name, Name::Number(16));
         assert_eq!(bb46.name, Name::Number(44));
+        vec![bb2, bb7, bb11, bb16, bb18, bb46]
+    };
+    #[cfg(feature = "llvm-18-or-greater")]
+    let bbs = {
+        assert_eq!(func.basic_blocks.len(), 8);
+        let bb2 = &func.basic_blocks[0];
+        let bb7 = &func.basic_blocks[1];
+        let bb11 = &func.basic_blocks[2];
+        let bb16 = &func.basic_blocks[3];
+        let bb18 = &func.basic_blocks[4];
+        let bb46 = &func.basic_blocks[7];
+        // Some extra optimization removes a few instructions in Clang 18,
+        // c.f. Clang 17
+        assert_eq!(bb2.name, Name::Number(2));
+        assert_eq!(bb7.name, Name::Number(6));
+        assert_eq!(bb11.name, Name::Number(9));
+        assert_eq!(bb16.name, Name::Number(14));
+        assert_eq!(bb18.name, Name::Number(16));
+        assert_eq!(bb46.name, Name::Number(41));
         vec![bb2, bb7, bb11, bb16, bb18, bb46]
     };
 
@@ -753,8 +776,10 @@ fn loopbc() {
         Name::Number(47)
     } else if cfg!(feature = "llvm-14") {
         Name::Number(46)
-    } else {
+    } else if cfg!(all(feature = "llvm-15-or-greater", feature = "llvm-17-or-lower")) {
         Name::Number(44)
+    } else {
+        Name::Number(41)
     };
     assert_eq!(condbr.false_dest, expected_false_dest);
     assert_eq!(module.type_of(condbr), module.types.void());
@@ -969,7 +994,7 @@ fn loopbc() {
             ),
         ]
     );
-    #[cfg(feature = "llvm-15-or-greater")]
+    #[cfg(all(feature = "llvm-15-or-greater", feature = "llvm-17-or-lower"))]
     assert_eq!(
         phi.incoming_values,
         vec![
@@ -980,6 +1005,23 @@ fn loopbc() {
             (
                 Operand::LocalOperand {
                     name: Name::Number(31),
+                    ty: module.types.i64()
+                },
+                Name::Number(16)
+            ),
+        ]
+    );
+    #[cfg(feature = "llvm-18-or-greater")]
+    assert_eq!(
+        phi.incoming_values,
+        vec![
+            (
+                Operand::ConstantOperand(ConstantRef::new(Constant::Int { bits: 64, value: 1 })),
+                Name::Number(14)
+            ),
+            (
+                Operand::LocalOperand {
+                    name: Name::Number(29),
                     ty: module.types.i64()
                 },
                 Name::Number(16)
@@ -1011,10 +1053,15 @@ fn loopbc() {
         &phi.to_string(),
         "%19 = phi i64 [ i64 1, %16 ], [ i64 %33, %18 ]"
     );
-    #[cfg(feature = "llvm-15-or-greater")]
+    #[cfg(all(feature = "llvm-15-or-greater", feature = "llvm-17-or-lower"))]
     assert_eq!(
         &phi.to_string(),
         "%17 = phi i64 [ i64 1, %14 ], [ i64 %31, %16 ]"
+    );
+    #[cfg(feature = "llvm-18-or-greater")]
+    assert_eq!(
+        &phi.to_string(),
+        "%17 = phi i64 [ i64 1, %14 ], [ i64 %29, %16 ]"
     );
 
     #[cfg(feature = "llvm-11-or-lower")]
@@ -1221,8 +1268,12 @@ fn loopbc() {
         &bbs[2].instrs[5]
     } else if cfg!(feature = "llvm-11") {
         &bbs[2].instrs[6]
-    } else {
+    } else if cfg!(all(feature = "llvm-12-or-greater", feature = "llvm-17-or-lower")) {
         &bbs[4].instrs[7]
+    }
+    else {
+        // Clang 18 removes some instructions in the loop body c.f. Clang 17
+        &bbs[4].instrs[6]
     };
     let load: &instruction::Load = &load_inst.clone().try_into().expect("Should be a load");
     let load_addr = if cfg!(feature = "llvm-10-or-lower") {
@@ -1233,8 +1284,10 @@ fn loopbc() {
         Name::Number(25)
     } else if cfg!(feature = "llvm-14") {
         Name::Number(24)
-    } else {
+    } else if cfg!(all(feature = "llvm-14-or-greater", feature = "llvm-17-or-lower")) {
         Name::Number(22)
+    } else {
+        Name::Number(21)
     };
     #[cfg(feature = "llvm-14-or-lower")]
     let load_addr_expected_ty = module.types.pointer_to(module.types.i32());
@@ -1255,8 +1308,11 @@ fn loopbc() {
     assert_eq!(load.dest, Name::Number(26));
     #[cfg(feature = "llvm-14")]
     assert_eq!(load.dest, Name::Number(25));
-    #[cfg(feature = "llvm-15-or-greater")]
+    #[cfg(all(feature = "llvm-15-or-greater", feature = "llvm-17-or-lower"))]
     assert_eq!(load.dest, Name::Number(23));
+    #[cfg(feature = "llvm-18-or-greater")]
+    assert_eq!(load.dest, Name::Number(22));
+
     assert_eq!(load.volatile, true);
     assert_eq!(load.alignment, 4);
     assert_eq!(module.type_of(load), module.types.i32());
@@ -1269,10 +1325,15 @@ fn loopbc() {
     assert_eq!(&load.to_string(), "%26 = load volatile i32* %25, align 4");
     #[cfg(feature = "llvm-14")]
     assert_eq!(&load.to_string(), "%25 = load volatile i32* %24, align 4");
-    #[cfg(feature = "llvm-15-or-greater")]
+    #[cfg(all(feature = "llvm-15-or-greater", feature = "llvm-17-or-lower"))]
     assert_eq!(
         &load.to_string(),
         "%23 = load volatile i32, ptr %22, align 4"
+    );
+    #[cfg(feature = "llvm-18-or-greater")]
+    assert_eq!(
+        &load.to_string(),
+        "%22 = load volatile i32, ptr %21, align 4"
     );
     let ret: &Terminator = if cfg!(feature = "llvm-9-or-lower") {
         &bbs[5].term
@@ -1660,8 +1721,10 @@ fn issue4() {
     assert_eq!(first_param_attrs.len(), 3);
     #[cfg(any(feature = "llvm-11", feature = "llvm-12", feature = "llvm-13"))]
     assert_eq!(first_param_attrs.len(), 4);
-    #[cfg(any(feature = "llvm-14-or-greater"))]
+    #[cfg(all(feature = "llvm-14-or-greater", feature = "llvm-17-or-lower"))]
     assert_eq!(first_param_attrs.len(), 5);
+    #[cfg(feature = "llvm-18-or-greater")]
+    assert_eq!(first_param_attrs.len(), 7); // Clang 18 adds dead_on_unwind and writable
     let second_param_attrs = &func.parameters[1].attributes;
     #[cfg(feature = "llvm-13-or-lower")]
     assert_eq!(second_param_attrs.len(), 0);
@@ -2721,7 +2784,97 @@ fn datalayouts() {
     let module = Module::from_bc_path(&path).expect("Failed to parse module");
     let data_layout = &module.data_layout;
 
-    #[cfg(feature = "llvm-10-or-greater")]
+    // Data layout changed from Clang 17 to 18, even w/ an explicit --target=x86_64-apple-macosx12.0.0
+    #[cfg(feature = "llvm-18-or-greater")]
+    {
+        assert_eq!(
+            &data_layout.layout_str,
+            "e-m:o-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+        );
+        assert_eq!(&data_layout.endianness, &Endianness::LittleEndian);
+        assert_eq!(&data_layout.mangling, &Some(Mangling::MachO));
+        assert_eq!(
+            data_layout.alignments.ptr_alignment(270),
+            &PointerLayout {
+                size: 32,
+                alignment: Alignment { abi: 32, pref: 32 },
+                index_size: 32
+            }
+        );
+        assert_eq!(
+            data_layout.alignments.ptr_alignment(271),
+            &PointerLayout {
+                size: 32,
+                alignment: Alignment { abi: 32, pref: 32 },
+                index_size: 32
+            }
+        );
+        assert_eq!(
+            data_layout.alignments.ptr_alignment(272),
+            &PointerLayout {
+                size: 64,
+                alignment: Alignment { abi: 64, pref: 64 },
+                index_size: 64
+            }
+        );
+        assert_eq!(
+            data_layout.alignments.ptr_alignment(0),
+            &PointerLayout {
+                size: 64,
+                alignment: Alignment { abi: 64, pref: 64 },
+                index_size: 64
+            }
+        );
+        assert_eq!(
+            data_layout.alignments.ptr_alignment(33),
+            &PointerLayout {
+                size: 64,
+                alignment: Alignment { abi: 64, pref: 64 },
+                index_size: 64
+            }
+        );
+        assert_eq!(
+            data_layout.alignments.int_alignment(64),
+            &Alignment { abi: 64, pref: 64 }
+        );
+        assert_eq!(
+            data_layout.alignments.int_alignment(7),
+            &Alignment { abi: 8, pref: 8 }
+        );
+        assert_eq!(
+            data_layout.alignments.int_alignment(26),
+            &Alignment { abi: 32, pref: 32 }
+        );
+        assert_eq!(
+            data_layout.alignments.int_alignment(123456),
+            &Alignment { abi: 128, pref: 128 }
+        );
+        assert_eq!(
+            data_layout.alignments.fp_alignment(FPType::Double),
+            &Alignment { abi: 64, pref: 64 }
+        );
+        assert_eq!(
+            data_layout.alignments.fp_alignment(FPType::X86_FP80),
+            &Alignment {
+                abi: 128,
+                pref: 128
+            }
+        );
+        assert_eq!(
+            data_layout
+                .native_int_widths
+                .as_ref()
+                .unwrap()
+                .iter()
+                .copied()
+                .sorted()
+                .collect::<Vec<_>>(),
+            vec![8, 16, 32, 64]
+        );
+        assert_eq!(data_layout.stack_alignment, Some(128));
+    }
+
+    #[cfg(all(feature = "llvm-10-or-greater", feature = "llvm-17-or-lower"))]
     {
         assert_eq!(
             &data_layout.layout_str,

@@ -552,6 +552,7 @@ impl CallingConvention {
             _ if u == LLVMCallConv::LLVMColdCallConv as u32 => CallingConvention::Cold,
             _ if u == LLVMCallConv::LLVMGHCCallConv as u32 => CallingConvention::GHC,
             _ if u == LLVMCallConv::LLVMHiPECallConv as u32 => CallingConvention::HiPE,
+            #[cfg(feature = "llvm-17-or-lower")]
             _ if u == LLVMCallConv::LLVMWebKitJSCallConv as u32 => CallingConvention::WebKit_JS,
             _ if u == LLVMCallConv::LLVMAnyRegCallConv as u32 => CallingConvention::AnyReg,
             _ if u == LLVMCallConv::LLVMPreserveMostCallConv as u32 => CallingConvention::PreserveMost,
