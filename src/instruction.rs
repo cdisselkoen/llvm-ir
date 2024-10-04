@@ -2448,6 +2448,10 @@ pub enum RMWBinOp {
     FMax,
     #[cfg(feature = "llvm-15-or-greater")]
     FMin,
+    #[cfg(feature = "llvm-19-or-greater")]
+    UIncWrap,
+    #[cfg(feature = "llvm-19-or-greater")]
+    UDecWrap,
 }
 
 impl Display for RMWBinOp {
@@ -2472,6 +2476,10 @@ impl Display for RMWBinOp {
             Self::FMax => write!(f, "fmax"),
             #[cfg(feature = "llvm-15-or-greater")]
             Self::FMin => write!(f, "fmin"),
+            #[cfg(feature = "llvm-19-or-greater")]
+            Self::UIncWrap => write!(f, "uinc_wrap"),
+            #[cfg(feature = "llvm-19-or-greater")]
+            Self::UDecWrap => write!(f, "udec_wrap"),
         }
     }
 }
@@ -3481,6 +3489,10 @@ impl RMWBinOp {
             LLVMAtomicRMWBinOp::LLVMAtomicRMWBinOpFMax => Self::FMax,
             #[cfg(feature = "llvm-15-or-greater")]
             LLVMAtomicRMWBinOp::LLVMAtomicRMWBinOpFMin => Self::FMin,
+            #[cfg(feature = "llvm-19-or-greater")]
+            LLVMAtomicRMWBinOp::LLVMAtomicRMWBinOpUIncWrap => Self::UIncWrap,
+            #[cfg(feature = "llvm-19-or-greater")]
+            LLVMAtomicRMWBinOp::LLVMAtomicRMWBinOpUDecWrap => Self::UDecWrap,
         }
     }
 }
