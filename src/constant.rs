@@ -59,6 +59,14 @@ pub enum Constant {
         ty: TypeRef,
     },
     TokenNone,
+    /// See [LLVM 19 docs on ptrauth constants](https://releases.llvm.org/19.1.0/docs/LangRef.html#pointer-authentication-constants)
+    #[cfg(feature = "llvm-19-or-greater")]
+    PtrAuth {
+        ptr : ConstantRef,
+        key : ConstantRef,
+        disc : ConstantRef,
+        addr_disc : ConstantRef
+    },
 
     // Constants can also be expressed as operations applied to other constants:
 
@@ -290,6 +298,8 @@ impl Typed for Constant {
             Constant::FCmp(f) => types.type_of(f),
             #[cfg(feature="llvm-16-or-lower")]
             Constant::Select(s) => types.type_of(s),
+            #[cfg(feature="llvm-19-or-greater")]
+            Constant::PtrAuth { .. } => types.pointer(),
         }
     }
 }
@@ -471,6 +481,10 @@ impl Display for Constant {
             Constant::FCmp(c) => write!(f, "{}", c),
             #[cfg(feature="llvm-16-or-lower")]
             Constant::Select(s) => write!(f, "{}", s),
+            #[cfg(feature="llvm-19-or-greater")]
+            Constant::PtrAuth { ptr, key, disc, addr_disc } => {
+                write!(f, "ptrauth({}, {}, {}, {})", ptr, key, disc, addr_disc)
+            }
         }
     }
 }
@@ -1588,6 +1602,14 @@ impl Constant {
                     opcode => panic!("ConstantExpr has unexpected opcode {:?}", opcode),
                 }
             },
+            LLVMValueKind::LLVMConstantPtrAuthValueKind => {
+                Constant::PtrAuth {
+                    ptr : Constant::from_llvm_ref( unsafe { LLVMGetConstantPtrAuthPointer(constant) }, ctx),
+                    key : Constant::from_llvm_ref( unsafe { LLVMGetConstantPtrAuthKey(constant) }, ctx),
+                    disc : Constant::from_llvm_ref( unsafe { LLVMGetConstantPtrAuthDiscriminator(constant) }, ctx),
+                    addr_disc : Constant::from_llvm_ref( unsafe { LLVMGetConstantPtrAuthAddrDiscriminator(constant) }, ctx)
+                }
+            }
             _ if unsafe { !LLVMIsAGlobalValue(constant).is_null() } => {
                 Constant::GlobalReference {
                     name: ctx.global_names.get(&constant)

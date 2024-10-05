@@ -43,6 +43,8 @@ fn llvm_bc_dir() -> PathBuf {
         Path::new(BC_DIR).join("llvm17")
     } else if cfg!(feature = "llvm-18") {
         Path::new(BC_DIR).join("llvm18")
+    } else if cfg!(feature = "llvm-19") {
+        Path::new(BC_DIR).join("llvm19")
     } else {
         unimplemented!("new llvm version?")
     }
@@ -70,6 +72,8 @@ fn cxx_llvm_bc_dir() -> PathBuf {
         Path::new(BC_DIR).join("cxx-llvm17")
     } else if cfg!(feature = "llvm-18") {
         Path::new(BC_DIR).join("cxx-llvm18")
+    } else if cfg!(feature = "llvm-19") {
+        Path::new(BC_DIR).join("cxx-llvm19")
     } else {
         unimplemented!("new llvm version?")
     }
@@ -1945,7 +1949,17 @@ fn rustbcg() {
         assert!(startbb.instrs[i].get_debug_loc().is_none());
     }
 
-    let store_debugloc = startbb.instrs[31]
+    #[cfg(feature = "llvm-18-or-lower")]
+    const EXPECTED_STORE_INSTRUCTION_INDEX : usize = 31;
+    #[cfg(feature = "llvm-19-or-greater")]
+    const EXPECTED_STORE_INSTRUCTION_INDEX : usize = 19;
+
+    #[cfg(feature = "llvm-18-or-lower")]
+    const EXPECTED_CALL_INSTRUCTION_INDEX : usize = 33;
+    #[cfg(feature = "llvm-19-or-greater")]
+    const EXPECTED_CALL_INSTRUCTION_INDEX : usize = 21;
+
+    let store_debugloc = startbb.instrs[EXPECTED_STORE_INSTRUCTION_INDEX]
         .get_debug_loc()
         .as_ref()
         .expect("Expected this store to have a debugloc");
@@ -1957,8 +1971,8 @@ fn rustbcg() {
     let expected_fmt = "store i64 0, i64* %sum, align 8 (with debugloc)";
     #[cfg(feature = "llvm-15-or-greater")]
     let expected_fmt = "store i64 0, ptr %sum, align 8 (with debugloc)";
-    assert_eq!(&startbb.instrs[31].to_string(), expected_fmt);
-    let call_debugloc = startbb.instrs[33]
+    assert_eq!(&startbb.instrs[EXPECTED_STORE_INSTRUCTION_INDEX].to_string(), expected_fmt);
+    let call_debugloc = startbb.instrs[EXPECTED_CALL_INSTRUCTION_INDEX]
         .get_debug_loc()
         .as_ref()
         .expect("Expected this call to have a debugloc");
@@ -1970,7 +1984,7 @@ fn rustbcg() {
     let expected_fmt = "%4 = call @_ZN68_$LT$alloc..vec..Vec$LT$T$GT$$u20$as$u20$core..ops..deref..Deref$GT$5deref17h378128d7d9378466E(%alloc::vec::Vec<isize>* %3) (with debugloc)";
     #[cfg(feature = "llvm-15-or-greater")]
     let expected_fmt = "%4 = call @_ZN68_$LT$alloc..vec..Vec$LT$T$GT$$u20$as$u20$core..ops..deref..Deref$GT$5deref17h378128d7d9378466E(ptr %3) (with debugloc)";
-    assert_eq!(&startbb.instrs[33].to_string(), expected_fmt);
+    assert_eq!(&startbb.instrs[EXPECTED_CALL_INSTRUCTION_INDEX].to_string(), expected_fmt);
 }
 
 #[test]
@@ -2128,19 +2142,23 @@ fn simple_linked_list_g() {
         assert!(func.basic_blocks[0].instrs[i].get_debug_loc().is_none());
     }
 
-    // the eighth instruction should have a debugloc
-    let debugloc = func.basic_blocks[0].instrs[7]
-        .get_debug_loc()
-        .as_ref()
-        .expect("expected this instruction to have a debugloc");
-    assert_eq!(debugloc.line, 8);
-    assert_eq!(debugloc.col, Some(28));
-    assert_eq!(debugloc.filename, debug_filename);
-    assert!(debugloc.directory.as_ref().expect("directory should exist").ends_with(debug_directory_suffix));
-    assert_eq!(
-        &func.basic_blocks[0].instrs[7].to_string(),
-        "call @llvm.dbg.declare(<metadata>, <metadata>, <metadata>) (with debugloc)",
-    );
+    // As of LLVM 19, debug info is now metadata instead of intrinsics
+    #[cfg(feature = "llvm-18-or-lower")]
+    {
+        // the eighth instruction should have a debugloc
+        let debugloc = func.basic_blocks[0].instrs[7]
+            .get_debug_loc()
+            .as_ref()
+            .expect("expected this instruction to have a debugloc");
+        assert_eq!(debugloc.line, 8);
+        assert_eq!(debugloc.col, Some(28));
+        assert_eq!(debugloc.filename, debug_filename);
+        assert!(debugloc.directory.as_ref().expect("directory should exist").ends_with(debug_directory_suffix));
+        assert_eq!(
+            &func.basic_blocks[0].instrs[7].to_string(),
+            "call @llvm.dbg.declare(<metadata>, <metadata>, <metadata>) (with debugloc)",
+        );
+    }
 
     // the tenth instruction should have a different debugloc
     let debugloc = func.basic_blocks[0].instrs[9]
@@ -2154,8 +2172,11 @@ fn simple_linked_list_g() {
     #[cfg(feature = "llvm-14-or-lower")]
     let expected_fmt =
         "%8 = getelementptr inbounds %struct.SimpleLinkedList* %3, i32 0, i32 0 (with debugloc)";
-    #[cfg(feature = "llvm-15-or-greater")]
+    #[cfg(feature = "llvm-18-or-lower")]
     let expected_fmt = "%8 = getelementptr inbounds ptr %3, i32 0, i32 0 (with debugloc)";
+    #[cfg(feature = "llvm-19-or-greater")]
+    let expected_fmt = "store i32 %9, ptr %8, align 8 (with debugloc)";
+
     assert_eq!(&func.basic_blocks[0].instrs[9].to_string(), expected_fmt);
 }
 
