@@ -26,6 +26,7 @@ jobs:
         - 16
         - 17
         - 18
+        - 19
 
     steps:
       - name: Checkout sources
@@ -62,8 +63,17 @@ jobs:
           # LLVM 11 doesn't work with strict-versioning, see #53
           args: ${{ format('--release --features=llvm-{0}{1}', matrix.llvm, matrix.llvm != '11' && ',strict-versioning' || '') }}
 
-      - name: Test
+      - name: Test Release
         uses: actions-rs/cargo@v1
         with:
           command: test
           args: ${{ format('--release --features=llvm-{0}{1}', matrix.llvm, matrix.llvm != '11' && ',strict-versioning' || '') }}
+
+        # LLVM 19 tests should pass with a debug build, now that https://github.com/llvm/llvm-project/issues/65227
+        # and https://github.com/llvm/llvm-project/pull/87163 have landed in a release
+      - name: Test Debug
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --features=llvm-${{ matrix.llvm }}
+        if: matrix.llvm >= 19
