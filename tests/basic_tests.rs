@@ -2169,10 +2169,11 @@ fn simple_linked_list_g() {
     assert_eq!(debugloc.col, Some(34));
     assert_eq!(debugloc.filename, debug_filename);
     assert!(debugloc.directory.as_ref().expect("directory should exist").ends_with(debug_directory_suffix));
+
     #[cfg(feature = "llvm-14-or-lower")]
     let expected_fmt =
         "%8 = getelementptr inbounds %struct.SimpleLinkedList* %3, i32 0, i32 0 (with debugloc)";
-    #[cfg(feature = "llvm-18-or-lower")]
+    #[cfg(all(feature = "llvm-15-or-greater", feature = "llvm-18-or-lower"))]
     let expected_fmt = "%8 = getelementptr inbounds ptr %3, i32 0, i32 0 (with debugloc)";
     #[cfg(feature = "llvm-19-or-greater")]
     let expected_fmt = "store i32 %9, ptr %8, align 8 (with debugloc)";
