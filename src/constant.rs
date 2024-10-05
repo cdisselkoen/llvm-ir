@@ -1602,6 +1602,7 @@ impl Constant {
                     opcode => panic!("ConstantExpr has unexpected opcode {:?}", opcode),
                 }
             },
+            #[cfg(feature = "llvm-19-or-greater")]
             LLVMValueKind::LLVMConstantPtrAuthValueKind => {
                 Constant::PtrAuth {
                     ptr : Constant::from_llvm_ref( unsafe { LLVMGetConstantPtrAuthPointer(constant) }, ctx),
