@@ -3481,6 +3481,10 @@ impl RMWBinOp {
             LLVMAtomicRMWBinOp::LLVMAtomicRMWBinOpFMax => Self::FMax,
             #[cfg(feature = "llvm-15-or-greater")]
             LLVMAtomicRMWBinOp::LLVMAtomicRMWBinOpFMin => Self::FMin,
+            #[cfg(feature = "llvm-19-or-greater")]
+            LLVMAtomicRMWBinOp::LLVMAtomicRMWBinOpUIncWrap => todo!(),
+            #[cfg(feature = "llvm-19-or-greater")]
+            LLVMAtomicRMWBinOp::LLVMAtomicRMWBinOpUDecWrap => todo!()
         }
     }
 }
