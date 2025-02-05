@@ -9,7 +9,7 @@ use std::sync::Arc;
 
 /// See [LLVM 14 docs on Constants](https://releases.llvm.org/14.0.0/docs/LangRef.html#constants).
 /// Constants can be either values, or expressions involving other constants (see [LLVM 14 docs on Constant Expressions](https://releases.llvm.org/14.0.0/docs/LangRef.html#constant-expressions)).
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub enum Constant {
     Int {
         /// Number of bits in the constant integer
@@ -170,6 +170,17 @@ pub enum Float {
     Quadruple, // TODO perhaps Quadruple(u128)
     X86_FP80,  // TODO perhaps X86_FP80((u16, u64)) with the most-significant bits on the left
     PPC_FP128, // TODO perhaps PPC_FP128((u64, u64)) with the most-significant bits on the left
+}
+
+impl std::hash::Hash for Float {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        core::mem::discriminant(self).hash(state);
+        match self {
+            Float::Single(f) => ordered_float::OrderedFloat(*f).hash(state),
+            Float::Double(f) => ordered_float::OrderedFloat(*f).hash(state),
+            _ => {},
+        }
+    }
 }
 
 impl Typed for Float {
@@ -507,7 +518,7 @@ impl Display for Constant {
 // `Arc` is used rather than `Rc` so that `Module` can remain `Sync`.
 // This is important because it allows multiple threads to simultaneously access
 // a single (immutable) `Module`.
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct ConstantRef(Arc<Constant>);
 
 impl AsRef<Constant> for ConstantRef {
@@ -672,7 +683,7 @@ macro_rules! unop_explicitly_typed {
     };
 }
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct Add {
     pub operand0: ConstantRef,
     pub operand1: ConstantRef,
@@ -683,7 +694,7 @@ pub struct Add {
 impl_constexpr!(Add, Add);
 binop_same_type!(Add, "add");
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct Sub {
     pub operand0: ConstantRef,
     pub operand1: ConstantRef,
@@ -694,7 +705,7 @@ pub struct Sub {
 impl_constexpr!(Sub, Sub);
 binop_same_type!(Sub, "sub");
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct Mul {
     pub operand0: ConstantRef,
     pub operand1: ConstantRef,
@@ -706,7 +717,7 @@ impl_constexpr!(Mul, Mul);
 binop_same_type!(Mul, "mul");
 
 #[cfg(feature = "llvm-14-or-lower")]
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct UDiv {
     pub operand0: ConstantRef,
     pub operand1: ConstantRef,
@@ -719,7 +730,7 @@ impl_constexpr!(UDiv, UDiv);
 binop_same_type!(UDiv, "udiv");
 
 #[cfg(feature = "llvm-14-or-lower")]
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct SDiv {
     pub operand0: ConstantRef,
     pub operand1: ConstantRef,
@@ -732,7 +743,7 @@ impl_constexpr!(SDiv, SDiv);
 binop_same_type!(SDiv, "sdiv");
 
 #[cfg(feature = "llvm-14-or-lower")]
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct URem {
     pub operand0: ConstantRef,
     pub operand1: ConstantRef,
@@ -744,7 +755,7 @@ impl_constexpr!(URem, URem);
 binop_same_type!(URem, "urem");
 
 #[cfg(feature = "llvm-14-or-lower")]
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct SRem {
     pub operand0: ConstantRef,
     pub operand1: ConstantRef,
@@ -756,7 +767,7 @@ impl_constexpr!(SRem, SRem);
 binop_same_type!(SRem, "srem");
 
 #[cfg(feature = "llvm-17-or-lower")]
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct And {
     pub operand0: ConstantRef,
     pub operand1: ConstantRef,
@@ -768,7 +779,7 @@ impl_constexpr!(And, And);
 binop_same_type!(And, "and");
 
 #[cfg(feature = "llvm-17-or-lower")]
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct Or {
     pub operand0: ConstantRef,
     pub operand1: ConstantRef,
@@ -779,7 +790,7 @@ impl_constexpr!(Or, Or);
 #[cfg(feature = "llvm-17-or-lower")]
 binop_same_type!(Or, "or");
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct Xor {
     pub operand0: ConstantRef,
     pub operand1: ConstantRef,
@@ -789,7 +800,7 @@ impl_constexpr!(Xor, Xor);
 binop_same_type!(Xor, "xor");
 
 #[cfg(feature = "llvm-18-or-lower")]
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct Shl {
     pub operand0: ConstantRef,
     pub operand1: ConstantRef,
@@ -803,7 +814,7 @@ impl_constexpr!(Shl, Shl);
 binop_left_type!(Shl, "shl");
 
 #[cfg(feature = "llvm-17-or-lower")]
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct LShr {
     pub operand0: ConstantRef,
     pub operand1: ConstantRef,
@@ -816,7 +827,7 @@ impl_constexpr!(LShr, LShr);
 binop_left_type!(LShr, "lshr");
 
 #[cfg(feature = "llvm-17-or-lower")]
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct AShr {
     pub operand0: ConstantRef,
     pub operand1: ConstantRef,
@@ -829,7 +840,7 @@ impl_constexpr!(AShr, AShr);
 binop_left_type!(AShr, "ashr");
 
 #[cfg(feature = "llvm-14-or-lower")]
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct FAdd {
     pub operand0: ConstantRef,
     pub operand1: ConstantRef,
@@ -841,7 +852,7 @@ impl_constexpr!(FAdd, FAdd);
 binop_same_type!(FAdd, "fadd");
 
 #[cfg(feature = "llvm-14-or-lower")]
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct FSub {
     pub operand0: ConstantRef,
     pub operand1: ConstantRef,
@@ -853,7 +864,7 @@ impl_constexpr!(FSub, FSub);
 binop_same_type!(FSub, "fsub");
 
 #[cfg(feature = "llvm-14-or-lower")]
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct FMul {
     pub operand0: ConstantRef,
     pub operand1: ConstantRef,
@@ -865,7 +876,7 @@ impl_constexpr!(FMul, FMul);
 binop_same_type!(FMul, "fmul");
 
 #[cfg(feature = "llvm-14-or-lower")]
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct FDiv {
     pub operand0: ConstantRef,
     pub operand1: ConstantRef,
@@ -877,7 +888,7 @@ impl_constexpr!(FDiv, FDiv);
 binop_same_type!(FDiv, "fdiv");
 
 #[cfg(feature = "llvm-14-or-lower")]
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct FRem {
     pub operand0: ConstantRef,
     pub operand1: ConstantRef,
@@ -888,7 +899,7 @@ impl_constexpr!(FRem, FRem);
 #[cfg(feature = "llvm-14-or-lower")]
 binop_same_type!(FRem, "frem");
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct ExtractElement {
     pub vector: ConstantRef,
     pub index: ConstantRef,
@@ -914,7 +925,7 @@ impl Display for ExtractElement {
     }
 }
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct InsertElement {
     pub vector: ConstantRef,
     pub element: ConstantRef,
@@ -939,7 +950,7 @@ impl Display for InsertElement {
     }
 }
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct ShuffleVector {
     pub operand0: ConstantRef,
     pub operand1: ConstantRef,
@@ -989,7 +1000,7 @@ impl Display for ShuffleVector {
 }
 
 #[cfg(feature = "llvm-14-or-lower")]
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct ExtractValue {
     pub aggregate: ConstantRef,
     pub indices: Vec<u32>,
@@ -1039,7 +1050,7 @@ impl Display for ExtractValue {
 }
 
 #[cfg(feature = "llvm-14-or-lower")]
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct InsertValue {
     pub aggregate: ConstantRef,
     pub element: ConstantRef,
@@ -1068,7 +1079,7 @@ impl Display for InsertValue {
     }
 }
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct GetElementPtr {
     pub address: ConstantRef,
     pub indices: Vec<ConstantRef>,
@@ -1148,7 +1159,7 @@ impl Display for GetElementPtr {
     }
 }
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct Trunc {
     pub operand: ConstantRef,
     pub to_type: TypeRef,
@@ -1158,7 +1169,7 @@ impl_constexpr!(Trunc, Trunc);
 unop_explicitly_typed!(Trunc, "trunc");
 
 #[cfg(feature = "llvm-17-or-lower")]
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct ZExt {
     pub operand: ConstantRef,
     pub to_type: TypeRef,
@@ -1170,7 +1181,7 @@ impl_constexpr!(ZExt, ZExt);
 unop_explicitly_typed!(ZExt, "zext");
 
 #[cfg(feature = "llvm-17-or-lower")]
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct SExt {
     pub operand: ConstantRef,
     pub to_type: TypeRef,
@@ -1182,7 +1193,7 @@ impl_constexpr!(SExt, SExt);
 unop_explicitly_typed!(SExt, "sext");
 
 #[cfg(feature = "llvm-17-or-lower")]
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct FPTrunc {
     pub operand: ConstantRef,
     pub to_type: TypeRef,
@@ -1193,7 +1204,7 @@ impl_constexpr!(FPTrunc, FPTrunc);
 unop_explicitly_typed!(FPTrunc, "fptrunc");
 
 #[cfg(feature = "llvm-17-or-lower")]
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct FPExt {
     pub operand: ConstantRef,
     pub to_type: TypeRef,
@@ -1205,7 +1216,7 @@ impl_constexpr!(FPExt, FPExt);
 unop_explicitly_typed!(FPExt, "fpext");
 
 #[cfg(feature = "llvm-17-or-lower")]
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct FPToUI {
     pub operand: ConstantRef,
     pub to_type: TypeRef,
@@ -1217,7 +1228,7 @@ impl_constexpr!(FPToUI, FPToUI);
 unop_explicitly_typed!(FPToUI, "fptoui");
 
 #[cfg(feature = "llvm-17-or-lower")]
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct FPToSI {
     pub operand: ConstantRef,
     pub to_type: TypeRef,
@@ -1229,7 +1240,7 @@ impl_constexpr!(FPToSI, FPToSI);
 unop_explicitly_typed!(FPToSI, "fptosi");
 
 #[cfg(feature = "llvm-17-or-lower")]
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct UIToFP {
     pub operand: ConstantRef,
     pub to_type: TypeRef,
@@ -1241,7 +1252,7 @@ impl_constexpr!(UIToFP, UIToFP);
 unop_explicitly_typed!(UIToFP, "uitofp");
 
 #[cfg(feature = "llvm-17-or-lower")]
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct SIToFP {
     pub operand: ConstantRef,
     pub to_type: TypeRef,
@@ -1252,7 +1263,7 @@ impl_constexpr!(SIToFP, SIToFP);
 #[cfg(feature = "llvm-17-or-lower")]
 unop_explicitly_typed!(SIToFP, "sitofp");
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct PtrToInt {
     pub operand: ConstantRef,
     pub to_type: TypeRef,
@@ -1261,7 +1272,7 @@ pub struct PtrToInt {
 impl_constexpr!(PtrToInt, PtrToInt);
 unop_explicitly_typed!(PtrToInt, "ptrtoint");
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct IntToPtr {
     pub operand: ConstantRef,
     pub to_type: TypeRef,
@@ -1270,7 +1281,7 @@ pub struct IntToPtr {
 impl_constexpr!(IntToPtr, IntToPtr);
 unop_explicitly_typed!(IntToPtr, "inttoptr");
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct BitCast {
     pub operand: ConstantRef,
     pub to_type: TypeRef,
@@ -1279,7 +1290,7 @@ pub struct BitCast {
 impl_constexpr!(BitCast, BitCast);
 unop_explicitly_typed!(BitCast, "bitcast");
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct AddrSpaceCast {
     pub operand: ConstantRef,
     pub to_type: TypeRef,
@@ -1289,7 +1300,7 @@ impl_constexpr!(AddrSpaceCast, AddrSpaceCast);
 unop_explicitly_typed!(AddrSpaceCast, "addrspacecast");
 
 #[cfg(feature = "llvm-18-or-lower")]
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct ICmp {
     pub predicate: IntPredicate,
     pub operand0: ConstantRef,
@@ -1332,7 +1343,7 @@ impl Display for ICmp {
 }
 
 #[cfg(feature = "llvm-18-or-lower")]
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct FCmp {
     pub predicate: FPPredicate,
     pub operand0: ConstantRef,
@@ -1375,7 +1386,7 @@ impl Display for FCmp {
 }
 
 #[cfg(feature="llvm-16-or-lower")]
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct Select {
     pub condition: ConstantRef,
     pub true_value: ConstantRef,
