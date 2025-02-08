@@ -100,22 +100,37 @@ impl Module {
 
     /// Parse the LLVM text IR (.ll) file at the given path to create a `Module`
     pub fn from_ir_path(path: impl AsRef<Path>) -> Result<Self, String> {
-        unsafe fn parse_ir(
-            context_ref: LLVMContextRef,
-            mem_buf: LLVMMemoryBufferRef,
-            out_module: *mut LLVMModuleRef,
-        ) -> Result<(), String> {
-            use std::ffi::CStr;
-            let mut err_string = std::mem::zeroed();
-            // This call takes ownership of the buffer, so we don't free it.
-            match llvm_sys::ir_reader::LLVMParseIRInContext(context_ref, mem_buf, out_module, &mut err_string) {
-                0 => Ok(()),
-                _ => Err(format!("Failed to parse bitcode: {}",
-                                 CStr::from_ptr(err_string).to_str().expect("Failed to convert CStr")))
-            }
-        }
-        Self::from_path(path, parse_ir)
+        Self::from_path(path, Self::parse_ir)
     }
+
+    /// Parse the given string as LLVM text IR to create a `Module`
+    pub fn from_ir_str(str: &str) -> Result<Self, String> {
+        let memory_buffer = unsafe {
+            LLVMCreateMemoryBufferWithMemoryRange(
+                str.as_ptr() as *const _,
+                str.len(),
+                std::ffi::CString::new("str").unwrap().as_ptr(),
+                true.into(),
+            )
+        };
+        Self::from_buffer(memory_buffer, Self::parse_ir)
+    }
+
+    unsafe fn parse_ir(
+        context_ref: LLVMContextRef,
+        mem_buf: LLVMMemoryBufferRef,
+        out_module: *mut LLVMModuleRef,
+    ) -> Result<(), String> {
+        use std::ffi::CStr;
+        let mut err_string = std::mem::zeroed();
+        // This call takes ownership of the buffer, so we don't free it.
+        match llvm_sys::ir_reader::LLVMParseIRInContext(context_ref, mem_buf, out_module, &mut err_string) {
+            0 => Ok(()),
+            _ => Err(format!("Failed to parse bitcode: {}",
+                             CStr::from_ptr(err_string).to_str().expect("Failed to convert CStr")))
+        }
+    }
+
     fn from_path(
         path: impl AsRef<Path>,
         parse: unsafe fn(
@@ -126,7 +141,6 @@ impl Module {
     ) -> Result<Self, String> {
         // implementation here inspired by the `inkwell` crate's `Module::parse_bitcode_from_path`
         use std::ffi::{CStr, CString};
-        use std::mem;
 
         let path = CString::new(
             path.as_ref()
@@ -154,10 +168,21 @@ impl Module {
         };
         debug!("Created a MemoryBuffer");
 
+        Self::from_buffer(memory_buffer, parse)
+    }
+
+    fn from_buffer(
+        memory_buffer: LLVMMemoryBufferRef,
+        parse: unsafe fn(
+            context_ref: LLVMContextRef,
+            mem_buf: LLVMMemoryBufferRef,
+            out_module: *mut LLVMModuleRef,
+        ) -> Result<(), String>,
+    ) -> Result<Self, String> {
         let context = crate::from_llvm::Context::new();
 
         let module = unsafe {
-            let mut module: mem::MaybeUninit<LLVMModuleRef> = mem::MaybeUninit::uninit();
+            let mut module: std::mem::MaybeUninit<LLVMModuleRef> = std::mem::MaybeUninit::uninit();
             parse(context.ctx, memory_buffer, module.as_mut_ptr())?;
             module.assume_init()
         };
