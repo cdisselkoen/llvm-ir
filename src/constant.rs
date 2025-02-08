@@ -1,4 +1,5 @@
 use crate::name::Name;
+#[cfg(feature = "llvm-18-or-lower")]
 use crate::predicates::*;
 use crate::types::{FPType, NamedStructDef, Type, TypeRef, Typed, Types};
 use std::convert::TryFrom;
@@ -59,6 +60,14 @@ pub enum Constant {
         ty: TypeRef,
     },
     TokenNone,
+    /// See [LLVM 19 docs on ptrauth constants](https://releases.llvm.org/19.1.0/docs/LangRef.html#pointer-authentication-constants)
+    #[cfg(feature = "llvm-19-or-greater")]
+    PtrAuth {
+        ptr : ConstantRef,
+        key : ConstantRef,
+        disc : ConstantRef,
+        addr_disc : ConstantRef
+    },
 
     // Constants can also be expressed as operations applied to other constants:
 
@@ -81,6 +90,7 @@ pub enum Constant {
     #[cfg(feature = "llvm-17-or-lower")]
     Or(Or),
     Xor(Xor),
+    #[cfg(feature = "llvm-18-or-lower")]
     Shl(Shl),
     #[cfg(feature = "llvm-17-or-lower")]
     LShr(LShr),
@@ -137,7 +147,9 @@ pub enum Constant {
     AddrSpaceCast(AddrSpaceCast),
 
     // Other ops
+    #[cfg(feature = "llvm-18-or-lower")]
     ICmp(ICmp),
+    #[cfg(feature = "llvm-18-or-lower")]
     FCmp(FCmp),
     #[cfg(feature = "llvm-16-or-lower")]
     Select(Select),
@@ -242,6 +254,7 @@ impl Typed for Constant {
             #[cfg(feature = "llvm-17-or-lower")]
             Constant::Or(o) => types.type_of(o),
             Constant::Xor(x) => types.type_of(x),
+            #[cfg(feature = "llvm-18-or-lower")]
             Constant::Shl(s) => types.type_of(s),
             #[cfg(feature = "llvm-17-or-lower")]
             Constant::LShr(l) => types.type_of(l),
@@ -286,10 +299,14 @@ impl Typed for Constant {
             Constant::IntToPtr(i) => types.type_of(i),
             Constant::BitCast(b) => types.type_of(b),
             Constant::AddrSpaceCast(a) => types.type_of(a),
+            #[cfg(feature = "llvm-18-or-lower")]
             Constant::ICmp(i) => types.type_of(i),
+            #[cfg(feature = "llvm-18-or-lower")]
             Constant::FCmp(f) => types.type_of(f),
             #[cfg(feature="llvm-16-or-lower")]
             Constant::Select(s) => types.type_of(s),
+            #[cfg(feature="llvm-19-or-greater")]
+            Constant::PtrAuth { .. } => types.pointer(),
         }
     }
 }
@@ -423,6 +440,7 @@ impl Display for Constant {
             #[cfg(feature = "llvm-17-or-lower")]
             Constant::Or(o) => write!(f, "{}", o),
             Constant::Xor(x) => write!(f, "{}", x),
+            #[cfg(feature = "llvm-18-or-lower")]
             Constant::Shl(s) => write!(f, "{}", s),
             #[cfg(feature = "llvm-17-or-lower")]
             Constant::LShr(l) => write!(f, "{}", l),
@@ -467,10 +485,16 @@ impl Display for Constant {
             Constant::IntToPtr(i) => write!(f, "{}", i),
             Constant::BitCast(b) => write!(f, "{}", b),
             Constant::AddrSpaceCast(a) => write!(f, "{}", a),
+            #[cfg(feature = "llvm-18-or-lower")]
             Constant::ICmp(i) => write!(f, "{}", i),
+            #[cfg(feature = "llvm-18-or-lower")]
             Constant::FCmp(c) => write!(f, "{}", c),
             #[cfg(feature="llvm-16-or-lower")]
             Constant::Select(s) => write!(f, "{}", s),
+            #[cfg(feature="llvm-19-or-greater")]
+            Constant::PtrAuth { ptr, key, disc, addr_disc } => {
+                write!(f, "ptrauth({}, {}, {}, {})", ptr, key, disc, addr_disc)
+            }
         }
     }
 }
@@ -604,6 +628,7 @@ macro_rules! binop_same_type {
 
 // Use on binops where the result type is the same as the first operand type
 // (and the Display impl doesn't need to show any more information other than the operands)
+#[cfg(feature = "llvm-18-or-lower")]
 macro_rules! binop_left_type {
     ($expr:ty, $dispname:expr) => {
         impl_binop!($expr, $dispname);
@@ -763,6 +788,7 @@ pub struct Xor {
 impl_constexpr!(Xor, Xor);
 binop_same_type!(Xor, "xor");
 
+#[cfg(feature = "llvm-18-or-lower")]
 #[derive(PartialEq, Clone, Debug)]
 pub struct Shl {
     pub operand0: ConstantRef,
@@ -771,7 +797,9 @@ pub struct Shl {
     // pub nuw: bool,  // getters for these seem to not be exposed in the LLVM C API, only in the C++ one
 }
 
+#[cfg(feature = "llvm-18-or-lower")]
 impl_constexpr!(Shl, Shl);
+#[cfg(feature = "llvm-18-or-lower")]
 binop_left_type!(Shl, "shl");
 
 #[cfg(feature = "llvm-17-or-lower")]
@@ -1260,6 +1288,7 @@ pub struct AddrSpaceCast {
 impl_constexpr!(AddrSpaceCast, AddrSpaceCast);
 unop_explicitly_typed!(AddrSpaceCast, "addrspacecast");
 
+#[cfg(feature = "llvm-18-or-lower")]
 #[derive(PartialEq, Clone, Debug)]
 pub struct ICmp {
     pub predicate: IntPredicate,
@@ -1267,9 +1296,12 @@ pub struct ICmp {
     pub operand1: ConstantRef,
 }
 
+#[cfg(feature = "llvm-18-or-lower")]
 impl_constexpr!(ICmp, ICmp);
+#[cfg(feature = "llvm-18-or-lower")]
 impl_binop!(ICmp, "icmp");
 
+#[cfg(feature = "llvm-18-or-lower")]
 impl Typed for ICmp {
     fn get_type(&self, types: &Types) -> TypeRef {
         let ty = types.type_of(&self.operand0);
@@ -1288,6 +1320,7 @@ impl Typed for ICmp {
     }
 }
 
+#[cfg(feature = "llvm-18-or-lower")]
 impl Display for ICmp {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
@@ -1298,6 +1331,7 @@ impl Display for ICmp {
     }
 }
 
+#[cfg(feature = "llvm-18-or-lower")]
 #[derive(PartialEq, Clone, Debug)]
 pub struct FCmp {
     pub predicate: FPPredicate,
@@ -1305,9 +1339,12 @@ pub struct FCmp {
     pub operand1: ConstantRef,
 }
 
+#[cfg(feature = "llvm-18-or-lower")]
 impl_constexpr!(FCmp, FCmp);
+#[cfg(feature = "llvm-18-or-lower")]
 impl_binop!(FCmp, "fcmp");
 
+#[cfg(feature = "llvm-18-or-lower")]
 impl Typed for FCmp {
     fn get_type(&self, types: &Types) -> TypeRef {
         let ty = types.type_of(&self.operand0);
@@ -1326,6 +1363,7 @@ impl Typed for FCmp {
     }
 }
 
+#[cfg(feature = "llvm-18-or-lower")]
 impl Display for FCmp {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
@@ -1537,6 +1575,7 @@ impl Constant {
                     #[cfg(feature = "llvm-17-or-lower")]
                     LLVMOpcode::LLVMOr => Constant::Or(Or::from_llvm_ref(constant, ctx)),
                     LLVMOpcode::LLVMXor => Constant::Xor(Xor::from_llvm_ref(constant, ctx)),
+                    #[cfg(feature = "llvm-18-or-lower")]
                     LLVMOpcode::LLVMShl => Constant::Shl(Shl::from_llvm_ref(constant, ctx)),
                     #[cfg(feature = "llvm-17-or-lower")]
                     LLVMOpcode::LLVMLShr => Constant::LShr(LShr::from_llvm_ref(constant, ctx)),
@@ -1581,13 +1620,24 @@ impl Constant {
                     LLVMOpcode::LLVMIntToPtr => Constant::IntToPtr(IntToPtr::from_llvm_ref(constant, ctx)),
                     LLVMOpcode::LLVMBitCast => Constant::BitCast(BitCast::from_llvm_ref(constant, ctx)),
                     LLVMOpcode::LLVMAddrSpaceCast => Constant::AddrSpaceCast(AddrSpaceCast::from_llvm_ref(constant, ctx)),
+                    #[cfg(feature = "llvm-18-or-lower")]
                     LLVMOpcode::LLVMICmp => Constant::ICmp(ICmp::from_llvm_ref(constant, ctx)),
+                    #[cfg(feature = "llvm-18-or-lower")]
                     LLVMOpcode::LLVMFCmp => Constant::FCmp(FCmp::from_llvm_ref(constant, ctx)),
                     #[cfg(feature="llvm-16-or-lower")]
                     LLVMOpcode::LLVMSelect => Constant::Select(Select::from_llvm_ref(constant, ctx)),
                     opcode => panic!("ConstantExpr has unexpected opcode {:?}", opcode),
                 }
             },
+            #[cfg(feature = "llvm-19-or-greater")]
+            LLVMValueKind::LLVMConstantPtrAuthValueKind => {
+                Constant::PtrAuth {
+                    ptr : Constant::from_llvm_ref( unsafe { LLVMGetConstantPtrAuthPointer(constant) }, ctx),
+                    key : Constant::from_llvm_ref( unsafe { LLVMGetConstantPtrAuthKey(constant) }, ctx),
+                    disc : Constant::from_llvm_ref( unsafe { LLVMGetConstantPtrAuthDiscriminator(constant) }, ctx),
+                    addr_disc : Constant::from_llvm_ref( unsafe { LLVMGetConstantPtrAuthAddrDiscriminator(constant) }, ctx)
+                }
+            }
             _ if unsafe { !LLVMIsAGlobalValue(constant).is_null() } => {
                 Constant::GlobalReference {
                     name: ctx.global_names.get(&constant)
@@ -1631,6 +1681,7 @@ binop_from_llvm!(And);
 #[cfg(feature = "llvm-17-or-lower")]
 binop_from_llvm!(Or);
 binop_from_llvm!(Xor);
+#[cfg(feature = "llvm-18-or-lower")]
 binop_from_llvm!(Shl);
 #[cfg(feature = "llvm-17-or-lower")]
 binop_from_llvm!(LShr);
@@ -1772,6 +1823,7 @@ typed_unop_from_llvm!(IntToPtr);
 typed_unop_from_llvm!(BitCast);
 typed_unop_from_llvm!(AddrSpaceCast);
 
+#[cfg(feature = "llvm-18-or-lower")]
 impl ICmp {
     pub(crate) fn from_llvm_ref(expr: LLVMValueRef, ctx: &mut ModuleContext) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 2);
@@ -1783,6 +1835,7 @@ impl ICmp {
     }
 }
 
+#[cfg(feature = "llvm-18-or-lower")]
 impl FCmp {
     pub(crate) fn from_llvm_ref(expr: LLVMValueRef, ctx: &mut ModuleContext) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 2);
