@@ -3117,3 +3117,43 @@ fn fences() {
     assert_eq!(syncscope.atomicity.synch_scope, SynchronizationScope::SingleThread);
 }
 */
+
+
+
+
+mod data_layout_type_size {
+    use itertools::Itertools;
+    use llvm_ir::Module;
+    use crate::llvm_bc_dir;
+
+    #[test]
+    fn hello_bc() {
+        let _ = env_logger::builder().is_test(true).try_init(); // capture log messages with test harness
+        let path = llvm_bc_dir().join("hello.bc");
+        let module = Module::from_bc_path(&path).expect("Failed to parse module");
+        let t = module.data_layout
+            .get_type_alloc_size_in_bits(&module.types, module.types.i32().as_ref())
+            .unwrap();
+        assert_eq!(32, t.min_size_in_bits());
+    }
+
+    #[test]
+    fn linkedlist_bc() {
+        let _ = env_logger::builder().is_test(true).try_init(); // capture log messages with test harness
+        let path = llvm_bc_dir().join("linkedlist.bc");
+        let module = Module::from_bc_path(&path).expect("Failed to parse module");
+
+        let t = module.data_layout
+            .get_type_alloc_size_in_bits(&module.types, module.types.named_struct("struct.SimpleLinkedList").as_ref())
+            .unwrap();
+        assert_eq!(128, t.min_size_in_bits());
+        let t = module.data_layout
+            .get_type_alloc_size_in_bits(&module.types, module.types.named_struct("struct.NodeA").as_ref())
+            .unwrap();
+        assert_eq!(128, t.min_size_in_bits());
+        let t = module.data_layout
+            .get_type_alloc_size_in_bits(&module.types, module.types.named_struct("struct.NodeB").as_ref())
+            .unwrap();
+        assert_eq!(128, t.min_size_in_bits());
+    }
+}
