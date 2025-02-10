@@ -15,7 +15,7 @@ pub enum MetadataRef<T> where T: PartialEq + Clone + Debug {
 pub type MetadataNodeID = usize;
 
 /// See [LLVM 14 docs on Metadata Nodes and Metadata Strings](https://releases.llvm.org/14.0.0/docs/LangRef.html#metadata-nodes-and-metadata-strings)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub enum Metadata {
     String(String),
     Node(MetadataRef<MetadataNode>),
@@ -29,7 +29,7 @@ impl Typed for Metadata {
 }
 
 /// See [LLVM 14 docs on Metadata Nodes and Metadata Strings](https://releases.llvm.org/14.0.0/docs/LangRef.html#metadata-nodes-and-metadata-strings)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub enum MetadataNode {
     Tuple(Vec<Option<Metadata>>),  // None represents null
     Expression(DIExpression),
@@ -41,14 +41,14 @@ pub enum MetadataNode {
 
 // DI* types are in alphabetical order in this file
 
-#[derive(PartialEq, Eq, Clone, Copy, Debug)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug, Hash)]
 pub enum DIAccessibility {
     Private,
     Protected,
     Public,
 }
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct DIArrayType {
     pub subscripts: Vec<DISubrange>,
     pub element_type: Option<MetadataRef<DIType>>,
@@ -58,7 +58,7 @@ pub struct DIArrayType {
 }
 
 /// See [LLVM 14 docs on DIBasicType](https://releases.llvm.org/14.0.0/docs/LangRef.html#dibasictype)
-#[derive(PartialEq, Eq, Clone, Debug)]
+#[derive(PartialEq, Eq, Clone, Debug, Hash)]
 pub struct DIBasicType {
     pub name: String,
     pub size_in_bits: u64,
@@ -68,25 +68,25 @@ pub struct DIBasicType {
     pub flags: Vec<DIFlag>,
 }
 
-#[derive(PartialEq, Eq, Clone, Copy, Debug)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug, Hash)]
 pub enum DIBasicTypeTag {
     BaseType,
     UnspecifiedType,
 }
 
-#[derive(PartialEq, Eq, Clone, Debug)]
+#[derive(PartialEq, Eq, Clone, Debug, Hash)]
 pub struct DIChecksumInfo {
     pub kind: DIChecksumKind,
     pub value: String,
 }
 
-#[derive(PartialEq, Eq, Clone, Copy, Debug)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug, Hash)]
 pub enum DIChecksumKind {
     MD5,
     SHA1,
 }
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct DIClassType {
     pub name: String,
     pub scope: Option<MetadataRef<DIScope>>,
@@ -103,7 +103,7 @@ pub struct DIClassType {
 }
 
 /// See [LLVM 14 docs on DICompileUnit](https://releases.llvm.org/14.0.0/docs/LangRef.html#dicompileunit)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct DICompileUnit {
     pub language: u32,
     pub file: MetadataRef<DIFile>,
@@ -126,7 +126,7 @@ pub struct DICompileUnit {
 }
 
 /// See [LLVM 14 docs on DICompositeType](https://releases.llvm.org/14.0.0/docs/LangRef.html#dicompositetype)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub enum DICompositeType {
     Array(DIArrayType),
     Class(DIClassType),
@@ -135,20 +135,20 @@ pub enum DICompositeType {
     Union(DIUnionType),
 }
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub enum DICount {
     Constant(i64),
     Variable(MetadataRef<DIVariable>),
 }
 
-#[derive(PartialEq, Eq, Clone, Copy, Debug)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug, Hash)]
 pub enum DIDebugEmissionKind {
     NoDebug,
     FullDebug,
     LineTablesOnly,
 }
 
-#[derive(PartialEq, Eq, Clone, Copy, Debug)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug, Hash)]
 pub enum DIDebugNameTableKind {
     Default,
     GNU,
@@ -156,7 +156,7 @@ pub enum DIDebugNameTableKind {
 }
 
 /// See [LLVM 14 docs on DIDerivedType](https://releases.llvm.org/14.0.0/docs/LangRef.html#diderivedtype)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct DIDerivedType {
     pub tag: DIDerivedTypeTag,
     pub name: String,
@@ -171,7 +171,7 @@ pub struct DIDerivedType {
     pub flags: Vec<DIFlag>,
 }
 
-#[derive(PartialEq, Eq, Clone, Copy, Debug)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug, Hash)]
 pub enum DIDerivedTypeTag {
     Typedef,
     PointerType,
@@ -187,7 +187,7 @@ pub enum DIDerivedTypeTag {
     Friend,
 }
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct DIEnumerationType {
     pub name: String,
     pub scope: Option<MetadataRef<DIScope>>,
@@ -201,7 +201,7 @@ pub struct DIEnumerationType {
 }
 
 /// See [LLVM 14 docs on DIEnumerator](https://releases.llvm.org/14.0.0/docs/LangRef.html#dienumerator)
-#[derive(PartialEq, Eq, Clone, Debug)]
+#[derive(PartialEq, Eq, Clone, Debug, Hash)]
 pub struct DIEnumerator {
     pub name: String,
     pub value: i64,
@@ -212,14 +212,14 @@ pub struct DIEnumerator {
 pub type DIExpression = Vec<DWOp>;
 
 /// See [LLVM 14 docs on DIFile](https://releases.llvm.org/14.0.0/docs/LangRef.html#difile)
-#[derive(PartialEq, Eq, Clone, Debug)]
+#[derive(PartialEq, Eq, Clone, Debug, Hash)]
 pub struct DIFile {
     pub filename: String,
     pub directory: String,
     pub checksum: Option<DIChecksumInfo>,
 }
 
-#[derive(PartialEq, Eq, Clone, Debug)]
+#[derive(PartialEq, Eq, Clone, Debug, Hash)]
 pub enum DIFlag {
     Accessibility(DIAccessibility),
     FwdDecl,
@@ -243,7 +243,7 @@ pub enum DIFlag {
 }
 
 /// See [LLVM 14 docs on DIGlobalVariable](https://releases.llvm.org/14.0.0/docs/LangRef.html#diglobalvariable)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct DIGlobalVariable {
     pub name: String,
     pub linkage_name: String,
@@ -258,14 +258,14 @@ pub struct DIGlobalVariable {
     pub align_in_bits: u32,
 }
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct DIGlobalVariableExpression {
     pub var: MetadataRef<DIGlobalVariable>,
     pub expr: MetadataRef<DIExpression>,
 }
 
 /// See [LLVM 14 docs on DIImportedEntity](https://releases.llvm.org/14.0.0/docs/LangRef.html#diimportedentity)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct DIImportedEntity {
     pub tag: DIImportedEntityTag,
     pub name: String,
@@ -275,27 +275,27 @@ pub struct DIImportedEntity {
     pub line: u32,
 }
 
-#[derive(PartialEq, Eq, Clone, Copy, Debug)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug, Hash)]
 pub enum DIImportedEntityTag {
     Module,
     Declaration,
 }
 
-#[derive(PartialEq, Eq, Clone, Copy, Debug)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug, Hash)]
 pub enum DIInheritance {
     SingleInheritance,
     MultipleInheritance,
     VirtualInheritance,
 }
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub enum DILexicalBlockBase {
     LexicalBlock(DILexicalBlock),
     LexicalBlockFile(DILexicalBlockFile),
 }
 
 /// See [LLVM 14 docs on DILexicalBlock](https://releases.llvm.org/14.0.0/docs/LangRef.html#dilexicalblock)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct DILexicalBlock {
     pub scope: MetadataRef<DILocalScope>,
     pub file: Option<MetadataRef<DIFile>>,
@@ -304,21 +304,21 @@ pub struct DILexicalBlock {
 }
 
 /// See [LLVM 14 docs on DILexicalBlockFile](https://releases.llvm.org/14.0.0/docs/LangRef.html#dilexicalblockfile)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct DILexicalBlockFile {
     pub scope: MetadataRef<DILocalScope>,
     pub file: Option<MetadataRef<DIFile>>,
     pub discriminator: u32,
 }
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub enum DILocalScope {
     LexicalBlockBase(DILexicalBlockBase),
     Subprogram(DISubprogram),
 }
 
 /// See [LLVM 14 docs on DILocalVariable](https://releases.llvm.org/14.0.0/docs/LangRef.html#dilocalvariable)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct DILocalVariable {
     pub name: String,
     pub scope: MetadataRef<DIScope>,
@@ -331,7 +331,7 @@ pub struct DILocalVariable {
 }
 
 /// See [LLVM 14 docs on DILocation](https://releases.llvm.org/14.0.0/docs/LangRef.html#dilocation)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct DILocation {
     pub line: u32,
     pub column: u32,
@@ -340,19 +340,19 @@ pub struct DILocation {
 
 /// See LLVM 14 docs on [DIMacro](https://releases.llvm.org/14.0.0/docs/LangRef.html#dimacro) and
 /// [DIMacroFile](https://releases.llvm.org/14.0.0/docs/LangRef.html#dimacrofile)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub enum DIMacroNode {
     Macro { name: String, value: String, info: DIMacroInfo, line: u32 },
     MacroFile { file: MetadataRef<DIFile>, elements: Vec<MetadataRef<DIMacroNode>>, line: u32 },
 }
 
-#[derive(PartialEq, Eq, Clone, Copy, Debug)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug, Hash)]
 pub enum DIMacroInfo {
     Define,
     Undef,
 }
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct DIModule {
     pub name: String,
     pub scope: Option<MetadataRef<DIScope>>,
@@ -362,14 +362,14 @@ pub struct DIModule {
 }
 
 /// See [LLVM 14 docs on DINamespace](https://releases.llvm.org/14.0.0/docs/LangRef.html#dinamespace)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct DINamespace {
     pub name: String,
     pub scope: Option<MetadataRef<DIScope>>,
     pub export_symbols: bool,
 }
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub enum DINode {
     Enumerator(DIEnumerator),
     ImportedEntity(DIImportedEntity),
@@ -381,7 +381,7 @@ pub enum DINode {
 }
 
 /// See [LLVM 14 docs on DIObjCProperty](https://releases.llvm.org/14.0.0/docs/LangRef.html#diobjcproperty)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct DIObjCProperty {
     pub name: String,
     pub file: Option<MetadataRef<DIFile>>,
@@ -392,7 +392,7 @@ pub struct DIObjCProperty {
     pub ty: Option<MetadataRef<DIType>>,
 }
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub enum DIScope {
     CompileUnit(DICompileUnit),
     File(DIFile),
@@ -402,7 +402,7 @@ pub enum DIScope {
     Type(DIType),
 }
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct DIStructureType {
     pub name: String,
     pub scope: Option<MetadataRef<DIScope>>,
@@ -419,7 +419,7 @@ pub struct DIStructureType {
 }
 
 /// See [LLVM 14 docs on DISubprogram](https://releases.llvm.org/14.0.0/docs/LangRef.html#disubprogram)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct DISubprogram {
     pub name: String,
     pub linkage_name: String,
@@ -444,14 +444,14 @@ pub struct DISubprogram {
 }
 
 /// See [LLVM 14 docs on DISubrange](https://releases.llvm.org/14.0.0/docs/LangRef.html#disubrange)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct DISubrange {
     pub count: DICount,
     pub lower_bound: i64,
 }
 
 /// See [LLVM 14 docs on DISubroutineType](https://releases.llvm.org/14.0.0/docs/LangRef.html#disubroutinetype)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct DISubroutineType {
     /// First the return type, then the operand types. `None` means `void`.
     pub type_array: Vec<Option<MetadataRef<DIType>>>,
@@ -461,20 +461,20 @@ pub struct DISubroutineType {
 
 /// See LLVM 14 docs on [DITemplateTypeParameter](https://releases.llvm.org/14.0.0/docs/LangRef.html#ditemplatetypeparameter)
 /// and [DITemplateValueParameter](https://releases.llvm.org/14.0.0/docs/LangRef.html#ditemplatevalueparameter)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub enum DITemplateParameter {
     TypeParameter { name: String, ty: Option<MetadataRef<DIType>> },
     ValueParameter { name: String, ty: Option<MetadataRef<DIType>>, value: Option<Box<Metadata>>, tag: DITemplateValueParameterTag },
 }
 
-#[derive(PartialEq, Eq, Clone, Copy, Debug)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug, Hash)]
 pub enum DITemplateValueParameterTag {
     TemplateValueParameter,
     GNUTemplateTemplateParam,
     GNUTemplateParameterPack,
 }
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub enum DIType {
     Basic(DIBasicType),
     Composite(DICompositeType),
@@ -482,7 +482,7 @@ pub enum DIType {
     Subroutine(DISubroutineType),
 }
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct DIUnionType {
     pub name: String,
     pub scope: Option<MetadataRef<DIScope>>,
@@ -496,13 +496,13 @@ pub struct DIUnionType {
     pub align_in_bits: u32,
 }
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub enum DIVariable {
     Global(DIGlobalVariable),
     Local(DILocalVariable),
 }
 
-#[derive(PartialEq, Eq, Clone, Debug)]
+#[derive(PartialEq, Eq, Clone, Debug, Hash)]
 pub enum DWOp {
     Fragment { offset: u64, size: u64 },  // must be last in the list
     StackValue,  // must be either last or followed by Fragment
@@ -527,7 +527,7 @@ pub enum DWOp {
     XDeref,
 }
 
-#[derive(PartialEq, Eq, Clone, Copy, Debug)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug, Hash)]
 pub enum Encoding {
     AddressEncoding,
     BooleanEncoding,
@@ -539,7 +539,7 @@ pub enum Encoding {
     UTFEncoding,
 }
 
-#[derive(PartialEq, Eq, Clone, Copy, Debug)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug, Hash)]
 pub enum Virtuality {
     NoVirtuality,
     Virtual,

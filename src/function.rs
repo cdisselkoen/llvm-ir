@@ -4,7 +4,7 @@ use crate::types::{TypeRef, Typed, Types};
 use crate::{BasicBlock, ConstantRef, Name};
 
 /// See [LLVM 14 docs on Functions](https://releases.llvm.org/14.0.0/docs/LangRef.html#functions)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct Function {
     pub name: String,
     pub parameters: Vec<Parameter>,
@@ -76,7 +76,7 @@ impl Function {
 }
 
 /// See [LLVM 14 docs on Functions](https://releases.llvm.org/14.0.0/docs/LangRef.html#functions)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct FunctionDeclaration {
     pub name: String,
     pub parameters: Vec<Parameter>,
@@ -93,7 +93,7 @@ pub struct FunctionDeclaration {
     pub debugloc: Option<DebugLoc>,
 }
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct Parameter {
     pub name: Name,
     pub ty: TypeRef,
@@ -107,7 +107,7 @@ impl Typed for Parameter {
 }
 
 /// See [LLVM 14 docs on Calling Conventions](https://releases.llvm.org/14.0.0/docs/LangRef.html#callingconv)
-#[derive(PartialEq, Eq, Clone, Copy, Debug)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug, Hash)]
 #[allow(non_camel_case_types)]
 pub enum CallingConvention {
     C,
@@ -160,7 +160,7 @@ pub enum CallingConvention {
 /// Describes how a given location in memory can be accessed.
 /// See [LLVM 16 docs on FunctionAttributes](https://releases.llvm.org/16.0.0/docs/LangRef.html#fnattrs),
 /// the section on memory(...)
-#[derive(PartialEq, Eq, Clone, Debug)]
+#[derive(PartialEq, Eq, Clone, Debug, Hash)]
 pub enum MemoryEffect {
     None,
     Read,
@@ -182,7 +182,7 @@ impl MemoryEffect {
 }
 
 /// See [LLVM 14 docs on Function Attributes](https://releases.llvm.org/14.0.0/docs/LangRef.html#fnattrs)
-#[derive(PartialEq, Eq, Clone, Debug)]
+#[derive(PartialEq, Eq, Clone, Debug, Hash)]
 pub enum FunctionAttribute {
     AlignStack(u64),
     AllocSize {
@@ -253,7 +253,7 @@ pub enum FunctionAttribute {
 
 /// `ParameterAttribute`s can apply to function parameters as well as function return types.
 /// See [LLVM 14 docs on Parameter Attributes](https://releases.llvm.org/14.0.0/docs/LangRef.html#paramattrs)
-#[derive(PartialEq, Eq, Clone, Debug)]
+#[derive(PartialEq, Eq, Clone, Debug, Hash)]
 pub enum ParameterAttribute {
     ZeroExt,
     SignExt,

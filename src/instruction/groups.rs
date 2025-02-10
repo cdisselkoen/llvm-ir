@@ -3,7 +3,7 @@ use crate::types::Types;
 use std::convert::TryFrom;
 
 /// Just the BinaryOps.  This ends up being better than a `&dyn `[`BinaryOp`](../trait.BinaryOp.html) for various reasons.
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub enum BinaryOp {
     // Integer binary ops
     Add(super::Add),
@@ -31,7 +31,7 @@ pub enum BinaryOp {
 }
 
 /// Just the UnaryOps.  This ends up being better than a `&dyn `[`UnaryOp`](../trait.UnaryOp.html) for various reasons.
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub enum UnaryOp {
     // listed alphabetically
     AddrSpaceCast(super::AddrSpaceCast),
