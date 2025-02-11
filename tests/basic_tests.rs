@@ -3117,3 +3117,35 @@ fn fences() {
     assert_eq!(syncscope.atomicity.synch_scope, SynchronizationScope::SingleThread);
 }
 */
+
+#[test]
+fn parseir() -> Result<(), Box<dyn std::error::Error>> {
+    let ir = "define void @f() { ret void }";
+
+    let module = Module::from_ir_str(ir)?;
+    assert_eq!(module.functions.len(), 1);
+    let func = &module.functions[0];
+    assert_eq!(func.name, "f");
+    assert_eq!(func.parameters.len(), 0);
+    assert_eq!(func.is_var_arg, false);
+    assert_eq!(func.return_type, module.types.void());
+    assert_eq!(func.basic_blocks.len(), 1);
+    let bb = &func.basic_blocks[0];
+    assert_eq!(bb.name, Name::Number(0));
+    assert_eq!(bb.instrs.len(), 0);
+    let ret: &terminator::Ret = &bb
+        .term
+        .clone()
+        .try_into()
+        .unwrap_or_else(|_| panic!("Terminator should be a Ret but is {:?}", &bb.term));
+    assert_eq!(
+        ret.return_operand,
+        None
+    );
+    assert_eq!(&ret.to_string(), "ret void");
+
+    // this file was compiled without debuginfo, so nothing should have a debugloc
+    assert_eq!(func.debugloc, None);
+    assert_eq!(ret.debugloc, None);
+    Ok(())
+}
