@@ -12,7 +12,7 @@ use std::convert::TryFrom;
 use std::fmt::{self, Debug, Display};
 
 /// Non-terminator instructions.
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub enum Instruction {
     // Integer binary ops
     Add(Add),
@@ -796,7 +796,7 @@ macro_rules! void_typed {
 
 /// Integer add.
 /// See [LLVM 14 docs on the 'add' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#add-instruction)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct Add {
     pub operand0: Operand,
     pub operand1: Operand,
@@ -816,7 +816,7 @@ binop_nuw_nsw_display!(Add, "add");
 
 /// Integer subtract.
 /// See [LLVM 14 docs on the 'sub' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#sub-instruction)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct Sub {
     pub operand0: Operand,
     pub operand1: Operand,
@@ -836,7 +836,7 @@ binop_nuw_nsw_display!(Sub, "sub");
 
 /// Integer multiply.
 /// See [LLVM 14 docs on the 'mul' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#mul-instruction)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct Mul {
     pub operand0: Operand,
     pub operand1: Operand,
@@ -856,7 +856,7 @@ binop_nuw_nsw_display!(Mul, "mul");
 
 /// Unsigned integer divide.
 /// See [LLVM 14 docs on the 'udiv' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#udiv-instruction)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct UDiv {
     pub operand0: Operand,
     pub operand1: Operand,
@@ -874,7 +874,7 @@ binop_exact_display!(UDiv, "udiv");
 
 /// Signed integer divide.
 /// See [LLVM 14 docs on the 'sdiv' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#sdiv-instruction)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct SDiv {
     pub operand0: Operand,
     pub operand1: Operand,
@@ -892,7 +892,7 @@ binop_exact_display!(SDiv, "sdiv");
 
 /// Unsigned integer remainder.
 /// See [LLVM 14 docs on the 'urem' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#urem-instruction)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct URem {
     pub operand0: Operand,
     pub operand1: Operand,
@@ -908,7 +908,7 @@ binop_display!(URem, "urem");
 
 /// Signed integer remainder.
 /// See [LLVM 14 docs on the 'srem' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#srem-instruction)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct SRem {
     pub operand0: Operand,
     pub operand1: Operand,
@@ -924,7 +924,7 @@ binop_display!(SRem, "srem");
 
 /// Bitwise logical and.
 /// See [LLVM 14 docs on the 'and' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#and-instruction)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct And {
     pub operand0: Operand,
     pub operand1: Operand,
@@ -940,7 +940,7 @@ binop_display!(And, "and");
 
 /// Bitwise logical inclusive or.
 /// See [LLVM 14 docs on the 'or' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#or-instruction)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct Or {
     pub operand0: Operand,
     pub operand1: Operand,
@@ -956,7 +956,7 @@ binop_display!(Or, "or");
 
 /// Bitwise logical exclusive or.
 /// See [LLVM 14 docs on the 'xor' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#xor-instruction)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct Xor {
     pub operand0: Operand,
     pub operand1: Operand,
@@ -972,7 +972,7 @@ binop_display!(Xor, "xor");
 
 /// Shift left.
 /// See [LLVM 14 docs on the 'shl' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#shl-instruction)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct Shl {
     pub operand0: Operand,
     pub operand1: Operand,
@@ -992,7 +992,7 @@ binop_nuw_nsw_display!(Shl, "shl");
 
 /// Logical shift right.
 /// See [LLVM 14 docs on the 'lshr' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#lshr-instruction)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct LShr {
     pub operand0: Operand,
     pub operand1: Operand,
@@ -1010,7 +1010,7 @@ binop_exact_display!(LShr, "lshr");
 
 /// Arithmetic shift right.
 /// See [LLVM 14 docs on the 'ashr' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#ashr-instruction)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct AShr {
     pub operand0: Operand,
     pub operand1: Operand,
@@ -1028,7 +1028,7 @@ binop_exact_display!(AShr, "ashr");
 
 /// Floating-point add.
 /// See [LLVM 14 docs on the 'fadd' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#fadd-instruction)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct FAdd {
     pub operand0: Operand,
     pub operand1: Operand,
@@ -1045,7 +1045,7 @@ binop_display!(FAdd, "fadd");
 
 /// Floating-point subtract.
 /// See [LLVM 14 docs on the 'fsub' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#fsub-instruction)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct FSub {
     pub operand0: Operand,
     pub operand1: Operand,
@@ -1062,7 +1062,7 @@ binop_display!(FSub, "fsub");
 
 /// Floating-point multiply.
 /// See [LLVM 14 docs on the 'fmul' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#fmul-instruction)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct FMul {
     pub operand0: Operand,
     pub operand1: Operand,
@@ -1079,7 +1079,7 @@ binop_display!(FMul, "fmul");
 
 /// Floating-point divide.
 /// See [LLVM 14 docs on the 'fdiv' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#fdiv-instruction)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct FDiv {
     pub operand0: Operand,
     pub operand1: Operand,
@@ -1096,7 +1096,7 @@ binop_display!(FDiv, "fdiv");
 
 /// Floating-point remainder.
 /// See [LLVM 14 docs on the 'frem' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#frem-instruction)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct FRem {
     pub operand0: Operand,
     pub operand1: Operand,
@@ -1113,7 +1113,7 @@ binop_display!(FRem, "frem");
 
 /// Floating-point unary negation.
 /// See [LLVM 14 docs on the 'fneg' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#fneg-instruction)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct FNeg {
     pub operand: Operand,
     pub dest: Name,
@@ -1127,7 +1127,7 @@ unop_same_type!(FNeg, "fneg");
 
 /// Get an element from a vector at a specified index.
 /// See [LLVM 14 docs on the 'extractelement' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#extractelement-instruction)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct ExtractElement {
     pub vector: Operand,
     pub index: Operand,
@@ -1167,7 +1167,7 @@ impl Display for ExtractElement {
 
 /// Insert an element into a vector at a specified index.
 /// See [LLVM 14 docs on the 'insertelement' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#insertelement-instruction)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct InsertElement {
     pub vector: Operand,
     pub element: Operand,
@@ -1202,7 +1202,7 @@ impl Display for InsertElement {
 
 /// Permute elements from two input vectors into a single output vector.
 /// See [LLVM 14 docs on the 'shufflevector' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#shufflevector-instruction)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct ShuffleVector {
     pub operand0: Operand,
     pub operand1: Operand,
@@ -1260,7 +1260,7 @@ impl Display for ShuffleVector {
 
 /// Extract the value of a member field from an aggregate (struct or array) type.
 /// See [LLVM 14 docs on the 'extractvalue' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#extractvalue-instruction)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct ExtractValue {
     pub aggregate: Operand,
     pub indices: Vec<u32>,
@@ -1319,7 +1319,7 @@ impl Display for ExtractValue {
 
 /// Insert a value into a member field of an aggregate (struct or array) type.
 /// See [LLVM 14 docs on the 'insertvalue' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#insertvalue-instruction)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct InsertValue {
     pub aggregate: Operand,
     pub element: Operand,
@@ -1360,7 +1360,7 @@ impl Display for InsertValue {
 
 /// Allocate memory on the stack.
 /// See [LLVM 14 docs on the 'alloca' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#alloca-instruction)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct Alloca {
     pub allocated_type: TypeRef,
     pub num_elements: Operand, // llvm-hs-pure has Option<Operand>
@@ -1404,7 +1404,7 @@ impl Display for Alloca {
 
 /// Load a value from memory.
 /// See [LLVM 14 docs on the 'load' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#load-instruction)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct Load {
     pub address: Operand,
     pub dest: Name,
@@ -1469,7 +1469,7 @@ impl Display for Load {
 
 /// Store a value to memory.
 /// See [LLVM 14 docs on the 'store' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#store-instruction)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct Store {
     pub address: Operand,
     pub value: Operand,
@@ -1506,7 +1506,7 @@ impl Display for Store {
 
 /// Memory-ordering fence.
 /// See [LLVM 14 docs on the 'fence' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#fence-instruction)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct Fence {
     pub atomicity: Atomicity,
     pub debugloc: Option<DebugLoc>,
@@ -1528,7 +1528,7 @@ impl Display for Fence {
 
 /// Atomic compare and exchange.
 /// See [LLVM 14 docs on the 'cmpxchg' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#cmpxchg-instruction)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct CmpXchg {
     pub address: Operand,
     pub expected: Operand,
@@ -1584,7 +1584,7 @@ impl Display for CmpXchg {
 
 /// Atomic read-modify-write.
 /// See [LLVM 14 docs on the 'atomicrmw' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#atomicrmw-instruction)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct AtomicRMW {
     // the binop-getter was added to the LLVM C API in LLVM 10
     #[cfg(feature = "llvm-10-or-greater")]
@@ -1639,7 +1639,7 @@ impl Display for AtomicRMW {
 /// Get the address of a subelement of an aggregate data structure.
 /// Only performs address calculation, does not actually access memory.
 /// See [LLVM 14 docs on the 'getelementptr' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#getelementptr-instruction)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct GetElementPtr {
     pub address: Operand,
     pub indices: Vec<Operand>,
@@ -1730,7 +1730,7 @@ impl Display for GetElementPtr {
 
 /// Truncate.
 /// See [LLVM 14 docs on the 'trunc' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#trunc-to-instruction)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct Trunc {
     pub operand: Operand,
     pub to_type: TypeRef,
@@ -1744,7 +1744,7 @@ unop_explicitly_typed!(Trunc, "trunc");
 
 /// Zero-extend.
 /// See [LLVM 14 docs on the 'zext' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#zext-to-instruction)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct ZExt {
     pub operand: Operand,
     pub to_type: TypeRef,
@@ -1758,7 +1758,7 @@ unop_explicitly_typed!(ZExt, "zext");
 
 /// Sign-extend.
 /// See [LLVM 14 docs on the 'sext' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#sext-to-instruction)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct SExt {
     pub operand: Operand,
     pub to_type: TypeRef,
@@ -1772,7 +1772,7 @@ unop_explicitly_typed!(SExt, "sext");
 
 /// Truncate a floating-point value.
 /// See [LLVM 14 docs on the 'fptrunc' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#fptrunc-to-instruction)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct FPTrunc {
     pub operand: Operand,
     pub to_type: TypeRef,
@@ -1786,7 +1786,7 @@ unop_explicitly_typed!(FPTrunc, "fptrunc");
 
 /// Extend a floating-point value.
 /// See [LLVM 14 docs on the 'fpext' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#fpext-to-instruction)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct FPExt {
     pub operand: Operand,
     pub to_type: TypeRef,
@@ -1800,7 +1800,7 @@ unop_explicitly_typed!(FPExt, "fpext");
 
 /// Convert floating-point to unsigned integer.
 /// See [LLVM 14 docs on the 'fptoui' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#fptoui-to-instruction)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct FPToUI {
     pub operand: Operand,
     pub to_type: TypeRef,
@@ -1814,7 +1814,7 @@ unop_explicitly_typed!(FPToUI, "fptoui");
 
 /// Convert floating-point to signed integer.
 /// See [LLVM 14 docs on the 'fptosi' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#fptosi-to-instruction)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct FPToSI {
     pub operand: Operand,
     pub to_type: TypeRef,
@@ -1828,7 +1828,7 @@ unop_explicitly_typed!(FPToSI, "fptosi");
 
 /// Convert unsigned integer to floating-point.
 /// See [LLVM 14 docs on the 'uitofp' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#uitofp-to-instruction)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct UIToFP {
     pub operand: Operand,
     pub to_type: TypeRef,
@@ -1842,7 +1842,7 @@ unop_explicitly_typed!(UIToFP, "uitofp");
 
 /// Convert signed integer to floating-point.
 /// See [LLVM 14 docs on the 'sitofp' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#sitofp-to-instruction)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct SIToFP {
     pub operand: Operand,
     pub to_type: TypeRef,
@@ -1856,7 +1856,7 @@ unop_explicitly_typed!(SIToFP, "sitofp");
 
 /// Convert pointer to integer.
 /// See [LLVM 14 docs on the 'ptrtoint' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#ptrtoint-to-instruction)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct PtrToInt {
     pub operand: Operand,
     pub to_type: TypeRef,
@@ -1870,7 +1870,7 @@ unop_explicitly_typed!(PtrToInt, "ptrtoint");
 
 /// Convert integer to pointer.
 /// See [LLVM 14 docs on the 'inttoptr' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#inttoptr-to-instruction)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct IntToPtr {
     pub operand: Operand,
     pub to_type: TypeRef,
@@ -1884,7 +1884,7 @@ unop_explicitly_typed!(IntToPtr, "inttoptr");
 
 /// Convert between types without changing any bits.
 /// See [LLVM 14 docs on the 'bitcast' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#bitcast-to-instruction)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct BitCast {
     pub operand: Operand,
     pub to_type: TypeRef,
@@ -1898,7 +1898,7 @@ unop_explicitly_typed!(BitCast, "bitcast");
 
 /// Convert a pointer to a different address space.
 /// See [LLVM 14 docs on the 'addrspacecast' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#addrspacecast-to-instruction)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct AddrSpaceCast {
     pub operand: Operand,
     pub to_type: TypeRef,
@@ -1912,7 +1912,7 @@ unop_explicitly_typed!(AddrSpaceCast, "addrspacecast");
 
 /// Compare integers, pointers, or vectors of integers or pointers.
 /// See [LLVM 14 docs on the 'icmp' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#icmp-instruction)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct ICmp {
     pub predicate: IntPredicate,
     pub operand0: Operand,
@@ -1959,7 +1959,7 @@ impl Display for ICmp {
 
 /// Compare floating-point values or vectors of floating-point values.
 /// See [LLVM 14 docs on the 'fcmp' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#fcmp-instruction)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct FCmp {
     pub predicate: FPPredicate,
     pub operand0: Operand,
@@ -2005,7 +2005,7 @@ impl Display for FCmp {
 }
 
 /// See [LLVM 14 docs on the 'phi' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#phi-instruction)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct Phi {
     pub incoming_values: Vec<(Operand, Name)>,
     pub dest: Name,
@@ -2041,7 +2041,7 @@ impl Display for Phi {
 
 /// Choose between two values depending on a condition.
 /// See [LLVM 14 docs on the 'select' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#select-instruction)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct Select {
     pub condition: Operand,
     pub true_value: Operand,
@@ -2079,7 +2079,7 @@ impl Display for Select {
 /// Stop the propagation of `undef` or `poison` values.
 /// See [LLVM 14 docs on the 'freeze' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#freeze-instruction)
 #[cfg(feature = "llvm-10-or-greater")]
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct Freeze {
     pub operand: Operand,
     pub dest: Name,
@@ -2094,7 +2094,7 @@ unop_same_type!(Freeze, "freeze");
 
 /// Function call.
 /// See [LLVM 14 docs on the 'call' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#call-instruction)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct Call {
     pub function: Either<InlineAssembly, Operand>,
     #[cfg(feature = "llvm-15-or-greater")]
@@ -2168,7 +2168,7 @@ impl Display for Call {
 
 /// Used to access variadic arguments passed to a function.
 /// See [LLVM 14 docs on the 'va_arg' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#va-arg-instruction)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct VAArg {
     pub arg_list: Operand,
     pub cur_type: TypeRef,
@@ -2202,7 +2202,7 @@ impl Display for VAArg {
 
 /// Used for exception handling.
 /// See [LLVM 14 docs on the 'landingpad' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#landingpad-instruction)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct LandingPad {
     pub result_type: TypeRef,
     pub clauses: Vec<LandingPadClause>,
@@ -2236,7 +2236,7 @@ impl Display for LandingPad {
 
 /// Used for exception handling.
 /// See [LLVM 14 docs on the 'catchpad' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#catchpad-instruction)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct CatchPad {
     pub catch_switch: Operand,
     pub args: Vec<Operand>,
@@ -2278,7 +2278,7 @@ impl Display for CatchPad {
 
 /// Used for exception handling.
 /// See [LLVM 14 docs on the 'cleanuppad' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#cleanuppad-instruction)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct CleanupPad {
     pub parent_pad: Operand,
     pub args: Vec<Operand>,
@@ -2319,7 +2319,7 @@ impl Display for CleanupPad {
 }
 
 /*
-#[derive(PartialEq, Eq, Clone, Copy, Debug)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug, Hash)]
 pub enum TailCallKind {
     Tail,
     MustTail,
@@ -2328,7 +2328,7 @@ pub enum TailCallKind {
 */
 
 /// See [LLVM 14 docs on Fast-Math Flags](https://releases.llvm.org/14.0.0/docs/LangRef.html#fastmath)
-#[derive(PartialEq, Eq, Clone, Debug)]
+#[derive(PartialEq, Eq, Clone, Debug, Hash)]
 #[allow(non_snake_case)]
 pub struct FastMathFlags {
     pub allow_reassoc: bool,
@@ -2341,7 +2341,7 @@ pub struct FastMathFlags {
 }
 
 /// See [LLVM 14 docs on Atomic Memory Ordering Constraints](https://releases.llvm.org/14.0.0/docs/LangRef.html#ordering)
-#[derive(PartialEq, Eq, Clone, Debug)]
+#[derive(PartialEq, Eq, Clone, Debug, Hash)]
 pub struct Atomicity {
     pub synch_scope: SynchronizationScope,
     pub mem_ordering: MemoryOrdering,
@@ -2359,14 +2359,14 @@ impl Display for Atomicity {
 }
 
 /// See [LLVM 14 docs on Atomic Memory Ordering Constraints](https://releases.llvm.org/14.0.0/docs/LangRef.html#ordering)
-#[derive(PartialEq, Eq, Clone, Copy, Debug)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug, Hash)]
 pub enum SynchronizationScope {
     SingleThread,
     System,
 }
 
 /// See [LLVM 14 docs on Atomic Memory Ordering Constraints](https://releases.llvm.org/14.0.0/docs/LangRef.html#ordering)
-#[derive(PartialEq, Eq, Clone, Copy, Debug)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug, Hash)]
 pub enum MemoryOrdering {
     Unordered,
     Monotonic,
@@ -2394,7 +2394,7 @@ impl Display for MemoryOrdering {
 // --TODO this seems to be the data structure we want. But see notes on
 // InlineAssembly::from_llvm_ref()
 /*
-#[derive(PartialEq, Eq, Clone, Debug)]
+#[derive(PartialEq, Eq, Clone, Debug, Hash)]
 pub struct InlineAssembly {
     pub assembly: String,
     pub ty: TypeRef,
@@ -2404,7 +2404,7 @@ pub struct InlineAssembly {
     pub dialect: AssemblyDialect,
 }
 
-#[derive(PartialEq, Eq, Clone, Copy, Debug)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug, Hash)]
 pub enum AssemblyDialect {
     ATT,
     Intel,
@@ -2415,7 +2415,7 @@ pub enum AssemblyDialect {
 ///
 /// `InlineAssembly` needs more fields, but the necessary getter functions are
 /// apparently not exposed in the LLVM C API (only the C++ API)
-#[derive(PartialEq, Eq, Clone, Debug)]
+#[derive(PartialEq, Eq, Clone, Debug, Hash)]
 pub struct InlineAssembly {
     pub ty: TypeRef,
 }
@@ -2427,7 +2427,7 @@ impl Typed for InlineAssembly {
 }
 
 /// See [LLVM 14 docs on the 'atomicrmw' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#i-atomicrmw)
-#[derive(PartialEq, Eq, Clone, Copy, Debug)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug, Hash)]
 pub enum RMWBinOp {
     Xchg,
     Add,
@@ -2487,7 +2487,7 @@ impl Display for RMWBinOp {
 // --TODO this seems to be the data structure we want. But see notes on
 // LandingPadClause::from_llvm_ref()
 /*
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub enum LandingPadClause {
     Catch(Constant),
     Filter(Constant),
@@ -2498,7 +2498,7 @@ pub enum LandingPadClause {
 ///
 /// `LandingPadClause` needs more fields, but the necessary getter functions are
 /// apparently not exposed in the LLVM C API (only the C++ API)
-#[derive(PartialEq, Eq, Clone, Copy, Debug)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug, Hash)]
 pub struct LandingPadClause {}
 
 // ********* //

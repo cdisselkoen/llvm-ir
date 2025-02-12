@@ -1,6 +1,6 @@
 use std::fmt::{self, Display};
 
-#[derive(PartialEq, Eq, Clone, Copy, Debug)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug, Hash)]
 pub enum IntPredicate {
     EQ,
     NE,
@@ -31,7 +31,7 @@ impl Display for IntPredicate {
     }
 }
 
-#[derive(PartialEq, Eq, Clone, Copy, Debug)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug, Hash)]
 pub enum FPPredicate {
     False,
     OEQ,

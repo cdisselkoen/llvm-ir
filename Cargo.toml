@@ -25,6 +25,7 @@ llvm-sys-181 = { package = "llvm-sys", version = "181.0.0", optional = true }
 llvm-sys-191 = { package = "llvm-sys", version = "191.0.0", optional = true }
 either = "1.9"
 log = "0.4"
+ordered-float = "4.6.0"
 
 [dev-dependencies]
 env_logger = "0.10"

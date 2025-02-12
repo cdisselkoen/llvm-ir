@@ -2,7 +2,7 @@ use crate::types::{TypeRef, Typed, Types};
 use crate::{ConstantRef, Name};
 use std::fmt::{self, Display};
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub enum Operand {
     /// e.g., `i32 %foo`
     LocalOperand {

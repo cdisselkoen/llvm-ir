@@ -5,7 +5,7 @@ use crate::terminator::Terminator;
 /// A `BasicBlock` is a sequence of zero or more non-terminator instructions
 /// followed by a single terminator instruction which ends the block.
 /// Basic blocks are discussed in the [LLVM 14 docs on Functions](https://releases.llvm.org/14.0.0/docs/LangRef.html#functionstructure)
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Hash)]
 pub struct BasicBlock {
     pub name: Name,
     pub instrs: Vec<Instruction>,
