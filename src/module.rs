@@ -103,14 +103,13 @@ impl Module {
         Self::from_path(path, Self::parse_ir)
     }
 
-    /// Parse the given string as LLVM text IR to create a `Module`
+    /// Parse the given string as LLVM text IR by copying to create a `Module`
     pub fn from_ir_str(str: &str) -> Result<Self, String> {
         let memory_buffer = unsafe {
-            LLVMCreateMemoryBufferWithMemoryRange(
+            LLVMCreateMemoryBufferWithMemoryRangeCopy(
                 str.as_ptr() as *const _,
                 str.len(),
-                std::ffi::CString::new("str").unwrap().as_ptr(),
-                true.into(),
+                std::ffi::CString::default().as_ptr(),
             )
         };
         Self::from_buffer(memory_buffer, Self::parse_ir)
@@ -126,7 +125,7 @@ impl Module {
         // This call takes ownership of the buffer, so we don't free it.
         match llvm_sys::ir_reader::LLVMParseIRInContext(context_ref, mem_buf, out_module, &mut err_string) {
             0 => Ok(()),
-            _ => Err(format!("Failed to parse bitcode: {}",
+            _ => Err(format!("Failed to parse IR: {}",
                              CStr::from_ptr(err_string).to_str().expect("Failed to convert CStr")))
         }
     }
