@@ -2393,16 +2393,16 @@ impl Display for MemoryOrdering {
 
 #[derive(PartialEq, Eq, Clone, Debug, Hash)]
 pub struct InlineAssembly {
-    #[cfg(feature = "llvm-19-or-greater")]
+    #[cfg(feature = "llvm-18-or-greater")]
     pub assembly: String,
     pub ty: TypeRef,
-    #[cfg(feature = "llvm-19-or-greater")]
+    #[cfg(feature = "llvm-18-or-greater")]
     pub constraints: String,
-    #[cfg(feature = "llvm-19-or-greater")]
+    #[cfg(feature = "llvm-18-or-greater")]
     pub has_side_effects: bool,
-    #[cfg(feature = "llvm-19-or-greater")]
+    #[cfg(feature = "llvm-18-or-greater")]
     pub align_stack: bool,
-    #[cfg(feature = "llvm-19-or-greater")]
+    #[cfg(feature = "llvm-18-or-greater")]
     pub dialect: AssemblyDialect,
 }
 
@@ -3492,22 +3492,22 @@ impl RMWBinOp {
 impl InlineAssembly {
     pub(crate) fn from_llvm_ref(asm: LLVMValueRef, types: &mut TypesBuilder) -> Self {
         Self {
-            #[cfg(feature = "llvm-19-or-greater")]
+            #[cfg(feature = "llvm-18-or-greater")]
             assembly: unsafe { get_inline_asm_asm_string(asm) },
             ty: types.type_from_llvm_ref(unsafe { LLVMTypeOf(asm) }),
-            #[cfg(feature = "llvm-19-or-greater")]
+            #[cfg(feature = "llvm-18-or-greater")]
             constraints: unsafe {get_inline_asm_constraint_string(asm) },
-            #[cfg(feature = "llvm-19-or-greater")]
+            #[cfg(feature = "llvm-18-or-greater")]
             has_side_effects: unsafe { LLVMGetInlineAsmHasSideEffects(asm) } != 0,
-            #[cfg(feature = "llvm-19-or-greater")]
+            #[cfg(feature = "llvm-18-or-greater")]
             align_stack: unsafe { LLVMGetInlineAsmNeedsAlignedStack(asm) } != 0,
-            #[cfg(feature = "llvm-19-or-greater")]
+            #[cfg(feature = "llvm-18-or-greater")]
             dialect: AssemblyDialect::from_llvm_ref(unsafe { LLVMGetInlineAsmDialect(asm) }),
         }
     }
 }
 
-#[cfg(feature = "llvm-19-or-greater")]
+#[cfg(feature = "llvm-18-or-greater")]
 impl AssemblyDialect {
     pub(crate) fn from_llvm_ref(dialect: llvm_sys::LLVMInlineAsmDialect) -> Self {
         match dialect {

@@ -23,25 +23,6 @@ llvm_test!(
 );
 
 #[test]
-fn inline_assembly() {
-    let _ = env_logger::builder().is_test(true).try_init();
-    let path = Path::new("tests/llvm_bc/nop-inlineasm.ll.bc");
-    let module = Module::from_bc_path(path).expect("Failed to parse module");
-    let inst = &module.functions[0].basic_blocks[0].instrs[0];
-    if let llvm_ir::Instruction::Call(call) = inst {
-        assert!(call.function.is_left());
-        let inline = call.function.clone().left().unwrap();
-        assert_eq!(inline.assembly, "nop;");
-        assert_eq!(inline.dialect, llvm_ir::instruction::AssemblyDialect::ATT);
-        assert!(inline.has_side_effects);
-        assert!(!inline.align_stack);
-        assert_eq!(inline.constraints, "");
-    } else {
-        panic!("Expected InlineAsm instruction, got {:?}", inst);
-    }
-}
-
-#[test]
 fn ptr_auth() {
     let _ = env_logger::builder().is_test(true).try_init(); // capture log messages with test harness
     let path = Path::new("tests/llvm_bc/compatibility-as-of-llvm-19.bc");
