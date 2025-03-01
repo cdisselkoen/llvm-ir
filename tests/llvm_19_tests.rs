@@ -26,7 +26,7 @@ llvm_test!(
 fn ptr_auth() {
     let _ = env_logger::builder().is_test(true).try_init(); // capture log messages with test harness
     let path = Path::new("tests/llvm_bc/compatibility-as-of-llvm-19.bc");
-    let module = Module::from_bc_path(&path).expect("Failed to parse module");
+    let module = Module::from_bc_path(path).expect("Failed to parse module");
 
     let auth_var = module.global_vars.iter().find(|var| var.name == "auth_var".into())
         .expect("auth_var variable should exist");

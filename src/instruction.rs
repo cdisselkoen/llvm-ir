@@ -2391,16 +2391,18 @@ impl Display for MemoryOrdering {
     }
 }
 
-// --TODO this seems to be the data structure we want. But see notes on
-// InlineAssembly::from_llvm_ref()
-/*
 #[derive(PartialEq, Eq, Clone, Debug, Hash)]
 pub struct InlineAssembly {
+    #[cfg(feature = "llvm-18-or-greater")]
     pub assembly: String,
     pub ty: TypeRef,
+    #[cfg(feature = "llvm-18-or-greater")]
     pub constraints: String,
+    #[cfg(feature = "llvm-18-or-greater")]
     pub has_side_effects: bool,
+    #[cfg(feature = "llvm-18-or-greater")]
     pub align_stack: bool,
+    #[cfg(feature = "llvm-18-or-greater")]
     pub dialect: AssemblyDialect,
 }
 
@@ -2408,16 +2410,6 @@ pub struct InlineAssembly {
 pub enum AssemblyDialect {
     ATT,
     Intel,
-}
-*/
-// Instead we have this for now
-/// See [LLVM 14 docs on Inline Assembler Expressions](https://releases.llvm.org/14.0.0/docs/LangRef.html#inline-assembler-expressions)
-///
-/// `InlineAssembly` needs more fields, but the necessary getter functions are
-/// apparently not exposed in the LLVM C API (only the C++ API)
-#[derive(PartialEq, Eq, Clone, Debug, Hash)]
-pub struct InlineAssembly {
-    pub ty: TypeRef,
 }
 
 impl Typed for InlineAssembly {
@@ -3499,12 +3491,28 @@ impl RMWBinOp {
 
 impl InlineAssembly {
     pub(crate) fn from_llvm_ref(asm: LLVMValueRef, types: &mut TypesBuilder) -> Self {
-        // The LLVM C API appears to have no way to get any information about an
-        // `InlineAssembly`? You can tell whether an `LLVMValueRef` is an
-        // `InlineAssembly`, but once you know it is one, there seem to be no
-        // other related methods
         Self {
+            #[cfg(feature = "llvm-18-or-greater")]
+            assembly: unsafe { get_inline_asm_asm_string(asm) },
             ty: types.type_from_llvm_ref(unsafe { LLVMTypeOf(asm) }),
+            #[cfg(feature = "llvm-18-or-greater")]
+            constraints: unsafe {get_inline_asm_constraint_string(asm) },
+            #[cfg(feature = "llvm-18-or-greater")]
+            has_side_effects: unsafe { LLVMGetInlineAsmHasSideEffects(asm) } != 0,
+            #[cfg(feature = "llvm-18-or-greater")]
+            align_stack: unsafe { LLVMGetInlineAsmNeedsAlignedStack(asm) } != 0,
+            #[cfg(feature = "llvm-18-or-greater")]
+            dialect: AssemblyDialect::from_llvm_ref(unsafe { LLVMGetInlineAsmDialect(asm) }),
+        }
+    }
+}
+
+#[cfg(feature = "llvm-18-or-greater")]
+impl AssemblyDialect {
+    pub(crate) fn from_llvm_ref(dialect: llvm_sys::LLVMInlineAsmDialect) -> Self {
+        match dialect {
+            llvm_sys::LLVMInlineAsmDialect::LLVMInlineAsmDialectATT => AssemblyDialect::ATT,
+            llvm_sys::LLVMInlineAsmDialect::LLVMInlineAsmDialectIntel => AssemblyDialect::Intel,
         }
     }
 }
