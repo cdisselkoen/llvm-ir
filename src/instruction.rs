@@ -645,56 +645,29 @@ macro_rules! binop_display {
     };
 }
 
-// Display impl for all BinaryOps with nuw/nsw flags
-macro_rules! binop_nuw_nsw_display {
-    ($inst:ty, $dispname:expr) => {
+/// Some instructions have extra flags that we need to print out. This macro allows for specifying them
+/// The second argument to the macro is a comma-separated list of displayed string for the flag, the field
+/// and the required feature flag (since most of these are added in later LLVM versions).
+/// e.g. `("nuw" = nuw ; "llvm-17-or-greater")`
+macro_rules! binop_display_with_flags {
+    ($inst:ty, $dispname:expr, ($($flag_display:expr ; $flag_field:ident ; $required_feature:expr),*)) => {
         impl Display for $inst {
             fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-                #[cfg(feature = "llvm-16-or-lower")]
-                let nuw = "";
-                #[cfg(feature = "llvm-17-or-greater")]
-                let nuw = if self.nuw { " nuw" } else { "" };
-                #[cfg(feature = "llvm-16-or-lower")]
-                let nsw = "";
-                #[cfg(feature = "llvm-17-or-greater")]
-                let nsw = if self.nsw { " nsw" } else { "" };
                 write!(
                     f,
-                    "{} = {}{}{} {}, {}",
-                    &self.dest,
-                    $dispname,
-                    nuw,
-                    nsw,
-                    &self.operand0,
-                    &self.operand1,
+                    "{} = {}",
+                    &self.dest, $dispname
                 )?;
-                if self.debugloc.is_some() {
-                    write!(f, " (with debugloc)")?;
-                }
-                Ok(())
-            }
-        }
-    };
-}
 
-// Display impl for all BinaryOps with the 'exact' flag
-macro_rules! binop_exact_display {
-    ($inst:ty, $dispname:expr) => {
-        impl Display for $inst {
-            fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-                #[cfg(feature = "llvm-16-or-lower")]
-                let exact = "";
-                #[cfg(feature = "llvm-17-or-greater")]
-                let exact = if self.exact { " exact" } else { "" };
+                // Write any flags we may have
+                $( #[cfg(feature = $required_feature)] if self.$flag_field { write!(f, " {}", $flag_display)?; })*
+
                 write!(
                     f,
-                    "{} = {}{} {}, {}",
-                    &self.dest,
-                    $dispname,
-                    exact,
-                    &self.operand0,
-                    &self.operand1,
+                    " {}, {}",
+                    &self.operand0, &self.operand1,
                 )?;
+
                 if self.debugloc.is_some() {
                     write!(f, " (with debugloc)")?;
                 }
@@ -718,6 +691,34 @@ macro_rules! unop_same_type {
         impl Display for $inst {
             fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
                 write!(f, "{} = {} {}", &self.dest, $dispname, &self.operand)?;
+                if self.debugloc.is_some() {
+                    write!(f, " (with debugloc)")?;
+                }
+                Ok(())
+            }
+        }
+    };
+}
+
+macro_rules! unop_typed_display_with_flags {
+    ($inst:ty, $dispname:expr, ($($flag_display:expr ; $flag_field:ident ; $required_feature:expr),*)) => {
+        impl Display for $inst {
+            fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                write!(
+                    f,
+                    "{} = {}",
+                    &self.dest, $dispname
+                )?;
+
+                // Write any flags we may have
+                $( #[cfg(feature = $required_feature)] if self.$flag_field { write!(f, " {}", $flag_display)?; })*
+
+                write!(
+                    f,
+                    " {} to {}",
+                    &self.operand, &self.to_type
+                )?;
+
                 if self.debugloc.is_some() {
                     write!(f, " (with debugloc)")?;
                 }
@@ -802,9 +803,9 @@ pub struct Add {
     pub operand1: Operand,
     pub dest: Name,
     #[cfg(feature = "llvm-17-or-greater")]
-    pub nuw: bool,  // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
+    pub nuw: bool, // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
     #[cfg(feature = "llvm-17-or-greater")]
-    pub nsw: bool,  // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
+    pub nsw: bool, // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -812,7 +813,7 @@ pub struct Add {
 impl_inst!(Add, Add);
 impl_binop!(Add, Add);
 binop_same_type!(Add);
-binop_nuw_nsw_display!(Add, "add");
+binop_display_with_flags!(Add, "add", ("nuw" ; nuw ; "llvm-17-or-greater", "nsw" ; nsw ; "llvm-17-or-greater"));
 
 /// Integer subtract.
 /// See [LLVM 14 docs on the 'sub' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#sub-instruction)
@@ -822,9 +823,9 @@ pub struct Sub {
     pub operand1: Operand,
     pub dest: Name,
     #[cfg(feature = "llvm-17-or-greater")]
-    pub nuw: bool,  // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
+    pub nuw: bool, // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
     #[cfg(feature = "llvm-17-or-greater")]
-    pub nsw: bool,  // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
+    pub nsw: bool, // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -832,7 +833,7 @@ pub struct Sub {
 impl_inst!(Sub, Sub);
 impl_binop!(Sub, Sub);
 binop_same_type!(Sub);
-binop_nuw_nsw_display!(Sub, "sub");
+binop_display_with_flags!(Sub, "sub", ("nuw" ; nuw ; "llvm-17-or-greater", "nsw" ; nsw ; "llvm-17-or-greater"));
 
 /// Integer multiply.
 /// See [LLVM 14 docs on the 'mul' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#mul-instruction)
@@ -842,9 +843,9 @@ pub struct Mul {
     pub operand1: Operand,
     pub dest: Name,
     #[cfg(feature = "llvm-17-or-greater")]
-    pub nuw: bool,  // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
+    pub nuw: bool, // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
     #[cfg(feature = "llvm-17-or-greater")]
-    pub nsw: bool,  // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
+    pub nsw: bool, // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -852,7 +853,7 @@ pub struct Mul {
 impl_inst!(Mul, Mul);
 impl_binop!(Mul, Mul);
 binop_same_type!(Mul);
-binop_nuw_nsw_display!(Mul, "mul");
+binop_display_with_flags!(Mul, "mul", ("nuw" ; nuw ; "llvm-17-or-greater", "nsw" ; nsw ; "llvm-17-or-greater"));
 
 /// Unsigned integer divide.
 /// See [LLVM 14 docs on the 'udiv' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#udiv-instruction)
@@ -862,7 +863,7 @@ pub struct UDiv {
     pub operand1: Operand,
     pub dest: Name,
     #[cfg(feature = "llvm-17-or-greater")]
-    pub exact: bool,  // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
+    pub exact: bool, // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -870,7 +871,7 @@ pub struct UDiv {
 impl_inst!(UDiv, UDiv);
 impl_binop!(UDiv, UDiv);
 binop_same_type!(UDiv);
-binop_exact_display!(UDiv, "udiv");
+binop_display_with_flags!(UDiv, "udiv", ("exact" ; exact ; "llvm-17-or-greater"));
 
 /// Signed integer divide.
 /// See [LLVM 14 docs on the 'sdiv' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#sdiv-instruction)
@@ -880,7 +881,7 @@ pub struct SDiv {
     pub operand1: Operand,
     pub dest: Name,
     #[cfg(feature = "llvm-17-or-greater")]
-    pub exact: bool,  // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
+    pub exact: bool, // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -888,7 +889,7 @@ pub struct SDiv {
 impl_inst!(SDiv, SDiv);
 impl_binop!(SDiv, SDiv);
 binop_same_type!(SDiv);
-binop_exact_display!(SDiv, "sdiv");
+binop_display_with_flags!(SDiv, "sdiv", ("exact" ; exact ; "llvm-17-or-greater"));
 
 /// Unsigned integer remainder.
 /// See [LLVM 14 docs on the 'urem' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#urem-instruction)
@@ -945,6 +946,8 @@ pub struct Or {
     pub operand0: Operand,
     pub operand1: Operand,
     pub dest: Name,
+    #[cfg(feature = "llvm-18-or-greater")]
+    pub disjoint: bool,
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -952,7 +955,7 @@ pub struct Or {
 impl_inst!(Or, Or);
 impl_binop!(Or, Or);
 binop_same_type!(Or);
-binop_display!(Or, "or");
+binop_display_with_flags!(Or, "or", ("disjoint" ; disjoint ; "llvm-18-or-greater"));
 
 /// Bitwise logical exclusive or.
 /// See [LLVM 14 docs on the 'xor' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#xor-instruction)
@@ -978,9 +981,9 @@ pub struct Shl {
     pub operand1: Operand,
     pub dest: Name,
     #[cfg(feature = "llvm-17-or-greater")]
-    pub nuw: bool,  // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
+    pub nuw: bool, // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
     #[cfg(feature = "llvm-17-or-greater")]
-    pub nsw: bool,  // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
+    pub nsw: bool, // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -988,7 +991,7 @@ pub struct Shl {
 impl_inst!(Shl, Shl);
 impl_binop!(Shl, Shl);
 binop_left_type!(Shl);
-binop_nuw_nsw_display!(Shl, "shl");
+binop_display_with_flags!(Shl, "shl", ("nuw" ; nuw ; "llvm-17-or-greater", "nsw" ; nsw ; "llvm-17-or-greater"));
 
 /// Logical shift right.
 /// See [LLVM 14 docs on the 'lshr' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#lshr-instruction)
@@ -998,7 +1001,7 @@ pub struct LShr {
     pub operand1: Operand,
     pub dest: Name,
     #[cfg(feature = "llvm-17-or-greater")]
-    pub exact: bool,  // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
+    pub exact: bool, // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -1006,7 +1009,7 @@ pub struct LShr {
 impl_inst!(LShr, LShr);
 impl_binop!(LShr, LShr);
 binop_left_type!(LShr);
-binop_exact_display!(LShr, "lshr");
+binop_display_with_flags!(LShr, "lshr", ("exact" ; exact ; "llvm-17-or-greater"));
 
 /// Arithmetic shift right.
 /// See [LLVM 14 docs on the 'ashr' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#ashr-instruction)
@@ -1016,7 +1019,7 @@ pub struct AShr {
     pub operand1: Operand,
     pub dest: Name,
     #[cfg(feature = "llvm-17-or-greater")]
-    pub exact: bool,  // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
+    pub exact: bool, // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -1024,7 +1027,7 @@ pub struct AShr {
 impl_inst!(AShr, AShr);
 impl_binop!(AShr, AShr);
 binop_left_type!(AShr);
-binop_exact_display!(AShr, "ashr");
+binop_display_with_flags!(AShr, "ashr", ("exact" ; exact ; "llvm-17-or-greater"));
 
 /// Floating-point add.
 /// See [LLVM 14 docs on the 'fadd' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#fadd-instruction)
@@ -1647,8 +1650,7 @@ pub struct GetElementPtr {
     pub in_bounds: bool,
     pub debugloc: Option<DebugLoc>,
     #[cfg(feature = "llvm-14-or-greater")]
-    pub source_element_type: TypeRef
-    // --TODO not yet implemented-- pub metadata: InstructionMetadata,
+    pub source_element_type: TypeRef, // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
 impl_inst!(GetElementPtr, GetElementPtr);
@@ -1749,12 +1751,16 @@ pub struct ZExt {
     pub operand: Operand,
     pub to_type: TypeRef,
     pub dest: Name,
+    #[cfg(feature = "llvm-18-or-greater")]
+    pub nneg: bool,
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
 impl_inst!(ZExt, ZExt);
-unop_explicitly_typed!(ZExt, "zext");
+impl_unop!(ZExt);
+explicitly_typed!(ZExt);
+unop_typed_display_with_flags!(ZExt, "zext", ("nneg" ; nneg ; "llvm-18-or-greater"));
 
 /// Sign-extend.
 /// See [LLVM 14 docs on the 'sext' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#sext-to-instruction)
@@ -2683,8 +2689,12 @@ macro_rules! binop_from_llvm {
     };
 }
 
-macro_rules! binop_from_llvm_with_nuw_nsw {
-    ($inst:ident) => {
+/// Some instructions have extra flags that we need to parse. This macro allows for specifying them
+/// The second argument to the macro is a comma-separated list of the field, LLVM getter function, and
+/// the required feature flag (since most of these are added in later LLVM versions).
+/// e.g. `(nuw = LLVMGetNUW ; "llvm-17-or-greater")`
+macro_rules! binop_from_llvm_with_flags {
+    ($inst:ident, ($($flag_field:ident = $llvm_sys_func:ident ; $required_feature:expr),*)) => {
         impl $inst {
             pub(crate) fn from_llvm_ref(
                 inst: LLVMValueRef,
@@ -2704,10 +2714,8 @@ macro_rules! binop_from_llvm_with_nuw_nsw {
                         func_ctx,
                     ),
                     dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
-                    #[cfg(feature = "llvm-17-or-greater")]
-                    nuw: unsafe { LLVMGetNUW(inst) } != 0,
-                    #[cfg(feature = "llvm-17-or-greater")]
-                    nsw: unsafe { LLVMGetNSW(inst) } != 0,
+                    // For each field, call the given LLVM getter
+                    $( #[cfg(feature = $required_feature)] $flag_field: unsafe { $llvm_sys_func(inst) } != 0,)*
                     debugloc: DebugLoc::from_llvm_with_col(inst),
                     // metadata: InstructionMetadata::from_llvm_inst(inst),
                 }
@@ -2716,50 +2724,20 @@ macro_rules! binop_from_llvm_with_nuw_nsw {
     };
 }
 
-macro_rules! binop_from_llvm_with_exact {
-    ($inst:ident) => {
-        impl $inst {
-            pub(crate) fn from_llvm_ref(
-                inst: LLVMValueRef,
-                ctx: &mut ModuleContext,
-                func_ctx: &mut FunctionContext,
-            ) -> Self {
-                assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 2);
-                Self {
-                    operand0: Operand::from_llvm_ref(
-                        unsafe { LLVMGetOperand(inst, 0) },
-                        ctx,
-                        func_ctx,
-                    ),
-                    operand1: Operand::from_llvm_ref(
-                        unsafe { LLVMGetOperand(inst, 1) },
-                        ctx,
-                        func_ctx,
-                    ),
-                    dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
-                    #[cfg(feature = "llvm-17-or-greater")]
-                    exact: unsafe { LLVMGetExact(inst) } != 0,
-                    debugloc: DebugLoc::from_llvm_with_col(inst),
-                    // metadata: InstructionMetadata::from_llvm_inst(inst),
-                }
-            }
-        }
-    };
-}
+binop_from_llvm_with_flags!(Add, (nuw = LLVMGetNUW ; "llvm-17-or-greater", nsw = LLVMGetNSW ; "llvm-17-or-greater"));
+binop_from_llvm_with_flags!(Sub, (nuw = LLVMGetNUW ; "llvm-17-or-greater", nsw = LLVMGetNSW ; "llvm-17-or-greater"));
+binop_from_llvm_with_flags!(Mul, (nuw = LLVMGetNUW ; "llvm-17-or-greater", nsw = LLVMGetNSW ; "llvm-17-or-greater"));
+binop_from_llvm_with_flags!(UDiv, (exact = LLVMGetExact ; "llvm-17-or-greater"));
+binop_from_llvm_with_flags!(SDiv, (exact = LLVMGetExact ; "llvm-17-or-greater"));
+binop_from_llvm_with_flags!(Shl, (nuw = LLVMGetNUW ; "llvm-17-or-greater", nsw = LLVMGetNSW ; "llvm-17-or-greater"));
+binop_from_llvm_with_flags!(LShr, (exact = LLVMGetExact ; "llvm-17-or-greater"));
+binop_from_llvm_with_flags!(AShr, (exact = LLVMGetExact ; "llvm-17-or-greater"));
+binop_from_llvm_with_flags!(Or, (disjoint = LLVMGetIsDisjoint ; "llvm-18-or-greater"));
 
-binop_from_llvm_with_nuw_nsw!(Add);
-binop_from_llvm_with_nuw_nsw!(Sub);
-binop_from_llvm_with_nuw_nsw!(Mul);
-binop_from_llvm_with_exact!(UDiv);
-binop_from_llvm_with_exact!(SDiv);
 binop_from_llvm!(URem);
 binop_from_llvm!(SRem);
 binop_from_llvm!(And);
-binop_from_llvm!(Or);
 binop_from_llvm!(Xor);
-binop_from_llvm_with_nuw_nsw!(Shl);
-binop_from_llvm_with_exact!(LShr);
-binop_from_llvm_with_exact!(AShr);
 binop_from_llvm!(FAdd);
 binop_from_llvm!(FSub);
 binop_from_llvm!(FMul);
@@ -3070,7 +3048,9 @@ impl GetElementPtr {
             in_bounds: unsafe { LLVMIsInBounds(inst) } != 0,
             debugloc: DebugLoc::from_llvm_with_col(inst),
             #[cfg(feature = "llvm-14-or-greater")]
-            source_element_type: ctx.types.type_from_llvm_ref(unsafe { LLVMGetGEPSourceElementType(inst) }),
+            source_element_type: ctx
+                .types
+                .type_from_llvm_ref(unsafe { LLVMGetGEPSourceElementType(inst) }),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
@@ -3103,8 +3083,39 @@ macro_rules! typed_unop_from_llvm {
     };
 }
 
+/// Some instructions have extra flags that we need to parse. This macro allows for specifying them
+/// The second argument to the macro is a comma-separated list of the field, LLVM getter function, and
+/// the required feature flag (since most of these are added in later LLVM versions).
+/// e.g. `(nneg = LLVMGetNNeg ; "llvm-18-or-greater")`
+macro_rules! typed_unop_from_llvm_with_flags {
+    ($inst:ident, ($($flag_field:ident = $llvm_sys_func:ident ; $required_feature:expr),*)) => {
+        impl $inst {
+            pub(crate) fn from_llvm_ref(
+                inst: LLVMValueRef,
+                ctx: &mut ModuleContext,
+                func_ctx: &mut FunctionContext,
+            ) -> Self {
+                assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 1);
+                Self {
+                    operand: Operand::from_llvm_ref(
+                        unsafe { LLVMGetOperand(inst, 0) },
+                        ctx,
+                        func_ctx,
+                    ),
+                    to_type: ctx.types.type_from_llvm_ref(unsafe { LLVMTypeOf(inst) }),
+                    dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
+                    $( #[cfg(feature = $required_feature)] $flag_field: unsafe { $llvm_sys_func(inst) } != 0,)*
+                    debugloc: DebugLoc::from_llvm_with_col(inst),
+                    // metadata: InstructionMetadata::from_llvm_inst(inst),
+                }
+            }
+        }
+    };
+}
+
+typed_unop_from_llvm_with_flags!(ZExt, (nneg = LLVMGetNNeg ; "llvm-18-or-greater"));
+
 typed_unop_from_llvm!(Trunc);
-typed_unop_from_llvm!(ZExt);
 typed_unop_from_llvm!(SExt);
 typed_unop_from_llvm!(FPTrunc);
 typed_unop_from_llvm!(FPExt);
@@ -3496,7 +3507,7 @@ impl InlineAssembly {
             assembly: unsafe { get_inline_asm_asm_string(asm) },
             ty: types.type_from_llvm_ref(unsafe { LLVMTypeOf(asm) }),
             #[cfg(feature = "llvm-18-or-greater")]
-            constraints: unsafe {get_inline_asm_constraint_string(asm) },
+            constraints: unsafe { get_inline_asm_constraint_string(asm) },
             #[cfg(feature = "llvm-18-or-greater")]
             has_side_effects: unsafe { LLVMGetInlineAsmHasSideEffects(asm) } != 0,
             #[cfg(feature = "llvm-18-or-greater")]
