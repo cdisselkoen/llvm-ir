@@ -858,8 +858,10 @@ fn loopbc() {
     assert_eq!(&ext.to_string(), "%13 = zext i32 %1 to i64");
     #[cfg(feature = "llvm-14")]
     assert_eq!(&ext.to_string(), "%12 = zext i32 %1 to i64");
-    #[cfg(feature = "llvm-15-or-greater")]
+    #[cfg(any(feature = "llvm-15", feature = "llvm-16", feature = "llvm-17"))]
     assert_eq!(&ext.to_string(), "%10 = zext i32 %1 to i64");
+    #[cfg(feature = "llvm-18-or-greater")]
+    assert_eq!(&ext.to_string(), "%10 = zext nneg i32 %1 to i64");
     #[cfg(feature = "llvm-9-or-lower")]
     {
         // LLVM 10 and 11 don't have a Br in this function
