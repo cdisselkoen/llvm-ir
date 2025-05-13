@@ -10,7 +10,7 @@ jobs:
   test:
     name: Test for LLVM ${{ matrix.llvm }}
 
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
 
     strategy:
       fail-fast: false
@@ -33,7 +33,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Install libtinfo
-        run: sudo apt-get update && sudo apt-get install -y libtinfo6
+        run: sudo apt-get update && sudo apt-get install -y libtinfo5
 
       - name: Install LLVM ${{ matrix.llvm }}
         uses: KyleMayes/install-llvm-action@v2
