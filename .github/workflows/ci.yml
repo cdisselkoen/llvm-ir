@@ -43,10 +43,6 @@ jobs:
       - name: llvm-config
         run: llvm-config --version --bindir --libdir
 
-      - name: Install Polly ${{ matrix.llvm }}
-        run: sudo apt-get install -y libpolly-${{ matrix.llvm }}-dev
-        if: matrix.llvm >= 14
-
       - name: Install zstd
         run: sudo apt-get install -y libzstd-dev
         if: matrix.llvm >= 16
