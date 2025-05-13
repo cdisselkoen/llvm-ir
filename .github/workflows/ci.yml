@@ -33,7 +33,9 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Install LLVM ${{ matrix.llvm }}
-        run: curl https://apt.llvm.org/llvm.sh | sudo bash  -s -- ${{ matrix.llvm }}
+        uses: KyleMayes/install-llvm-action@v2
+        with:
+          version: ${{ matrix.llvm }}
 
       - name: Install Polly ${{ matrix.llvm }}
         run: sudo apt-get install -y libpolly-${{ matrix.llvm }}-dev
