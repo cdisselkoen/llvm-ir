@@ -32,6 +32,9 @@ jobs:
       - name: Checkout sources
         uses: actions/checkout@v3
 
+      - name: Install libtinfo
+        run: sudo apt install -y libtinfo5
+
       - name: Install LLVM ${{ matrix.llvm }}
         uses: KyleMayes/install-llvm-action@v2
         with:
