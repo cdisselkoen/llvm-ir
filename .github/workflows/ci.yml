@@ -10,7 +10,7 @@ jobs:
   test:
     name: Test for LLVM ${{ matrix.llvm }}
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     strategy:
       fail-fast: false
@@ -32,12 +32,16 @@ jobs:
       - name: Checkout sources
         uses: actions/checkout@v3
 
-      - name: Install LLVM ${{ matrix.llvm }}
-        run: curl https://apt.llvm.org/llvm.sh | sudo bash  -s -- ${{ matrix.llvm }}
+      - name: Install libtinfo
+        run: sudo apt-get update && sudo apt-get install -y libtinfo5
 
-      - name: Install Polly ${{ matrix.llvm }}
-        run: sudo apt-get install -y libpolly-${{ matrix.llvm }}-dev
-        if: matrix.llvm >= 14
+      - name: Install LLVM ${{ matrix.llvm }}
+        uses: KyleMayes/install-llvm-action@v2
+        with:
+          version: ${{ matrix.llvm }}
+
+      - name: llvm-config
+        run: llvm-config --version --bindir --libdir
 
       - name: Install zstd
         run: sudo apt-get install -y libzstd-dev
