@@ -3151,3 +3151,54 @@ fn parseir() -> Result<(), Box<dyn std::error::Error>> {
     assert_eq!(ret.debugloc, None);
     Ok(())
 }
+
+#[test]
+fn from_bc_bytes_test() {
+    init_logging();
+    let path = llvm_bc_dir().join("hello.bc");
+    
+    // Read the bitcode file into bytes
+    let bytes = std::fs::read(&path).expect("Failed to read bitcode file");
+    
+    // Parse using from_bc_bytes
+    let module = Module::from_bc_bytes(&bytes).expect("Failed to parse module from bytes");
+    
+    // Verify the parsed module has the same content as from_bc_path
+    let module_from_path = Module::from_bc_path(&path).expect("Failed to parse module from path");
+    
+    // Check that key properties match
+    assert_eq!(module.source_file_name, module_from_path.source_file_name);
+    assert_eq!(module.target_triple, module_from_path.target_triple);
+    assert_eq!(module.functions.len(), module_from_path.functions.len());
+    assert_eq!(module.global_vars.len(), module_from_path.global_vars.len());
+    
+    // Check the main function exists and has the same properties
+    let func = &module.functions[0];
+    let func_from_path = &module_from_path.functions[0];
+    assert_eq!(func.name, func_from_path.name);
+    assert_eq!(func.parameters.len(), func_from_path.parameters.len());
+    assert_eq!(func.is_var_arg, func_from_path.is_var_arg);
+    assert_eq!(func.return_type, func_from_path.return_type);
+    assert_eq!(func.basic_blocks.len(), func_from_path.basic_blocks.len());
+    
+    // Verify the basic block structure
+    let bb = &func.basic_blocks[0];
+    let bb_from_path = &func_from_path.basic_blocks[0];
+    assert_eq!(bb.name, bb_from_path.name);
+    assert_eq!(bb.instrs.len(), bb_from_path.instrs.len());
+    
+    // Check the terminator instruction
+    let ret: &terminator::Ret = &bb
+        .term
+        .clone()
+        .try_into()
+        .unwrap_or_else(|_| panic!("Terminator should be a Ret but is {:?}", &bb.term));
+    assert_eq!(
+        ret.return_operand,
+        Some(Operand::ConstantOperand(ConstantRef::new(Constant::Int {
+            bits: 32,
+            value: 0
+        })))
+    );
+    assert_eq!(&ret.to_string(), "ret i32 0");
+}

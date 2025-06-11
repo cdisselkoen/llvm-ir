@@ -72,30 +72,46 @@ impl Module {
 
     /// Get the `GlobalAlias` having the given `Name` (if any).
     pub fn get_global_alias_by_name(&self, name: &Name) -> Option<&GlobalAlias> {
-        self.global_aliases.iter().find(|global| global.name == *name)
+        self.global_aliases
+            .iter()
+            .find(|global| global.name == *name)
     }
 
     /// Get the `GlobalIFunc` having the given `Name` (if any).
     pub fn get_global_ifunc_by_name(&self, name: &Name) -> Option<&GlobalIFunc> {
-        self.global_ifuncs.iter().find(|global| global.name == *name)
+        self.global_ifuncs
+            .iter()
+            .find(|global| global.name == *name)
     }
 
     /// Parse the LLVM bitcode (.bc) file at the given path to create a `Module`
     pub fn from_bc_path(path: impl AsRef<Path>) -> Result<Self, String> {
-        unsafe fn parse_bc(
-            context_ref: LLVMContextRef,
-            mem_buf: LLVMMemoryBufferRef,
-            out_module: *mut LLVMModuleRef,
-        ) -> Result<(), String> {
-            let result =
-                llvm_sys::bit_reader::LLVMParseBitcodeInContext2(context_ref, mem_buf, out_module);
-            LLVMDisposeMemoryBuffer(mem_buf);
-            match result {
-                0 => Ok(()),
-                _ => Err("Failed to parse bitcode".to_owned())
-            }
+        Self::from_path(path, Self::parse_bc)
+    }
+
+    pub fn from_bc_bytes(bytes: &[u8]) -> Result<Self, String> {
+        let memory_buffer = unsafe {
+            LLVMCreateMemoryBufferWithMemoryRangeCopy(
+                bytes.as_ptr() as *const _,
+                bytes.len(),
+                std::ffi::CString::default().as_ptr(),
+            )
+        };
+        Self::from_buffer(memory_buffer, Self::parse_bc)
+    }
+
+    unsafe fn parse_bc(
+        context_ref: LLVMContextRef,
+        mem_buf: LLVMMemoryBufferRef,
+        out_module: *mut LLVMModuleRef,
+    ) -> Result<(), String> {
+        let result =
+            llvm_sys::bit_reader::LLVMParseBitcodeInContext2(context_ref, mem_buf, out_module);
+        LLVMDisposeMemoryBuffer(mem_buf);
+        match result {
+            0 => Ok(()),
+            _ => Err("Failed to parse bitcode".to_owned()),
         }
-        Self::from_path(path, parse_bc)
     }
 
     /// Parse the LLVM text IR (.ll) file at the given path to create a `Module`
@@ -123,10 +139,19 @@ impl Module {
         use std::ffi::CStr;
         let mut err_string = std::mem::zeroed();
         // This call takes ownership of the buffer, so we don't free it.
-        match llvm_sys::ir_reader::LLVMParseIRInContext(context_ref, mem_buf, out_module, &mut err_string) {
+        match llvm_sys::ir_reader::LLVMParseIRInContext(
+            context_ref,
+            mem_buf,
+            out_module,
+            &mut err_string,
+        ) {
             0 => Ok(()),
-            _ => Err(format!("Failed to parse IR: {}",
-                             CStr::from_ptr(err_string).to_str().expect("Failed to convert CStr")))
+            _ => Err(format!(
+                "Failed to parse IR: {}",
+                CStr::from_ptr(err_string)
+                    .to_str()
+                    .expect("Failed to convert CStr")
+            )),
         }
     }
 
@@ -1059,8 +1084,7 @@ impl DataLayout {
                     independent: true,
                     abi,
                 };
-                data_layout.alignments.fptr_alignment_as_alignment =
-                    Alignment { abi, pref: abi };
+                data_layout.alignments.fptr_alignment_as_alignment = Alignment { abi, pref: abi };
             } else if let Some(stripped) = spec.strip_prefix("Fn") {
                 let abi: u32 = stripped
                     .parse()
@@ -1069,8 +1093,7 @@ impl DataLayout {
                     independent: false,
                     abi,
                 };
-                data_layout.alignments.fptr_alignment_as_alignment =
-                    Alignment { abi, pref: abi };
+                data_layout.alignments.fptr_alignment_as_alignment = Alignment { abi, pref: abi };
             } else if spec.starts_with('m') {
                 let mut chunks = spec.split(':');
                 let first_chunk = chunks.next().unwrap();
