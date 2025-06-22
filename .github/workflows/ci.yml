@@ -35,13 +35,31 @@ jobs:
       - name: Install libtinfo
         run: sudo apt-get update && sudo apt-get install -y libtinfo5
 
-      - name: Install LLVM ${{ matrix.llvm }}
+      - name: Install LLVM ${{ matrix.llvm }} (via Github Action)
         uses: KyleMayes/install-llvm-action@v2
         with:
           version: ${{ matrix.llvm }}
+        if: matrix.llvm < 19
+
+      # As of LLVM 19, the official LLVM binaries (which the install-llvm-action action uses), are built with LTO enabled
+      # To avoid breaking on non-LLVM linkers in CI, we can install the official apt binaries for LLVM 19 and above
+      - name: Install LLVM ${{ matrix.llvm }} (via official install script)
+        if: matrix.llvm >= 19
+        run: curl https://apt.llvm.org/llvm.sh | sudo bash  -s -- ${{ matrix.llvm }}
+
+      # Polly only needs explicit installation if we are installing LLVM via the apt packages
+      - name: Install Polly ${{ matrix.llvm }}
+        run: sudo apt-get install -y libpolly-${{ matrix.llvm }}-dev
+        if: matrix.llvm >= 19
 
       - name: llvm-config
         run: llvm-config --version --bindir --libdir
+        if: matrix.llvm < 19
+
+      # The apt packages install with a version suffix
+      - name: llvm-config
+        run: llvm-config-${{ matrix.llvm }} --version --bindir --libdir
+        if: matrix.llvm >= 19
 
       - name: Install zstd
         run: sudo apt-get install -y libzstd-dev
