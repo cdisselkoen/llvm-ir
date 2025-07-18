@@ -1,5 +1,6 @@
 use std::cmp::{Ordering, PartialOrd};
 use std::fmt;
+use std::sync::Arc;
 
 /// Describes a "debug location" (source location)
 #[derive(PartialEq, Eq, Clone, Debug, Hash)]
@@ -13,9 +14,9 @@ pub struct DebugLoc {
     /// will have `None`)
     pub col: Option<u32>,
     /// The source filename
-    pub filename: String,
+    pub filename: Arc<String>,
     /// The source directory, if available
-    pub directory: Option<String>,
+    pub directory: Option<Arc<String>>,
 }
 
 impl PartialOrd for DebugLoc {
@@ -95,14 +96,17 @@ impl DebugLoc {
     /// `value`: must represent an Instruction, Terminator, GlobalVariable, or Function
     ///
     /// Returns `None` if the object does not have a `DebugLoc`
-    pub(crate) fn from_llvm_no_col(value: LLVMValueRef) -> Option<Self> {
+    pub(crate) fn from_llvm_no_col(
+        value: LLVMValueRef,
+        interner: &mut StringInterner,
+    ) -> Option<Self> {
         match unsafe { get_debugloc_filename(value) } {
             None => None, // if no filename, assume no debugloc. To my knowledge, everything with a debugloc has a filename.
             Some(filename) => Some(Self {
                 line: unsafe { LLVMGetDebugLocLine(value) },
                 col: None,
-                filename,
-                directory: unsafe { get_debugloc_directory(value) },
+                filename: interner.intern(filename),
+                directory: interner.intern_optional(unsafe { get_debugloc_directory(value) }),
             }),
         }
     }
@@ -110,8 +114,11 @@ impl DebugLoc {
     /// `value`: must represent an Instruction or Terminator
     ///
     /// Returns `None` if the object does not have a `DebugLoc`
-    pub(crate) fn from_llvm_with_col(value: LLVMValueRef) -> Option<Self> {
-        match Self::from_llvm_no_col(value) {
+    pub(crate) fn from_llvm_with_col(
+        value: LLVMValueRef,
+        interner: &mut StringInterner,
+    ) -> Option<Self> {
+        match Self::from_llvm_no_col(value, interner) {
             Some(mut debugloc) => {
                 debugloc.col = Some(unsafe { LLVMGetDebugLocColumn(value) });
                 Some(debugloc)

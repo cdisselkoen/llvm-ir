@@ -1,5 +1,6 @@
 use crate::constant::ConstantRef;
 use crate::debugloc::*;
+use crate::from_llvm::StringInterner;
 use crate::function::{Function, FunctionAttribute, FunctionDeclaration, GroupID};
 use crate::llvm_sys::*;
 use crate::name::Name;
@@ -611,6 +612,8 @@ pub(crate) struct ModuleContext<'a> {
     // We use LLVMValueRef as a *const, even though it's technically a *mut
     #[allow(clippy::mutable_key_type)]
     pub global_names: &'a HashMap<LLVMValueRef, Name>,
+    /// String interner for debug location filenames and directories
+    pub string_interner: StringInterner,
 }
 
 impl<'a> ModuleContext<'a> {
@@ -622,6 +625,7 @@ impl<'a> ModuleContext<'a> {
             attrsdata: AttributesData::create(),
             constants: HashMap::new(),
             global_names,
+            string_interner: StringInterner::new(),
         }
     }
 }
@@ -730,7 +734,7 @@ impl GlobalVariable {
                 }
             },
             alignment: unsafe { LLVMGetAlignment(global) },
-            debugloc: DebugLoc::from_llvm_no_col(global),
+            debugloc: DebugLoc::from_llvm_no_col(global, &mut ctx.string_interner),
             // metadata: unimplemented!("metadata"),
         }
     }

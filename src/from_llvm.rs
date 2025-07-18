@@ -1,7 +1,9 @@
 pub use crate::iterators::*;
 use crate::llvm_sys::*;
+use std::collections::HashSet;
 use std::ffi::CStr;
 use std::os::raw::c_char;
+use std::sync::Arc;
 
 // We convert all LLVM strings to owned Strings (which involves a copy)
 // partly because we intend to serialize/deserialize our ASTs eventually
@@ -137,5 +139,33 @@ impl Drop for Context {
         unsafe {
             LLVMContextDispose(self.ctx);
         }
+    }
+}
+
+/// String interner for efficient sharing of identical strings such as debug
+/// filenames and directories.
+pub struct StringInterner {
+    strings: HashSet<Arc<String>>,
+}
+
+impl StringInterner {
+    pub fn new() -> Self {
+        Self {
+            strings: HashSet::new(),
+        }
+    }
+
+    pub fn intern(&mut self, s: String) -> Arc<String> {
+        let arc_string = Arc::new(s);
+        if let Some(existing) = self.strings.get(&arc_string) {
+            existing.clone()
+        } else {
+            self.strings.insert(arc_string.clone());
+            arc_string
+        }
+    }
+
+    pub fn intern_optional(&mut self, s: Option<String>) -> Option<Arc<String>> {
+        s.map(|s| self.intern(s))
     }
 }

@@ -2566,7 +2566,7 @@ impl Instruction {
             },
             LLVMOpcode::LLVMLoad => Instruction::Load(Load::from_llvm_ref(inst, ctx, func_ctx)),
             LLVMOpcode::LLVMStore => Instruction::Store(Store::from_llvm_ref(inst, ctx, func_ctx)),
-            LLVMOpcode::LLVMFence => Instruction::Fence(Fence::from_llvm_ref(inst)),
+            LLVMOpcode::LLVMFence => Instruction::Fence(Fence::from_llvm_ref(inst, ctx)),
             LLVMOpcode::LLVMAtomicCmpXchg => {
                 Instruction::CmpXchg(CmpXchg::from_llvm_ref(inst, ctx, func_ctx))
             },
@@ -2652,7 +2652,7 @@ macro_rules! unop_from_llvm {
                         func_ctx,
                     ),
                     dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
-                    debugloc: DebugLoc::from_llvm_with_col(inst),
+                    debugloc: DebugLoc::from_llvm_with_col(inst, &mut ctx.string_interner),
                     // metadata: InstructionMetadata::from_llvm_inst(inst),
                 }
             }
@@ -2681,7 +2681,7 @@ macro_rules! binop_from_llvm {
                         func_ctx,
                     ),
                     dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
-                    debugloc: DebugLoc::from_llvm_with_col(inst),
+                    debugloc: DebugLoc::from_llvm_with_col(inst, &mut ctx.string_interner),
                     // metadata: InstructionMetadata::from_llvm_inst(inst),
                 }
             }
@@ -2716,7 +2716,7 @@ macro_rules! binop_from_llvm_with_flags {
                     dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
                     // For each field, call the given LLVM getter
                     $( #[cfg(feature = $required_feature)] $flag_field: unsafe { $llvm_sys_func(inst) } != 0,)*
-                    debugloc: DebugLoc::from_llvm_with_col(inst),
+                    debugloc: DebugLoc::from_llvm_with_col(inst, &mut ctx.string_interner),
                     // metadata: InstructionMetadata::from_llvm_inst(inst),
                 }
             }
@@ -2758,7 +2758,7 @@ impl ExtractElement {
             vector: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 0) }, ctx, func_ctx),
             index: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 1) }, ctx, func_ctx),
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
-            debugloc: DebugLoc::from_llvm_with_col(inst),
+            debugloc: DebugLoc::from_llvm_with_col(inst, &mut ctx.string_interner),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
@@ -2776,7 +2776,7 @@ impl InsertElement {
             element: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 1) }, ctx, func_ctx),
             index: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 2) }, ctx, func_ctx),
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
-            debugloc: DebugLoc::from_llvm_with_col(inst),
+            debugloc: DebugLoc::from_llvm_with_col(inst, &mut ctx.string_interner),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
@@ -2826,7 +2826,7 @@ impl ShuffleVector {
                 }
             },
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
-            debugloc: DebugLoc::from_llvm_with_col(inst),
+            debugloc: DebugLoc::from_llvm_with_col(inst, &mut ctx.string_interner),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
@@ -2847,7 +2847,7 @@ impl ExtractValue {
                 std::slice::from_raw_parts(ptr, num_indices as usize).to_vec()
             },
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
-            debugloc: DebugLoc::from_llvm_with_col(inst),
+            debugloc: DebugLoc::from_llvm_with_col(inst, &mut ctx.string_interner),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
@@ -2869,7 +2869,7 @@ impl InsertValue {
                 std::slice::from_raw_parts(ptr, num_indices as usize).to_vec()
             },
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
-            debugloc: DebugLoc::from_llvm_with_col(inst),
+            debugloc: DebugLoc::from_llvm_with_col(inst, &mut ctx.string_interner),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
@@ -2893,7 +2893,7 @@ impl Alloca {
             ),
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
             alignment: unsafe { LLVMGetAlignment(inst) },
-            debugloc: DebugLoc::from_llvm_with_col(inst),
+            debugloc: DebugLoc::from_llvm_with_col(inst, &mut ctx.string_interner),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
@@ -2924,7 +2924,7 @@ impl Load {
                 }
             },
             alignment: unsafe { LLVMGetAlignment(inst) },
-            debugloc: DebugLoc::from_llvm_with_col(inst),
+            debugloc: DebugLoc::from_llvm_with_col(inst, &mut ctx.string_interner),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
@@ -2953,21 +2953,21 @@ impl Store {
                 }
             },
             alignment: unsafe { LLVMGetAlignment(inst) },
-            debugloc: DebugLoc::from_llvm_with_col(inst),
+            debugloc: DebugLoc::from_llvm_with_col(inst, &mut ctx.string_interner),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
 }
 
 impl Fence {
-    pub(crate) fn from_llvm_ref(inst: LLVMValueRef) -> Self {
+    pub(crate) fn from_llvm_ref(inst: LLVMValueRef, ctx: &mut ModuleContext) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 0);
         Self {
             atomicity: Atomicity {
                 synch_scope: SynchronizationScope::from_llvm_ref(inst),
                 mem_ordering: MemoryOrdering::from_llvm(unsafe { LLVMGetOrdering(inst) }),
             },
-            debugloc: DebugLoc::from_llvm_with_col(inst),
+            debugloc: DebugLoc::from_llvm_with_col(inst, &mut ctx.string_interner),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
@@ -2997,7 +2997,7 @@ impl CmpXchg {
             }),
             #[cfg(feature = "llvm-10-or-greater")]
             weak: unsafe { LLVMGetWeak(inst) } != 0,
-            debugloc: DebugLoc::from_llvm_with_col(inst),
+            debugloc: DebugLoc::from_llvm_with_col(inst, &mut ctx.string_interner),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
@@ -3022,7 +3022,7 @@ impl AtomicRMW {
                 synch_scope: SynchronizationScope::from_llvm_ref(inst),
                 mem_ordering: MemoryOrdering::from_llvm(unsafe { LLVMGetOrdering(inst) }),
             },
-            debugloc: DebugLoc::from_llvm_with_col(inst),
+            debugloc: DebugLoc::from_llvm_with_col(inst, &mut ctx.string_interner),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
@@ -3046,7 +3046,7 @@ impl GetElementPtr {
             },
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
             in_bounds: unsafe { LLVMIsInBounds(inst) } != 0,
-            debugloc: DebugLoc::from_llvm_with_col(inst),
+            debugloc: DebugLoc::from_llvm_with_col(inst, &mut ctx.string_interner),
             #[cfg(feature = "llvm-14-or-greater")]
             source_element_type: ctx
                 .types
@@ -3075,7 +3075,7 @@ macro_rules! typed_unop_from_llvm {
                     ),
                     to_type: ctx.types.type_from_llvm_ref(unsafe { LLVMTypeOf(inst) }),
                     dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
-                    debugloc: DebugLoc::from_llvm_with_col(inst),
+                    debugloc: DebugLoc::from_llvm_with_col(inst, &mut ctx.string_interner),
                     // metadata: InstructionMetadata::from_llvm_inst(inst),
                 }
             }
@@ -3105,7 +3105,7 @@ macro_rules! typed_unop_from_llvm_with_flags {
                     to_type: ctx.types.type_from_llvm_ref(unsafe { LLVMTypeOf(inst) }),
                     dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
                     $( #[cfg(feature = $required_feature)] $flag_field: unsafe { $llvm_sys_func(inst) } != 0,)*
-                    debugloc: DebugLoc::from_llvm_with_col(inst),
+                    debugloc: DebugLoc::from_llvm_with_col(inst, &mut ctx.string_interner),
                     // metadata: InstructionMetadata::from_llvm_inst(inst),
                 }
             }
@@ -3140,7 +3140,7 @@ impl ICmp {
             operand0: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 0) }, ctx, func_ctx),
             operand1: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 1) }, ctx, func_ctx),
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
-            debugloc: DebugLoc::from_llvm_with_col(inst),
+            debugloc: DebugLoc::from_llvm_with_col(inst, &mut ctx.string_interner),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
@@ -3158,7 +3158,7 @@ impl FCmp {
             operand0: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 0) }, ctx, func_ctx),
             operand1: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 1) }, ctx, func_ctx),
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
-            debugloc: DebugLoc::from_llvm_with_col(inst),
+            debugloc: DebugLoc::from_llvm_with_col(inst, &mut ctx.string_interner),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
@@ -3191,7 +3191,7 @@ impl Phi {
             },
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
             to_type: ctx.types.type_from_llvm_ref(unsafe { LLVMTypeOf(inst) }),
-            debugloc: DebugLoc::from_llvm_with_col(inst),
+            debugloc: DebugLoc::from_llvm_with_col(inst, &mut ctx.string_interner),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
@@ -3209,7 +3209,7 @@ impl Select {
             true_value: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 1) }, ctx, func_ctx),
             false_value: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 2) }, ctx, func_ctx),
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
-            debugloc: DebugLoc::from_llvm_with_col(inst),
+            debugloc: DebugLoc::from_llvm_with_col(inst, &mut ctx.string_interner),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
@@ -3349,7 +3349,7 @@ impl Call {
             function_attributes: callinfo.function_attributes,
             is_tail_call: unsafe { LLVMIsTailCall(inst) } != 0,
             calling_convention: callinfo.calling_convention,
-            debugloc: DebugLoc::from_llvm_with_col(inst),
+            debugloc: DebugLoc::from_llvm_with_col(inst, &mut ctx.string_interner),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
@@ -3366,7 +3366,7 @@ impl VAArg {
             arg_list: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 0) }, ctx, func_ctx),
             cur_type: ctx.types.type_from_llvm_ref(unsafe { LLVMTypeOf(inst) }),
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
-            debugloc: DebugLoc::from_llvm_with_col(inst),
+            debugloc: DebugLoc::from_llvm_with_col(inst, &mut ctx.string_interner),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
@@ -3388,7 +3388,7 @@ impl LandingPad {
             },
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
             cleanup: unsafe { LLVMIsCleanup(inst) } != 0,
-            debugloc: DebugLoc::from_llvm_with_col(inst),
+            debugloc: DebugLoc::from_llvm_with_col(inst, &mut ctx.string_interner),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
@@ -3415,7 +3415,7 @@ impl CatchPad {
                     .collect()
             },
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
-            debugloc: DebugLoc::from_llvm_with_col(inst),
+            debugloc: DebugLoc::from_llvm_with_col(inst, &mut ctx.string_interner),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
@@ -3438,7 +3438,7 @@ impl CleanupPad {
                     .collect()
             },
             dest: Name::name_or_num(unsafe { get_value_name(inst) }, &mut func_ctx.ctr),
-            debugloc: DebugLoc::from_llvm_with_col(inst),
+            debugloc: DebugLoc::from_llvm_with_col(inst, &mut ctx.string_interner),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
