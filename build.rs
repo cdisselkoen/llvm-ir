@@ -33,6 +33,12 @@ fn main() {
     if cfg!(feature = "llvm-19") {
         versions.push(19);
     }
+    if cfg!(feature = "llvm-20") {
+        versions.push(20);
+    }
+    if cfg!(feature = "llvm-21") {
+        versions.push(21);
+    }
     match versions.len() {
         0 => panic!("llvm-ir: Please select an LLVM version using a Cargo feature."),
         1 => {},

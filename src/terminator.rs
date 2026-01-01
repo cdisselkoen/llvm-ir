@@ -1,6 +1,12 @@
 use crate::debugloc::{DebugLoc, HasDebugLoc};
 use crate::function::{CallingConvention, FunctionAttribute, ParameterAttribute};
 use crate::instruction::{HasResult, InlineAssembly};
+#[cfg(feature = "llvm-20-or-greater")]
+use crate::instruction::OperandBundle;
+#[cfg(feature = "llvm-20-or-greater")]
+use crate::instruction::operand_bundles_from_llvm;
+#[cfg(feature = "llvm-20-or-greater")]
+use crate::metadata::InstructionMetadata;
 use crate::types::{Typed, Types};
 use crate::{Constant, ConstantRef, Name, Operand, Type, TypeRef};
 use either::Either;
@@ -88,7 +94,7 @@ impl Display for Terminator {
     }
 }
 
-/* --TODO not yet implemented: metadata
+#[cfg(feature = "llvm-20-or-greater")]
 impl Terminator {
     pub fn get_metadata(&self) -> &InstructionMetadata {
         match self {
@@ -107,7 +113,6 @@ impl Terminator {
         }
     }
 }
-*/
 
 impl Terminator {
     /// Get the result (destination) of the `Terminator`, or `None` if the
@@ -190,7 +195,8 @@ pub struct Ret {
     /// The value being returned, or `None` if returning void.
     pub return_operand: Option<Operand>,
     pub debugloc: Option<DebugLoc>,
-    // --TODO not yet implemented-- pub metadata: InstructionMetadata,
+    #[cfg(feature = "llvm-20-or-greater")]
+    pub metadata: InstructionMetadata,
 }
 
 impl_term!(Ret, Ret);
@@ -221,7 +227,8 @@ pub struct Br {
     /// The [`Name`](../enum.Name.html) of the [`BasicBlock`](../struct.BasicBlock.html) destination.
     pub dest: Name,
     pub debugloc: Option<DebugLoc>,
-    // --TODO not yet implemented-- pub metadata: InstructionMetadata,
+    #[cfg(feature = "llvm-20-or-greater")]
+    pub metadata: InstructionMetadata,
 }
 
 impl_term!(Br, Br);
@@ -249,7 +256,8 @@ pub struct CondBr {
     /// The [`Name`](../enum.Name.html) of the [`BasicBlock`](../struct.BasicBlock.html) destination if the `condition` is false.
     pub false_dest: Name,
     pub debugloc: Option<DebugLoc>,
-    // --TODO not yet implemented-- pub metadata: InstructionMetadata,
+    #[cfg(feature = "llvm-20-or-greater")]
+    pub metadata: InstructionMetadata,
 }
 
 impl_term!(CondBr, CondBr);
@@ -276,7 +284,8 @@ pub struct Switch {
     pub dests: Vec<(ConstantRef, Name)>,
     pub default_dest: Name,
     pub debugloc: Option<DebugLoc>,
-    // --TODO not yet implemented-- pub metadata: InstructionMetadata,
+    #[cfg(feature = "llvm-20-or-greater")]
+    pub metadata: InstructionMetadata,
 }
 
 impl_term!(Switch, Switch);
@@ -311,7 +320,8 @@ pub struct IndirectBr {
     /// `IndirectBr` cannot be used to jump between functions.
     pub possible_dests: Vec<Name>,
     pub debugloc: Option<DebugLoc>,
-    // --TODO not yet implemented-- pub metadata: InstructionMetadata,
+    #[cfg(feature = "llvm-20-or-greater")]
+    pub metadata: InstructionMetadata,
 }
 
 impl_term!(IndirectBr, IndirectBr);
@@ -353,7 +363,10 @@ pub struct Invoke {
     pub function_attributes: Vec<FunctionAttribute>, // llvm-hs has the equivalent of Vec<Either<GroupID, FunctionAttribute>>, but I'm not sure how the GroupID option comes up
     pub calling_convention: CallingConvention,
     pub debugloc: Option<DebugLoc>,
-    // --TODO not yet implemented-- pub metadata: InstructionMetadata,
+    #[cfg(feature = "llvm-20-or-greater")]
+    pub operand_bundles: Vec<OperandBundle>,
+    #[cfg(feature = "llvm-20-or-greater")]
+    pub metadata: InstructionMetadata,
 }
 
 impl_term!(Invoke, Invoke);
@@ -418,7 +431,8 @@ impl Display for Invoke {
 pub struct Resume {
     pub operand: Operand,
     pub debugloc: Option<DebugLoc>,
-    // --TODO not yet implemented-- pub metadata: InstructionMetadata,
+    #[cfg(feature = "llvm-20-or-greater")]
+    pub metadata: InstructionMetadata,
 }
 
 impl_term!(Resume, Resume);
@@ -438,7 +452,8 @@ impl Display for Resume {
 #[derive(PartialEq, Clone, Debug, Hash)]
 pub struct Unreachable {
     pub debugloc: Option<DebugLoc>,
-    // --TODO not yet implemented-- pub metadata: InstructionMetadata,
+    #[cfg(feature = "llvm-20-or-greater")]
+    pub metadata: InstructionMetadata,
 }
 
 impl_term!(Unreachable, Unreachable);
@@ -461,7 +476,8 @@ pub struct CleanupRet {
     /// `None` here indicates 'unwind to caller'
     pub unwind_dest: Option<Name>,
     pub debugloc: Option<DebugLoc>,
-    // --TODO not yet implemented-- pub metadata: InstructionMetadata,
+    #[cfg(feature = "llvm-20-or-greater")]
+    pub metadata: InstructionMetadata,
 }
 
 impl_term!(CleanupRet, CleanupRet);
@@ -491,7 +507,8 @@ pub struct CatchRet {
     pub catch_pad: Operand,
     pub successor: Name,
     pub debugloc: Option<DebugLoc>,
-    // --TODO not yet implemented-- pub metadata: InstructionMetadata,
+    #[cfg(feature = "llvm-20-or-greater")]
+    pub metadata: InstructionMetadata,
 }
 
 impl_term!(CatchRet, CatchRet);
@@ -521,7 +538,8 @@ pub struct CatchSwitch {
     pub default_unwind_dest: Option<Name>,
     pub result: Name,
     pub debugloc: Option<DebugLoc>,
-    // --TODO not yet implemented-- pub metadata: InstructionMetadata,
+    #[cfg(feature = "llvm-20-or-greater")]
+    pub metadata: InstructionMetadata,
 }
 
 impl_term!(CatchSwitch, CatchSwitch);
@@ -577,7 +595,10 @@ pub struct CallBr {
     pub function_attributes: Vec<FunctionAttribute>,
     pub calling_convention: CallingConvention,
     pub debugloc: Option<DebugLoc>,
-    // --TODO not yet implemented-- pub metadata: InstructionMetadata,
+    #[cfg(feature = "llvm-20-or-greater")]
+    pub operand_bundles: Vec<OperandBundle>,
+    #[cfg(feature = "llvm-20-or-greater")]
+    pub metadata: InstructionMetadata,
 }
 
 impl_term!(CallBr, CallBr);
@@ -705,7 +726,8 @@ impl Ret {
                 n => panic!("Ret instruction with {} operands", n),
             },
             debugloc: DebugLoc::from_llvm_with_col(term),
-            // metadata: InstructionMetadata::from_llvm_inst(term),
+            #[cfg(feature = "llvm-20-or-greater")]
+            metadata: InstructionMetadata::from_llvm_inst(term),
         }
     }
 }
@@ -720,7 +742,8 @@ impl Br {
                 .expect("Failed to find destination bb in map")
                 .clone(),
             debugloc: DebugLoc::from_llvm_with_col(term),
-            // metadata: InstructionMetadata::from_llvm_inst(term),
+            #[cfg(feature = "llvm-20-or-greater")]
+            metadata: InstructionMetadata::from_llvm_inst(term),
         }
     }
 }
@@ -745,7 +768,8 @@ impl CondBr {
                 .expect("Failed to find false-destination in bb map")
                 .clone(),
             debugloc: DebugLoc::from_llvm_with_col(term),
-            // metadata: InstructionMetadata::from_llvm_inst(term),
+            #[cfg(feature = "llvm-20-or-greater")]
+            metadata: InstructionMetadata::from_llvm_inst(term),
         }
     }
 }
@@ -780,7 +804,8 @@ impl Switch {
                 .expect("Failed to find switch default destination in map")
                 .clone(),
             debugloc: DebugLoc::from_llvm_with_col(term),
-            // metadata: InstructionMetadata::from_llvm_inst(term),
+            #[cfg(feature = "llvm-20-or-greater")]
+            metadata: InstructionMetadata::from_llvm_inst(term),
         }
     }
 }
@@ -806,7 +831,8 @@ impl IndirectBr {
                     .collect()
             },
             debugloc: DebugLoc::from_llvm_with_col(term),
-            // metadata: InstructionMetadata::from_llvm_inst(term),
+            #[cfg(feature = "llvm-20-or-greater")]
+            metadata: InstructionMetadata::from_llvm_inst(term),
         }
     }
 }
@@ -839,7 +865,10 @@ impl Invoke {
             function_attributes: callinfo.function_attributes,
             calling_convention: callinfo.calling_convention,
             debugloc: DebugLoc::from_llvm_with_col(term),
-            // metadata: InstructionMetadata::from_llvm_inst(term),
+            #[cfg(feature = "llvm-20-or-greater")]
+            operand_bundles: operand_bundles_from_llvm(term, ctx, func_ctx),
+            #[cfg(feature = "llvm-20-or-greater")]
+            metadata: InstructionMetadata::from_llvm_inst(term),
         }
     }
 }
@@ -854,7 +883,8 @@ impl Resume {
         Self {
             operand: Operand::from_llvm_ref(unsafe { LLVMGetOperand(term, 0) }, ctx, func_ctx),
             debugloc: DebugLoc::from_llvm_with_col(term),
-            // metadata: InstructionMetadata::from_llvm_inst(term),
+            #[cfg(feature = "llvm-20-or-greater")]
+            metadata: InstructionMetadata::from_llvm_inst(term),
         }
     }
 }
@@ -864,7 +894,8 @@ impl Unreachable {
         assert_eq!(unsafe { LLVMGetNumOperands(term) }, 0);
         Self {
             debugloc: DebugLoc::from_llvm_with_col(term),
-            // metadata: InstructionMetadata::from_llvm_inst(term),
+            #[cfg(feature = "llvm-20-or-greater")]
+            metadata: InstructionMetadata::from_llvm_inst(term),
         }
     }
 }
@@ -899,7 +930,8 @@ impl CleanupRet {
                 }
             },
             debugloc: DebugLoc::from_llvm_with_col(term),
-            // metadata: InstructionMetadata::from_llvm_inst(term),
+            #[cfg(feature = "llvm-20-or-greater")]
+            metadata: InstructionMetadata::from_llvm_inst(term),
         }
     }
 }
@@ -918,7 +950,8 @@ impl CatchRet {
                 .expect("Failed to find CatchRet successor in map")
                 .clone(),
             debugloc: DebugLoc::from_llvm_with_col(term),
-            // metadata: InstructionMetadata::from_llvm_inst(term),
+            #[cfg(feature = "llvm-20-or-greater")]
+            metadata: InstructionMetadata::from_llvm_inst(term),
         }
     }
 }
@@ -963,7 +996,8 @@ impl CatchSwitch {
             },
             result: Name::name_or_num(unsafe { get_value_name(term) }, &mut func_ctx.ctr),
             debugloc: DebugLoc::from_llvm_with_col(term),
-            // metadata: InstructionMetadata::from_llvm_inst(term),
+            #[cfg(feature = "llvm-20-or-greater")]
+            metadata: InstructionMetadata::from_llvm_inst(term),
         }
     }
 }
@@ -990,7 +1024,10 @@ impl CallBr {
             function_attributes: callinfo.function_attributes,
             calling_convention: callinfo.calling_convention,
             debugloc: DebugLoc::from_llvm_with_col(term),
-            // metadata: InstructionMetadata::from_llvm_inst(term),
+            #[cfg(feature = "llvm-20-or-greater")]
+            operand_bundles: operand_bundles_from_llvm(term, ctx, func_ctx),
+            #[cfg(feature = "llvm-20-or-greater")]
+            metadata: InstructionMetadata::from_llvm_inst(term),
         }
     }
 }

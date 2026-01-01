@@ -21,8 +21,10 @@ pub mod function;
 pub use function::Function;
 pub mod instruction;
 pub use instruction::Instruction;
-// pub mod metadata;
-// pub use metadata::Metadata;
+#[cfg(feature = "llvm-20-or-greater")]
+pub mod metadata;
+#[cfg(feature = "llvm-20-or-greater")]
+pub use metadata::{InstructionMetadata, MetadataAttachment, MetadataValue, NamedMetadata, md_kind_id};
 pub mod module;
 pub use module::Module;
 pub mod name;
@@ -57,5 +59,7 @@ pub fn llvm_version() -> &'static str {
     case!("llvm-17");
     case!("llvm-18");
     case!("llvm-19");
+    case!("llvm-20");
+    case!("llvm-21");
     unreachable!()
 }

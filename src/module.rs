@@ -4,6 +4,10 @@ use crate::function::{Function, FunctionAttribute, FunctionDeclaration, GroupID}
 use crate::llvm_sys::*;
 use crate::name::Name;
 use crate::types::{FPType, Type, TypeRef, Typed, Types, TypesBuilder};
+#[cfg(feature = "llvm-20-or-greater")]
+use crate::metadata::NamedMetadata;
+#[cfg(feature = "llvm-20-or-greater")]
+use crate::metadata::named_metadata_from_module;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::Path;
 
@@ -34,7 +38,8 @@ pub struct Module {
     /// See [LLVM 14 docs on Module-Level Inline Assembly](https://releases.llvm.org/14.0.0/docs/LangRef.html#moduleasm)
     pub inline_assembly: String,
     // --TODO not yet implemented-- pub metadata_nodes: Vec<(MetadataNodeID, MetadataNode)>,
-    // --TODO not yet implemented-- pub named_metadatas: Vec<NamedMetadata>,
+    #[cfg(feature = "llvm-20-or-greater")]
+    pub named_metadata: Vec<NamedMetadata>,
     // --TODO not yet implemented-- pub comdats: Vec<Comdat>,
     /// Holds a reference to all of the `Type`s used in the `Module`, and
     /// facilitates lookups so you can get a `TypeRef` to the `Type` you want.
@@ -679,7 +684,8 @@ impl Module {
             // function_attribute_groups: unimplemented!("function_attribute_groups"),  // llvm-hs collects these in the decoder monad or something
             inline_assembly: unsafe { get_module_inline_asm(module) },
             // metadata_nodes: unimplemented!("metadata_nodes"),
-            // named_metadatas: unimplemented!("named_metadatas"),
+            #[cfg(feature = "llvm-20-or-greater")]
+            named_metadata: unsafe { named_metadata_from_module(module) },
             // comdats: unimplemented!("comdats"),  // I think llvm-hs also collects these along the way
             types: ctx.types.build(),
         }

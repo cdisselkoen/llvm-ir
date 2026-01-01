@@ -45,6 +45,10 @@ fn llvm_bc_dir() -> PathBuf {
         Path::new(BC_DIR).join("llvm18")
     } else if cfg!(feature = "llvm-19") {
         Path::new(BC_DIR).join("llvm19")
+    } else if cfg!(feature = "llvm-20") {
+        Path::new(BC_DIR).join("llvm20")
+    } else if cfg!(feature = "llvm-21") {
+        Path::new(BC_DIR).join("llvm21")
     } else {
         unimplemented!("new llvm version?")
     }
@@ -74,6 +78,10 @@ fn cxx_llvm_bc_dir() -> PathBuf {
         Path::new(BC_DIR).join("cxx-llvm18")
     } else if cfg!(feature = "llvm-19") {
         Path::new(BC_DIR).join("cxx-llvm19")
+    } else if cfg!(feature = "llvm-20") {
+        Path::new(BC_DIR).join("cxx-llvm20")
+    } else if cfg!(feature = "llvm-21") {
+        Path::new(BC_DIR).join("cxx-llvm21")
     } else {
         unimplemented!("new llvm version?")
     }
@@ -100,10 +108,15 @@ fn hellobc() {
         module.target_triple,
         Some("x86_64-apple-macosx11.0.0".into())
     );
-    #[cfg(feature = "llvm-14-or-greater")]
+    #[cfg(all(feature = "llvm-14-or-greater", feature = "llvm-20-or-lower"))]
     assert_eq!(
         module.target_triple,
         Some("x86_64-apple-macosx12.0.0".into())
+    );
+    #[cfg(feature = "llvm-21")]
+    assert_eq!(
+        module.target_triple,
+        Some("arm64-apple-macosx26.0.0".into())
     );
     assert_eq!(module.functions.len(), 1);
     let func = &module.functions[0];
@@ -206,6 +219,25 @@ fn loopbc() {
     assert_eq!(param1.ty, module.types.i32());
     assert_eq!(module.type_of(param0), module.types.i32());
     assert_eq!(module.type_of(param1), module.types.i32());
+
+    if cfg!(feature = "llvm-21") {
+        assert_eq!(func.basic_blocks.len(), 4);
+        let bb2 = &func.basic_blocks[0];
+        assert_eq!(bb2.name, Name::Number(2));
+        let alloca: &instruction::Alloca = &bb2.instrs[0]
+            .clone()
+            .try_into()
+            .expect("Should be an alloca");
+        assert_eq!(&alloca.to_string(), "%3 = alloca [10 x i32], align 4");
+        let condbr: &terminator::CondBr = &bb2
+            .term
+            .clone()
+            .try_into()
+            .expect("Should be a condbr");
+        assert_eq!(condbr.true_dest, Name::Number(6));
+        assert_eq!(condbr.false_dest, Name::Number(19));
+        return;
+    }
 
     // get basic blocks and check their names
     // different LLVM versions end up with different numbers of basic blocks for this function
@@ -1467,6 +1499,12 @@ fn switchbc() {
         .expect("Failed to find bb %12");
     let phi: &instruction::Phi = &phibb.instrs[0].clone().try_into().expect("Should be a phi");
     assert_eq!(phi.incoming_values.len(), 10);
+    #[cfg(feature = "llvm-21-or-greater")]
+    assert_eq!(
+        &phi.to_string(),
+        "%13 = phi i32 [ i32 -1, %10 ], [ i32 5, %2 ], [ i32 -7, %3 ], [ i32 -5, %4 ], [ i32 1, %5 ], [ i32 -33, %6 ], [ i32 77, %7 ], [ i32 0, %8 ], [ i32 -3, %9 ], [ i32 3, %1 ]",
+    );
+    #[cfg(feature = "llvm-20-or-lower")]
     assert_eq!(
         &phi.to_string(),
         "%13 = phi i32 [ i32 -1, %10 ], [ i32 -3, %9 ], [ i32 0, %8 ], [ i32 77, %7 ], [ i32 -33, %6 ], [ i32 1, %5 ], [ i32 -5, %4 ], [ i32 -7, %3 ], [ i32 5, %2 ], [ i32 3, %1 ]",
@@ -1679,6 +1717,9 @@ fn issue4() {
     } else if cfg!(feature = "llvm-15") {
         // LLVM 15+ adds "argmemonly"
         17
+    } else if cfg!(feature = "llvm-21") {
+        // LLVM 21 drops a couple of attributes in this bitcode
+        14
     } else if cfg!(feature = "llvm-16-or-greater") {
         // LLVM 16+ merges "argmemonly", "inaccessiblememonly", etc. into a single memory attribute
         // See https://discourse.llvm.org/t/rfc-unify-memory-effect-attributes/65579/20
@@ -1719,6 +1760,14 @@ fn issue4() {
         string_attrs.count(),
         expected_num_function_attributes - expected_num_enum_attrs
     );
+
+    if cfg!(feature = "llvm-21") {
+        assert_eq!(func.parameters.len(), 1);
+        let first_param_attrs = &func.parameters[0].attributes;
+        assert_eq!(first_param_attrs.len(), 1);
+        assert_eq!(first_param_attrs[0], ParameterAttribute::NoUndef);
+        return;
+    }
 
     // now check that the first parameter has 3 attributes (4 in LLVM 11/12/13, 5 in LLVM 14) and the second parameter has 0
     assert_eq!(func.parameters.len(), 2);
@@ -2444,7 +2493,16 @@ fn param_and_func_attributes() {
     assert_eq!(f.parameters.len(), 1);
     let param = &f.parameters[0];
     assert_eq!(param.attributes.len(), 1);
+    #[cfg(feature = "llvm-20-or-lower")]
     assert_eq!(param.attributes[0], ParameterAttribute::NoCapture);
+    #[cfg(feature = "llvm-21-or-greater")]
+    assert_eq!(
+        param.attributes[0],
+        ParameterAttribute::StringAttribute {
+            kind: "captures".into(),
+            value: "none".into(),
+        }
+    );
     let f = module.get_func_by_name("f.param.nest").unwrap();
     assert_eq!(f.parameters.len(), 1);
     let param = &f.parameters[0];
@@ -2809,7 +2867,89 @@ fn datalayouts() {
     let data_layout = &module.data_layout;
 
     // Data layout changed from Clang 17 to 18, even w/ an explicit --target=x86_64-apple-macosx12.0.0
-    #[cfg(feature = "llvm-18-or-greater")]
+    #[cfg(feature = "llvm-21")]
+    {
+        assert_eq!(
+            &data_layout.layout_str,
+            "e-m:o-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-n32:64-S128-Fn32"
+        );
+        assert_eq!(&data_layout.endianness, &Endianness::LittleEndian);
+        assert_eq!(&data_layout.mangling, &Some(Mangling::MachO));
+        assert_eq!(
+            data_layout.alignments.ptr_alignment(270),
+            &PointerLayout {
+                size: 32,
+                alignment: Alignment { abi: 32, pref: 32 },
+                index_size: 32
+            }
+        );
+        assert_eq!(
+            data_layout.alignments.ptr_alignment(271),
+            &PointerLayout {
+                size: 32,
+                alignment: Alignment { abi: 32, pref: 32 },
+                index_size: 32
+            }
+        );
+        assert_eq!(
+            data_layout.alignments.ptr_alignment(272),
+            &PointerLayout {
+                size: 64,
+                alignment: Alignment { abi: 64, pref: 64 },
+                index_size: 64
+            }
+        );
+        assert_eq!(
+            data_layout.alignments.ptr_alignment(0),
+            &PointerLayout {
+                size: 64,
+                alignment: Alignment { abi: 64, pref: 64 },
+                index_size: 64
+            }
+        );
+        assert_eq!(
+            data_layout.alignments.ptr_alignment(33),
+            &PointerLayout {
+                size: 64,
+                alignment: Alignment { abi: 64, pref: 64 },
+                index_size: 64
+            }
+        );
+        assert_eq!(
+            data_layout.alignments.int_alignment(64),
+            &Alignment { abi: 64, pref: 64 }
+        );
+        assert_eq!(
+            data_layout.alignments.int_alignment(7),
+            &Alignment { abi: 8, pref: 8 }
+        );
+        assert_eq!(
+            data_layout.alignments.int_alignment(26),
+            &Alignment { abi: 32, pref: 32 }
+        );
+        assert_eq!(
+            data_layout.alignments.int_alignment(123456),
+            &Alignment { abi: 128, pref: 128 }
+        );
+        assert_eq!(
+            data_layout.alignments.fp_alignment(FPType::Double),
+            &Alignment { abi: 64, pref: 64 }
+        );
+        assert_eq!(
+            data_layout
+                .native_int_widths
+                .as_ref()
+                .unwrap()
+                .iter()
+                .copied()
+                .sorted()
+                .collect::<Vec<_>>(),
+            vec![32, 64]
+        );
+        assert_eq!(data_layout.stack_alignment, Some(128));
+    }
+
+    #[cfg(all(feature = "llvm-18-or-greater", feature = "llvm-20-or-lower"))]
     {
         assert_eq!(
             &data_layout.layout_str,

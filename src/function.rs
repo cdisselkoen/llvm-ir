@@ -661,11 +661,14 @@ impl AttributesData {
             "memory"
         ]
         .iter()
-        .map(|&attrname| {
+        .filter_map(|&attrname| {
             let cstr = CString::new(attrname).unwrap();
             let kind = unsafe { LLVMGetEnumAttributeKindForName(cstr.as_ptr(), attrname.len()) };
+            if kind == 0 && cfg!(feature = "llvm-21-or-greater") {
+                return None;
+            }
             assert_ne!(kind, 0, "Function attribute {:?} not found", attrname);
-            (kind, attrname.into())
+            Some((kind, attrname.into()))
         })
         .collect();
         let param_attribute_names = [
@@ -689,15 +692,20 @@ impl AttributesData {
             "swiftself",
             "swifterror",
             "immarg",
+            #[cfg(feature = "llvm-21-or-greater")]
+            "captures",
             #[cfg(feature = "llvm-11-or-greater")]
             "noundef",
         ]
         .iter()
-        .map(|&attrname| {
+        .filter_map(|&attrname| {
             let cstr = CString::new(attrname).unwrap();
             let kind = unsafe { LLVMGetEnumAttributeKindForName(cstr.as_ptr(), attrname.len()) };
+            if kind == 0 && cfg!(feature = "llvm-21-or-greater") {
+                return None;
+            }
             assert_ne!(kind, 0, "Parameter attribute {:?} not found", attrname);
-            (kind, attrname.into())
+            Some((kind, attrname.into()))
         })
         .collect();
         Self {
@@ -860,6 +868,20 @@ impl ParameterAttribute {
                 Some("swiftself") => Self::SwiftSelf,
                 Some("swifterror") => Self::SwiftError,
                 Some("immarg") => Self::ImmArg,
+                #[cfg(feature = "llvm-21-or-greater")]
+                Some("captures") => {
+                    let value = unsafe { LLVMGetEnumAttributeValue(a) };
+                    let capture = match value {
+                        0 => "none",
+                        1 => "ret",
+                        2 => "all",
+                        _ => "unknown",
+                    };
+                    Self::StringAttribute {
+                        kind: "captures".into(),
+                        value: capture.into(),
+                    }
+                },
                 #[cfg(feature = "llvm-11-or-greater")]
                 Some("noundef") => Self::NoUndef,
                 Some(s) => panic!("Unhandled value from lookup_param_attr: {:?}", s),
