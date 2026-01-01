@@ -1,0 +1,116 @@
+; ModuleID = 'variables.c'
+source_filename = "variables.c"
+target datalayout = "e-m:o-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-n32:64-S128-Fn32"
+target triple = "arm64-apple-macosx16.0.0"
+
+@global = global i32 5, align 4, !dbg !0
+
+; Function Attrs: nofree nounwind ssp uwtable(sync)
+define void @variables(i32 noundef %0, ptr noundef %1) local_unnamed_addr #0 !dbg !17 {
+  %3 = alloca i32, align 4
+  %4 = alloca i32, align 4
+  store volatile i32 %0, ptr %3, align 4, !tbaa !25
+    #dbg_declare(ptr %3, !21, !DIExpression(), !29)
+    #dbg_value(ptr %1, !22, !DIExpression(), !30)
+  call void @llvm.lifetime.start.p0(i64 4, ptr nonnull %4), !dbg !31
+    #dbg_declare(ptr %4, !23, !DIExpression(), !32)
+  store volatile i32 72, ptr %4, align 4, !dbg !32, !tbaa !25
+  %5 = tail call dereferenceable_or_null(4) ptr @malloc(i64 noundef 4) #3, !dbg !33
+    #dbg_value(ptr %5, !24, !DIExpression(), !30)
+  %6 = load volatile i32, ptr %4, align 4, !dbg !34, !tbaa !25
+  %7 = add nsw i32 %6, 5, !dbg !35
+  store volatile i32 %7, ptr %4, align 4, !dbg !36, !tbaa !25
+  %8 = load volatile i32, ptr %5, align 4, !dbg !37, !tbaa !25
+  %9 = add nsw i32 %8, 5, !dbg !38
+  store volatile i32 %9, ptr %5, align 4, !dbg !39, !tbaa !25
+  %10 = load volatile i32, ptr @global, align 4, !dbg !40, !tbaa !25
+  %11 = add nsw i32 %10, 5, !dbg !41
+  store volatile i32 %11, ptr @global, align 4, !dbg !42, !tbaa !25
+  %12 = load volatile i32, ptr %3, align 4, !dbg !43, !tbaa !25
+  %13 = add nsw i32 %12, 5, !dbg !44
+  store volatile i32 %13, ptr %3, align 4, !dbg !45, !tbaa !25
+  %14 = load volatile i32, ptr %1, align 4, !dbg !46, !tbaa !25
+  %15 = add nsw i32 %14, 5, !dbg !47
+  store volatile i32 %15, ptr %1, align 4, !dbg !48, !tbaa !25
+  call void @llvm.lifetime.end.p0(i64 4, ptr nonnull %4), !dbg !49
+  ret void, !dbg !49
+}
+
+; Function Attrs: mustprogress nocallback nofree nosync nounwind willreturn memory(argmem: readwrite)
+declare void @llvm.lifetime.start.p0(i64 immarg, ptr nocapture) #1
+
+; Function Attrs: mustprogress nofree nounwind willreturn allockind("alloc,uninitialized") allocsize(0) memory(inaccessiblemem: readwrite)
+declare !dbg !50 noalias noundef ptr @malloc(i64 noundef) local_unnamed_addr #2
+
+; Function Attrs: mustprogress nocallback nofree nosync nounwind willreturn memory(argmem: readwrite)
+declare void @llvm.lifetime.end.p0(i64 immarg, ptr nocapture) #1
+
+attributes #0 = { nofree nounwind ssp uwtable(sync) "frame-pointer"="non-leaf" "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-cpu"="apple-m1" "target-features"="+aes,+altnzcv,+ccdp,+ccidx,+ccpp,+complxnum,+crc,+dit,+dotprod,+flagm,+fp-armv8,+fp16fml,+fptoint,+fullfp16,+jsconv,+lse,+neon,+pauth,+perfmon,+predres,+ras,+rcpc,+rdm,+sb,+sha2,+sha3,+specrestrict,+ssbs,+v8.1a,+v8.2a,+v8.3a,+v8.4a,+v8a,+zcm,+zcz" }
+attributes #1 = { mustprogress nocallback nofree nosync nounwind willreturn memory(argmem: readwrite) }
+attributes #2 = { mustprogress nofree nounwind willreturn allockind("alloc,uninitialized") allocsize(0) memory(inaccessiblemem: readwrite) "alloc-family"="malloc" "frame-pointer"="non-leaf" "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-cpu"="apple-m1" "target-features"="+aes,+altnzcv,+ccdp,+ccidx,+ccpp,+complxnum,+crc,+dit,+dotprod,+flagm,+fp-armv8,+fp16fml,+fptoint,+fullfp16,+jsconv,+lse,+neon,+pauth,+perfmon,+predres,+ras,+rcpc,+rdm,+sb,+sha2,+sha3,+specrestrict,+ssbs,+v8.1a,+v8.2a,+v8.3a,+v8.4a,+v8a,+zcm,+zcz" }
+attributes #3 = { allocsize(0) }
+
+!llvm.module.flags = !{!9, !10, !11, !12, !13, !14, !15}
+!llvm.dbg.cu = !{!2}
+!llvm.ident = !{!16}
+
+!0 = !DIGlobalVariableExpression(var: !1, expr: !DIExpression())
+!1 = distinct !DIGlobalVariable(name: "global", scope: !2, file: !3, line: 5, type: !6, isLocal: false, isDefinition: true)
+!2 = distinct !DICompileUnit(language: DW_LANG_C11, file: !3, producer: "Homebrew clang version 20.1.8", isOptimized: true, runtimeVersion: 0, emissionKind: FullDebug, retainedTypes: !4, globals: !8, splitDebugInlining: false, nameTableKind: Apple, sysroot: "/Library/Developer/CommandLineTools/SDKs/MacOSX26.sdk", sdk: "MacOSX26.sdk")
+!3 = !DIFile(filename: "variables.c", directory: "/Users/jakku/Dev/llvm-ir/tests/basic_bc", checksumkind: CSK_MD5, checksum: "574e568540363d87b4569eedd3a13e55")
+!4 = !{!5}
+!5 = !DIDerivedType(tag: DW_TAG_pointer_type, baseType: !6, size: 64)
+!6 = !DIDerivedType(tag: DW_TAG_volatile_type, baseType: !7)
+!7 = !DIBasicType(name: "int", size: 32, encoding: DW_ATE_signed)
+!8 = !{!0}
+!9 = !{i32 2, !"SDK Version", [2 x i32] [i32 26, i32 2]}
+!10 = !{i32 7, !"Dwarf Version", i32 5}
+!11 = !{i32 2, !"Debug Info Version", i32 3}
+!12 = !{i32 1, !"wchar_size", i32 4}
+!13 = !{i32 8, !"PIC Level", i32 2}
+!14 = !{i32 7, !"uwtable", i32 1}
+!15 = !{i32 7, !"frame-pointer", i32 1}
+!16 = !{!"Homebrew clang version 20.1.8"}
+!17 = distinct !DISubprogram(name: "variables", scope: !3, file: !3, line: 7, type: !18, scopeLine: 7, flags: DIFlagPrototyped | DIFlagAllCallsDescribed, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !2, retainedNodes: !20)
+!18 = !DISubroutineType(types: !19)
+!19 = !{null, !6, !5}
+!20 = !{!21, !22, !23, !24}
+!21 = !DILocalVariable(name: "byvalue", arg: 1, scope: !17, file: !3, line: 7, type: !6)
+!22 = !DILocalVariable(name: "ptr", arg: 2, scope: !17, file: !3, line: 7, type: !5)
+!23 = !DILocalVariable(name: "stack_alloc", scope: !17, file: !3, line: 8, type: !6)
+!24 = !DILocalVariable(name: "heap_alloc", scope: !17, file: !3, line: 9, type: !5)
+!25 = !{!26, !26, i64 0}
+!26 = !{!"int", !27, i64 0}
+!27 = !{!"omnipotent char", !28, i64 0}
+!28 = !{!"Simple C/C++ TBAA"}
+!29 = !DILocation(line: 7, column: 29, scope: !17)
+!30 = !DILocation(line: 0, scope: !17)
+!31 = !DILocation(line: 8, column: 3, scope: !17)
+!32 = !DILocation(line: 8, column: 16, scope: !17)
+!33 = !DILocation(line: 9, column: 46, scope: !17)
+!34 = !DILocation(line: 12, column: 17, scope: !17)
+!35 = !DILocation(line: 12, column: 29, scope: !17)
+!36 = !DILocation(line: 12, column: 15, scope: !17)
+!37 = !DILocation(line: 15, column: 17, scope: !17)
+!38 = !DILocation(line: 15, column: 29, scope: !17)
+!39 = !DILocation(line: 15, column: 15, scope: !17)
+!40 = !DILocation(line: 18, column: 12, scope: !17)
+!41 = !DILocation(line: 18, column: 19, scope: !17)
+!42 = !DILocation(line: 18, column: 10, scope: !17)
+!43 = !DILocation(line: 21, column: 13, scope: !17)
+!44 = !DILocation(line: 21, column: 21, scope: !17)
+!45 = !DILocation(line: 21, column: 11, scope: !17)
+!46 = !DILocation(line: 24, column: 10, scope: !17)
+!47 = !DILocation(line: 24, column: 15, scope: !17)
+!48 = !DILocation(line: 24, column: 8, scope: !17)
+!49 = !DILocation(line: 25, column: 1, scope: !17)
+!50 = !DISubprogram(name: "malloc", scope: !51, file: !51, line: 54, type: !52, flags: DIFlagPrototyped, spFlags: DISPFlagOptimized)
+!51 = !DIFile(filename: "/Library/Developer/CommandLineTools/SDKs/MacOSX26.sdk/usr/include/malloc/_malloc.h", directory: "", checksumkind: CSK_MD5, checksum: "1ff1e04bc418b1c4bb5edfe9e395b8c0")
+!52 = !DISubroutineType(types: !53)
+!53 = !{!54, !55}
+!54 = !DIDerivedType(tag: DW_TAG_pointer_type, baseType: null, size: 64)
+!55 = !DIDerivedType(tag: DW_TAG_typedef, name: "size_t", file: !56, line: 50, baseType: !57)
+!56 = !DIFile(filename: "/Library/Developer/CommandLineTools/SDKs/MacOSX26.sdk/usr/include/sys/_types/_size_t.h", directory: "", checksumkind: CSK_MD5, checksum: "f7981334d28e0c246f35cd24042aa2a4")
+!57 = !DIDerivedType(tag: DW_TAG_typedef, name: "__darwin_size_t", file: !58, line: 87, baseType: !59)
+!58 = !DIFile(filename: "/Library/Developer/CommandLineTools/SDKs/MacOSX26.sdk/usr/include/arm/_types.h", directory: "", checksumkind: CSK_MD5, checksum: "b270144f57ae258d0ce80b8f87be068c")
+!59 = !DIBasicType(name: "unsigned long", size: 64, encoding: DW_ATE_unsigned)
