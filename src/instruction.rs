@@ -2549,6 +2549,10 @@ pub enum RMWBinOp {
     USubCond,
     #[cfg(feature = "llvm-20-or-greater")]
     USubSat,
+    #[cfg(feature = "llvm-21-or-greater")]
+    FMaximum,
+    #[cfg(feature = "llvm-21-or-greater")]
+    FMinimum,
 }
 
 impl Display for RMWBinOp {
@@ -2581,6 +2585,10 @@ impl Display for RMWBinOp {
             Self::USubCond => write!(f, "usub_cond"),
             #[cfg(feature = "llvm-20-or-greater")]
             Self::USubSat => write!(f, "usub_sat"),
+            #[cfg(feature = "llvm-21-or-greater")]
+            Self::FMaximum => write!(f, "fmaximum"),
+            #[cfg(feature = "llvm-21-or-greater")]
+            Self::FMinimum => write!(f, "fminimum"),
         }
     }
 }
@@ -3699,6 +3707,10 @@ impl RMWBinOp {
             LLVMAtomicRMWBinOp::LLVMAtomicRMWBinOpUSubCond => Self::USubCond,
             #[cfg(feature = "llvm-20-or-greater")]
             LLVMAtomicRMWBinOp::LLVMAtomicRMWBinOpUSubSat => Self::USubSat,
+            #[cfg(feature = "llvm-21-or-greater")]
+            LLVMAtomicRMWBinOp::LLVMAtomicRMWBinOpFMaximum => Self::FMaximum,
+            #[cfg(feature = "llvm-21-or-greater")]
+            LLVMAtomicRMWBinOp::LLVMAtomicRMWBinOpFMinimum => Self::FMinimum,
         }
     }
 }
