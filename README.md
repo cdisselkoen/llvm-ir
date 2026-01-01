@@ -37,12 +37,12 @@ add it as a dependency in your `Cargo.toml`, selecting the feature corresponding
 to the LLVM version you want:
 ```toml
 [dependencies]
-llvm-ir = { version = "0.11.3", features = ["llvm-20"] }
+llvm-ir = { version = "0.11.3", features = ["llvm-21"] }
 ```
 
 Currently, the supported LLVM versions are `llvm-9`, `llvm-10`, `llvm-11`,
 `llvm-12`, `llvm-13`, `llvm-14`, `llvm-15`, `llvm-16`, `llvm-17`, `llvm-18`,
-`llvm-19`, and `llvm-20`.
+`llvm-19`, `llvm-20`, and `llvm-21`.
 
 Then, the easiest way to get started is to parse some existing LLVM IR into
 this crate's data structures.
@@ -84,8 +84,8 @@ using.
 ## Compatibility
 Starting with `llvm-ir` 0.7.0, LLVM versions are selected by a Cargo feature
 flag. This means that a single crate version can be used for any supported LLVM
-version. Currently, `llvm-ir` supports LLVM versions 9 through 20, selected by
-feature flags `llvm-9` through `llvm-20`.
+version. Currently, `llvm-ir` supports LLVM versions 9 through 21, selected by
+feature flags `llvm-9` through `llvm-21`.
 
 You should select the LLVM version corresponding to the version of the LLVM
 library you are linking against (i.e., that is available on your system.)

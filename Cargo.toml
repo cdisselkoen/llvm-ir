@@ -24,6 +24,7 @@ llvm-sys-170 = { package = "llvm-sys", version = "170.0.1", optional = true }
 llvm-sys-181 = { package = "llvm-sys", version = "181.0.0", optional = true }
 llvm-sys-191 = { package = "llvm-sys", version = "191.0.0", optional = true }
 llvm-sys-201 = { package = "llvm-sys", version = "201.0.1", optional = true }
+llvm-sys-211 = { package = "llvm-sys", version = "211.0.0", optional = true }
 either = "1.9"
 log = "0.4"
 ordered-float = "4.6.0"
@@ -47,6 +48,7 @@ llvm-17 = ["llvm-sys-170", "llvm-17-or-lower", "llvm-17-or-greater"]
 llvm-18 = ["llvm-sys-181", "llvm-18-or-lower", "llvm-18-or-greater"]
 llvm-19 = ["llvm-sys-191", "llvm-19-or-lower", "llvm-19-or-greater"]
 llvm-20 = ["llvm-sys-201", "llvm-20-or-lower", "llvm-20-or-greater"]
+llvm-21 = ["llvm-sys-211", "llvm-21-or-lower", "llvm-21-or-greater"]
 
 ###
 # For convenience, these automatically-enabled features allow us to avoid
@@ -64,6 +66,7 @@ llvm-17-or-greater = ["llvm-16-or-greater"]
 llvm-18-or-greater = ["llvm-17-or-greater"]
 llvm-19-or-greater = ["llvm-18-or-greater"]
 llvm-20-or-greater = ["llvm-19-or-greater"]
+llvm-21-or-greater = ["llvm-20-or-greater"]
 
 llvm-9-or-lower = ["llvm-10-or-lower"]
 llvm-10-or-lower = ["llvm-11-or-lower"]
@@ -76,7 +79,8 @@ llvm-16-or-lower = ["llvm-17-or-lower"]
 llvm-17-or-lower = ["llvm-18-or-lower"]
 llvm-18-or-lower = ["llvm-19-or-lower"]
 llvm-19-or-lower = ["llvm-20-or-lower"]
-llvm-20-or-lower = []
+llvm-20-or-lower = ["llvm-21-or-lower"]
+llvm-21-or-lower = []
 ###
 
 # The `strict-versioning` feature requires an exact match between the
@@ -99,6 +103,7 @@ strict-versioning = [
     "llvm-sys-181?/strict-versioning",
     "llvm-sys-191?/strict-versioning",
     "llvm-sys-201?/strict-versioning",
+    "llvm-sys-211?/strict-versioning",
 ]
 
 # The `prefer-dynamic` feature is only available on llvm-sys versions >= 120.
@@ -112,6 +117,7 @@ prefer-dynamic = [
     "llvm-sys-181?/prefer-dynamic",
     "llvm-sys-191?/prefer-dynamic",
     "llvm-sys-201?/prefer-dynamic",
+    "llvm-sys-211?/prefer-dynamic",
 ]
 
 [package.metadata.docs.rs]

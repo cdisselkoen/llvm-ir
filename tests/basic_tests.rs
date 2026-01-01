@@ -47,6 +47,8 @@ fn llvm_bc_dir() -> PathBuf {
         Path::new(BC_DIR).join("llvm19")
     } else if cfg!(feature = "llvm-20") {
         Path::new(BC_DIR).join("llvm20")
+    } else if cfg!(feature = "llvm-21") {
+        Path::new(BC_DIR).join("llvm21")
     } else {
         unimplemented!("new llvm version?")
     }
@@ -78,6 +80,8 @@ fn cxx_llvm_bc_dir() -> PathBuf {
         Path::new(BC_DIR).join("cxx-llvm19")
     } else if cfg!(feature = "llvm-20") {
         Path::new(BC_DIR).join("cxx-llvm20")
+    } else if cfg!(feature = "llvm-21") {
+        Path::new(BC_DIR).join("cxx-llvm21")
     } else {
         unimplemented!("new llvm version?")
     }
