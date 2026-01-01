@@ -1,6 +1,7 @@
 //! See [LLVM 14 docs on Metadata](https://releases.llvm.org/14.0.0/docs/LangRef.html#metadata)
 
 use either::Either;
+use std::collections::HashSet;
 use std::fmt::Debug;
 
 #[cfg(feature = "llvm-20-or-greater")]
@@ -115,6 +116,16 @@ pub(crate) unsafe fn metadata_value_from_value(
     ctx: LLVMContextRef,
     val: LLVMValueRef,
 ) -> MetadataValue {
+    let mut visiting = HashSet::new();
+    metadata_value_from_value_inner(ctx, val, &mut visiting)
+}
+
+#[cfg(feature = "llvm-20-or-greater")]
+unsafe fn metadata_value_from_value_inner(
+    ctx: LLVMContextRef,
+    val: LLVMValueRef,
+    visiting: &mut HashSet<LLVMMetadataRef>,
+) -> MetadataValue {
     if val.is_null() {
         return MetadataValue::Value("<null>".into());
     }
@@ -125,8 +136,14 @@ pub(crate) unsafe fn metadata_value_from_value(
     if md.is_null() {
         return MetadataValue::Value(print_to_string(val));
     }
-    match LLVMGetMetadataKind(md) {
-        LLVMMetadataKind::LLVMMDStringMetadataKind => MetadataValue::String(md_string_from_value(val)),
+    if visiting.contains(&md) {
+        return MetadataValue::Value("<cycle>".into());
+    }
+    visiting.insert(md);
+    let value = match LLVMGetMetadataKind(md) {
+        LLVMMetadataKind::LLVMMDStringMetadataKind => {
+            MetadataValue::String(md_string_from_value(val))
+        },
         LLVMMetadataKind::LLVMMDTupleMetadataKind => {
             let count = LLVMGetMDNodeNumOperands(val);
             let mut values: Vec<LLVMValueRef> = vec![std::ptr::null_mut(); count as usize];
@@ -139,14 +156,16 @@ pub(crate) unsafe fn metadata_value_from_value(
                     if op.is_null() {
                         None
                     } else {
-                        Some(metadata_value_from_value(ctx, op))
+                        Some(metadata_value_from_value_inner(ctx, op, visiting))
                     }
                 })
                 .collect();
             MetadataValue::Node(elems)
         },
         _ => MetadataValue::Value(print_to_string(val)),
-    }
+    };
+    visiting.remove(&md);
+    value
 }
 
 #[cfg(feature = "llvm-20-or-greater")]
