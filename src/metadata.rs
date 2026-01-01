@@ -3,8 +3,171 @@
 use either::Either;
 use std::fmt::Debug;
 
+#[cfg(feature = "llvm-20-or-greater")]
+use crate::from_llvm::print_to_string;
+#[cfg(feature = "llvm-20-or-greater")]
+use crate::llvm_sys::*;
+
 use crate::operand::Operand;
 use crate::types::{Type, Typed};
+
+#[cfg(feature = "llvm-20-or-greater")]
+#[derive(PartialEq, Clone, Debug, Hash)]
+pub enum MetadataValue {
+    String(String),
+    Node(Vec<Option<MetadataValue>>),
+    Value(String),
+}
+
+#[cfg(feature = "llvm-20-or-greater")]
+#[derive(PartialEq, Clone, Debug, Hash)]
+pub struct MetadataAttachment {
+    pub kind_id: u32,
+    pub value: MetadataValue,
+}
+
+#[cfg(feature = "llvm-20-or-greater")]
+#[derive(PartialEq, Clone, Debug, Hash)]
+pub struct NamedMetadata {
+    pub name: String,
+    pub operands: Vec<MetadataValue>,
+}
+
+#[cfg(feature = "llvm-20-or-greater")]
+#[derive(PartialEq, Clone, Debug, Hash, Default)]
+pub struct InstructionMetadata(pub Vec<MetadataAttachment>);
+
+#[cfg(feature = "llvm-20-or-greater")]
+impl InstructionMetadata {
+    pub(crate) fn from_llvm_inst(inst: LLVMValueRef) -> Self {
+        unsafe {
+            let ctx = metadata_context_from_inst(inst);
+            let mut count: ::libc::size_t = 0;
+            let entries = LLVMInstructionGetAllMetadataOtherThanDebugLoc(inst, &mut count);
+            if entries.is_null() || count == 0 {
+                return InstructionMetadata(Vec::new());
+            }
+            let mut metadata = Vec::with_capacity(count as usize);
+            for idx in 0..count {
+                let kind_id = LLVMValueMetadataEntriesGetKind(entries, idx as u32);
+                let md = LLVMValueMetadataEntriesGetMetadata(entries, idx as u32);
+                if md.is_null() {
+                    continue;
+                }
+                let value = metadata_value_from_metadata(ctx, md);
+                metadata.push(MetadataAttachment { kind_id, value });
+            }
+            LLVMDisposeValueMetadataEntries(entries);
+            InstructionMetadata(metadata)
+        }
+    }
+}
+
+#[cfg(feature = "llvm-20-or-greater")]
+pub fn md_kind_id(name: &str) -> u32 {
+    let cstr = std::ffi::CString::new(name)
+        .expect("Failed to build CString for metadata kind name");
+    unsafe { LLVMGetMDKindID(cstr.as_ptr(), name.len() as ::libc::c_uint) }
+}
+
+#[cfg(feature = "llvm-20-or-greater")]
+pub(crate) unsafe fn named_metadata_from_module(module: LLVMModuleRef) -> Vec<NamedMetadata> {
+    let ctx = LLVMGetModuleContext(module);
+    let mut named = Vec::new();
+    let mut node = LLVMGetFirstNamedMetadata(module);
+    while !node.is_null() {
+        let mut name_len: ::libc::size_t = 0;
+        let name_ptr = LLVMGetNamedMetadataName(node, &mut name_len);
+        let name = metadata_string_from_ptr(name_ptr, name_len);
+        let name_cstr = std::ffi::CString::new(name.clone())
+            .expect("Failed to build CString for named metadata");
+        let count = LLVMGetNamedMetadataNumOperands(module, name_cstr.as_ptr());
+        let mut values: Vec<LLVMValueRef> = vec![std::ptr::null_mut(); count as usize];
+        if count > 0 {
+            LLVMGetNamedMetadataOperands(module, name_cstr.as_ptr(), values.as_mut_ptr());
+        }
+        let operands = values
+            .into_iter()
+            .filter(|val| !val.is_null())
+            .map(|val| metadata_value_from_value(ctx, val))
+            .collect();
+        named.push(NamedMetadata { name, operands });
+        node = LLVMGetNextNamedMetadata(node);
+    }
+    named
+}
+
+#[cfg(feature = "llvm-20-or-greater")]
+pub(crate) unsafe fn metadata_value_from_metadata(
+    ctx: LLVMContextRef,
+    md: LLVMMetadataRef,
+) -> MetadataValue {
+    let val = LLVMMetadataAsValue(ctx, md);
+    metadata_value_from_value(ctx, val)
+}
+
+#[cfg(feature = "llvm-20-or-greater")]
+pub(crate) unsafe fn metadata_value_from_value(
+    ctx: LLVMContextRef,
+    val: LLVMValueRef,
+) -> MetadataValue {
+    if val.is_null() {
+        return MetadataValue::Value("<null>".into());
+    }
+    if LLVMGetValueKind(val) != LLVMValueKind::LLVMMetadataAsValueValueKind {
+        return MetadataValue::Value(print_to_string(val));
+    }
+    let md = LLVMValueAsMetadata(val);
+    if md.is_null() {
+        return MetadataValue::Value(print_to_string(val));
+    }
+    match LLVMGetMetadataKind(md) {
+        LLVMMetadataKind::LLVMMDStringMetadataKind => MetadataValue::String(md_string_from_value(val)),
+        LLVMMetadataKind::LLVMMDTupleMetadataKind => {
+            let count = LLVMGetMDNodeNumOperands(val);
+            let mut values: Vec<LLVMValueRef> = vec![std::ptr::null_mut(); count as usize];
+            if count > 0 {
+                LLVMGetMDNodeOperands(val, values.as_mut_ptr());
+            }
+            let elems = values
+                .into_iter()
+                .map(|op| {
+                    if op.is_null() {
+                        None
+                    } else {
+                        Some(metadata_value_from_value(ctx, op))
+                    }
+                })
+                .collect();
+            MetadataValue::Node(elems)
+        },
+        _ => MetadataValue::Value(print_to_string(val)),
+    }
+}
+
+#[cfg(feature = "llvm-20-or-greater")]
+unsafe fn md_string_from_value(val: LLVMValueRef) -> String {
+    let mut len: ::libc::c_uint = 0;
+    let ptr = LLVMGetMDString(val, &mut len);
+    metadata_string_from_ptr(ptr, len as ::libc::size_t)
+}
+
+#[cfg(feature = "llvm-20-or-greater")]
+unsafe fn metadata_string_from_ptr(ptr: *const ::libc::c_char, len: ::libc::size_t) -> String {
+    if ptr.is_null() || len == 0 {
+        return String::new();
+    }
+    let bytes = std::slice::from_raw_parts(ptr as *const u8, len as usize);
+    String::from_utf8_lossy(bytes).into_owned()
+}
+
+#[cfg(feature = "llvm-20-or-greater")]
+pub(crate) unsafe fn metadata_context_from_inst(inst: LLVMValueRef) -> LLVMContextRef {
+    let bb = LLVMGetInstructionParent(inst);
+    let func = LLVMGetBasicBlockParent(bb);
+    let module = LLVMGetGlobalParent(func);
+    LLVMGetModuleContext(module)
+}
 
 #[derive(PartialEq, Clone, Debug, Hash)]
 pub enum MetadataRef<T> where T: PartialEq + Clone + Debug {

@@ -1,6 +1,8 @@
 use crate::instruction::Instruction;
 use crate::name::Name;
 use crate::terminator::Terminator;
+#[cfg(feature = "llvm-20-or-greater")]
+use crate::metadata::InstructionMetadata;
 
 /// A `BasicBlock` is a sequence of zero or more non-terminator instructions
 /// followed by a single terminator instruction which ends the block.
@@ -21,6 +23,8 @@ impl BasicBlock {
             instrs: vec![],
             term: Terminator::Unreachable(Unreachable {
                 debugloc: None,
+                #[cfg(feature = "llvm-20-or-greater")]
+                metadata: InstructionMetadata::default(),
             }),
         }
     }

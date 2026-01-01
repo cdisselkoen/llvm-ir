@@ -5,6 +5,7 @@
 use either::Either;
 use llvm_ir::{Constant, Instruction, Module, Type};
 use llvm_ir::instruction::RMWBinOp;
+use llvm_ir::{MetadataValue, md_kind_id};
 use std::path::Path;
 
 macro_rules! llvm_test {
@@ -166,4 +167,90 @@ fn stepvector_intrinsic() {
         found,
         "expected call to llvm.stepvector.v4i32 in llvm20_stepvector.bc"
     );
+}
+
+#[test]
+fn noalias_addrspace_metadata() {
+    let _ = env_logger::builder().is_test(true).try_init(); // capture log messages with test harness
+    let path = Path::new("tests/llvm_bc/llvm20_noalias_addrspace.bc");
+    let module = Module::from_bc_path(path).expect("Failed to parse module");
+
+    let func = module
+        .functions
+        .iter()
+        .find(|func| func.name == "load_noalias")
+        .expect("load_noalias function should exist");
+
+    let mut found = false;
+    let kind_id = md_kind_id("noalias.addrspace");
+    for bb in &func.basic_blocks {
+        for inst in &bb.instrs {
+            if let Instruction::Load(load) = inst {
+                for attachment in &load.metadata.0 {
+                    if attachment.kind_id != kind_id {
+                        continue;
+                    }
+                    if let MetadataValue::Node(values) = &attachment.value {
+                        let mut has_range = false;
+                        for value in values.iter().flatten() {
+                            if let MetadataValue::Value(text) = value {
+                                if text.contains("i32 1") || text.contains("i32 2") {
+                                    has_range = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if has_range {
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        if found {
+            break;
+        }
+    }
+
+    assert!(found, "expected noalias.addrspace metadata on load");
+}
+
+#[test]
+fn operand_bundle_metadata_string() {
+    let _ = env_logger::builder().is_test(true).try_init(); // capture log messages with test harness
+    let path = Path::new("tests/llvm_bc/llvm20_operand_bundle_mdstring.bc");
+    let module = Module::from_bc_path(path).expect("Failed to parse module");
+
+    let func = module
+        .functions
+        .iter()
+        .find(|func| func.name == "bundle_test")
+        .expect("bundle_test function should exist");
+
+    let mut found = false;
+    for bb in &func.basic_blocks {
+        for inst in &bb.instrs {
+            if let Instruction::Call(call) = inst {
+                for bundle in &call.operand_bundles {
+                    if bundle.tag != "tag" {
+                        continue;
+                    }
+                    for arg in &bundle.args {
+                        if let llvm_ir::instruction::OperandBundleArg::Metadata(MetadataValue::String(s)) = arg {
+                            if s == "hello" {
+                                found = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if found {
+            break;
+        }
+    }
+
+    assert!(found, "expected operand bundle metadata string in bundle_test");
 }

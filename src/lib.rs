@@ -21,8 +21,10 @@ pub mod function;
 pub use function::Function;
 pub mod instruction;
 pub use instruction::Instruction;
-// pub mod metadata;
-// pub use metadata::Metadata;
+#[cfg(feature = "llvm-20-or-greater")]
+pub mod metadata;
+#[cfg(feature = "llvm-20-or-greater")]
+pub use metadata::{InstructionMetadata, MetadataAttachment, MetadataValue, NamedMetadata, md_kind_id};
 pub mod module;
 pub use module::Module;
 pub mod name;
