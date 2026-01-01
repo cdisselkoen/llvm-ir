@@ -3,6 +3,8 @@ use crate::debugloc::{DebugLoc, HasDebugLoc};
 use crate::function::{CallingConvention, FunctionAttribute, ParameterAttribute};
 #[cfg(feature = "llvm-20-or-greater")]
 use crate::metadata::{metadata_value_from_value, InstructionMetadata, MetadataValue};
+#[cfg(feature = "llvm-20-or-greater")]
+use crate::llvm_sys::llvm_sys::LLVMValueKind;
 use crate::name::Name;
 use crate::operand::Operand;
 use crate::predicates::*;

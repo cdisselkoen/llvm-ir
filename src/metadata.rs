@@ -7,9 +7,13 @@ use std::fmt::Debug;
 use crate::from_llvm::print_to_string;
 #[cfg(feature = "llvm-20-or-greater")]
 use crate::llvm_sys::*;
+#[cfg(feature = "llvm-20-or-greater")]
+use crate::llvm_sys::llvm_sys::LLVMValueKind;
+#[cfg(feature = "llvm-20-or-greater")]
+use crate::llvm_sys::llvm_sys::debuginfo::{LLVMGetMetadataKind, LLVMMetadataKind};
 
 use crate::operand::Operand;
-use crate::types::{Type, Typed};
+use crate::types::{TypeRef, Typed, Types};
 
 #[cfg(feature = "llvm-20-or-greater")]
 #[derive(PartialEq, Clone, Debug, Hash)]
@@ -186,8 +190,8 @@ pub enum Metadata {
 }
 
 impl Typed for Metadata {
-    fn get_type(&self) -> Type {
-        Type::MetadataType
+    fn get_type(&self, types: &Types) -> TypeRef {
+        types.metadata_type()
     }
 }
 

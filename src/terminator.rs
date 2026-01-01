@@ -596,6 +596,8 @@ pub struct CallBr {
     pub calling_convention: CallingConvention,
     pub debugloc: Option<DebugLoc>,
     #[cfg(feature = "llvm-20-or-greater")]
+    pub operand_bundles: Vec<OperandBundle>,
+    #[cfg(feature = "llvm-20-or-greater")]
     pub metadata: InstructionMetadata,
 }
 
