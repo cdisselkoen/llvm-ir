@@ -153,7 +153,7 @@ fn hellobcg() {
         .expect("Expected main() to have a debugloc");
     assert_eq!(debugloc.line, 3);
     assert_eq!(debugloc.col, None);
-    assert_eq!(debugloc.filename, debug_filename);
+    assert_eq!(debugloc.filename.as_str(), debug_filename);
     assert!(debugloc.directory.as_ref().expect("directory should exist").ends_with(debug_directory_suffix));
 
     let bb = &func.basic_blocks[0];
@@ -168,7 +168,7 @@ fn hellobcg() {
         .expect("expected the Ret to have a debugloc");
     assert_eq!(debugloc.line, 4);
     assert_eq!(debugloc.col, Some(3));
-    assert_eq!(debugloc.filename, debug_filename);
+    assert_eq!(debugloc.filename.as_str(), debug_filename);
     assert!(debugloc.directory.as_ref().expect("directory should exist").ends_with(debug_directory_suffix));
     assert_eq!(&ret.to_string(), "ret i32 0 (with debugloc)");
 }
@@ -1639,7 +1639,7 @@ fn variablesbcg() {
         .expect("expected the global to have a debugloc");
     assert_eq!(debugloc.line, 5);
     assert_eq!(debugloc.col, None); // only `Instruction`s and `Terminator`s get column numbers
-    assert_eq!(debugloc.filename, debug_filename);
+    assert_eq!(debugloc.filename.as_str(), debug_filename);
     assert!(debugloc.directory.as_ref().expect("directory should exist").ends_with(debug_directory_suffix));
 }
 
@@ -1939,7 +1939,7 @@ fn rustbcg() {
         .expect("Expected function to have a debugloc");
     assert_eq!(debugloc.line, 3);
     assert_eq!(debugloc.col, None);
-    assert_eq!(debugloc.filename, debug_filename);
+    assert_eq!(debugloc.filename.as_str(), debug_filename);
     assert!(debugloc.directory.as_ref().expect("directory should exist").ends_with(debug_directory_suffix));
 
     let startbb = func
@@ -1967,7 +1967,7 @@ fn rustbcg() {
         .expect("Expected this store to have a debugloc");
     assert_eq!(store_debugloc.line, 4);
     assert_eq!(store_debugloc.col, Some(18));
-    assert_eq!(store_debugloc.filename, debug_filename);
+    assert_eq!(store_debugloc.filename.as_str(), debug_filename);
     assert!(debugloc.directory.as_ref().expect("directory should exist").ends_with(debug_directory_suffix));
     #[cfg(feature = "llvm-14-or-lower")]
     let expected_fmt = "store i64 0, i64* %sum, align 8 (with debugloc)";
@@ -1980,7 +1980,7 @@ fn rustbcg() {
         .expect("Expected this call to have a debugloc");
     assert_eq!(call_debugloc.line, 5);
     assert_eq!(call_debugloc.col, Some(13));
-    assert_eq!(call_debugloc.filename, debug_filename);
+    assert_eq!(call_debugloc.filename.as_str(), debug_filename);
     assert!(debugloc.directory.as_ref().expect("directory should exist").ends_with(debug_directory_suffix));
     #[cfg(feature = "llvm-14-or-lower")]
     let expected_fmt = "%4 = call @_ZN68_$LT$alloc..vec..Vec$LT$T$GT$$u20$as$u20$core..ops..deref..Deref$GT$5deref17h378128d7d9378466E(%alloc::vec::Vec<isize>* %3) (with debugloc)";
@@ -2136,7 +2136,7 @@ fn simple_linked_list_g() {
         .expect("expected simple_linked_list to have a debugloc");
     assert_eq!(debugloc.line, 8);
     assert_eq!(debugloc.col, None);
-    assert_eq!(debugloc.filename, debug_filename);
+    assert_eq!(debugloc.filename.as_str(), debug_filename);
     assert!(debugloc.directory.as_ref().expect("directory should exist").ends_with(debug_directory_suffix));
 
     // the first seven instructions shouldn't have debuglocs - they are just setting up the stack frame
@@ -2154,7 +2154,7 @@ fn simple_linked_list_g() {
             .expect("expected this instruction to have a debugloc");
         assert_eq!(debugloc.line, 8);
         assert_eq!(debugloc.col, Some(28));
-        assert_eq!(debugloc.filename, debug_filename);
+        assert_eq!(debugloc.filename.as_str(), debug_filename);
         assert!(debugloc.directory.as_ref().expect("directory should exist").ends_with(debug_directory_suffix));
         assert_eq!(
             &func.basic_blocks[0].instrs[7].to_string(),
@@ -2169,7 +2169,7 @@ fn simple_linked_list_g() {
         .expect("expected this instruction to have a debugloc");
     assert_eq!(debugloc.line, 9);
     assert_eq!(debugloc.col, Some(34));
-    assert_eq!(debugloc.filename, debug_filename);
+    assert_eq!(debugloc.filename.as_str(), debug_filename);
     assert!(debugloc.directory.as_ref().expect("directory should exist").ends_with(debug_directory_suffix));
 
     #[cfg(feature = "llvm-14-or-lower")]

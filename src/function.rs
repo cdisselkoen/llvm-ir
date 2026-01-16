@@ -428,7 +428,7 @@ impl FunctionDeclaration {
             }),
             alignment: unsafe { LLVMGetAlignment(func) },
             garbage_collector_name: unsafe { get_gc(func) },
-            debugloc: DebugLoc::from_llvm_no_col(func),
+            debugloc: DebugLoc::from_llvm_no_col(func, &mut ctx.string_interner),
         };
         (decl, local_ctr)
     }

@@ -649,7 +649,7 @@ impl Terminator {
                 Terminator::Ret(Ret::from_llvm_ref(term, ctx, func_ctx))
             },
             LLVMOpcode::LLVMBr => match unsafe { LLVMGetNumOperands(term) } {
-                1 => Terminator::Br(Br::from_llvm_ref(term, func_ctx)),
+                1 => Terminator::Br(Br::from_llvm_ref(term, ctx, func_ctx)),
                 3 => Terminator::CondBr(CondBr::from_llvm_ref(term, ctx, func_ctx)),
                 n => panic!("LLVMBr with {} operands, expected 1 or 3", n),
             },
@@ -666,7 +666,7 @@ impl Terminator {
                 Terminator::Resume(Resume::from_llvm_ref(term, ctx, func_ctx))
             },
             LLVMOpcode::LLVMUnreachable => {
-                Terminator::Unreachable(Unreachable::from_llvm_ref(term))
+                Terminator::Unreachable(Unreachable::from_llvm_ref(term, ctx))
             },
             LLVMOpcode::LLVMCleanupRet => {
                 Terminator::CleanupRet(CleanupRet::from_llvm_ref(term, ctx, func_ctx))
@@ -704,14 +704,14 @@ impl Ret {
                 )),
                 n => panic!("Ret instruction with {} operands", n),
             },
-            debugloc: DebugLoc::from_llvm_with_col(term),
+            debugloc: DebugLoc::from_llvm_with_col(term, &mut ctx.string_interner),
             // metadata: InstructionMetadata::from_llvm_inst(term),
         }
     }
 }
 
 impl Br {
-    pub(crate) fn from_llvm_ref(term: LLVMValueRef, func_ctx: &mut FunctionContext) -> Self {
+    pub(crate) fn from_llvm_ref(term: LLVMValueRef, ctx: &mut ModuleContext, func_ctx: &mut FunctionContext) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(term) }, 1);
         Self {
             dest: func_ctx
@@ -719,7 +719,7 @@ impl Br {
                 .get(unsafe { &op_to_bb(LLVMGetOperand(term, 0)) })
                 .expect("Failed to find destination bb in map")
                 .clone(),
-            debugloc: DebugLoc::from_llvm_with_col(term),
+            debugloc: DebugLoc::from_llvm_with_col(term, &mut ctx.string_interner),
             // metadata: InstructionMetadata::from_llvm_inst(term),
         }
     }
@@ -744,7 +744,7 @@ impl CondBr {
                 .get(unsafe { &op_to_bb(LLVMGetOperand(term, 1)) })
                 .expect("Failed to find false-destination in bb map")
                 .clone(),
-            debugloc: DebugLoc::from_llvm_with_col(term),
+            debugloc: DebugLoc::from_llvm_with_col(term, &mut ctx.string_interner),
             // metadata: InstructionMetadata::from_llvm_inst(term),
         }
     }
@@ -779,7 +779,7 @@ impl Switch {
                 .get(unsafe { &LLVMGetSwitchDefaultDest(term) })
                 .expect("Failed to find switch default destination in map")
                 .clone(),
-            debugloc: DebugLoc::from_llvm_with_col(term),
+            debugloc: DebugLoc::from_llvm_with_col(term, &mut ctx.string_interner),
             // metadata: InstructionMetadata::from_llvm_inst(term),
         }
     }
@@ -805,7 +805,7 @@ impl IndirectBr {
                     })
                     .collect()
             },
-            debugloc: DebugLoc::from_llvm_with_col(term),
+            debugloc: DebugLoc::from_llvm_with_col(term, &mut ctx.string_interner),
             // metadata: InstructionMetadata::from_llvm_inst(term),
         }
     }
@@ -838,7 +838,7 @@ impl Invoke {
                 .clone(),
             function_attributes: callinfo.function_attributes,
             calling_convention: callinfo.calling_convention,
-            debugloc: DebugLoc::from_llvm_with_col(term),
+            debugloc: DebugLoc::from_llvm_with_col(term, &mut ctx.string_interner),
             // metadata: InstructionMetadata::from_llvm_inst(term),
         }
     }
@@ -853,17 +853,17 @@ impl Resume {
         assert_eq!(unsafe { LLVMGetNumOperands(term) }, 1);
         Self {
             operand: Operand::from_llvm_ref(unsafe { LLVMGetOperand(term, 0) }, ctx, func_ctx),
-            debugloc: DebugLoc::from_llvm_with_col(term),
+            debugloc: DebugLoc::from_llvm_with_col(term, &mut ctx.string_interner),
             // metadata: InstructionMetadata::from_llvm_inst(term),
         }
     }
 }
 
 impl Unreachable {
-    pub(crate) fn from_llvm_ref(term: LLVMValueRef) -> Self {
+    pub(crate) fn from_llvm_ref(term: LLVMValueRef, ctx: &mut ModuleContext) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(term) }, 0);
         Self {
-            debugloc: DebugLoc::from_llvm_with_col(term),
+            debugloc: DebugLoc::from_llvm_with_col(term, &mut ctx.string_interner),
             // metadata: InstructionMetadata::from_llvm_inst(term),
         }
     }
@@ -898,7 +898,7 @@ impl CleanupRet {
                     )
                 }
             },
-            debugloc: DebugLoc::from_llvm_with_col(term),
+            debugloc: DebugLoc::from_llvm_with_col(term, &mut ctx.string_interner),
             // metadata: InstructionMetadata::from_llvm_inst(term),
         }
     }
@@ -917,7 +917,7 @@ impl CatchRet {
                 .get(unsafe { &LLVMGetSuccessor(term, 0) })
                 .expect("Failed to find CatchRet successor in map")
                 .clone(),
-            debugloc: DebugLoc::from_llvm_with_col(term),
+            debugloc: DebugLoc::from_llvm_with_col(term, &mut ctx.string_interner),
             // metadata: InstructionMetadata::from_llvm_inst(term),
         }
     }
@@ -962,7 +962,7 @@ impl CatchSwitch {
                 }
             },
             result: Name::name_or_num(unsafe { get_value_name(term) }, &mut func_ctx.ctr),
-            debugloc: DebugLoc::from_llvm_with_col(term),
+            debugloc: DebugLoc::from_llvm_with_col(term, &mut ctx.string_interner),
             // metadata: InstructionMetadata::from_llvm_inst(term),
         }
     }
@@ -989,7 +989,7 @@ impl CallBr {
             other_labels: (),
             function_attributes: callinfo.function_attributes,
             calling_convention: callinfo.calling_convention,
-            debugloc: DebugLoc::from_llvm_with_col(term),
+            debugloc: DebugLoc::from_llvm_with_col(term, &mut ctx.string_interner),
             // metadata: InstructionMetadata::from_llvm_inst(term),
         }
     }
