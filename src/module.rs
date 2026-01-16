@@ -233,6 +233,7 @@ pub struct GlobalVariable {
     pub comdat: Option<Comdat>, // llvm-hs-pure has Option<String> for some reason
     pub alignment: u32,
     pub debugloc: Option<DebugLoc>,
+    pub value_type: TypeRef
     // --TODO not yet implemented-- pub metadata: Vec<(String, MetadataRef<MetadataNode>)>,
 }
 
@@ -722,6 +723,7 @@ impl GlobalVariable {
         ctx: &mut ModuleContext,
     ) -> Self {
         let ty = ctx.types.type_from_llvm_ref(unsafe { LLVMTypeOf(global) });
+        let value_type = ctx.types.type_from_llvm_ref(unsafe { LLVMGlobalGetValueType(global) });
         let addr_space = match ty.as_ref() {
             Type::PointerType { addr_space, .. } => *addr_space,
             _ => panic!("GlobalVariable has a non-pointer type, {:?}", ty),
@@ -760,6 +762,7 @@ impl GlobalVariable {
             },
             alignment: unsafe { LLVMGetAlignment(global) },
             debugloc: DebugLoc::from_llvm_no_col(global, &mut ctx.string_interner),
+            value_type,
             // metadata: unimplemented!("metadata"),
         }
     }

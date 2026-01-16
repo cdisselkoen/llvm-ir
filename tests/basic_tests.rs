@@ -1503,6 +1503,7 @@ fn variablesbc() {
     assert_eq!(var.ty, module.types.pointer_to(module.types.i32()));
     #[cfg(feature = "llvm-15-or-greater")]
     assert_eq!(var.ty, module.types.pointer());
+    assert_eq!(var.value_type, module.types.i32());
     assert_eq!(
         var.initializer,
         Some(ConstantRef::new(Constant::Int { bits: 32, value: 5 }))
