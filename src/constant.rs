@@ -1081,6 +1081,8 @@ impl Display for InsertValue {
 
 #[derive(PartialEq, Clone, Debug, Hash)]
 pub struct GetElementPtr {
+    #[cfg(feature = "llvm-14-or-greater")]
+    pub indexed_type: TypeRef,
     pub address: ConstantRef,
     pub indices: Vec<ConstantRef>,
     pub in_bounds: bool,
@@ -1784,6 +1786,8 @@ impl InsertValue {
 impl GetElementPtr {
     pub(crate) fn from_llvm_ref(expr: LLVMValueRef, ctx: &mut ModuleContext) -> Self {
         Self {
+            #[cfg(feature = "llvm-14-or-greater")]
+            indexed_type: ctx.types.type_from_llvm_ref(unsafe { LLVMGetGEPSourceElementType(expr) }),
             address: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, ctx),
             indices: {
                 let num_indices = unsafe { LLVMGetNumOperands(expr) as u32 } - 1; // LLVMGetNumIndices(), which we use for instruction::GetElementPtr, appears empirically to not work for constant::GetElementPtr

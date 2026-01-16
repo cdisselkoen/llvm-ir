@@ -1644,6 +1644,8 @@ impl Display for AtomicRMW {
 /// See [LLVM 14 docs on the 'getelementptr' instruction](https://releases.llvm.org/14.0.0/docs/LangRef.html#getelementptr-instruction)
 #[derive(PartialEq, Clone, Debug, Hash)]
 pub struct GetElementPtr {
+    #[cfg(feature = "llvm-14-or-greater")]
+    pub indexed_type: TypeRef,
     pub address: Operand,
     pub indices: Vec<Operand>,
     pub dest: Name,
@@ -3035,6 +3037,8 @@ impl GetElementPtr {
         func_ctx: &mut FunctionContext,
     ) -> Self {
         Self {
+            #[cfg(feature = "llvm-14-or-greater")]
+            indexed_type: ctx.types.type_from_llvm_ref(unsafe { LLVMGetGEPSourceElementType(inst) }),
             address: Operand::from_llvm_ref(unsafe { LLVMGetOperand(inst, 0) }, ctx, func_ctx),
             indices: {
                 let num_indices = unsafe { LLVMGetNumIndices(inst) };
